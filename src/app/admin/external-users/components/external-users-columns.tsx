@@ -1,0 +1,339 @@
+"use client"
+
+import { ColumnDef } from "@tanstack/react-table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
+import { MoreVertical, Eye, Edit, Trash2, Lock, Check, ArrowUp, Clock, AlertCircle, Mail, MessageCircle, Coins } from "lucide-react"
+import { ExternalUser } from "@/types/admin/users"
+
+interface CreateExternalUsersColumnsProps {
+  onViewDetails: (user: ExternalUser) => void
+  onEdit: (user: ExternalUser) => void
+  onDelete: (user: ExternalUser) => void
+  onSuspend?: (user: ExternalUser) => void
+  onActivate?: (user: ExternalUser) => void
+  onUpsell?: (user: ExternalUser) => void
+  onSendEmail?: (user: ExternalUser) => void
+  onSendWhatsApp?: (user: ExternalUser) => void
+  onManageCredits?: (user: ExternalUser) => void
+  onNameClick?: (user: ExternalUser) => void
+}
+
+export function createExternalUsersColumns({
+  onViewDetails,
+  onEdit,
+  onDelete,
+  onSuspend,
+  onActivate,
+  onUpsell,
+  onSendEmail,
+  onSendWhatsApp,
+  onManageCredits,
+  onNameClick,
+}: CreateExternalUsersColumnsProps): ColumnDef<ExternalUser>[] {
+  const getPlanBadgeVariant = (plan: string) => {
+    switch (plan) {
+      case "premium":
+        return "default" as const
+      case "enterprise":
+        return "default" as const
+      case "pro":
+        return "secondary" as const
+      case "trial":
+        return "outline" as const
+      case "free":
+        return "outline" as const
+      default:
+        return "outline" as const
+    }
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "active":
+        return "default" as const
+      case "inactive":
+        return "secondary" as const
+      case "suspended":
+        return "destructive" as const
+      default:
+        return "outline" as const
+    }
+  }
+
+  const getTrialStatus = (user: ExternalUser) => {
+    if (!user.isTrial || !user.trialEndsAt) return null
+
+    const now = new Date()
+    const daysRemaining = Math.ceil((user.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    const isExpired = now > user.trialEndsAt
+
+    return {
+      daysRemaining: isExpired ? 0 : daysRemaining,
+      isExpired,
+      isEndingSoon: daysRemaining > 0 && daysRemaining <= 3,
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return [
+    {
+      accessorKey: "name",
+      id: "name",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+      cell: ({ row }) => {
+        const user = row.original
+        const handleClick = (e: React.MouseEvent) => {
+          e.stopPropagation()
+          onNameClick?.(user)
+        }
+        return (
+          <div
+            className="flex items-center gap-2 min-w-0 cursor-pointer hover:[&>span]:text-primary [&>div]:hover:opacity-80 transition-all"
+            onClick={handleClick}
+          >
+            <div className="shrink-0 pointer-events-none">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={`https://avatar.iran.liara.run/public?name=${encodeURIComponent(user.name)}`} />
+                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+              </Avatar>
+            </div>
+            <span className="font-medium truncate min-w-0 pointer-events-none max-w-[150px]">
+              {user.name}
+            </span>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "email",
+      id: "email",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+      cell: ({ row }) => (
+        <span className="text-sm truncate block max-w-[200px]" onClick={(e) => e.stopPropagation()} title={row.original.email}>
+          {row.original.email}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "plan",
+      id: "plan",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Plan" />,
+      cell: ({ row }) => {
+        const user = row.original
+        return (
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <Badge variant={getPlanBadgeVariant(user.plan)}>
+              {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
+            </Badge>
+            {user.isTrial && user.trialEndsAt && <Clock className="h-4 w-4 text-amber-600" />}
+          </div>
+        )
+      },
+      filterFn: (row, id, value) => {
+        return value.includes(row.getValue(id))
+      },
+    },
+    {
+      accessorKey: "trialStatus",
+      id: "trialStatus",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Trial" />,
+      cell: ({ row }) => {
+        const user = row.original
+        const trialStatus = getTrialStatus(user)
+
+        if (!trialStatus) {
+          return <span className="text-sm text-muted-foreground" onClick={(e) => e.stopPropagation()}>—</span>
+        }
+
+        return (
+          <div 
+            className="flex items-center gap-2" 
+            onClick={(e) => e.stopPropagation()}
+            title={user.trialEndsAt ? `Trial ends: ${user.trialEndsAt.toLocaleDateString()}` : undefined}
+          >
+            {trialStatus.isExpired ? (
+              <Badge variant="destructive" className="gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Expired
+              </Badge>
+            ) : trialStatus.isEndingSoon ? (
+              <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
+                <Clock className="h-3 w-3" />
+                {trialStatus.daysRemaining} day{trialStatus.daysRemaining !== 1 ? "s" : ""}
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="gap-1">
+                <Clock className="h-3 w-3" />
+                {trialStatus.daysRemaining} day{trialStatus.daysRemaining !== 1 ? "s" : ""}
+              </Badge>
+            )}
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "status",
+      id: "status",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      cell: ({ row }) => {
+        const status = row.original.status
+        return (
+          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
+        )
+      },
+      filterFn: (row, id, value) => {
+        return value.includes(row.getValue(id))
+      },
+    },
+    {
+      accessorKey: "subscriptionDate",
+      id: "subscriptionDate",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Sub. Date" />,
+      cell: ({ row }) => {
+        const date = row.original.subscriptionDate
+        return (
+          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+            {date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "expiryDate",
+      id: "expiryDate",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Expiry Date" />,
+      cell: ({ row }) => {
+        const user = row.original
+        const date = user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate
+        return (
+          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+            {date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "credits",
+      id: "credits",
+      enableSorting: true,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Credits" />,
+      cell: ({ row }) => {
+        const credits = row.original.credits || 0
+        return (
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <Coins className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{credits.toLocaleString()}</span>
+          </div>
+        )
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const user = row.original
+
+        return (
+          <div className="w-10" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onViewDetails(user)}>
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {onSendEmail && (
+                <DropdownMenuItem onClick={() => onSendEmail(user)}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Send Email
+                </DropdownMenuItem>
+              )}
+              {onSendWhatsApp && user.phoneNumber && (
+                <DropdownMenuItem onClick={() => onSendWhatsApp(user)}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Send WhatsApp
+                </DropdownMenuItem>
+              )}
+              {(onSendEmail || (onSendWhatsApp && user.phoneNumber)) && <DropdownMenuSeparator />}
+              {onManageCredits && (
+                <DropdownMenuItem onClick={() => onManageCredits(user)}>
+                  <Coins className="h-4 w-4 mr-2" />
+                  Manage Credits
+                </DropdownMenuItem>
+              )}
+              {onUpsell && (
+                <DropdownMenuItem onClick={() => onUpsell(user)}>
+                  <ArrowUp className="h-4 w-4 mr-2" />
+                  Upsell
+                </DropdownMenuItem>
+              )}
+              {(onManageCredits || onUpsell) && <DropdownMenuSeparator />}
+              {user.status === "active" && onSuspend ? (
+                <DropdownMenuItem onClick={() => onSuspend(user)}>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Suspend
+                </DropdownMenuItem>
+              ) : (
+                onActivate && (
+                  <DropdownMenuItem onClick={() => onActivate(user)}>
+                    <Check className="h-4 w-4 mr-2" />
+                    Activate
+                  </DropdownMenuItem>
+                )
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          </div>
+        )
+      },
+    },
+  ]
+}
+

@@ -1,0 +1,127 @@
+{
+  "1": {
+    "id": 1,
+    "title": "Smart Fitness Tracker Watch",
+    "description": "Stay on top of your fitness goals with this advanced smart fitness tracker watch. Features include heart rate monitoring, sleep tracking, step counting, and smartphone notifications. Water-resistant design makes it perfect for workouts and daily wear. The long-lasting battery ensures you never miss a beat, and the sleek design complements any style.",
+    "fullDescription": "Say goodbye to guessing your fitness progress with the Smart Fitness Tracker Watch. Designed with advanced sensors and AI-powered algorithms, it tracks your heart rate, steps, calories burned, distance traveled, and sleep patterns with precision. The watch syncs seamlessly with your smartphone via Bluetooth, allowing you to receive calls, messages, and app notifications right on your wrist. With 7 different workout modes including running, cycling, swimming, and yoga, you can track your performance across all activities. The 1.4-inch color touchscreen display is bright and easy to read even in direct sunlight. Water-resistant up to 50 meters, you can wear it while swimming or in the shower. The rechargeable battery lasts up to 7 days on a single charge, and the comfortable silicone band is adjustable for any wrist size. Perfect for fitness enthusiasts, athletes, or anyone looking to improve their health and wellness.",
+    "images": [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800&h=800&fit=crop",
+      "https://images.unsplash.com/photo-1544117519-31a4b719223d?w=800&h=800&fit=crop"
+    ],
+    "buyPrice": 29.99,
+    "sellPrice": 79.99,
+    "profitPerOrder": 50.0,
+    "category": "Fitness & Health",
+    "rating": 4.8,
+    "reviews": 1245,
+    "trending": true,
+    "addedDate": "2025-01-15",
+    "supplierLinks": {
+      "aliexpress": "https://www.aliexpress.com/item/example",
+      "amazon": "https://www.amazon.com/dp/example",
+      "facebookAd": "https://www.facebook.com/ads/library/example"
+    },
+    "fulfillment": {
+      "productCost": 7.17,
+      "shippingCost": 9.79,
+      "shippingTime": "8-10 days",
+      "shippingTo": "Germany",
+      "totalPrice": 16.96
+    },
+    "demand": {
+      "seasonalData": [
+        { "month": "Jan", "value": 45 },
+        { "month": "Feb", "value": 52 },
+        { "month": "Mar", "value": 48 },
+        { "month": "Apr", "value": 58 },
+        { "month": "May", "value": 55 },
+        { "month": "Jun", "value": 62 },
+        { "month": "Jul", "value": 60 },
+        { "month": "Aug", "value": 65 },
+        { "month": "Sep", "value": 58 },
+        { "month": "Oct", "value": 72 },
+        { "month": "Nov", "value": 68 },
+        { "month": "Dec", "value": 75 }
+      ],
+      "saturation": {
+        "storesSelling": 7,
+        "competitionLevel": "Low"
+      },
+      "regionalInterest": {
+        "US": 45,
+        "UK": 32,
+        "CA": 28,
+        "AU": 25,
+        "DE": 22
+      }
+    },
+    "targeting": {
+      "interests": [
+        { "name": "Fitness", "audienceSize": "1.5B" },
+        { "name": "Health & Wellness", "audienceSize": "1.2B" },
+        { "name": "Running", "audienceSize": "850M" },
+        { "name": "Gym & Fitness", "audienceSize": "720M" },
+        { "name": "Wearable Technology", "audienceSize": "450M" }
+      ],
+      "demographics": {
+        "gender": "All",
+        "age": "18-45",
+        "totalAudienceSize": "4.7B"
+      }
+    },
+    "competition": {
+      "stores": [
+        "fitnesspro.com",
+        "healthgear.shop",
+        "smartwear.store",
+        "activewear.myshopify.com"
+      ],
+      "metrics": {
+        "monthlyRevenue": 185056,
+        "monthlySales": 3693,
+        "roi": 164,
+        "aliexpressOrders": 4250,
+        "amazonPrice": 89.99
+      }
+    },
+    "specifications": {
+      "dimensions": "1.8 x 0.5 x 0.3 inches",
+      "weight": "0.05 pounds",
+      "battery": "7 days",
+      "waterResistance": "50 meters",
+      "display": "1.4 inch color touchscreen"
+    },
+    "reviews": [
+      {
+        "rating": 5,
+        "author": "Sarah M.",
+        "text": "Love this fitness tracker! The heart rate monitor is incredibly accurate and the battery lasts a full week. The app is easy to use and provides great insights into my daily activity. Highly recommend!",
+        "date": "2025-01-10"
+      },
+      {
+        "rating": 5,
+        "author": "Mike T.",
+        "text": "Best fitness watch I've owned. The sleep tracking feature is amazing and really helped me improve my sleep schedule. The design is sleek and comfortable to wear all day.",
+        "date": "2025-01-08"
+      },
+      {
+        "rating": 4,
+        "author": "Jessica L.",
+        "text": "Great value for money. Tracks everything I need and syncs perfectly with my phone. The only minor issue is the band could be a bit more comfortable, but overall very satisfied.",
+        "date": "2025-01-05"
+      }
+    ],
+    "influencers": [
+      "@fitnessguru",
+      "@healthylifestyle",
+      "@runnergirl",
+      "@fitmom",
+      "@wellnesscoach"
+    ],
+    "relatedProducts": [2, 3, 4, 5, 6]
+  }
+}
+
+
+

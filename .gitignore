@@ -39,3 +39,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel
+
+# Cursor/MCP config files (may contain secrets)
+.cursor/mcp.json
+
+# Large binary files
+*.blend
+*.blend1
+
+# Large image files (add these later if needed)
+public/3d icons/
+public/icons/
+public/christmas 3d icons]/
+public/Multimedia animated icons/
+public/winning-products/
+public/*.jpg
+public/*.png
+# Keep category images and SVG
+!public/categories/
+!public/shopify_glyph.svg
