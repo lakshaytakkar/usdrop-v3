@@ -25,18 +25,18 @@ export function TableSkeleton({
   className,
 }: TableSkeletonProps) {
   return (
-    <div className={cn("rounded-md border", className)}>
-      <Table>
+    <div className={cn("rounded-md border w-full max-w-full overflow-hidden min-w-0", className)}>
+      <Table className="w-full table-fixed">
         <TableHeader>
           <TableRow>
             {showCheckbox && (
-              <TableHead className="w-12">
+              <TableHead className="w-12 shrink-0">
                 <Skeleton className="h-4 w-4" />
               </TableHead>
             )}
             {Array.from({ length: columns }).map((_, index) => (
-              <TableHead key={index}>
-                <Skeleton className="h-4 w-20" />
+              <TableHead key={index} className="min-w-0">
+                <Skeleton className="h-4 w-16 max-w-full" />
               </TableHead>
             ))}
           </TableRow>
@@ -45,16 +45,16 @@ export function TableSkeleton({
           {Array.from({ length: rows }).map((_, rowIndex) => (
             <TableRow key={rowIndex}>
               {showCheckbox && (
-                <TableCell>
+                <TableCell className="w-12 shrink-0">
                   <Skeleton className="h-4 w-4 rounded" />
                 </TableCell>
               )}
               {Array.from({ length: columns }).map((_, colIndex) => (
-                <TableCell key={colIndex}>
+                <TableCell key={colIndex} className="min-w-0 max-w-0">
                   <Skeleton
                     className={cn(
-                      "h-4",
-                      colIndex === 0 ? "w-32" : colIndex === 1 ? "w-48" : "w-24"
+                      "h-4 max-w-full",
+                      colIndex === 0 ? "w-24" : colIndex === 1 ? "w-32" : "w-20"
                     )}
                   />
                 </TableCell>
@@ -81,18 +81,18 @@ export function TableRowSkeleton({
   return (
     <TableRow className={className}>
       {showCheckbox && (
-        <TableCell>
+        <TableCell className="w-12 shrink-0">
           <Skeleton className="h-4 w-4 rounded" />
         </TableCell>
       )}
       {Array.from({ length: columns }).map((_, colIndex) => (
-        <TableCell key={colIndex}>
-          <div className="flex items-center gap-2">
-            {colIndex === 0 && <Skeleton className="h-8 w-8 rounded-full" />}
+        <TableCell key={colIndex} className="min-w-0 max-w-0">
+          <div className="flex items-center gap-2 min-w-0">
+            {colIndex === 0 && <Skeleton className="h-8 w-8 rounded-full shrink-0" />}
             <Skeleton
               className={cn(
-                "h-4",
-                colIndex === 0 ? "w-32" : colIndex === 1 ? "w-48" : "w-24"
+                "h-4 max-w-full",
+                colIndex === 0 ? "w-24" : colIndex === 1 ? "w-32" : "w-20"
               )}
             />
           </div>

@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { MoreVertical, Eye, Edit, Trash2, Lock, Check, ArrowUp, Clock, AlertCircle } from "lucide-react"
 import { ExternalUser } from "@/types/admin/users"
@@ -153,7 +154,7 @@ export function ExternalUsersTable({
                 <TableCell onClick={() => onViewDetails(user)}>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={`https://avatar.iran.liara.run/public?name=${encodeURIComponent(user.name)}`} />
+                      <AvatarImage src={getAvatarUrl(user.id, user.email)} />
                       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{user.name}</span>

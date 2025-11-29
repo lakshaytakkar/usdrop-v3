@@ -82,3 +82,8 @@ export function FilterPanel({ filters, onFilterChange, onClearAll, className }: 
 }
 
 
+
+
+
+
+

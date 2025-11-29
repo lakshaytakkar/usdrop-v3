@@ -1,7 +1,6 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,20 +8,39 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { MoreVertical, Eye, Trash2, CheckCircle2, Star } from "lucide-react"
+import { MoreVertical, Eye, Trash2, CheckCircle2, Star, Copy, Edit, Package, X } from "lucide-react"
 import { Supplier } from "@/app/suppliers/data/suppliers"
 
 interface CreateSuppliersColumnsProps {
   onViewDetails: (supplier: Supplier) => void
+  onQuickView?: (supplier: Supplier) => void
+  onEdit: (supplier: Supplier) => void
   onDelete: (supplier: Supplier) => void
+  onCopySupplierId: (supplier: Supplier) => void
+  onCopyEmail: (supplier: Supplier) => void
+  onToggleVerify: (supplier: Supplier) => void
+  onViewProducts: (supplier: Supplier) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canVerify?: boolean
 }
 
 export function createSuppliersColumns({
   onViewDetails,
+  onQuickView,
+  onEdit,
   onDelete,
+  onCopySupplierId,
+  onCopyEmail,
+  onToggleVerify,
+  onViewProducts,
+  canEdit = true,
+  canDelete = true,
+  canVerify = true,
 }: CreateSuppliersColumnsProps): ColumnDef<Supplier>[] {
   const getInitials = (name: string) => {
     return name
@@ -34,25 +52,6 @@ export function createSuppliersColumns({
   }
 
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       id: "logo",
       header: "Logo",
@@ -150,14 +149,60 @@ export function createSuppliersColumns({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {onQuickView && (
+                  <DropdownMenuItem onClick={() => onQuickView(supplier)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Quick View
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onViewDetails(supplier)}>
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(supplier)} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <DropdownMenuItem onClick={() => onViewProducts(supplier)}>
+                  <Package className="h-4 w-4 mr-2" />
+                  View Products
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(supplier)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canVerify && (
+                  <DropdownMenuItem onClick={() => onToggleVerify(supplier)}>
+                    {supplier.verified ? (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Unverify
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Verify
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onCopySupplierId(supplier)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Supplier ID
+                </DropdownMenuItem>
+                {supplier.contactEmail && (
+                  <DropdownMenuItem onClick={() => onCopyEmail(supplier)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Email
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {canDelete && (
+                  <DropdownMenuItem onClick={() => onDelete(supplier)} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -166,4 +211,3 @@ export function createSuppliersColumns({
     },
   ]
 }
-

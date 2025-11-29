@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -10,34 +11,176 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Check, Lock, Search, X, Copy, Eye, EyeOff, RefreshCw, Download, Edit, MoreVertical, UserPlus, Upload, AlertCircle } from "lucide-react"
 import { DataTable } from "@/components/data-table/data-table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createInternalUsersColumns } from "./components/internal-users-columns"
 import { InternalUser, InternalUserRole, UserStatus } from "@/types/admin/users"
 import { sampleInternalUsers } from "./data/users"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
-import { QuickViewModal } from "@/components/ui/quick-view-modal"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getAvatarUrl } from "@/lib/utils/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import {
+  generateSecurePassword,
+  getPasswordStrengthLabel,
+  getPasswordStrengthColor,
+  getPasswordStrengthBarColor,
+  getPasswordStrengthProgress,
+} from "@/lib/utils/password"
+import { Loader } from "@/components/ui/loader"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { useToast } from "@/hooks/use-toast"
+import { useHasPermission } from "@/hooks/use-has-permission"
 
 export default function AdminInternalUsersPage() {
-  const [users, setUsers] = useState<InternalUser[]>(sampleInternalUsers)
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const { showSuccess, showError, showInfo } = useToast()
+  
+  // Permission checks
+  const { hasPermission: canView } = useHasPermission("internal_users.view")
+  const { hasPermission: canEdit } = useHasPermission("internal_users.edit")
+  const { hasPermission: canDelete } = useHasPermission("internal_users.delete")
+  const { hasPermission: canSuspend } = useHasPermission("internal_users.suspend")
+  const { hasPermission: canActivate } = useHasPermission("internal_users.activate")
+  
+  const [users, setUsers] = useState<InternalUser[]>([])
   const [initialLoading, setInitialLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [pageCount, setPageCount] = useState(0)
   const [sorting, setSorting] = useState<SortingState>([])
   const [filters, setFilters] = useState<ColumnFiltersState>([])
   const [search, setSearch] = useState("")
+  const [selectedRoleTab, setSelectedRoleTab] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined })
+  const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<InternalUser | null>(null)
+  const [suspendConfirmOpen, setSuspendConfirmOpen] = useState(false)
+  const [userToSuspend, setUserToSuspend] = useState<InternalUser | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<InternalUser | null>(null)
   const [quickViewOpen, setQuickViewOpen] = useState(false)
   const [selectedUserForQuickView, setSelectedUserForQuickView] = useState<InternalUser | null>(null)
+  const [selectedUsers, setSelectedUsers] = useState<InternalUser[]>([])
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "executive" as InternalUserRole,
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [formLoading, setFormLoading] = useState(false)
+  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
+  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
+  const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
+  const [assignedMembers, setAssignedMembers] = useState<string[]>([])
+  const [memberSearch, setMemberSearch] = useState("")
+  const [tempOwner, setTempOwner] = useState<string | null>(null)
+  const [tempMembers, setTempMembers] = useState<string[]>([])
 
-  // Filter users based on search and filters
+  const roles = useMemo(() => ["superadmin", "admin", "manager", "executive"], [])
+  
+  const internalUsersForAssignee = sampleInternalUsers
+  
+  // Filter members based on search
+  const filteredMembers = useMemo(() => {
+    if (!memberSearch) return internalUsersForAssignee
+    const searchLower = memberSearch.toLowerCase()
+    return internalUsersForAssignee.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower)
+    )
+  }, [memberSearch, internalUsersForAssignee])
+  
+  // Available members (excluding owner and already selected members)
+  const availableMembers = useMemo(() => {
+    return filteredMembers.filter(
+      (user) => user.id !== tempOwner && !tempMembers.includes(user.id)
+    )
+  }, [filteredMembers, tempOwner, tempMembers])
+  
+  const handleOpenAssigneeModal = () => {
+    setTempOwner(assignedOwner)
+    setTempMembers([...assignedMembers])
+    setMemberSearch("")
+    setAssigneeModalOpen(true)
+  }
+  
+  const handleSaveAssignees = () => {
+    setAssignedOwner(tempOwner)
+    setAssignedMembers(tempMembers)
+    setAssigneeModalOpen(false)
+  }
+  
+  const handleAddMember = (memberId: string) => {
+    if (!tempMembers.includes(memberId)) {
+      setTempMembers([...tempMembers, memberId])
+    }
+    setMemberSearch("")
+  }
+  
+  const handleRemoveMember = (memberId: string) => {
+    setTempMembers(tempMembers.filter(id => id !== memberId))
+  }
+
+  // Calculate role counts
+  const roleCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    roles.forEach((role) => {
+      counts[role] = users.filter((u) => u.role === role).length
+    })
+    counts.all = users.length
+    return counts
+  }, [users, roles])
+
+  // Filter users based on search, filters, role tab, date range, and quick filters
   const filteredUsers = useMemo(() => {
     let result = users
+
+    // Apply role tab filter
+    if (selectedRoleTab && selectedRoleTab !== "all") {
+      result = result.filter((user) => user.role === selectedRoleTab)
+    }
+
+    // Apply date range filter
+    if (dateRange.from || dateRange.to) {
+      result = result.filter((user) => {
+        const userDate = new Date(user.createdAt)
+        if (dateRange.from && userDate < dateRange.from) return false
+        if (dateRange.to) {
+          const toDate = new Date(dateRange.to)
+          toDate.setHours(23, 59, 59, 999)
+          if (userDate > toDate) return false
+        }
+        return true
+      })
+    }
+
+    // Apply quick filters
+    if (quickFilter === "active") {
+      result = result.filter((user) => user.status === "active")
+    } else if (quickFilter === "inactive") {
+      result = result.filter((user) => user.status === "inactive")
+    } else if (quickFilter === "suspended") {
+      result = result.filter((user) => user.status === "suspended")
+    }
 
     // Apply search
     if (search) {
@@ -49,59 +192,322 @@ export default function AdminInternalUsersPage() {
       )
     }
 
-    // Apply column filters
+    // Apply column filters from TanStack table (excluding role since it's handled by tabs)
     filters.forEach((filter) => {
-      if (filter.id === "role" && Array.isArray(filter.value) && filter.value.length > 0) {
-        result = result.filter((user) => filter.value.includes(user.role))
-      }
-      if (filter.id === "status" && Array.isArray(filter.value) && filter.value.length > 0) {
-        result = result.filter((user) => filter.value.includes(user.status))
+      if (!filter.value) return
+      
+      const filterValues = Array.isArray(filter.value) ? filter.value : [filter.value]
+      if (filterValues.length === 0) return
+      
+      if (filter.id === "status") {
+        result = result.filter((user) => filterValues.includes(user.status))
       }
     })
 
     return result
-  }, [users, search, filters])
+  }, [users, search, filters, selectedRoleTab, dateRange, quickFilter])
 
-  // Paginate filtered users
+  // Apply sorting to filtered users
+  const sortedUsers = useMemo(() => {
+    if (!sorting || sorting.length === 0) {
+      return filteredUsers
+    }
+
+    const sorted = [...filteredUsers]
+    sorting.forEach((sort) => {
+      const { id, desc } = sort
+      sorted.sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+
+        switch (id) {
+          case "name":
+            aValue = a.name.toLowerCase()
+            bValue = b.name.toLowerCase()
+            break
+          case "email":
+            aValue = a.email.toLowerCase()
+            bValue = b.email.toLowerCase()
+            break
+          case "role":
+            aValue = a.role
+            bValue = b.role
+            break
+          case "status":
+            aValue = a.status
+            bValue = b.status
+            break
+          case "updatedAt":
+            aValue = a.updatedAt.getTime()
+            bValue = b.updatedAt.getTime()
+            break
+          default:
+            return 0
+        }
+
+        if (aValue < bValue) return desc ? 1 : -1
+        if (aValue > bValue) return desc ? -1 : 1
+        return 0
+      })
+    })
+
+    return sorted
+  }, [filteredUsers, sorting])
+
+  // Paginate sorted users
   const paginatedUsers = useMemo(() => {
     const start = (page - 1) * pageSize
     const end = start + pageSize
-    return filteredUsers.slice(start, end)
-  }, [filteredUsers, page, pageSize])
+    return sortedUsers.slice(start, end)
+  }, [sortedUsers, page, pageSize])
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      // TODO: Replace with real API call
+      // For now, simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setUsers(sampleInternalUsers)
+    } catch (err) {
+      console.error("Error fetching users:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to load users. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+      setInitialLoading(false)
+    }
+  }, [showError])
+
+  // Fetch users on mount
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
 
   useEffect(() => {
-    setPageCount(Math.ceil(filteredUsers.length / pageSize))
-    setInitialLoading(false)
-  }, [filteredUsers.length, pageSize])
+    const totalPages = Math.ceil(sortedUsers.length / pageSize)
+    const calculatedPageCount = totalPages > 0 ? totalPages : 1
+    setPageCount(calculatedPageCount)
+    // Reset to page 1 if current page is out of bounds
+    if (page > calculatedPageCount && calculatedPageCount > 0) {
+      setPage(1)
+    }
+  }, [sortedUsers.length, pageSize, page])
 
-  const handleViewDetails = (user: InternalUser) => {
+  const handleViewDetails = useCallback((user: InternalUser) => {
+    router.push(`/admin/internal-users/${user.id}`)
+  }, [router])
+
+  const handleNameClick = useCallback((user: InternalUser) => {
     setSelectedUserForQuickView(user)
     setQuickViewOpen(true)
-  }
+  }, [])
 
-  const handleRowClick = (user: InternalUser) => {
-    setSelectedUserForQuickView(user)
-    setQuickViewOpen(true)
-  }
-
-  const handleEdit = (user: InternalUser) => {
+  const handleEdit = useCallback((user: InternalUser) => {
     setEditingUser(user)
+    setFormData({
+      name: user.name,
+      email: user.email,
+      password: "",
+      role: user.role,
+    })
+    setFormErrors({})
     setFormOpen(true)
+  }, [])
+
+  const handleGeneratePassword = () => {
+    const newPassword = generateSecurePassword(16)
+    setFormData({ ...formData, password: newPassword })
+    setShowPassword(true)
   }
 
-  const handleDelete = (user: InternalUser) => {
+  const handleCopyPassword = async () => {
+    if (formData.password) {
+      await navigator.clipboard.writeText(formData.password)
+      showSuccess("Password copied to clipboard")
+    }
+  }
+
+  const handleDelete = useCallback((user: InternalUser) => {
+    if (!canDelete) {
+      showError("You don't have permission to delete users")
+      return
+    }
     setUserToDelete(user)
     setDeleteConfirmOpen(true)
-  }
+  }, [canDelete, showError])
 
   const confirmDelete = async () => {
     if (!userToDelete) return
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setUsers(users.filter((u) => u.id !== userToDelete.id))
-    setDeleteConfirmOpen(false)
-    setUserToDelete(null)
+    setActionLoading("delete")
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setUsers(users.filter((u) => u.id !== userToDelete.id))
+      setDeleteConfirmOpen(false)
+      const deletedUserName = userToDelete.name
+      setUserToDelete(null)
+      showSuccess(`User "${deletedUserName}" has been deleted successfully`)
+      // Refresh data after delete
+      await fetchUsers()
+    } catch (err) {
+      console.error("Error deleting user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete user. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
   }
+
+  const handleSuspend = useCallback((user: InternalUser) => {
+    if (!canSuspend) {
+      showError("You don't have permission to suspend users")
+      return
+    }
+    setUserToSuspend(user)
+    setSuspendConfirmOpen(true)
+  }, [canSuspend, showError])
+
+  const confirmSuspend = async () => {
+    if (!userToSuspend) return
+    setActionLoading("suspend")
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setUsers(
+        users.map((u) =>
+          u.id === userToSuspend.id ? { ...u, status: "suspended" as const, updatedAt: new Date() } : u
+        )
+      )
+      setSuspendConfirmOpen(false)
+      const suspendedUserName = userToSuspend.name
+      setUserToSuspend(null)
+      showSuccess(`User "${suspendedUserName}" has been suspended`)
+      // Refresh data after suspend
+      await fetchUsers()
+    } catch (err) {
+      console.error("Error suspending user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to suspend user. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleActivate = useCallback(async (user: InternalUser) => {
+    if (!canActivate) {
+      showError("You don't have permission to activate users")
+      return
+    }
+    setActionLoading(`activate-${user.id}`)
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
+          u.id === user.id ? { ...u, status: "active" as const, updatedAt: new Date() } : u
+        )
+      )
+      showSuccess(`User "${user.name}" has been activated`)
+      // Refresh data after activate
+      await fetchUsers()
+    } catch (err) {
+      console.error("Error activating user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to activate user. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }, [fetchUsers, showSuccess, showError, canActivate])
+
+  const handleExport = useCallback(() => {
+    try {
+      if (sortedUsers.length === 0) {
+        showError("There are no users to export")
+        return
+      }
+
+      const csv = [
+        ["Name", "Email", "Role", "Status", "Created At", "Last Updated"],
+        ...sortedUsers.map((user) => [
+          user.name,
+          user.email,
+          user.role,
+          user.status,
+          user.createdAt.toLocaleDateString("en-US"),
+          user.updatedAt.toLocaleDateString("en-US"),
+        ]),
+      ]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n")
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `internal-users-${new Date().toISOString().split("T")[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      showSuccess(`Exported ${sortedUsers.length} user(s) to CSV`)
+    } catch (err) {
+      console.error("Error exporting users:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to export users"
+      showError(errorMessage)
+    }
+  }, [sortedUsers, showSuccess, showError])
+
+  const handleBulkUpload = useCallback(() => {
+    // Create file input
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = ".csv,.xlsx,.xls"
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      try {
+        setBulkActionLoading("upload")
+        // TODO: Implement actual bulk upload API call
+        // For now, show a message
+        console.log("Bulk upload file:", file.name)
+        // Simulate processing
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        showInfo(`Bulk upload functionality will be implemented. File: ${file.name}`)
+      } catch (err) {
+        console.error("Error uploading file:", err)
+        const errorMessage = err instanceof Error ? err.message : "Failed to upload file"
+        showError(errorMessage)
+      } finally {
+        setBulkActionLoading(null)
+      }
+    }
+    input.click()
+  }, [showInfo, showError])
+
+  const handlePaginationChange = useCallback((p: number, s: number) => {
+    if (p !== page) setPage(p)
+    if (s !== pageSize) {
+      setPageSize(s)
+      setPage(1) // Reset to first page when page size changes
+    }
+  }, [page, pageSize])
+
+  const handleRowSelectionChange = useCallback((selectedRows: InternalUser[]) => {
+    setSelectedUsers(selectedRows)
+  }, [])
+
+  const handleSendEmail = useCallback((user: InternalUser) => {
+    // TODO: Implement send email
+    console.log("Sending email to:", user.email)
+    showInfo(`Email functionality will be implemented. User: ${user.email}`)
+  }, [showInfo])
 
   const columns = useMemo(
     () =>
@@ -109,21 +515,117 @@ export default function AdminInternalUsersPage() {
         onViewDetails: handleViewDetails,
         onEdit: handleEdit,
         onDelete: handleDelete,
+        onNameClick: handleNameClick,
+        onSendEmail: handleSendEmail,
+        onSuspend: handleSuspend,
+        onActivate: handleActivate,
+        canEdit,
+        canDelete,
+        canSuspend,
+        canActivate,
       }),
-    []
+    [handleViewDetails, handleEdit, handleDelete, handleNameClick, handleSendEmail, handleSuspend, handleActivate, canEdit, canDelete, canSuspend, canActivate]
   )
 
+  const handleFormSubmit = async () => {
+    if (!canEdit) {
+      showError("You don't have permission to create or edit users")
+      return
+    }
+
+    const errors: Record<string, string> = {}
+    if (!formData.name.trim()) errors.name = "Name is required"
+    if (!formData.email.trim()) errors.email = "Email is required"
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = "Invalid email format"
+    else {
+      // Check for duplicate email (excluding current user if editing)
+      const duplicateUser = users.find(
+        (u) => u.email.toLowerCase() === formData.email.toLowerCase() && u.id !== editingUser?.id
+      )
+      if (duplicateUser) {
+        errors.email = "This email is already in use"
+      }
+    }
+    if (!editingUser && !formData.password) errors.password = "Password is required"
+    if (formData.password && formData.password.length < 8) errors.password = "Password must be at least 8 characters"
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
+
+    setFormLoading(true)
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      if (editingUser) {
+        setUsers(
+          users.map((u) =>
+            u.id === editingUser.id
+              ? {
+                  ...u,
+                  name: formData.name,
+                  email: formData.email,
+                  role: formData.role,
+                  updatedAt: new Date(),
+                }
+              : u
+          )
+        )
+      } else {
+        const newUser: InternalUser = {
+          id: `int_${Date.now()}`,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          status: "active",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+        setUsers([...users, newUser])
+      }
+
+      setFormOpen(false)
+      setEditingUser(null)
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "executive",
+      })
+      setFormErrors({})
+      setShowPassword(false)
+      const userName = formData.name
+      showSuccess(editingUser 
+        ? `User "${userName}" has been updated successfully`
+        : `User "${userName}" has been created successfully`)
+      // Refresh data after create/edit
+      await fetchUsers()
+    } catch (err) {
+      console.error("Error saving user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to save user. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setFormLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (formOpen && !editingUser) {
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "executive",
+      })
+      setFormErrors({})
+      setShowPassword(false)
+    }
+  }, [formOpen, editingUser])
+
   const filterConfig = [
-    {
-      columnId: "role",
-      title: "Role",
-      options: [
-        { label: "Superadmin", value: "superadmin" },
-        { label: "Admin", value: "admin" },
-        { label: "Manager", value: "manager" },
-        { label: "Executive", value: "executive" },
-      ],
-    },
     {
       columnId: "status",
       title: "Status",
@@ -135,65 +637,285 @@ export default function AdminInternalUsersPage() {
     },
   ]
 
+  const quickFilters = [
+    { id: "active", label: "Active", icon: Check },
+    { id: "inactive", label: "Inactive", icon: AlertCircle },
+    { id: "suspended", label: "Suspended", icon: Lock },
+  ]
+
+  // Prepare toolbar buttons based on selection
+  const toolbarButtons = useMemo(() => {
+    if (selectedUsers.length > 0) {
+      return [
+        {
+          label: bulkActionLoading === "delete" ? "Deleting..." : "Delete Selected",
+          icon: bulkActionLoading === "delete" ? <Loader size="sm" className="mr-2" /> : <Trash2 className="h-4 w-4" />,
+          onClick: async () => {
+            setBulkActionLoading("delete")
+            try {
+              // TODO: Replace with real API call
+              await new Promise((resolve) => setTimeout(resolve, 500))
+              const selectedIds = selectedUsers.map((u) => u.id)
+              setUsers(users.filter((u) => !selectedIds.includes(u.id)))
+              const deletedCount = selectedUsers.length
+              setSelectedUsers([])
+              showSuccess(`${deletedCount} user(s) deleted successfully`)
+              // Refresh data after bulk delete
+              await fetchUsers()
+            } catch (err) {
+              console.error("Error deleting users:", err)
+              const errorMessage = err instanceof Error ? err.message : "Failed to delete users. Please try again."
+              setError(errorMessage)
+              showError(errorMessage)
+            } finally {
+              setBulkActionLoading(null)
+            }
+          },
+          variant: "outline" as const,
+        },
+        {
+          label: bulkActionLoading === "suspend" ? "Suspending..." : "Suspend Selected",
+          icon: bulkActionLoading === "suspend" ? <Loader size="sm" className="mr-2" /> : <Lock className="h-4 w-4" />,
+          disabled: !canSuspend || bulkActionLoading !== null,
+          tooltip: !canSuspend ? "You don't have permission to suspend users" : undefined,
+          onClick: async () => {
+            if (!canSuspend) {
+              showError("You don't have permission to suspend users")
+              return
+            }
+            setBulkActionLoading("suspend")
+            try {
+              // TODO: Replace with real API call
+              await new Promise((resolve) => setTimeout(resolve, 500))
+              const selectedIds = selectedUsers.map((u) => u.id)
+              setUsers(
+                users.map((u) =>
+                  selectedIds.includes(u.id)
+                    ? { ...u, status: "suspended" as const, updatedAt: new Date() }
+                    : u
+                )
+              )
+              const suspendedCount = selectedUsers.length
+              setSelectedUsers([])
+              showSuccess(`${suspendedCount} user(s) suspended successfully`)
+              // Refresh data after bulk suspend
+              await fetchUsers()
+            } catch (err) {
+              console.error("Error suspending users:", err)
+              const errorMessage = err instanceof Error ? err.message : "Failed to suspend users. Please try again."
+              setError(errorMessage)
+              showError(errorMessage)
+            } finally {
+              setBulkActionLoading(null)
+            }
+          },
+          variant: "outline" as const,
+        },
+        {
+          label: bulkActionLoading === "activate" ? "Activating..." : "Activate Selected",
+          icon: bulkActionLoading === "activate" ? <Loader size="sm" className="mr-2" /> : <Check className="h-4 w-4" />,
+          disabled: !canActivate || bulkActionLoading !== null,
+          tooltip: !canActivate ? "You don't have permission to activate users" : undefined,
+          onClick: async () => {
+            if (!canActivate) {
+              showError("You don't have permission to activate users")
+              return
+            }
+            setBulkActionLoading("activate")
+            try {
+              // TODO: Replace with real API call
+              await new Promise((resolve) => setTimeout(resolve, 500))
+              const selectedIds = selectedUsers.map((u) => u.id)
+              setUsers(
+                users.map((u) =>
+                  selectedIds.includes(u.id)
+                    ? { ...u, status: "active" as const, updatedAt: new Date() }
+                    : u
+                )
+              )
+              const activatedCount = selectedUsers.length
+              setSelectedUsers([])
+              showSuccess(`${activatedCount} user(s) activated successfully`)
+              // Refresh data after bulk activate
+              await fetchUsers()
+            } catch (err) {
+              console.error("Error activating users:", err)
+              const errorMessage = err instanceof Error ? err.message : "Failed to activate users. Please try again."
+              setError(errorMessage)
+              showError(errorMessage)
+            } finally {
+              setBulkActionLoading(null)
+            }
+          },
+          variant: "outline" as const,
+        },
+        {
+          label: "Clear Selection",
+          onClick: () => setSelectedUsers([]),
+          variant: "ghost" as const,
+        },
+      ]
+    } else {
+      return [
+        {
+          label: "Bulk Upload",
+          icon: <Upload className="h-4 w-4" />,
+          onClick: handleBulkUpload,
+          variant: "outline" as const,
+        },
+        {
+          label: "Create User",
+          icon: <Plus className="h-4 w-4" />,
+          onClick: () => {
+            if (!canEdit) {
+              showError("You don't have permission to create users")
+              return
+            }
+            setEditingUser(null)
+            setFormOpen(true)
+          },
+          variant: "default" as const,
+          disabled: !canEdit,
+          tooltip: !canEdit ? "You don't have permission to create users" : undefined,
+        },
+      ]
+    }
+  }, [selectedUsers, bulkActionLoading, users, handleExport, handleBulkUpload, canEdit, canDelete, canSuspend, canActivate, showError])
+
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
-      <div>
+        <div>
           <h1 className="text-lg font-semibold tracking-tight">Internal Users</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             Manage internal users and their roles. Internal users have role-based access (admin, manager, executive).
           </p>
-          </div>
-        <Button onClick={() => {
-          setEditingUser(null)
-          setFormOpen(true)
-        }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create User
-          </Button>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {assignedOwner || assignedMembers.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center -space-x-2">
+                {assignedOwner && (() => {
+                  const owner = internalUsersForAssignee.find(u => u.id === assignedOwner)
+                  return (
+                    <Avatar className="h-8 w-8 border-2 border-background">
+                      <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                      <AvatarFallback className="text-xs">
+                        {owner?.name.charAt(0) || "O"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )
+                })()}
+                {assignedMembers.slice(0, 3).map((memberId) => {
+                  const member = internalUsersForAssignee.find(u => u.id === memberId)
+                  return (
+                    <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
+                      <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                      <AvatarFallback className="text-xs">
+                        {member?.name.charAt(0) || "M"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )
+                })}
+                {assignedMembers.length > 3 && (
+                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+                    <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
+                  </div>
+                )}
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleOpenAssigneeModal}
+                className="whitespace-nowrap cursor-pointer"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Assignee
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleOpenAssigneeModal}
+              className="whitespace-nowrap cursor-pointer"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Assignee
+            </Button>
+          )}
+          {selectedUsers.length > 0 && (
+            <span className="text-sm font-medium">
+              {selectedUsers.length} user{selectedUsers.length !== 1 ? "s" : ""} selected
+            </span>
+          )}
+        </div>
       </div>
 
-      {initialLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-muted-foreground">Loading users...</div>
-              </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={paginatedUsers}
-          pageCount={pageCount}
-          onPaginationChange={(p, s) => {
-            setPage(p)
-            setPageSize(s)
-          }}
-          onSortingChange={setSorting}
-          onFilterChange={setFilters}
-          onSearchChange={setSearch}
-          loading={loading}
-          initialLoading={initialLoading}
-          filterConfig={filterConfig}
-          searchPlaceholder="Search users..."
-          page={page}
-          pageSize={pageSize}
-          onAdd={() => {
-            setEditingUser(null)
-            setFormOpen(true)
-          }}
-          addButtonText="Create User"
-          addButtonIcon={<Plus className="h-4 w-4" />}
-          enableRowSelection={true}
-          onRowSelectionChange={(selectedRows) => {
-            // Handle bulk actions if needed
-            console.log("Selected rows:", selectedRows)
-          }}
-          onRowClick={handleRowClick}
-            />
+      {error && (
+        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchUsers}
+            className="mt-2 cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
       )}
+
+      {/* Role Tabs with Counters */}
+      <div className="mb-3">
+        <Tabs value={selectedRoleTab || "all"} onValueChange={(value) => setSelectedRoleTab(value === "all" ? null : value)}>
+          <TabsList className="h-9">
+            <TabsTrigger value="all" className="cursor-pointer">
+              All
+              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
+                {roleCounts.all}
+              </Badge>
+            </TabsTrigger>
+            {roles.map((role) => (
+              <TabsTrigger key={role} value={role} className="cursor-pointer">
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
+                  {roleCounts[role] || 0}
+                </Badge>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={paginatedUsers}
+        pageCount={Math.max(1, pageCount)}
+        onPaginationChange={handlePaginationChange}
+        onSortingChange={setSorting}
+        onFilterChange={setFilters}
+        onSearchChange={setSearch}
+        loading={loading}
+        initialLoading={initialLoading}
+        filterConfig={filterConfig}
+        searchPlaceholder="Search users..."
+        page={page}
+        pageSize={pageSize}
+        enableRowSelection={true}
+        onRowSelectionChange={handleRowSelectionChange}
+        secondaryButtons={toolbarButtons}
+        onDateRangeChange={setDateRange}
+        quickFilters={quickFilters}
+        selectedQuickFilter={quickFilter}
+        onQuickFilterChange={setQuickFilter}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-4">
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this user? This action cannot be undone.
@@ -209,12 +931,56 @@ export default function AdminInternalUsersPage() {
               </p>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={actionLoading === "delete"} className="cursor-pointer">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete
+            <Button variant="destructive" onClick={confirmDelete} disabled={actionLoading === "delete"} className="cursor-pointer">
+              {actionLoading === "delete" ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend Confirmation Dialog */}
+      <Dialog open={suspendConfirmOpen} onOpenChange={setSuspendConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-4">
+            <DialogTitle>Suspend User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to suspend this user? They will not be able to access the platform.
+            </DialogDescription>
+          </DialogHeader>
+          {userToSuspend && (
+            <div className="space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">User:</span> {userToSuspend.name}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Email:</span> {userToSuspend.email}
+              </p>
+            </div>
+          )}
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setSuspendConfirmOpen(false)} disabled={actionLoading === "suspend"} className="cursor-pointer">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmSuspend} disabled={actionLoading === "suspend"} className="cursor-pointer">
+              {actionLoading === "suspend" ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Suspending...
+                </>
+              ) : (
+                "Suspend"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -222,8 +988,8 @@ export default function AdminInternalUsersPage() {
 
       {/* Create/Edit User Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4">
             <DialogTitle>{editingUser ? "Edit User" : "Create User"}</DialogTitle>
             <DialogDescription>
               {editingUser
@@ -232,75 +998,340 @@ export default function AdminInternalUsersPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              User form implementation would go here (name, email, role, password fields).
-            </p>
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value })
+                  if (formErrors.name) setFormErrors({ ...formErrors, name: "" })
+                }}
+                placeholder="Enter full name"
+                className={formErrors.name ? "border-destructive" : ""}
+              />
+              {formErrors.name && <p className="text-xs text-destructive">{formErrors.name}</p>}
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value })
+                  if (formErrors.email) setFormErrors({ ...formErrors, email: "" })
+                }}
+                placeholder="Enter email address"
+                className={formErrors.email ? "border-destructive" : ""}
+              />
+              {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
+            </div>
+
+            {/* Password - Only for new users */}
+            {!editingUser && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Password *</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(e) => {
+                        setFormData({ ...formData, password: e.target.value })
+                        if (formErrors.password) setFormErrors({ ...formErrors, password: "" })
+                      }}
+                      placeholder="Enter password"
+                      className={formErrors.password ? "border-destructive pr-20" : "pr-20"}
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      {formData.password && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={handleCopyPassword}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGeneratePassword}
+                    className="flex-shrink-0"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Generate
+                  </Button>
+                </div>
+                {formData.password && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Password strength:</span>
+                      <span className={`font-medium ${getPasswordStrengthColor(formData.password)}`}>
+                        {getPasswordStrengthLabel(formData.password)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${getPasswordStrengthBarColor(formData.password)}`}
+                        style={{ width: `${getPasswordStrengthProgress(formData.password)}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                {formErrors.password && <p className="text-xs text-destructive">{formErrors.password}</p>}
+              </div>
+            )}
+
+            {/* Role */}
+            <div className="space-y-2">
+              <Label htmlFor="role">Role *</Label>
+              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as InternalUserRole })}>
+                <SelectTrigger id="role">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setFormOpen(false)
-              setEditingUser(null)
-            }}>
+          <DialogFooter className="pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setFormOpen(false)
+                setEditingUser(null)
+                setFormErrors({})
+              }}
+              disabled={formLoading}
+            >
               Cancel
             </Button>
-            <Button onClick={() => {
-              // TODO: Handle form submission
-              setFormOpen(false)
-              setEditingUser(null)
-            }}>
-              {editingUser ? "Update" : "Create"}
+            <Button onClick={handleFormSubmit} disabled={formLoading} className="cursor-pointer">
+              {formLoading ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  {editingUser ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                editingUser ? "Update" : "Create"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Quick View Modal */}
-      {selectedUserForQuickView && (
-        <QuickViewModal
-          open={quickViewOpen}
-          onOpenChange={setQuickViewOpen}
-          title={selectedUserForQuickView.name}
-        >
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Email</p>
-              <p className="text-sm font-medium">{selectedUserForQuickView.email}</p>
+      {/* User Quick View Modal */}
+      <Dialog 
+        open={quickViewOpen} 
+        onOpenChange={(open) => {
+          setQuickViewOpen(open)
+          if (!open) {
+            setSelectedUserForQuickView(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-xs p-4">
+          {selectedUserForQuickView && (
+            <>
+              <DialogHeader className="pb-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarImage
+                      src={getAvatarUrl(selectedUserForQuickView.id, selectedUserForQuickView.email)}
+                    />
+                    <AvatarFallback className="text-sm">
+                      {selectedUserForQuickView.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-base truncate">{selectedUserForQuickView.name}</DialogTitle>
+                    <DialogDescription className="text-xs truncate">{selectedUserForQuickView.email}</DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Role</span>
+                  <Badge variant="outline" className="text-xs px-2 py-0.5">
+                    {selectedUserForQuickView.role.charAt(0).toUpperCase() + selectedUserForQuickView.role.slice(1)}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Status</span>
+                  <Badge
+                    variant={selectedUserForQuickView.status === "active" ? "default" : "secondary"}
+                    className="text-xs px-2 py-0.5"
+                  >
+                    {selectedUserForQuickView.status.charAt(0).toUpperCase() + selectedUserForQuickView.status.slice(1)}
+                  </Badge>
+                </div>
+              </div>
+              <DialogFooter className="pt-3 border-t mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQuickViewOpen(false)
+                    if (selectedUserForQuickView) {
+                      router.push(`/admin/internal-users/${selectedUserForQuickView.id}`)
+                    }
+                  }}
+                  className="w-full text-sm h-8 cursor-pointer"
+                >
+                  View More Details
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Assignee Modal */}
+      <Dialog open={assigneeModalOpen} onOpenChange={setAssigneeModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Page Access Control</DialogTitle>
+            <DialogDescription>
+              Manage ownership and access for this page
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Owner Section */}
+            <div className="space-y-2">
+              <Label htmlFor="owner">Owner</Label>
+              <Select value={tempOwner || ""} onValueChange={setTempOwner}>
+                <SelectTrigger id="owner" className="w-full">
+                  <SelectValue placeholder="Select owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  {internalUsersForAssignee.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The owner is responsible for maintaining this page
+              </p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Role</p>
-              <p className="text-sm font-medium capitalize">{selectedUserForQuickView.role}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Status</p>
-              <p className="text-sm font-medium capitalize">{selectedUserForQuickView.status}</p>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setQuickViewOpen(false)
-                  handleEdit(selectedUserForQuickView)
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => {
-                  setQuickViewOpen(false)
-                  handleViewDetails(selectedUserForQuickView)
-                }}
-              >
-                View Details
-              </Button>
+
+            {/* Members Section */}
+            <div className="space-y-2">
+              <Label htmlFor="members">Members</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-start"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    {memberSearch || "Search users to add..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search users..." 
+                      value={memberSearch}
+                      onValueChange={setMemberSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No users found.</CommandEmpty>
+                      <CommandGroup>
+                        {availableMembers.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={user.id}
+                            onSelect={() => handleAddMember(user.id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
+                                <AvatarFallback className="text-xs">
+                                  {user.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{user.name}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              
+              {/* Selected Members */}
+              {tempMembers.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tempMembers.map((memberId) => {
+                    const member = internalUsersForAssignee.find(u => u.id === memberId)
+                    if (!member) return null
+                    return (
+                      <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
+                        <Avatar className="h-4 w-4">
+                          <AvatarImage src={getAvatarUrl(memberId, member.email)} />
+                          <AvatarFallback className="text-xs">
+                            {member.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {member.name}
+                        <button
+                          onClick={() => handleRemoveMember(memberId)}
+                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           </div>
-        </QuickViewModal>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssigneeModalOpen(false)} className="cursor-pointer">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAssignees} className="cursor-pointer">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

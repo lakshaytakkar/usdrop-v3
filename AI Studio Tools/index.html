@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" class="no-scroll">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Virtual Photoshoot Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              zinc: {
+                50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa',
+                500: '#71717a', 600: '#52525b', 700: '#3f3f46', 750: '#35353b', 800: '#27272a',
+                850: '#1f1f22', 900: '#18181b', 925: '#121215', 950: '#09090b',
+              },
+              violet: {
+                50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+                500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+              },
+              brand: {
+                'primary': '#8b5cf6', // violet-500
+                'primary-hover': '#a78bfa', // violet-400
+                'glow': 'rgba(139, 92, 246, 0.3)',
+              },
+              accent: '#8b5cf6', // This now themes form elements like sliders
+            },
+            backgroundImage: {
+              'button-gradient': 'linear-gradient(180deg, hsla(0,0%,100%,.05), hsla(0,0%,100%,0))',
+              'aurora': 'radial-gradient(ellipse at 20% 80%, rgba(124, 58, 237, 0.1), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.1), transparent 50%)',
+            },
+            boxShadow: {
+              'glow-sm': '0 0 4px 0 rgba(139, 92, 246, 0.25)',
+              'glow-md': '0 0 12px 0 rgba(139, 92, 246, 0.25)',
+              'glow-lg': '0 0 24px -4px rgba(139, 92, 246, 0.3)',
+              'glow-xl': '0 0 40px -10px rgba(139, 92, 246, 0.4)',
+              'inner-soft': 'inset 0 1px 2px 0 rgba(0,0,0,0.3)',
+              'inner-highlight': 'inset 0 1px 0 0 hsla(0,0%,100%,.05)',
+              'button-glow': '0 0 12px -2px rgba(139, 92, 246, 0.4)',
+              'button-glow-hover': '0 0 20px -2px rgba(139, 92, 246, 0.5)',
+              'button-glow-pro': '0 0 16px -4px rgba(139, 92, 246, 0.5)',
+              'button-glow-pro-hover': '0 0 24px -4px rgba(139, 92, 246, 0.6)',
+              'glass': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              'glass-inset': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'reveal': 'revealImage 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+              'pulse-slow': 'pulseSlow 4s infinite cubic-bezier(0.4, 0, 0.6, 1)',
+              'aurora': 'aurora 20s ease-in-out infinite',
+              'spinner-orb': 'spinner-orb 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'subtle-pop': 'subtlePop 0.3s cubic-bezier(0.25, 1, 0.5, 1) forwards',
+              'card-lift': 'cardLift 0.3s ease-out forwards',
+              'float-in': 'floatIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+              'slide-in-left': 'slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              'slide-in-right': 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              'peek-in': 'peekIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards',
+            },
+            keyframes: {
+              fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+              slideUp: { '0%': { opacity: 0, transform: 'translateY(24px) scale(0.98)' }, '100%': { opacity: 1, transform: 'translateY(0) scale(1)' } },
+              revealImage: {
+                '0%': { filter: 'blur(20px) saturate(0.8)', transform: 'scale(1.05)', opacity: '0.5' },
+                '100%': { filter: 'blur(0px) saturate(1)', transform: 'scale(1)', opacity: '1' }
+              },
+              pulseSlow: {
+                '0%, 100%': { opacity: 1, transform: 'scale(1)' }, '50%': { opacity: 0.85, transform: 'scale(1.03)' }
+              },
+              aurora: {
+                '0%, 100%': { 'background-position': '0% 50%, 100% 50%' },
+                '50%': { 'background-position': '100% 50%, 0% 50%' }
+              },
+              'spinner-orb': {
+                '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-12px)' },
+              },
+              subtlePop: {
+                 '0%': { transform: 'scale(0.96)', opacity: 0.8 },
+                 '100%': { transform: 'scale(1)', opacity: 1 },
+              },
+              cardLift: {
+                 '0%': { transform: 'translateY(0px)', 'box-shadow': '0 1px 3px rgba(0,0,0,0.1)' },
+                 '100%': { transform: 'translateY(-4px)', 'box-shadow': '0 10px 20px rgba(0,0,0,0.2)' },
+              },
+              floatIn: {
+                '0%': { opacity: 0, transform: 'translateY(40px) scale(0.9) rotateX(20deg) rotateZ(-5deg)' },
+                '100%': { opacity: 1, transform: 'translateY(0) scale(1) rotateX(0deg) rotateZ(0deg)' }
+              },
+              slideInLeft: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(0)' } },
+              slideInRight: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(0)' } },
+              peekIn: {
+                '0%': { transform: 'translateX(100%)', opacity: 0 },
+                '50%': { opacity: 1 },
+                '100%': { transform: 'translateX(0)', opacity: 1 }
+              },
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.15.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react-dropzone": "https://esm.sh/react-dropzone@^14.3.8",
+    "lucide-react": "https://esm.sh/lucide-react@^0.541.0",
+    "zustand": "https://esm.sh/zustand@^4.5.4",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.44.4",
+    "framer-motion": "https://esm.sh/framer-motion@^11.3.8",
+    "jszip": "https://aistudiocdn.com/jszip@^3.10.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-zinc-950 text-zinc-100 font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,14 +1,13 @@
 'use client'
 
+import { useState, useMemo } from 'react'
 import { Column } from '@tanstack/react-table'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
-  CommandItem,
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -31,15 +30,47 @@ export function DataTableFacetedFilter<TData, TValue>({
   options,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
-  const selectedValues = new Set(column?.getFilterValue() as string[])
+  const filterValue = column?.getFilterValue() as string[] | undefined
+  const [open, setOpen] = useState(false)
+  
+  // Derive selected values from column filter value
+  const selectedValues = useMemo(() => {
+    return new Set(filterValue || [])
+  }, [filterValue])
 
+  const hasActiveFilters = selectedValues.size > 0
+  
+  const handleToggleOption = (optionValue: string) => {
+    const newSet = new Set(selectedValues)
+    
+    if (newSet.has(optionValue)) {
+      newSet.delete(optionValue)
+    } else {
+      newSet.add(optionValue)
+    }
+    
+    const filterValues = Array.from(newSet)
+    column?.setFilterValue(filterValues.length > 0 ? filterValues : undefined)
+  }
+  
+  const handleClearFilters = () => {
+    column?.setFilterValue(undefined)
+  }
+  
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 px-2.5 border-dashed text-xs">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={cn(
+            "h-8 px-2.5 border-dashed text-xs whitespace-nowrap cursor-pointer",
+            hasActiveFilters && "border-primary bg-primary/5"
+          )}
+        >
           <ChevronsUpDown className="mr-1.5 h-3.5 w-3.5" />
           {title}
-          {selectedValues?.size > 0 && (
+          {hasActiveFilters && (
             <>
               <Badge variant="secondary" className="ml-1.5 rounded-sm px-1 font-normal text-[10px]">
                 {selectedValues.size}
@@ -48,26 +79,35 @@ export function DataTableFacetedFilter<TData, TValue>({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
-        <Command>
+      <PopoverContent 
+        className="w-[200px] p-0" 
+        align="start" 
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        <Command shouldFilter={false}>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value)
                 return (
-                  <CommandItem
+                  <div
                     key={option.value}
-                    onSelect={() => {
-                      if (isSelected) {
-                        selectedValues.delete(option.value)
-                      } else {
-                        selectedValues.add(option.value)
-                      }
-                      const filterValues = Array.from(selectedValues)
-                      column?.setFilterValue(filterValues.length ? filterValues : undefined)
+                    className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleToggleOption(option.value)
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleToggleOption(option.value)
+                      }
+                    }}
+                    role="option"
+                    aria-selected={isSelected}
+                    tabIndex={0}
                   >
                     <div
                       className={cn(
@@ -80,25 +120,37 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <Check className={cn('h-4 w-4')} />
                     </div>
                     {option.icon && <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
-                    <span>{option.label}</span>
+                    <span className="whitespace-nowrap">{option.label}</span>
                     {facets?.get(option.value) && (
                       <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
                         {facets.get(option.value)}
                       </span>
                     )}
-                  </CommandItem>
+                  </div>
                 )
               })}
             </CommandGroup>
             {selectedValues.size > 0 && (
               <>
                 <CommandGroup>
-                  <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
-                    className="justify-center text-center"
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleClearFilters()
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleClearFilters()
+                      }
+                    }}
+                    className="relative flex cursor-pointer select-none items-center justify-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-center"
+                    role="button"
+                    tabIndex={0}
                   >
                     Clear filters
-                  </CommandItem>
+                  </div>
                 </CommandGroup>
               </>
             )}
@@ -108,4 +160,3 @@ export function DataTableFacetedFilter<TData, TValue>({
     </Popover>
   )
 }
-

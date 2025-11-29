@@ -2,6 +2,8 @@
 
 export type PermissionKey =
   | "users.view"
+  | "users.view_all"
+  | "users.view_assigned"
   | "users.edit"
   | "users.reset_password"
   | "users.create"
@@ -16,12 +18,16 @@ export type PermissionKey =
   | "plans.delete"
   | "plans.manage_permissions"
   | "external_users.view"
+  | "external_users.view_all"
+  | "external_users.view_assigned"
   | "external_users.edit"
   | "external_users.suspend"
   | "external_users.activate"
   | "external_users.delete"
   | "external_users.upsell"
   | "internal_users.view"
+  | "internal_users.view_all"
+  | "internal_users.view_assigned"
   | "internal_users.edit"
   | "internal_users.create"
   | "internal_users.delete"
@@ -31,9 +37,12 @@ export type PermissionKey =
   | "reports.export"
   | "orders.view"
   | "orders.view_all"
+  | "orders.view_assigned"
   | "orders.refund"
   | "orders.cancel"
   | "hand-picked-winners.view"
+  | "hand-picked-winners.view_all"
+  | "hand-picked-winners.view_assigned"
   | "hand-picked-winners.edit"
   | "hand-picked-winners.create"
   | "hand-picked-winners.delete"
@@ -74,11 +83,14 @@ export type PermissionKey =
   | "other-recommended-apps.create"
   | "other-recommended-apps.delete"
 
+export type ViewScope = 'all' | 'assigned' | null
+
 export interface PermissionDefinition {
   key: string
   label: string
   description?: string
   category?: string
+  supportsScope?: boolean
 }
 
 export interface ModulePermissionGroup {
@@ -114,5 +126,35 @@ export interface Module {
   description?: string
   icon?: string
   href?: string
+}
+
+export interface ExternalPlanPermission {
+  moduleId: string
+  /**
+   * Access level for the module:
+   * - "full_access": Full access to all features
+   * - "limited_access": Limited access with count restrictions
+   * - "locked": Module visible in sidebar but blocked with overlay (lockPage = true)
+   * - "hidden": Module hidden from sidebar and routes blocked
+   */
+  accessLevel: "full_access" | "limited_access" | "locked" | "hidden"
+  view: boolean
+  viewDetails: boolean
+  limitedView: boolean
+  limitCount: number | null
+  lockPage: boolean
+}
+
+export type ExternalPlanPermissions = Record<string, ExternalPlanPermission>
+
+export interface ExternalPlanPermissionDefinition extends PermissionDefinition {
+  type?: "checkbox" | "select" | "number"
+  dependsOn?: string // For conditional fields (e.g., limit_count depends on limited_view)
+}
+
+export interface ExternalUserModulePermissionGroup {
+  moduleId: string
+  moduleName: string
+  permissions: ExternalPlanPermissionDefinition[]
 }
 

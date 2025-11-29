@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" class="no-scroll">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - AI Virtual Photoshoot Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              zinc: {
+                50: '#fafafa', 100: '#f4f4f5', 200: '#e4e4e7', 300: '#d4d4d8', 400: '#a1a1aa',
+                500: '#71717a', 600: '#52525b', 700: '#3f3f46', 750: '#35353b', 800: '#27272a',
+                850: '#1f1f22', 900: '#18181b', 925: '#121215', 950: '#09090b',
+              },
+              violet: {
+                50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa',
+                500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95',
+              },
+              brand: {
+                'primary': '#8b5cf6', // violet-500
+                'primary-hover': '#a78bfa', // violet-400
+                'glow': 'rgba(139, 92, 246, 0.3)',
+              }
+            },
+            backgroundImage: {
+              'button-gradient': 'linear-gradient(180deg, hsla(0,0%,100%,.05), hsla(0,0%,100%,0))',
+              'aurora': 'radial-gradient(ellipse at 20% 80%, rgba(124, 58, 237, 0.1), transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.1), transparent 50%)',
+            },
+            boxShadow: {
+              'glow-sm': '0 0 4px 0 rgba(139, 92, 246, 0.25)',
+              'glow-md': '0 0 12px 0 rgba(139, 92, 246, 0.25)',
+              'glow-lg': '0 0 24px -4px rgba(139, 92, 246, 0.3)',
+              'glow-xl': '0 0 40px -10px rgba(139, 92, 246, 0.4)',
+              'inner-soft': 'inset 0 1px 2px 0 rgba(0,0,0,0.3)',
+              'inner-highlight': 'inset 0 1px 0 0 hsla(0,0%,100%,.05)',
+              'button-glow': '0 0 12px -2px rgba(139, 92, 246, 0.4)',
+              'button-glow-hover': '0 0 20px -2px rgba(139, 92, 246, 0.5)',
+              'glass': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              'glass-inset': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.05)',
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            },
+            keyframes: {
+              fadeIn: { '0%': { opacity: 0, transform: 'translateY(10px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+              slideUp: { '0%': { opacity: 0, transform: 'translateY(24px) scale(0.98)' }, '100%': { opacity: 1, transform: 'translateY(0) scale(1)' } },
+            },
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.15.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react-dropzone": "https://esm.sh/react-dropzone@^14.3.8",
+    "lucide-react": "https://esm.sh/lucide-react@^0.541.0",
+    "zustand": "https://esm.sh/zustand@^4.5.4",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.44.4"
+  }
+}
+</script>
+</head>
+  <body class="bg-zinc-950 text-zinc-100 font-sans">
+    <div id="root"></div>
+    <script type="module" src="/signup.tsx"></script>
+  </body>
+</html>

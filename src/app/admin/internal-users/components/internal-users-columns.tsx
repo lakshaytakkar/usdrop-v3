@@ -8,18 +8,29 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { MoreVertical, Eye, Edit, Trash2, UserCog } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { MoreVertical, Eye, Edit, Trash2, UserCog, Mail, Lock, Check } from "lucide-react"
 import { InternalUser } from "@/types/admin/users"
+import { getAvatarUrl } from "@/lib/utils/avatar"
 
 interface CreateInternalUsersColumnsProps {
   onViewDetails: (user: InternalUser) => void
   onEdit: (user: InternalUser) => void
   onDelete: (user: InternalUser) => void
   onManagePermissions?: (user: InternalUser) => void
+  onNameClick?: (user: InternalUser) => void
+  onSendEmail?: (user: InternalUser) => void
+  onSuspend?: (user: InternalUser) => void
+  onActivate?: (user: InternalUser) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canSuspend?: boolean
+  canActivate?: boolean
 }
 
 export function createInternalUsersColumns({
@@ -27,6 +38,14 @@ export function createInternalUsersColumns({
   onEdit,
   onDelete,
   onManagePermissions,
+  onNameClick,
+  onSendEmail,
+  onSuspend,
+  onActivate,
+  canEdit = true,
+  canDelete = true,
+  canSuspend = true,
+  canActivate = true,
 }: CreateInternalUsersColumnsProps): ColumnDef<InternalUser>[] {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -67,37 +86,30 @@ export function createInternalUsersColumns({
 
   return [
     {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
       accessorKey: "name",
       id: "name",
+      enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
       cell: ({ row }) => {
         const user = row.original
+        const handleClick = (e: React.MouseEvent) => {
+          e.stopPropagation()
+          onNameClick?.(user)
+        }
         return (
-          <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={`https://avatar.iran.liara.run/public?name=${encodeURIComponent(user.name)}`} />
-              <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium">{user.name}</span>
+          <div
+            className="flex items-center gap-2 min-w-0 cursor-pointer hover:[&>span]:text-primary [&>div]:hover:opacity-80 transition-all"
+            onClick={handleClick}
+          >
+            <div className="shrink-0 pointer-events-none">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
+                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+              </Avatar>
+            </div>
+            <span className="font-medium truncate min-w-0 pointer-events-none max-w-[150px]" title={user.name}>
+              {user.name}
+            </span>
           </div>
         )
       },
@@ -105,49 +117,62 @@ export function createInternalUsersColumns({
     {
       accessorKey: "email",
       id: "email",
+      enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
-      cell: ({ row }) => <span className="text-sm" onClick={(e) => e.stopPropagation()}>{row.original.email}</span>,
+      cell: ({ row }) => (
+        <span className="text-sm truncate block max-w-[200px]" onClick={(e) => e.stopPropagation()} title={row.original.email}>
+          {row.original.email}
+        </span>
+      ),
+      size: 220,
     },
     {
       accessorKey: "role",
       id: "role",
+      enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
       cell: ({ row }) => {
         const role = row.original.role
+        const roleLabel = role.charAt(0).toUpperCase() + role.slice(1)
         return (
-          <Badge variant={getRoleBadgeVariant(role)} onClick={(e) => e.stopPropagation()}>
-            {role.charAt(0).toUpperCase() + role.slice(1)}
+          <Badge variant={getRoleBadgeVariant(role)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={roleLabel}>
+            {roleLabel}
           </Badge>
         )
       },
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
       },
+      size: 120,
     },
     {
       accessorKey: "status",
       id: "status",
+      enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => {
         const status = row.original.status
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
         return (
-          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={statusLabel}>
+            {statusLabel}
           </Badge>
         )
       },
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
       },
+      size: 110,
     },
     {
       accessorKey: "updatedAt",
       id: "updatedAt",
+      enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Last Updated" />,
       cell: ({ row }) => {
         const date = row.original.updatedAt
         return (
-          <span className="text-sm text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
             {date.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -163,32 +188,65 @@ export function createInternalUsersColumns({
         const user = row.original
 
         return (
-          <div onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onViewDetails(user)}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Actions</p>
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" side="left" className="w-48">
+                <DropdownMenuItem onClick={() => onViewDetails(user)} className="cursor-pointer">
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(user)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {(canEdit || onSendEmail || onManagePermissions) && <DropdownMenuSeparator />}
+                {onSendEmail && (
+                  <DropdownMenuItem onClick={() => onSendEmail(user)} className="cursor-pointer">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Send Email
+                  </DropdownMenuItem>
+                )}
                 {onManagePermissions && (
-                  <DropdownMenuItem onClick={() => onManagePermissions(user)}>
+                  <DropdownMenuItem onClick={() => onManagePermissions(user)} className="cursor-pointer">
                     <UserCog className="h-4 w-4 mr-2" />
                     Manage Permissions
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                {(onSendEmail || onManagePermissions || canSuspend || canActivate) && <DropdownMenuSeparator />}
+                {user.status === "active" && canSuspend && onSuspend ? (
+                  <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Suspend
+                  </DropdownMenuItem>
+                ) : (
+                  canActivate && onActivate && (
+                    <DropdownMenuItem onClick={() => onActivate(user)} className="cursor-pointer">
+                      <Check className="h-4 w-4 mr-2" />
+                      Activate
+                    </DropdownMenuItem>
+                  )
+                )}
+                {canDelete && <DropdownMenuSeparator />}
+                {canDelete && (
+                  <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive cursor-pointer">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

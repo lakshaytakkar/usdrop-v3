@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
 import { MoreVertical, Eye, Edit, Trash2, Lock, Check, ArrowUp, Clock, AlertCircle, Mail, MessageCircle, Coins } from "lucide-react"
 import { ExternalUser } from "@/types/admin/users"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { getAvatarUrl } from "@/lib/utils/avatar"
 
 interface CreateExternalUsersColumnsProps {
   onViewDetails: (user: ExternalUser) => void
@@ -26,6 +28,11 @@ interface CreateExternalUsersColumnsProps {
   onSendWhatsApp?: (user: ExternalUser) => void
   onManageCredits?: (user: ExternalUser) => void
   onNameClick?: (user: ExternalUser) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canSuspend?: boolean
+  canActivate?: boolean
+  canUpsell?: boolean
 }
 
 export function createExternalUsersColumns({
@@ -39,6 +46,11 @@ export function createExternalUsersColumns({
   onSendWhatsApp,
   onManageCredits,
   onNameClick,
+  canEdit = true,
+  canDelete = true,
+  canSuspend = true,
+  canActivate = true,
+  canUpsell = true,
 }: CreateExternalUsersColumnsProps): ColumnDef<ExternalUser>[] {
   const getPlanBadgeVariant = (plan: string) => {
     switch (plan) {
@@ -112,11 +124,11 @@ export function createExternalUsersColumns({
           >
             <div className="shrink-0 pointer-events-none">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={`https://avatar.iran.liara.run/public?name=${encodeURIComponent(user.name)}`} />
+                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
               </Avatar>
             </div>
-            <span className="font-medium truncate min-w-0 pointer-events-none max-w-[150px]">
+            <span className="font-medium truncate min-w-0 pointer-events-none max-w-[150px]" title={user.name}>
               {user.name}
             </span>
           </div>
@@ -133,6 +145,7 @@ export function createExternalUsersColumns({
           {row.original.email}
         </span>
       ),
+      size: 220,
     },
     {
       accessorKey: "plan",
@@ -141,10 +154,11 @@ export function createExternalUsersColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Plan" />,
       cell: ({ row }) => {
         const user = row.original
+        const planLabel = user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
         return (
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Badge variant={getPlanBadgeVariant(user.plan)}>
-              {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
+            <Badge variant={getPlanBadgeVariant(user.plan)} className="whitespace-nowrap" title={planLabel}>
+              {planLabel}
             </Badge>
             {user.isTrial && user.trialEndsAt && <Clock className="h-4 w-4 text-amber-600" />}
           </div>
@@ -153,6 +167,7 @@ export function createExternalUsersColumns({
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
       },
+      size: 120,
     },
     {
       accessorKey: "trialStatus",
@@ -199,15 +214,17 @@ export function createExternalUsersColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => {
         const status = row.original.status
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
         return (
-          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={statusLabel}>
+            {statusLabel}
           </Badge>
         )
       },
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
       },
+      size: 110,
     },
     {
       accessorKey: "subscriptionDate",
@@ -267,67 +284,78 @@ export function createExternalUsersColumns({
         const user = row.original
 
         return (
-          <div className="w-10" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewDetails(user)}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Actions</p>
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="end" side="left" className="w-48">
+              <DropdownMenuItem onClick={() => onViewDetails(user)} className="cursor-pointer">
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(user)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {canEdit && (
+                <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+              )}
+              {(canEdit || onSendEmail || (onSendWhatsApp && user.phoneNumber)) && <DropdownMenuSeparator />}
               {onSendEmail && (
-                <DropdownMenuItem onClick={() => onSendEmail(user)}>
+                <DropdownMenuItem onClick={() => onSendEmail(user)} className="cursor-pointer">
                   <Mail className="h-4 w-4 mr-2" />
                   Send Email
                 </DropdownMenuItem>
               )}
               {onSendWhatsApp && user.phoneNumber && (
-                <DropdownMenuItem onClick={() => onSendWhatsApp(user)}>
+                <DropdownMenuItem onClick={() => onSendWhatsApp(user)} className="cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Send WhatsApp
                 </DropdownMenuItem>
               )}
-              {(onSendEmail || (onSendWhatsApp && user.phoneNumber)) && <DropdownMenuSeparator />}
+              {(onSendEmail || (onSendWhatsApp && user.phoneNumber) || onManageCredits || onUpsell) && <DropdownMenuSeparator />}
               {onManageCredits && (
-                <DropdownMenuItem onClick={() => onManageCredits(user)}>
+                <DropdownMenuItem onClick={() => onManageCredits(user)} className="cursor-pointer">
                   <Coins className="h-4 w-4 mr-2" />
                   Manage Credits
                 </DropdownMenuItem>
               )}
-              {onUpsell && (
-                <DropdownMenuItem onClick={() => onUpsell(user)}>
+              {canUpsell && onUpsell && (
+                <DropdownMenuItem onClick={() => onUpsell(user)} className="cursor-pointer">
                   <ArrowUp className="h-4 w-4 mr-2" />
                   Upsell
                 </DropdownMenuItem>
               )}
-              {(onManageCredits || onUpsell) && <DropdownMenuSeparator />}
-              {user.status === "active" && onSuspend ? (
-                <DropdownMenuItem onClick={() => onSuspend(user)}>
+              {(onManageCredits || (canUpsell && onUpsell) || canSuspend || canActivate) && <DropdownMenuSeparator />}
+              {user.status === "active" && canSuspend && onSuspend ? (
+                <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer">
                   <Lock className="h-4 w-4 mr-2" />
                   Suspend
                 </DropdownMenuItem>
               ) : (
-                onActivate && (
-                  <DropdownMenuItem onClick={() => onActivate(user)}>
+                canActivate && onActivate && (
+                  <DropdownMenuItem onClick={() => onActivate(user)} className="cursor-pointer">
                     <Check className="h-4 w-4 mr-2" />
                     Activate
                   </DropdownMenuItem>
                 )
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
+              {canDelete && <DropdownMenuSeparator />}
+              {canDelete && (
+                <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive cursor-pointer">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
           </div>

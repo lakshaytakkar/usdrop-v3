@@ -3,6 +3,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
+import { Toaster } from "@/components/ui/toast"
 
 export default function AdminLayout({
   children,
@@ -18,8 +19,10 @@ export default function AdminLayout({
           {children}
         </div>
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
   )
 }
+
 
 

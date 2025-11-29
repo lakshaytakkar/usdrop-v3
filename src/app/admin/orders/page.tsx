@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { ColumnDef, SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -25,24 +26,51 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { ShoppingCart, MoreVertical, Eye, ArrowLeft, DollarSign, AlertCircle, TrendingUp, Plus } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { ShoppingCart, MoreVertical, Eye, ArrowLeft, DollarSign, AlertCircle, TrendingUp, Plus, UserPlus, Check, X, Search, Lock, Copy, Mail, User, CreditCard, Download, RefreshCw, FileText, Calendar } from "lucide-react"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { LargeModal } from "@/components/ui/large-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { CreateOrderForm } from "./components/create-order-form"
+import { createOrdersColumns } from "./components/orders-columns"
 import { Order, OrderStatus, OrderFilters } from "@/types/admin/orders"
 import { sampleOrders } from "./data/orders"
 import { format } from "date-fns"
+import { getAvatarUrl } from "@/lib/utils/avatar"
+import { Label } from "@/components/ui/label"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
+import { Loader } from "@/components/ui/loader"
+import { useToast } from "@/hooks/use-toast"
+import { useHasPermission } from "@/hooks/use-has-permission"
 
 export default function AdminOrdersPage() {
+  const router = useRouter()
+  const { showSuccess, showError, showInfo } = useToast()
+  
+  // Permission checks
+  const { hasPermission: canView } = useHasPermission("orders.view")
+  const { hasPermission: canEdit } = useHasPermission("orders.edit")
+  const { hasPermission: canDelete } = useHasPermission("orders.delete")
+  const { hasPermission: canRefund } = useHasPermission("orders.refund")
+  
   const [orders, setOrders] = useState<Order[]>(sampleOrders)
   const [selectedOrders, setSelectedOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [statusTab, setStatusTab] = useState<"all" | OrderStatus>("all")
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined })
+  const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [quickViewOpen, setQuickViewOpen] = useState(false)
@@ -52,6 +80,62 @@ export default function AdminOrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [refundConfirmOpen, setRefundConfirmOpen] = useState(false)
   const [orderToRefund, setOrderToRefund] = useState<Order | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [formLoading, setFormLoading] = useState(false)
+  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
+  const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
+  const [assignedMembers, setAssignedMembers] = useState<string[]>([])
+  const [memberSearch, setMemberSearch] = useState("")
+  const [tempOwner, setTempOwner] = useState<string | null>(null)
+  const [tempMembers, setTempMembers] = useState<string[]>([])
+
+  const internalUsers = sampleInternalUsers
+
+  // Filter members based on search
+  const filteredMembers = useMemo(() => {
+    if (!memberSearch) return internalUsers
+    const searchLower = memberSearch.toLowerCase()
+    return internalUsers.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower)
+    )
+  }, [memberSearch, internalUsers])
+
+  // Available members (excluding owner and already selected members)
+  const availableMembers = useMemo(() => {
+    return filteredMembers.filter(
+      (user) => user.id !== tempOwner && !tempMembers.includes(user.id)
+    )
+  }, [filteredMembers, tempOwner, tempMembers])
+
+  const handleOpenAssigneeModal = () => {
+    setTempOwner(assignedOwner)
+    setTempMembers([...assignedMembers])
+    setMemberSearch("")
+    setAssigneeModalOpen(true)
+  }
+
+  const handleSaveAssignees = () => {
+    setAssignedOwner(tempOwner)
+    setAssignedMembers(tempMembers)
+    setAssigneeModalOpen(false)
+  }
+
+  const handleAddMember = (memberId: string) => {
+    if (!tempMembers.includes(memberId)) {
+      setTempMembers([...tempMembers, memberId])
+    }
+    setMemberSearch("")
+  }
+
+  const handleRemoveMember = (memberId: string) => {
+    setTempMembers(tempMembers.filter(id => id !== memberId))
+  }
 
   const plans = useMemo(() => {
     const planSet = new Set(orders.map((o) => o.plan?.name).filter(Boolean))
@@ -79,6 +163,77 @@ export default function AdminOrdersPage() {
     let filtered = orders.filter((order) => {
       // Status tab filter
       if (statusTab !== "all" && order.status !== statusTab) return false
+
+      // Date range filter
+      if (dateRange.from || dateRange.to) {
+        const orderDate = new Date(order.created_at)
+        if (dateRange.from && orderDate < dateRange.from) return false
+        if (dateRange.to) {
+          const toDate = new Date(dateRange.to)
+          toDate.setHours(23, 59, 59, 999)
+          if (orderDate > toDate) return false
+        }
+      }
+
+      // Quick filter - support overlapping filters
+      if (quickFilter) {
+        const now = new Date()
+        const orderDate = new Date(order.created_at)
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const weekStart = new Date(today.getTime() - (today.getDay() * 24 * 60 * 60 * 1000))
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+        
+        switch (quickFilter) {
+          case "paid":
+            if (order.status !== "paid") return false
+            break
+          case "created":
+            if (order.status !== "created") return false
+            break
+          case "failed":
+            if (order.status !== "failed") return false
+            break
+          case "refunded":
+            if (order.status !== "refunded") return false
+            break
+          case "high_value":
+            if (order.amount_inr < 1000000) return false // ₹10,000
+            break
+          case "recent":
+            if (orderDate < weekAgo) return false
+            break
+          case "needs_attention":
+            // Pending orders >24 hours OR failed orders
+            if (order.status === "created" && orderDate > dayAgo) return false
+            if (order.status === "failed") return true
+            if (order.status === "created" && orderDate <= dayAgo) return true
+            return false
+          case "refundable":
+            // Paid orders that can be refunded
+            if (order.status !== "paid") return false
+            break
+          case "annual":
+            if (order.billing_period !== "annual") return false
+            break
+          case "large_orders":
+            // Top 10% by amount
+            const amounts = orders.map(o => o.amount_inr).sort((a, b) => b - a)
+            const top10PercentThreshold = amounts[Math.floor(amounts.length * 0.1)] || 0
+            if (order.amount_inr < top10PercentThreshold) return false
+            break
+          case "today":
+            if (orderDate < today) return false
+            break
+          case "this_week":
+            if (orderDate < weekStart) return false
+            break
+          case "this_month":
+            if (orderDate < monthStart) return false
+            break
+        }
+      }
 
       // Search filter
       if (searchQuery) {
@@ -148,7 +303,7 @@ export default function AdminOrdersPage() {
     }
 
     return filtered
-  }, [orders, searchQuery, columnFilters, sorting, statusTab])
+  }, [orders, searchQuery, columnFilters, sorting, statusTab, quickFilter, dateRange])
 
   const paginatedOrders = useMemo(() => {
     const start = (page - 1) * pageSize
@@ -162,9 +317,19 @@ export default function AdminOrdersPage() {
     const totalRevenue = filteredOrders
       .filter((o) => o.status === "paid")
       .reduce((sum, o) => sum + o.amount_inr, 0)
-    const pendingCount = filteredOrders.filter((o) => o.status === "created").length
-    const failedCount = filteredOrders.filter((o) => o.status === "failed").length
-    return { totalRevenue, pendingCount, failedCount }
+    const pendingRevenue = filteredOrders
+      .filter((o) => o.status === "created")
+      .reduce((sum, o) => sum + o.amount_inr, 0)
+    const failedRevenue = filteredOrders
+      .filter((o) => o.status === "failed")
+      .reduce((sum, o) => sum + o.amount_inr, 0)
+    const refundedRevenue = filteredOrders
+      .filter((o) => o.status === "refunded")
+      .reduce((sum, o) => sum + o.amount_inr, 0)
+    const averageOrderValue = filteredOrders.length > 0 
+      ? filteredOrders.reduce((sum, o) => sum + o.amount_inr, 0) / filteredOrders.length 
+      : 0
+    return { totalRevenue, pendingRevenue, failedRevenue, refundedRevenue, averageOrderValue }
   }, [filteredOrders])
 
   const getStatusCount = (status: "all" | OrderStatus) => {
@@ -187,33 +352,140 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const handleViewDetails = (order: Order) => {
-    setSelectedOrder(order)
-    setDetailDrawerOpen(true)
-  }
+  const handleViewDetails = useCallback((order: Order) => {
+    router.push(`/admin/orders/${order.id}`)
+  }, [router])
 
-  const handleQuickView = (order: Order) => {
+  const handleQuickView = useCallback((order: Order) => {
     setSelectedOrder(order)
     setQuickViewOpen(true)
-  }
+  }, [])
 
-  const handleRowClick = (order: Order) => {
-    setSelectedOrder(order)
-    setQuickViewOpen(true)
-  }
+  const handleCopyOrderId = useCallback(async (order: Order) => {
+    try {
+      await navigator.clipboard.writeText(order.id)
+      showSuccess("Order ID copied to clipboard")
+    } catch (err) {
+      showError("Failed to copy Order ID")
+    }
+  }, [showSuccess, showError])
+
+  const handleCopyPaymentId = useCallback(async (order: Order) => {
+    if (!order.razorpay_payment_id) {
+      showError("No payment ID available")
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(order.razorpay_payment_id)
+      showSuccess("Payment ID copied to clipboard")
+    } catch (err) {
+      showError("Failed to copy Payment ID")
+    }
+  }, [showSuccess, showError])
+
+  const handleSendEmail = useCallback((order: Order) => {
+    if (!order.user?.email) {
+      showError("User email not available")
+      return
+    }
+    // TODO: Implement send email
+    showInfo(`Email functionality will be implemented. User: ${order.user.email}`)
+  }, [showInfo, showError])
+
+  const handleViewUser = useCallback((order: Order) => {
+    if (order.user_id) {
+      router.push(`/admin/external-users/${order.user_id}`)
+    }
+  }, [router])
+
+  const handleViewPlan = useCallback((order: Order) => {
+    if (order.plan_id) {
+      router.push(`/admin/plans`)
+      // TODO: Navigate to specific plan if plan detail page exists
+      showInfo(`Plan details functionality will be implemented. Plan: ${order.plan?.name}`)
+    }
+  }, [router, showInfo])
+
+  const handleDownloadReceipt = useCallback((order: Order) => {
+    // TODO: Implement download receipt
+    showInfo(`Receipt download functionality will be implemented. Order: ${order.id}`)
+  }, [showInfo])
+
+  const handleResendPaymentLink = useCallback(async (order: Order) => {
+    if (order.status !== "created") {
+      showError("Can only resend payment link for pending orders")
+      return
+    }
+    setActionLoading(`resend-${order.id}`)
+    try {
+      // TODO: Implement resend payment link
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      showSuccess(`Payment link resent to ${order.user?.email || "user"}`)
+    } catch (err) {
+      showError("Failed to resend payment link")
+    } finally {
+      setActionLoading(null)
+    }
+  }, [showSuccess, showError])
+
+  const handleMarkAsPaid = useCallback(async (order: Order) => {
+    if (order.status !== "created") {
+      showError("Can only mark pending orders as paid")
+      return
+    }
+    if (!canEdit) {
+      showError("You don't have permission to edit orders")
+      return
+    }
+    setActionLoading(`mark-paid-${order.id}`)
+    try {
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id
+            ? { ...o, status: "paid" as OrderStatus, razorpay_payment_id: `pay_rzp_${Date.now()}`, updated_at: new Date().toISOString() }
+            : o
+        )
+      )
+      showSuccess(`Order "${order.id.substring(0, 8)}" marked as paid`)
+    } catch (err) {
+      showError("Failed to mark order as paid")
+    } finally {
+      setActionLoading(null)
+    }
+  }, [canEdit, showSuccess, showError])
+
+  const handleDelete = useCallback((order: Order) => {
+    if (!canDelete) {
+      showError("You don't have permission to delete orders")
+      return
+    }
+    // TODO: Implement delete confirmation
+    showInfo(`Delete functionality will be implemented. Order: ${order.id}`)
+  }, [canDelete, showError, showInfo])
+
+  const handleRowClick = useCallback((order: Order) => {
+    router.push(`/admin/orders/${order.id}`)
+  }, [router])
 
   const handleLargeModal = (order: Order) => {
     setSelectedOrder(order)
     setLargeModalOpen(true)
   }
 
-  const handleRefund = async (order: Order) => {
+  const handleRefund = useCallback(async (order: Order) => {
+    if (!canRefund) {
+      showError("You don't have permission to refund orders")
+      return
+    }
     setOrderToRefund(order)
     setRefundConfirmOpen(true)
-  }
+  }, [canRefund, showError])
 
   const confirmRefund = async () => {
     if (!orderToRefund) return
+    setActionLoading("refund")
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -224,28 +496,164 @@ export default function AdminOrdersPage() {
         )
       )
       setRefundConfirmOpen(false)
+      const refundedOrderId = orderToRefund.id
       setOrderToRefund(null)
+      showSuccess(`Order "${refundedOrderId.substring(0, 8)}" has been refunded successfully`)
     } catch (error) {
       console.error("Error refunding order:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to refund order. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
     }
   }
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      // TODO: Replace with real API call
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setOrders(sampleOrders)
+    } catch (err) {
+      console.error("Error fetching orders:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to load orders. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+      setInitialLoading(false)
+    }
+  }, [showError])
+
+  useEffect(() => {
+    fetchOrders()
+  }, [fetchOrders])
+
   const handleBulkRefund = async () => {
     if (selectedOrders.length === 0) return
+    if (!canRefund) {
+      showError("You don't have permission to refund orders")
+      return
+    }
+    setBulkActionLoading("bulk-refund")
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000))
+      const refundedCount = selectedOrders.length
       setOrders((prev) =>
         prev.map((o) =>
           selectedOrders.some((so) => so.id === o.id)
-            ? { ...o, status: "refunded" as OrderStatus }
+            ? { ...o, status: "refunded" as OrderStatus, updated_at: new Date().toISOString() }
             : o
         )
       )
       setSelectedOrders([])
+      showSuccess(`${refundedCount} order(s) refunded successfully`)
+      await fetchOrders()
     } catch (error) {
       console.error("Error refunding orders:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to refund orders. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setBulkActionLoading(null)
     }
   }
+
+  const handleBulkMarkAsPaid = async () => {
+    if (selectedOrders.length === 0) return
+    if (!canEdit) {
+      showError("You don't have permission to edit orders")
+      return
+    }
+    setBulkActionLoading("bulk-mark-paid")
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const markedCount = selectedOrders.length
+      setOrders((prev) =>
+        prev.map((o) =>
+          selectedOrders.some((so) => so.id === o.id && o.status === "created")
+            ? { ...o, status: "paid" as OrderStatus, razorpay_payment_id: `pay_rzp_${Date.now()}`, updated_at: new Date().toISOString() }
+            : o
+        )
+      )
+      setSelectedOrders([])
+      showSuccess(`${markedCount} order(s) marked as paid successfully`)
+      await fetchOrders()
+    } catch (error) {
+      console.error("Error marking orders as paid:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to mark orders as paid. Please try again."
+      setError(errorMessage)
+      showError(errorMessage)
+    } finally {
+      setBulkActionLoading(null)
+    }
+  }
+
+  const handleBulkExport = useCallback(() => {
+    if (selectedOrders.length === 0) {
+      showError("No orders selected for export")
+      return
+    }
+    try {
+      const csv = [
+        ["Order ID", "User", "Plan", "Amount (INR)", "Status", "Payment ID", "Created At"],
+        ...selectedOrders.map((order) => [
+          order.id,
+          order.user?.email || "",
+          order.plan?.name || "",
+          (order.amount_inr / 100).toFixed(2),
+          order.status,
+          order.razorpay_payment_id || "",
+          new Date(order.created_at).toLocaleString(),
+        ]),
+      ]
+        .map((row) => row.map((cell) => `"${cell}"`).join(","))
+        .join("\n")
+
+      const blob = new Blob([csv], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `selected-orders-${new Date().toISOString().split("T")[0]}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      showSuccess(`Exported ${selectedOrders.length} order(s) to CSV`)
+    } catch (err) {
+      showError("Failed to export orders")
+    }
+  }, [selectedOrders, showSuccess, showError])
+
+  const handleBulkSendEmail = useCallback(async () => {
+    if (selectedOrders.length === 0) {
+      showError("No orders selected")
+      return
+    }
+    const emails = selectedOrders.map(o => o.user?.email).filter(Boolean)
+    if (emails.length === 0) {
+      showError("No valid email addresses found")
+      return
+    }
+    // TODO: Implement bulk send email
+    showInfo(`Bulk email functionality will be implemented. ${emails.length} user(s) selected.`)
+  }, [selectedOrders, showError, showInfo])
+
+  // Only 3-5 most important quick filters
+  const quickFilters = [
+    { id: "paid", label: "Paid", icon: Check },
+    { id: "created", label: "Pending", icon: AlertCircle, isWarning: true },
+    { id: "failed", label: "Failed", icon: X },
+    { id: "needs_attention", label: "Needs Attention", icon: AlertCircle, isWarning: true },
+    { id: "high_value", label: "High Value", icon: DollarSign },
+  ]
+
+  const handlePaginationChange = useCallback((p: number, s: number) => {
+    if (p !== page) setPage(p)
+    if (s !== pageSize) {
+      setPageSize(s)
+      setPage(1)
+    }
+  }, [page, pageSize])
 
   const handleExport = () => {
     const csv = [
@@ -313,175 +721,45 @@ export default function AdminOrdersPage() {
     return tags
   }
 
-  const columns: ColumnDef<Order>[] = [
-    {
-      id: "id",
-      accessorKey: "id",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Order ID" />,
-      cell: ({ row }) => (
-        <Button
-          variant="link"
-          className="h-auto p-0 font-mono text-xs text-left justify-start hover:underline"
-          onClick={(e) => {
-            e.stopPropagation()
-            handleQuickView(row.original)
-          }}
-        >
-          {row.original.id.substring(0, 8)}...
-        </Button>
-      ),
-    },
-    {
-      id: "user",
-      accessorFn: (row) => row.user?.email || "",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="User" />,
-      cell: ({ row }) => {
-        const order = row.original
-        return (
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={order.user?.avatar_url || undefined} />
-              <AvatarFallback>
-                {order.user?.full_name?.charAt(0) || order.user?.email?.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">{order.user?.full_name || "Unknown"}</span>
-              <span className="text-xs text-muted-foreground">{order.user?.email}</span>
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      id: "planId",
-      accessorKey: "plan_id",
-      header: () => null,
-      cell: () => null,
-      enableHiding: true,
-      meta: {
-        hidden: true,
-      },
-      filterFn: (row, id, value) => {
-        if (!value || !Array.isArray(value) || value.length === 0) return true
-        return value.includes(row.original.plan_id)
-      },
-    },
-    {
-      id: "plan",
-      accessorFn: (row) => row.plan?.name || "",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Plan" />,
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.plan?.name || "Unknown"}</Badge>
-      ),
-    },
-    {
-      id: "amount_inr",
-      accessorKey: "amount_inr",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Amount" />,
-      cell: ({ row }) => {
-        const order = row.original
-        return (
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">₹{(order.amount_inr / 100).toFixed(2)}</span>
-            {order.amount_usd && (
-              <span className="text-xs text-muted-foreground">${order.amount_usd.toFixed(2)}</span>
-            )}
-          </div>
-        )
-      },
-    },
-    {
-      id: "status",
-      accessorKey: "status",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
-      cell: ({ row }) => (
-        <Badge variant={getStatusVariant(row.original.status) as any}>
-          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
-        </Badge>
-      ),
-      filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
-      },
-    },
-    {
-      id: "tags",
-      accessorFn: (row) => getOrderTags(row),
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Tags" />,
-      cell: ({ row }) => {
-        const tags = getOrderTags(row.original)
-        if (tags.length === 0) return <span className="text-muted-foreground text-xs">—</span>
-        return (
-          <div className="flex flex-wrap gap-1">
-            {tags.map((tag, idx) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )
-      },
-    },
-    {
-      id: "razorpay_payment_id",
-      accessorKey: "razorpay_payment_id",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Payment ID" />,
-      cell: ({ row }) => (
-        <div className="font-mono text-xs">
-          {row.original.razorpay_payment_id ? (
-            <span>{row.original.razorpay_payment_id.substring(0, 12)}...</span>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: "created_at",
-      accessorKey: "created_at",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
-      cell: ({ row }) => (
-        <div className="text-sm">
-          {format(new Date(row.original.created_at), "MMM dd, yyyy HH:mm")}
-        </div>
-      ),
-    },
-    {
-      id: "actions",
-      cell: ({ row }) => {
-        const order = row.original
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleQuickView(order)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Quick View
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLargeModal(order)}>
-                <Eye className="h-4 w-4 mr-2" />
-                View Full Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleViewDetails(order)}>
-                <Eye className="h-4 w-4 mr-2" />
-                View in Drawer
-              </DropdownMenuItem>
-              {order.status !== "refunded" && order.status !== "failed" && (
-                <DropdownMenuItem onClick={() => handleRefund(order)} className="text-destructive">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Refund
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
-      },
-    },
-  ]
+  const columns = useMemo(
+    () =>
+      createOrdersColumns({
+        onViewDetails: handleViewDetails,
+        onQuickView: handleQuickView,
+        onRefund: handleRefund,
+        onEdit: canEdit ? handleViewDetails : undefined, // TODO: Implement edit
+        onDelete: handleDelete,
+        onCopyOrderId: handleCopyOrderId,
+        onCopyPaymentId: handleCopyPaymentId,
+        onSendEmail: handleSendEmail,
+        onViewUser: handleViewUser,
+        onViewPlan: handleViewPlan,
+        onDownloadReceipt: handleDownloadReceipt,
+        onResendPaymentLink: handleResendPaymentLink,
+        onMarkAsPaid: handleMarkAsPaid,
+        onOrderIdClick: handleQuickView,
+        canEdit,
+        canDelete,
+        canRefund,
+      }),
+    [
+      handleViewDetails,
+      handleQuickView,
+      handleRefund,
+      handleDelete,
+      handleCopyOrderId,
+      handleCopyPaymentId,
+      handleSendEmail,
+      handleViewUser,
+      handleViewPlan,
+      handleDownloadReceipt,
+      handleResendPaymentLink,
+      handleMarkAsPaid,
+      canEdit,
+      canDelete,
+      canRefund,
+    ]
+  )
 
   const statusOptions = [
     { label: "Created", value: "created" },
@@ -503,81 +781,147 @@ export default function AdminOrdersPage() {
             <h1 className="text-lg font-semibold tracking-tight">Orders</h1>
             <p className="text-xs text-muted-foreground mt-0.5">Manage payment orders and transactions</p>
           </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {assignedOwner || assignedMembers.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center -space-x-2">
+                  {assignedOwner && (() => {
+                    const owner = internalUsers.find(u => u.id === assignedOwner)
+                    return (
+                      <Avatar className="h-8 w-8 border-2 border-background">
+                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                        <AvatarFallback className="text-xs">
+                          {owner?.name.charAt(0) || "O"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })()}
+                  {assignedMembers.slice(0, 3).map((memberId) => {
+                    const member = internalUsers.find(u => u.id === memberId)
+                    return (
+                      <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
+                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                        <AvatarFallback className="text-xs">
+                          {member?.name.charAt(0) || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })}
+                  {assignedMembers.length > 3 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
+                      <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleOpenAssigneeModal}
+                  className="whitespace-nowrap cursor-pointer"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Assignee
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleOpenAssigneeModal}
+                className="whitespace-nowrap cursor-pointer"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Assignee
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <Card className="border-l-4 border-l-primary">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
-                  <p className="text-xl font-bold">₹{(stats.totalRevenue / 100).toFixed(2)}</p>
-                </div>
-                <DollarSign className="h-6 w-6 text-primary/20" />
+        {selectedOrders.length > 0 && (
+          <div className="mb-2">
+            <span className="text-sm font-medium">
+              {selectedOrders.length} order{selectedOrders.length !== 1 ? "s" : ""} selected
+            </span>
+          </div>
+        )}
+
+        {/* Metrics Cards - Clickable to apply quick filters */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setQuickFilter(quickFilter === "paid" ? null : "paid")}
+          >
+            <CardContent className="p-2.5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Total Revenue</p>
+                <p className="text-base font-semibold">₹{(stats.totalRevenue / 100).toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-amber-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Pending Orders</p>
-                  <p className="text-xl font-bold text-amber-600">{stats.pendingCount}</p>
-                </div>
-                <AlertCircle className="h-6 w-6 text-amber-500/20" />
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setQuickFilter(quickFilter === "created" ? null : "created")}
+          >
+            <CardContent className="p-2.5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Pending Amount</p>
+                <p className="text-base font-semibold">₹{(stats.pendingRevenue / 100).toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-l-4 border-l-destructive">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Failed Orders</p>
-                  <p className="text-xl font-bold text-destructive">{stats.failedCount}</p>
-                </div>
-                <TrendingUp className="h-6 w-6 text-destructive/20" />
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setQuickFilter(quickFilter === "failed" ? null : "failed")}
+          >
+            <CardContent className="p-2.5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Failed Amount</p>
+                <p className="text-base font-semibold">₹{(stats.failedRevenue / 100).toFixed(2)}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card 
+            className="cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => setQuickFilter(quickFilter === "high_value" ? null : "high_value")}
+          >
+            <CardContent className="p-2.5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Avg Order Value</p>
+                <p className="text-base font-semibold">₹{(stats.averageOrderValue / 100).toFixed(2)}</p>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
-        <Tabs value={statusTab} onValueChange={(v) => setStatusTab(v as typeof statusTab)} className="w-full mb-4 flex-shrink-0">
-          <TabsList>
-            <TabsTrigger value="all" className="gap-1.5">
-              All
-              <Badge
-                variant="secondary"
-                className="h-5 min-w-5 rounded-full px-1.5 flex items-center justify-center text-[10px] font-medium leading-none"
-              >
-                {getStatusCount("all")}
-              </Badge>
-            </TabsTrigger>
-            {statusOptions.map((option) => (
-              <TabsTrigger key={option.value} value={option.value} className="gap-1.5">
-                {option.label}
-                <Badge
-                  variant="secondary"
-                  className="h-5 min-w-5 rounded-full px-1.5 flex items-center justify-center text-[10px] font-medium leading-none"
-                >
-                  {getStatusCount(option.value as OrderStatus)}
+        <div className="mb-3">
+          <Tabs value={statusTab} onValueChange={(v) => setStatusTab(v as typeof statusTab)}>
+            <TabsList className="h-9">
+              <TabsTrigger value="all" className="cursor-pointer">
+                All
+                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
+                  {getStatusCount("all")}
                 </Badge>
               </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+              {statusOptions.map((option) => (
+                <TabsTrigger key={option.value} value={option.value} className="cursor-pointer">
+                  {option.label}
+                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
+                    {getStatusCount(option.value as OrderStatus)}
+                  </Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
-        {/* DataTable - No Card wrapper */}
+        {/* DataTable */}
         <div className="flex-1 overflow-hidden min-h-0">
           <DataTable
             columns={columns}
             data={paginatedOrders}
             pageCount={pageCount}
-            onPaginationChange={(newPage, newPageSize) => {
-              setPage(newPage)
-              setPageSize(newPageSize)
-            }}
+            onPaginationChange={handlePaginationChange}
             onSortingChange={setSorting}
             onFilterChange={setColumnFilters}
             onSearchChange={setSearchQuery}
@@ -589,9 +933,6 @@ export default function AdminOrdersPage() {
             enableRowSelection={true}
             onRowSelectionChange={setSelectedOrders}
             onRowClick={handleRowClick}
-            onAdd={() => setCreateOrderOpen(true)}
-            addButtonText="Create Order"
-            addButtonIcon={<Plus className="mr-2 h-4 w-4" />}
             filterConfig={[
               {
                 columnId: "status",
@@ -604,18 +945,69 @@ export default function AdminOrdersPage() {
                 options: planOptions,
               },
             ]}
-            secondaryButtons={[
-              ...(selectedOrders.length > 0
-                ? [
-                    {
-                      label: "Refund Selected",
-                      icon: <ArrowLeft className="h-4 w-4" />,
-                      onClick: handleBulkRefund,
-                      variant: "destructive" as const,
+            quickFilters={quickFilters}
+            onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
+            selectedQuickFilter={quickFilter}
+            secondaryButtons={useMemo(() => {
+              if (selectedOrders.length > 0) {
+                return [
+                  {
+                    label: bulkActionLoading === "bulk-refund" ? "Refunding..." : "Refund Selected",
+                    icon: bulkActionLoading === "bulk-refund" ? <Loader size="sm" className="mr-2" /> : <ArrowLeft className="h-4 w-4" />,
+                    onClick: handleBulkRefund,
+                    variant: "destructive" as const,
+                    disabled: !canRefund || bulkActionLoading !== null,
+                    tooltip: !canRefund ? "You don't have permission to refund orders" : undefined,
+                  },
+                  {
+                    label: bulkActionLoading === "bulk-mark-paid" ? "Marking..." : "Mark as Paid",
+                    icon: bulkActionLoading === "bulk-mark-paid" ? <Loader size="sm" className="mr-2" /> : <Check className="h-4 w-4" />,
+                    onClick: handleBulkMarkAsPaid,
+                    variant: "outline" as const,
+                    disabled: !canEdit || bulkActionLoading !== null,
+                    tooltip: !canEdit ? "You don't have permission to edit orders" : undefined,
+                  },
+                  {
+                    label: "Export Selected",
+                    icon: <Download className="h-4 w-4" />,
+                    onClick: handleBulkExport,
+                    variant: "outline" as const,
+                  },
+                  {
+                    label: "Send Email",
+                    icon: <Mail className="h-4 w-4" />,
+                    onClick: handleBulkSendEmail,
+                    variant: "outline" as const,
+                  },
+                  {
+                    label: "Clear Selection",
+                    onClick: () => setSelectedOrders([]),
+                    variant: "ghost" as const,
+                  },
+                ]
+              } else {
+                return [
+                  {
+                    label: "Create Order",
+                    icon: <Plus className="h-4 w-4" />,
+                    onClick: () => {
+                      if (!canEdit) {
+                        showError("You don't have permission to create orders")
+                        return
+                      }
+                      setCreateOrderOpen(true)
                     },
-                  ]
-                : []),
-            ]}
+                    variant: "default" as const,
+                    disabled: !canEdit,
+                    tooltip: !canEdit ? "You don't have permission to create orders" : undefined,
+                  },
+                ]
+              }
+            }, [selectedOrders, bulkActionLoading, canRefund, canEdit, handleBulkRefund, handleBulkMarkAsPaid, handleBulkExport, handleBulkSendEmail, showError])}
+            onDateRangeChange={setDateRange}
+            quickFilters={quickFilters}
+            selectedQuickFilter={quickFilter}
+            onQuickFilterChange={setQuickFilter}
           />
         </div>
       </div>
@@ -629,60 +1021,92 @@ export default function AdminOrdersPage() {
         plans={plans}
       />
 
+      {error && (
+        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchOrders}
+            className="mt-2 cursor-pointer"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      )}
+
       {/* Quick View Modal */}
-      {selectedOrder && (
-        <QuickViewModal
-          open={quickViewOpen}
-          onOpenChange={setQuickViewOpen}
-          title={`Order ${selectedOrder.id.substring(0, 8)}`}
-        >
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Status</p>
-              <Badge variant={getStatusVariant(selectedOrder.status) as any}>
-                {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">User</p>
-              <p className="text-sm font-medium">{selectedOrder.user?.email}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Plan</p>
-              <p className="text-sm">{selectedOrder.plan?.name || "Unknown"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Amount</p>
-              <p className="text-sm font-medium">₹{(selectedOrder.amount_inr / 100).toFixed(2)}</p>
-            </div>
-            {getOrderTags(selectedOrder).length > 0 && (
-              <div>
-                <p className="text-xs text-muted-foreground mb-1">Tags</p>
-                <div className="flex flex-wrap gap-1">
-                  {getOrderTags(selectedOrder).map((tag, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
+      <Dialog 
+        open={quickViewOpen} 
+        onOpenChange={(open) => {
+          setQuickViewOpen(open)
+          if (!open) {
+            setSelectedOrder(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-xs p-4">
+          {selectedOrder && (
+            <>
+              <DialogHeader className="pb-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarImage
+                      src={selectedOrder.user?.avatar_url || getAvatarUrl(selectedOrder.user_id, selectedOrder.user?.email)}
+                    />
+                    <AvatarFallback className="text-sm">
+                      {selectedOrder.user?.full_name?.charAt(0) || selectedOrder.user?.email?.charAt(0) || "O"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-base truncate">Order {selectedOrder.id.substring(0, 8)}</DialogTitle>
+                    <DialogDescription className="text-xs truncate">{selectedOrder.user?.email}</DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Status</span>
+                  <Badge variant={getStatusVariant(selectedOrder.status) as any} className="text-xs px-2 py-0.5">
+                    {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Plan</span>
+                  <Badge variant="outline" className="text-xs px-2 py-0.5">
+                    {selectedOrder.plan?.name || "Unknown"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Amount</span>
+                  <span className="text-xs font-medium">₹{(selectedOrder.amount_inr / 100).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">Created</span>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(selectedOrder.created_at), "MMM dd, yyyy")}
+                  </span>
                 </div>
               </div>
-            )}
-            <div className="flex gap-2 pt-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setQuickViewOpen(false)
-                  handleViewDetails(selectedOrder)
-                }}
-              >
-                View Full
-              </Button>
-            </div>
-          </div>
-        </QuickViewModal>
-      )}
+              <DialogFooter className="pt-3 border-t mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQuickViewOpen(false)
+                    if (selectedOrder) {
+                      router.push(`/admin/orders/${selectedOrder.id}`)
+                    }
+                  }}
+                  className="w-full text-sm h-8 cursor-pointer"
+                >
+                  View More Details
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Large Modal */}
       {selectedOrder && (
@@ -915,8 +1339,8 @@ export default function AdminOrdersPage() {
 
       {/* Refund Confirmation Dialog */}
       <Dialog open={refundConfirmOpen} onOpenChange={setRefundConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-4">
             <DialogTitle>Refund Order</DialogTitle>
             <DialogDescription>
               Are you sure you want to refund this order? This action cannot be undone.
@@ -935,12 +1359,138 @@ export default function AdminOrdersPage() {
               </p>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRefundConfirmOpen(false)}>
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setRefundConfirmOpen(false)} disabled={actionLoading === "refund"} className="cursor-pointer">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmRefund}>
-              Confirm Refund
+            <Button variant="destructive" onClick={confirmRefund} disabled={actionLoading === "refund"} className="cursor-pointer">
+              {actionLoading === "refund" ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Refunding...
+                </>
+              ) : (
+                "Confirm Refund"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Assignee Modal */}
+      <Dialog open={assigneeModalOpen} onOpenChange={setAssigneeModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Page Access Control</DialogTitle>
+            <DialogDescription>
+              Manage ownership and access for this page
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Owner Section */}
+            <div className="space-y-2">
+              <Label htmlFor="owner">Owner</Label>
+              <Select value={tempOwner || ""} onValueChange={setTempOwner}>
+                <SelectTrigger id="owner" className="w-full">
+                  <SelectValue placeholder="Select owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  {internalUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The owner is responsible for maintaining this page
+              </p>
+            </div>
+
+            {/* Members Section */}
+            <div className="space-y-2">
+              <Label htmlFor="members">Members</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-start"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    {memberSearch || "Search users to add..."}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search users..." 
+                      value={memberSearch}
+                      onValueChange={setMemberSearch}
+                    />
+                    <CommandList>
+                      <CommandEmpty>No users found.</CommandEmpty>
+                      <CommandGroup>
+                        {availableMembers.map((user) => (
+                          <CommandItem
+                            key={user.id}
+                            value={user.id}
+                            onSelect={() => handleAddMember(user.id)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
+                                <AvatarFallback className="text-xs">
+                                  {user.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{user.name}</p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                              </div>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              
+              {/* Selected Members */}
+              {tempMembers.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {tempMembers.map((memberId) => {
+                    const member = internalUsers.find(u => u.id === memberId)
+                    if (!member) return null
+                    return (
+                      <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
+                        <Avatar className="h-4 w-4">
+                          <AvatarImage src={getAvatarUrl(memberId, member.email)} />
+                          <AvatarFallback className="text-xs">
+                            {member.name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        {member.name}
+                        <button
+                          onClick={() => handleRemoveMember(memberId)}
+                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssigneeModalOpen(false)} className="cursor-pointer">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAssignees} className="cursor-pointer">
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -948,3 +1498,4 @@ export default function AdminOrdersPage() {
     </>
   )
 }
+

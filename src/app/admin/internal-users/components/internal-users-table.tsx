@@ -125,7 +125,7 @@ export function InternalUsersTable({
                 <TableCell onClick={() => onViewDetails(user)}>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={`https://avatar.iran.liara.run/public?name=${encodeURIComponent(user.name)}`} />
+                      <AvatarImage src="https://avatar.iran.liara.run/public" />
                       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{user.name}</span>

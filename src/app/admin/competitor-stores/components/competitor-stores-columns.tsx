@@ -1,7 +1,6 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,10 +8,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { MoreVertical, Eye, Trash2, ExternalLink } from "lucide-react"
+import { MoreVertical, Eye, Trash2, CheckCircle2, Copy, Edit, ExternalLink, Package, X } from "lucide-react"
 import { CompetitorStore } from "../data/stores"
+import Image from "next/image"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -28,32 +30,57 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 interface CreateCompetitorStoresColumnsProps {
   onViewDetails: (store: CompetitorStore) => void
+  onQuickView?: (store: CompetitorStore) => void
+  onEdit: (store: CompetitorStore) => void
   onDelete: (store: CompetitorStore) => void
+  onCopyStoreId: (store: CompetitorStore) => void
+  onCopyUrl: (store: CompetitorStore) => void
+  onToggleVerify: (store: CompetitorStore) => void
+  onVisitStore: (store: CompetitorStore) => void
+  onViewProducts: (store: CompetitorStore) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canVerify?: boolean
 }
 
 export function createCompetitorStoresColumns({
   onViewDetails,
+  onQuickView,
+  onEdit,
   onDelete,
+  onCopyStoreId,
+  onCopyUrl,
+  onToggleVerify,
+  onVisitStore,
+  onViewProducts,
+  canEdit = true,
+  canDelete = true,
+  canVerify = true,
 }: CreateCompetitorStoresColumnsProps): ColumnDef<CompetitorStore>[] {
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return [
     {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
+      id: "logo",
+      header: "Logo",
+      cell: ({ row }) => {
+        const store = row.original
+        return (
+          <Avatar className="h-10 w-10" onClick={(e) => e.stopPropagation()}>
+            {store.logo ? (
+              <AvatarImage src={store.logo} alt={store.name} />
+            ) : null}
+            <AvatarFallback>{getInitials(store.name)}</AvatarFallback>
+          </Avatar>
+        )
+      },
     },
     {
       accessorKey: "name",
@@ -77,8 +104,9 @@ export function createCompetitorStoresColumns({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
+              className="text-muted-foreground hover:text-foreground"
             >
-              <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           </div>
         )
@@ -95,6 +123,21 @@ export function createCompetitorStoresColumns({
       ),
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id))
+      },
+    },
+    {
+      accessorKey: "country",
+      id: "country",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Country" />,
+      cell: ({ row }) => (
+        <span className="text-sm" onClick={(e) => e.stopPropagation()}>
+          {row.original.country || "—"}
+        </span>
+      ),
+      filterFn: (row, id, value) => {
+        const country = row.getValue(id) as string | undefined
+        if (!country) return false
+        return value.includes(country)
       },
     },
     {
@@ -124,11 +167,43 @@ export function createCompetitorStoresColumns({
       accessorKey: "growth",
       id: "growth",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Growth" />,
-      cell: ({ row }) => (
-        <span className="text-emerald-600 font-medium" onClick={(e) => e.stopPropagation()}>
-          +{row.original.growth.toFixed(1)}%
-        </span>
-      ),
+      cell: ({ row }) => {
+        const growth = row.original.growth
+        return (
+          <span
+            className={`font-medium ${growth >= 0 ? "text-emerald-600" : "text-destructive"}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {growth >= 0 ? "+" : ""}{growth.toFixed(1)}%
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "verified",
+      id: "verified",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+      cell: ({ row }) => {
+        const store = row.original
+        return (
+          <Badge
+            variant={store.verified ? "default" : "secondary"}
+            className="gap-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {store.verified && <CheckCircle2 className="h-3 w-3" />}
+            {store.verified ? "Verified" : "Unverified"}
+          </Badge>
+        )
+      },
+      filterFn: (row, id, value) => {
+        if (!value || value.length === 0) return true
+        const isVerified = value.includes("verified")
+        const isUnverified = value.includes("unverified")
+        if (isVerified && !row.original.verified) return false
+        if (isUnverified && row.original.verified) return false
+        return true
+      },
     },
     {
       id: "actions",
@@ -144,14 +219,62 @@ export function createCompetitorStoresColumns({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {onQuickView && (
+                  <DropdownMenuItem onClick={() => onQuickView(store)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Quick View
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => onViewDetails(store)}>
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(store)} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                <DropdownMenuItem onClick={() => onViewProducts(store)}>
+                  <Package className="h-4 w-4 mr-2" />
+                  View Products
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onVisitStore(store)}>
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Visit Store
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(store)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canVerify && (
+                  <DropdownMenuItem onClick={() => onToggleVerify(store)}>
+                    {store.verified ? (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Unverify
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Verify
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onCopyStoreId(store)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Store ID
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onCopyUrl(store)}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy URL
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {canDelete && (
+                  <DropdownMenuItem onClick={() => onDelete(store)} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -160,4 +283,3 @@ export function createCompetitorStoresColumns({
     },
   ]
 }
-

@@ -184,3 +184,8 @@ Remove the background from image.jpg and tell me the output URL
 
 
 
+
+
+
+
+

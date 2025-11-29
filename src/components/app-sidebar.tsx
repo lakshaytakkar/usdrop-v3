@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useEffect, useRef } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -13,8 +14,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
+import { ProBadge, LimitedBadge } from "@/components/ui/pro-badge"
+import { SidebarCreditsFooter } from "@/components/sidebar-credits-footer"
 import {
   TrendingUp,
   Trophy,
@@ -22,7 +24,6 @@ import {
   Grid3x3,
   Package,
   BarChart3,
-  Search,
   Home,
   Bookmark,
   ShoppingBag,
@@ -38,20 +39,29 @@ import {
   Folder,
   Building,
   Book,
+  Image,
+  Badge,
+  Calculator,
+  Presentation,
+  User,
+  Target,
+  LucideIcon,
 } from "lucide-react"
 import Link from "next/link"
 
-// Products & Discovery items
-const productsDiscoveryItems = [
+// USDrop AI Research items
+const aiResearchItems = [
   {
     title: "Product Hunt",
     icon: TrendingUp,
     url: "/product-hunt",
+    isLimited: true,
   },
   {
     title: "Winning Products",
     icon: Trophy,
     url: "/winning-products",
+    isLimited: true,
   },
   {
     title: "Competitor Stores",
@@ -64,28 +74,94 @@ const productsDiscoveryItems = [
     url: "/categories",
   },
   {
-    title: "Suppliers",
+    title: "Meta Ads",
+    icon: BarChart3,
+    url: "/meta-ads",
+  },
+]
+
+// USDrop AI Learn items
+const aiLearnItems = [
+  {
+    title: "Academy",
+    icon: GraduationCap,
+    url: "/academy",
+  },
+  {
+    title: "Intelligence",
+    icon: Newspaper,
+    url: "/intelligence",
+  },
+]
+
+// USDrop AI Fulfilment items
+const aiFulfilmentItems: Array<{ title: string; icon: LucideIcon; url: string; isPro?: boolean; isLimited?: boolean }> = [
+  {
+    title: "Private Supplier",
     icon: Package,
     url: "/suppliers",
   },
 ]
 
-// Research & Analytics items
-const researchAnalyticsItems = [
+// USDrop AI Studio items
+const aiStudioItems = [
   {
-    title: "Meta Ads",
-    icon: BarChart3,
-    url: "/meta-ads",
+    title: "AI Studio",
+    icon: Sparkles,
+    url: "/ai-studio",
   },
   {
-    title: "Store Research",
-    icon: Search,
-    url: "/store-research",
+    title: "Image Studio",
+    icon: Image,
+    url: "/ai-toolkit/image-studio",
+    isPro: true,
+  },
+  {
+    title: "Logo Studio",
+    icon: Badge,
+    url: "/ai-toolkit/logo-studio",
+    isPro: true,
+  },
+  {
+    title: "Campaign Studio",
+    icon: Presentation,
+    url: "/ai-toolkit/campaign-studio",
+    isPro: true,
+  },
+  {
+    title: "Ad Studio",
+    icon: Sparkles,
+    url: "/ai-toolkit/ad-studio",
+    isPro: true,
+  },
+  {
+    title: "Model Studio",
+    icon: User,
+    url: "/ai-toolkit/model-studio",
+    isPro: true,
+  },
+  {
+    title: "Brand Studio",
+    icon: Badge,
+    url: "/ai-toolkit/brand-studio",
+    isPro: true,
+  },
+  {
+    title: "Audience Studio",
+    icon: Target,
+    url: "/ai-toolkit/audience-studio",
+    isPro: true,
+  },
+  {
+    title: "Profit Calculator",
+    icon: Calculator,
+    url: "/ai-toolkit/profit-calculator",
+    isPro: true,
   },
 ]
 
-// My Workspace items
-const myWorkspaceItems = [
+// USDrop AI Workspace items
+const aiWorkspaceItems = [
   {
     title: "Home",
     icon: Home,
@@ -100,25 +176,6 @@ const myWorkspaceItems = [
     title: "Shopify Stores",
     icon: ShoppingBag,
     url: "/shopify-stores",
-  },
-]
-
-// Learning & AI items
-const learningAIItems = [
-  {
-    title: "Academy",
-    icon: GraduationCap,
-    url: "/academy",
-  },
-  {
-    title: "AI Studio",
-    icon: Sparkles,
-    url: "/ai-studio",
-  },
-  {
-    title: "Intelligence",
-    icon: Newspaper,
-    url: "/intelligence",
   },
 ]
 
@@ -172,20 +229,25 @@ const adminContentItems = [
     icon: Building,
     url: "/admin/suppliers",
   },
-]
-
-// Admin Research & Stores items
-const adminResearchItems = [
   {
     title: "Competitor Stores",
     icon: Store,
     url: "/admin/competitor-stores",
   },
   {
-    title: "Store Research",
-    icon: Search,
-    url: "/admin/store-research",
+    title: "Courses",
+    icon: Book,
+    url: "/admin/courses",
   },
+  {
+    title: "Intelligence",
+    icon: Newspaper,
+    url: "/admin/intelligence",
+  },
+]
+
+// Admin Research & Stores items
+const adminResearchItems = [
   {
     title: "Shopify Stores",
     icon: ShoppingBag,
@@ -193,18 +255,68 @@ const adminResearchItems = [
   },
 ]
 
-// Admin Learning items
-const adminLearningItems = [
-  {
-    title: "Courses",
-    icon: Book,
-    url: "/admin/courses",
-  },
-]
 
 export function AppSidebar() {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith("/admin") ?? false
+  const sidebarContentRef = useRef<HTMLDivElement>(null)
+
+  // Preserve sidebar scroll position
+  useEffect(() => {
+    const sidebarContent = sidebarContentRef.current
+    if (!sidebarContent) return
+
+    // Save scroll position continuously
+    const handleScroll = () => {
+      sessionStorage.setItem('sidebarScrollPosition', sidebarContent.scrollTop.toString())
+    }
+
+    // Restore scroll position after navigation
+    const restoreScrollPosition = () => {
+      const savedPosition = sessionStorage.getItem('sidebarScrollPosition')
+      if (savedPosition !== null) {
+        // Use multiple attempts to ensure scroll position is restored
+        const attemptRestore = () => {
+          if (sidebarContent.scrollTop === 0 && parseInt(savedPosition, 10) > 0) {
+            sidebarContent.scrollTop = parseInt(savedPosition, 10)
+            // Try again if still at top
+            if (sidebarContent.scrollTop === 0) {
+              setTimeout(() => {
+                sidebarContent.scrollTop = parseInt(savedPosition, 10)
+              }, 50)
+            }
+          } else {
+            sidebarContent.scrollTop = parseInt(savedPosition, 10)
+          }
+        }
+
+        // Try immediately
+        attemptRestore()
+        
+        // Also try after a short delay to handle async rendering
+        setTimeout(attemptRestore, 0)
+        requestAnimationFrame(attemptRestore)
+      }
+    }
+
+    // Restore on mount and pathname change
+    restoreScrollPosition()
+
+    // Save on scroll
+    sidebarContent.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      sidebarContent.removeEventListener('scroll', handleScroll)
+    }
+  }, [pathname])
+
+  // Helper function to check if a URL is active
+  const isActive = (url: string) => {
+    if (url === "/") {
+      return pathname === "/"
+    }
+    return pathname?.startsWith(url) ?? false
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -213,17 +325,17 @@ export function AppSidebar() {
           <Logo />
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent ref={sidebarContentRef}>
         {!isAdminRoute && (
           <>
-            {/* My Workspace Section */}
+            {/* USDrop AI Workspace Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>My Workspace</SidebarGroupLabel>
+              <SidebarGroupLabel>USDrop AI Workspace</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {myWorkspaceItems.map((item) => (
+                  {aiWorkspaceItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -235,14 +347,34 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Products & Discovery Section */}
+            {/* USDrop AI Research Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Products & Discovery</SidebarGroupLabel>
+              <SidebarGroupLabel>USDrop AI Research</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {productsDiscoveryItems.map((item) => (
+                  {aiResearchItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                        <Link href={item.url} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span className="flex-1">{item.title}</span>
+                          {item.isLimited && <LimitedBadge size="sm" />}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* USDrop AI Learn Section */}
+            <SidebarGroup>
+              <SidebarGroupLabel>USDrop AI Learn</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {aiLearnItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -254,36 +386,41 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Research & Analytics Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>Research & Analytics</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {researchAnalyticsItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            {/* USDrop AI Fulfilment Section */}
+            {aiFulfilmentItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel>USDrop AI Fulfilment</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {aiFulfilmentItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                          <Link href={item.url} className="flex items-center gap-2">
+                            <item.icon className="h-4 w-4" />
+                            <span className="flex-1">{item.title}</span>
+                            {item.isPro && <ProBadge size="sm" />}
+                            {item.isLimited && <LimitedBadge size="sm" />}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
 
-            {/* Learning & AI Section */}
+            {/* USDrop AI Studio Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Learning & AI</SidebarGroupLabel>
+              <SidebarGroupLabel>USDrop AI Studio</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {learningAIItems.map((item) => (
+                  {aiStudioItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
-                        <Link href={item.url}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                        <Link href={item.url} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {item.isPro && <ProBadge size="sm" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -304,7 +441,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {adminUserManagementItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -323,7 +460,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {adminOrdersItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -342,7 +479,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {adminContentItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -361,7 +498,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {adminResearchItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.title}</span>
@@ -373,55 +510,12 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Learning Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel>Learning</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminLearningItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
           </>
         )}
 
-        {/* Admin Link - Show when NOT on admin routes */}
-        {!isAdminRoute && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Admin Panel">
-                    <Link href="/admin">
-                      <Shield className="h-4 w-4" />
-                      <span>Admin Panel</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex flex-col gap-2 p-2">
-          <div className="flex items-center justify-between gap-2 rounded-md bg-primary/10 px-3 py-2">
-            <span className="text-sm font-medium text-primary">0 credits</span>
-            <Button size="sm" variant="default" className="h-7 text-xs">
-              Upgrade
-            </Button>
-          </div>
-        </div>
+        <SidebarCreditsFooter />
       </SidebarFooter>
     </Sidebar>
   )

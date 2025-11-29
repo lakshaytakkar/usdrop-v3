@@ -6,12 +6,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "./components/product-card"
-import { CategoryFilter } from "./components/category-filter"
-import productsData from "./data/products.json"
+import { productPicks } from "@/data/product-picks"
 import { Loader2 } from "lucide-react"
 
 type Product = {
-  id: number
+  id: string | number
   image: string
   title: string
   buyPrice: number
@@ -25,7 +24,22 @@ type Product = {
 }
 
 export default function ProductHuntPage() {
-  const products = productsData as Product[]
+  // Map product picks to the format expected by this page
+  const products: Product[] = productPicks.map((pick, index) => ({
+    id: pick.id,
+    image: pick.image,
+    title: pick.title,
+    buyPrice: pick.buy_price,
+    sellPrice: pick.sell_price,
+    profitPerOrder: pick.profit_per_order,
+    trendData: pick.trend_data || [],
+    category: pick.category,
+    rating: pick.rating || 0,
+    reviews: pick.reviews_count,
+    trending: pick.trend_data && pick.trend_data.length > 1 
+      ? pick.trend_data[pick.trend_data.length - 1] > pick.trend_data[0]
+      : false,
+  }))
   const PRODUCTS_PER_PAGE = 12 // 3 rows × 4 columns
   
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
@@ -95,10 +109,34 @@ export default function ProductHuntPage() {
         >
           {/* Category Filter */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 border-b border-border/50">
-            <CategoryFilter
-              selectedCategory={selectedCategory}
-              onCategoryChange={setSelectedCategory}
-            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  selectedCategory === "all"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-accent"
+                }`}
+              >
+                All Products
+              </button>
+              {Array.from(new Set(products.map(p => p.category)))
+                .filter(cat => cat && cat !== "uncategorized")
+                .slice(0, 15)
+                .map(category => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${
+                      selectedCategory === category
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {category.replace(/-/g, " ")}
+                  </button>
+                ))}
+            </div>
           </div>
           
           <div className="relative">

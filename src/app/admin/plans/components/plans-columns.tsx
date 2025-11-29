@@ -20,6 +20,7 @@ interface CreatePlansColumnsProps {
   onDelete: (plan: SubscriptionPlan) => void
   onToggleActive?: (plan: SubscriptionPlan) => void
   onTogglePublic?: (plan: SubscriptionPlan) => void
+  onNameClick?: (plan: SubscriptionPlan) => void
 }
 
 export function createPlansColumns({
@@ -28,27 +29,9 @@ export function createPlansColumns({
   onDelete,
   onToggleActive,
   onTogglePublic,
+  onNameClick,
 }: CreatePlansColumnsProps): ColumnDef<SubscriptionPlan>[] {
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "name",
       id: "name",
@@ -56,8 +39,20 @@ export function createPlansColumns({
       cell: ({ row }) => {
         const plan = row.original
         return (
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <span className="font-medium">{plan.name}</span>
+          <div className="flex items-center gap-2">
+            {onNameClick ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onNameClick(plan)
+                }}
+                className="font-medium hover:underline text-left cursor-pointer"
+              >
+                {plan.name}
+              </button>
+            ) : (
+              <span className="font-medium">{plan.name}</span>
+            )}
             {plan.popular && (
               <Badge variant="default" className="gap-1">
                 <Star className="h-3 w-3" />

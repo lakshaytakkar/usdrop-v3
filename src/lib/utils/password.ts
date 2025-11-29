@@ -92,3 +92,8 @@ export function getPasswordStrengthProgress(password: string): number {
   return (strength / 4) * 100
 }
 
+
+
+
+
+

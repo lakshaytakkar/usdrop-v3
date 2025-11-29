@@ -160,33 +160,33 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Popular tools Section */}
+            {/* USDrop AI Studio Tools Section */}
             <div>
-              <h3 className="text-xl font-semibold mb-4 text-foreground">Popular tools</h3>
+              <h3 className="text-xl font-semibold mb-4 text-foreground">USDrop AI Studio Tools</h3>
               <div className="grid gap-4 md:grid-cols-3">
-                {/* Avatar Video Card */}
+                {/* Image Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <Image
-                    src="/3d icons/ui 9.png"
-                    alt="Avatar Video"
-                    width={48}
-                    height={48}
+                    src="/Right%20color/Camera%23camera,photo,picture,capture,media,image,snapshot,lens,device,photography,app,ui,icon,symbol,record.png"
+                    alt="Image Studio"
+                    width={64}
+                    height={64}
                     className="object-contain mb-4"
                   />
-                  <h4 className="font-semibold mb-2 text-lg">Avatar Video</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Image Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Turn scripts into talking videos with 1,000+ AI actors
+                    Generate multiple photorealistic views of your product from different angles
                   </p>
                 </div>
 
-                {/* Ad Clone Card */}
+                {/* Ad Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <div className="mb-4 flex items-center justify-between">
                     <Image
-                      src="/3d icons/ui 10.png"
-                      alt="Ad Clone"
-                      width={48}
-                      height={48}
+                      src="/Right%20color/Edit%23edit,pencil,write,modify,update,change,note,ui,icon,symbol,text,tool,adjust,input,create.png"
+                      alt="Ad Studio"
+                      width={64}
+                      height={64}
                       className="object-contain"
                     />
                     <div className="flex items-center gap-1">
@@ -196,35 +196,35 @@ export default function Home() {
                       <Flame className="h-4 w-4 text-orange-500" />
                     </div>
                   </div>
-                  <h4 className="font-semibold mb-2 text-lg">Ad Clone</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Ad Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Recreate winning ads instantly, with your product
+                    Create compelling ad creatives with AI. Generate images, videos, and copy that convert
                   </p>
                 </div>
 
-                {/* Product Video Card */}
+                {/* Model Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <Image
-                    src="/3d icons/ui 11.png"
-                    alt="Product Video"
-                    width={48}
-                    height={48}
+                    src="/Right%20color/Camera%23camera,photo,picture,capture,media,image,snapshot,lens,device,photography,app,ui,icon,symbol,record.png"
+                    alt="Model Studio"
+                    width={64}
+                    height={64}
                     className="object-contain mb-4"
                   />
-                  <h4 className="font-semibold mb-2 text-lg">Product Video</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Model Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Turn a product image into stunning product videos
+                    Generate professional model advertisements for your apparel products with AI-generated models
                   </p>
                 </div>
 
-                {/* Asset Generator Card */}
+                {/* Logo Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <div className="mb-4 flex items-center justify-between">
                     <Image
-                      src="/3d icons/ui 12.png"
-                      alt="Asset Generator"
-                      width={48}
-                      height={48}
+                      src="/Right%20color/Add%23add,plus,new,create,increase,ui,icon,symbol,button,insert,more,action,expand,positive,symbol.png"
+                      alt="Logo Studio"
+                      width={64}
+                      height={64}
                       className="object-contain"
                     />
                     <div className="flex items-center gap-1">
@@ -240,39 +240,39 @@ export default function Home() {
                       <Flame className="h-4 w-4 text-orange-500" />
                     </div>
                   </div>
-                  <h4 className="font-semibold mb-2 text-lg">Asset Generator</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Logo Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Create any video or image with any AI model
+                    Apply your logo to multiple images in bulk. Customize placement, size, and opacity
                   </p>
                 </div>
 
-                {/* Image Ads Card */}
+                {/* Brand Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <Image
-                    src="/3d icons/ui 13.png"
-                    alt="Image Ads"
-                    width={48}
-                    height={48}
+                    src="/Right%20color/Edit%23edit,pencil,write,modify,update,change,note,ui,icon,symbol,text,tool,adjust,input,create.png"
+                    alt="Brand Studio"
+                    width={64}
+                    height={64}
                     className="object-contain mb-4"
                   />
-                  <h4 className="font-semibold mb-2 text-lg">Image Ads</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Brand Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Turn any product image into ready-to-use static ads instantly
+                    Automatically place your brand logo on product images with customizable placement and size
                   </p>
                 </div>
 
-                {/* AI Shorts Card */}
+                {/* Campaign Studio Card */}
                 <div className="rounded-xl border bg-card p-6 hover:shadow-md transition-shadow">
                   <Image
-                    src="/3d icons/ui 14.png"
-                    alt="AI Shorts"
-                    width={48}
-                    height={48}
+                    src="/Right%20color/Star%23star,favorite,rate,rating,like,highlight,ui,icon,symbol,award,mark,best,feature,badge,top.png"
+                    alt="Campaign Studio"
+                    width={64}
+                    height={64}
                     className="object-contain mb-4"
                   />
-                  <h4 className="font-semibold mb-2 text-lg">AI Shorts</h4>
+                  <h4 className="font-semibold mb-2 text-lg">Campaign Studio</h4>
                   <p className="text-sm text-muted-foreground">
-                    Turn a script into artistic, animated video ads
+                    Strategize and plan your Meta advertising campaigns. Set budgets, define audiences, and track performance
                   </p>
                 </div>
               </div>

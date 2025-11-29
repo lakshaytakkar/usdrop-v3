@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   ColumnDef,
   flexRender,
@@ -63,6 +63,9 @@ interface DataTableProps<TData, TValue> {
     title: string
     options: { label: string; value: string; icon?: React.ComponentType<{ className?: string }> }[]
   }[]
+  quickFilters?: Array<{ id: string; label: string; count: number }>
+  selectedQuickFilter?: string | null
+  onQuickFilterChange?: (filterId: string | null) => void
   page?: number
   pageSize?: number
   enableRowSelection?: boolean
@@ -94,6 +97,9 @@ export function DataTable<TData, TValue>({
   aiGenerateButton,
   renderCustomView,
   filterConfig = [],
+  quickFilters,
+  selectedQuickFilter,
+  onQuickFilterChange,
   page: controlledPage,
   pageSize: controlledPageSize,
   enableRowSelection = false,
@@ -109,6 +115,7 @@ export function DataTable<TData, TValue>({
     pageSize: controlledPageSize || 10 
   })
 
+  // Sync controlled props to internal state, but only when they actually change
   useEffect(() => {
     if (controlledPage !== undefined || controlledPageSize !== undefined) {
       setPagination(prev => {
@@ -157,7 +164,10 @@ export function DataTable<TData, TValue>({
       }
     },
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: (updater) => {
+      const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater
+      setRowSelection(newSelection)
+    },
     enableRowSelection: enableRowSelection,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
@@ -165,24 +175,54 @@ export function DataTable<TData, TValue>({
     manualFiltering: true,
   })
 
-  // Handle row selection changes
+  // Handle row selection changes - use refs to prevent infinite loops
+  const prevSelectionKeysRef = useRef<string>('')
+  const onRowSelectionChangeRef = useRef(onRowSelectionChange)
+  const enableRowSelectionRef = useRef(enableRowSelection)
+  const tableRef = useRef(table)
+  
+  // Keep refs updated without triggering effects
   useEffect(() => {
-    if (onRowSelectionChange && enableRowSelection) {
-      const selectedRows = table.getRowModel().rows
-        .filter((row) => rowSelection[row.id])
-        .map((row) => row.original)
-      onRowSelectionChange(selectedRows)
+    onRowSelectionChangeRef.current = onRowSelectionChange
+    enableRowSelectionRef.current = enableRowSelection
+    tableRef.current = table
+  }, [onRowSelectionChange, enableRowSelection, table])
+  
+  useEffect(() => {
+    if (onRowSelectionChangeRef.current && enableRowSelectionRef.current) {
+      // Get current selection keys as a sorted string for comparison
+      const currentSelectionKeys = Object.keys(rowSelection)
+        .filter(key => rowSelection[key])
+        .sort()
+        .join(',')
+      
+      // Only call callback if selection actually changed
+      if (currentSelectionKeys !== prevSelectionKeysRef.current) {
+        prevSelectionKeysRef.current = currentSelectionKeys
+        // Use ref to access table to avoid dependency
+        const selectedRows = tableRef.current.getRowModel().rows
+          .filter((row) => rowSelection[row.id])
+          .map((row) => row.original)
+        // Use setTimeout to defer and prevent synchronous loops
+        setTimeout(() => {
+          onRowSelectionChangeRef.current?.(selectedRows)
+        }, 0)
+      }
     }
-  }, [rowSelection, onRowSelectionChange, enableRowSelection, table])
+    // Only depend on rowSelection, not table or callbacks (using refs instead)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowSelection])
+
 
   const renderView = () => {
     if (initialLoading && view === 'table') {
       return (
-        <div className="flex-1 overflow-x-auto overflow-y-auto rounded-md border min-h-0 w-full overscroll-x-contain">
+        <div className="flex-1 overflow-x-auto overflow-y-auto rounded-md border min-h-0 w-full max-w-full overscroll-x-contain min-w-0">
           <TableSkeleton
             rows={pagination.pageSize || 10}
             columns={columns.length}
             showCheckbox={enableRowSelection}
+            className="w-full max-w-full min-w-0"
           />
         </div>
       )
@@ -193,7 +233,7 @@ export function DataTable<TData, TValue>({
     }
 
     return (
-      <div className="flex-1 overflow-y-auto rounded-md border min-h-0 w-full overflow-x-hidden">
+      <div className="flex-1 overflow-y-auto rounded-md border min-h-0 w-full max-w-full overflow-x-auto min-w-0">
         <Table className="w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -231,7 +271,7 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {loading ? (
-              Array.from({ length: pageSize || 5 }).map((_, index) => (
+              Array.from({ length: pagination.pageSize || 5 }).map((_, index) => (
                 <TableRowSkeleton
                   key={`loading-${index}`}
                   columns={columns.length}
@@ -243,7 +283,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={cn("text-sm", onRowClick && "cursor-pointer hover:bg-muted/50")}
+                  className={cn("text-sm h-16", onRowClick && "cursor-pointer hover:bg-muted/50")}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {enableRowSelection && (
@@ -272,7 +312,7 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length + (enableRowSelection ? 1 : 0)} className="h-24 text-center">
+                <TableCell colSpan={columns.length + (enableRowSelection ? 1 : 0)} className="h-24 text-center shrink-0">
                   No results.
                 </TableCell>
               </TableRow>
@@ -285,7 +325,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col h-full min-h-0 flex-1 min-w-0 overflow-x-hidden">
-      <div className="flex-shrink-0 mb-4">
+      <div className="shrink-0 mb-4">
         <DataTableToolbar
           table={table}
           onSearchChange={onSearchChange}
@@ -300,11 +340,14 @@ export function DataTable<TData, TValue>({
           secondaryButtons={secondaryButtons}
           aiGenerateButton={aiGenerateButton}
           filterConfig={filterConfig}
+          quickFilters={quickFilters}
+          selectedQuickFilter={selectedQuickFilter}
+          onQuickFilterChange={onQuickFilterChange}
         />
       </div>
       <div className="flex-1 min-h-0 flex flex-col min-w-0 overflow-hidden">{renderView()}</div>
       {(view === 'table' || view === 'list') && (
-        <div className="flex-shrink-0 bg-background border-t mt-4">
+        <div className="shrink-0 bg-background border-t mt-4">
           <DataTablePagination table={table} />
         </div>
       )}

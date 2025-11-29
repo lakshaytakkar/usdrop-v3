@@ -21,7 +21,7 @@ import {
 
 interface ProductCardProps {
   product: {
-    id: number
+    id: number | string
     image: string
     title: string
     buyPrice: number

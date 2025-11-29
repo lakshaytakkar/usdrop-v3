@@ -1,7 +1,6 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,21 +8,38 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { MoreVertical, Eye, Trash2, Star } from "lucide-react"
+import { MoreVertical, Eye, Trash2, Star, Edit, Copy, BookOpen, CheckCircle2, X } from "lucide-react"
 import { Course } from "../data/courses"
 import Image from "next/image"
 
 interface CreateCoursesColumnsProps {
   onViewDetails: (course: Course) => void
+  onQuickView?: (course: Course) => void
+  onEdit: (course: Course) => void
   onDelete: (course: Course) => void
+  onBuild?: (course: Course) => void
+  onDuplicate?: (course: Course) => void
+  onTogglePublish?: (course: Course) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  canPublish?: boolean
 }
 
 export function createCoursesColumns({
   onViewDetails,
+  onQuickView,
+  onEdit,
   onDelete,
+  onBuild,
+  onDuplicate,
+  onTogglePublish,
+  canEdit = true,
+  canDelete = true,
+  canPublish = true,
 }: CreateCoursesColumnsProps): ColumnDef<Course>[] {
   const getInitials = (name: string) => {
     return name
@@ -35,25 +51,6 @@ export function createCoursesColumns({
   }
 
   return [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       id: "thumbnail",
       header: "Thumbnail",
@@ -138,6 +135,24 @@ export function createCoursesColumns({
       ),
     },
     {
+      id: "modules",
+      header: "Modules",
+      cell: ({ row }) => {
+        const course = row.original
+        const moduleCount = course.modules?.length || 0
+        const chapterCount = course.modules?.reduce((sum, m) => sum + (m.chapters?.length || 0), 0) || 0
+        return (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+            <Badge variant="outline" className="text-xs">
+              {moduleCount} Modules
+            </Badge>
+            <span>•</span>
+            <span>{chapterCount} Chapters</span>
+          </div>
+        )
+      },
+    },
+    {
       accessorKey: "published",
       id: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
@@ -173,10 +188,47 @@ export function createCoursesColumns({
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(course)} className="text-destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                {onBuild && (
+                  <DropdownMenuItem onClick={() => onBuild(course)}>
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Build Course
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(course)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canPublish && onTogglePublish && (
+                  <DropdownMenuItem onClick={() => onTogglePublish(course)}>
+                    {course.published ? (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Unpublish
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Publish
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                )}
+                {onDuplicate && (
+                  <DropdownMenuItem onClick={() => onDuplicate(course)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicate
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {canDelete && (
+                  <DropdownMenuItem onClick={() => onDelete(course)} className="text-destructive">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

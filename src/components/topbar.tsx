@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { RainbowButton } from "@/components/ui/rainbow-button"
 import { 
   Gift, 
   UserPlus, 
@@ -23,11 +24,21 @@ import {
   Palette,
   ArrowLeftRight,
   LogOut,
+  ArrowUpRight,
+  Sparkles,
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export function Topbar() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    // Check if dark mode is already set
+    const isDark = document.documentElement.classList.contains("dark")
+    setTheme(isDark ? "dark" : "light")
+  }, [])
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light"
@@ -45,6 +56,19 @@ export function Topbar() {
 
         {/* Right side - Action Buttons and Profile Menu */}
         <div className="flex items-center gap-2">
+          {/* Ask USDrop AI Button */}
+          <RainbowButton
+            size="lg"
+            className="hidden sm:flex items-center gap-2 h-10 rounded-lg font-sans font-bold px-4"
+            onClick={() => {
+              // Handle Ask USDrop AI click - you can add navigation or modal here
+              console.log("Ask USDrop AI clicked")
+            }}
+          >
+            <Sparkles className="h-4 w-4 flex-shrink-0" />
+            <span className="text-sm font-bold whitespace-nowrap">Ask USDrop AI</span>
+          </RainbowButton>
+
           <Button
             variant="ghost"
             size="sm"
@@ -70,11 +94,14 @@ export function Topbar() {
             onClick={toggleTheme}
             className="cursor-pointer"
             title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            suppressHydrationWarning
           >
-            {theme === "light" ? (
+            {mounted && theme === "light" ? (
               <Moon className="h-4 w-4" />
-            ) : (
+            ) : mounted ? (
               <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
             )}
             <span className="sr-only">Toggle theme</span>
           </Button>
@@ -100,15 +127,16 @@ export function Topbar() {
           </Button>
 
           {/* User Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src="https://avatar.iran.liara.run/public" alt="User avatar" />
-                  <AvatarFallback>LT</AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
+          {mounted && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer" suppressHydrationWarning>
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="https://avatar.iran.liara.run/public" alt="User avatar" />
+                    <AvatarFallback>LT</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               {/* User Info Header */}
               <div className="flex items-center gap-3 px-2 py-2">
@@ -162,6 +190,7 @@ export function Topbar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
         </div>
       </div>
     </header>

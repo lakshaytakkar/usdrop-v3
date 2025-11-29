@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { X, Check, Zap, Crown, Sparkles } from "lucide-react"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Check, Zap, Crown, Sparkles } from "lucide-react"
 
 interface UpsellDialogProps {
   isOpen: boolean
@@ -12,39 +12,12 @@ interface UpsellDialogProps {
 }
 
 export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true)
-    } else {
-      const timer = setTimeout(() => setIsVisible(false), 300)
-      return () => clearTimeout(timer)
-    }
-  }, [isOpen])
-
-  if (!isVisible) return null
-
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 transition-all duration-300 ${
-        isOpen ? "opacity-100" : "opacity-0"
-      }`}
-      onClick={onClose}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-6 md:p-8 w-[calc(100%-2rem)] sm:w-full">
 
-      {/* Dialog Content */}
-      <div
-        className={`relative w-full max-w-4xl max-h-[85vh] my-4 transition-all duration-300 ${
-          isOpen ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Card className="h-full max-h-[85vh] overflow-y-auto p-4 md:p-6 shadow-2xl border-2">
-          {/* Pricing Plans */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 pt-4 md:pt-6">
+        {/* Pricing Plans */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4">
             {/* Starter Plan */}
             <Card className="p-3 md:p-4 relative hover:shadow-lg transition-all border-2 hover:border-primary/50">
               <div className="space-y-2 md:space-y-3">
@@ -195,13 +168,12 @@ export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
             </Card>
           </div>
 
-          {/* Footer */}
-          <div className="text-center text-xs text-muted-foreground px-2 pt-2">
-            <p>All plans include a free trial. No credit card required.</p>
-          </div>
-        </Card>
-      </div>
-    </div>
+        {/* Footer */}
+        <div className="text-center text-sm text-muted-foreground pt-4 mt-4 border-t border-border">
+          <p>All plans include a free trial. No credit card required.</p>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

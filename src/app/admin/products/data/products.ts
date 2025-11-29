@@ -1,4 +1,5 @@
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
+import { productPicks as realProductPicks } from "@/data/product-picks"
 
 export const sampleHandPickedProducts: HandPickedProduct[] = [
   {
@@ -54,55 +55,19 @@ export const sampleHandPickedProducts: HandPickedProduct[] = [
   },
 ]
 
-export const sampleProductPicks: ProductPick[] = [
-  {
-    id: "pp_001",
-    image: "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?w=400",
-    title: "Skincare Essentials Set",
-    buy_price: 15.0,
-    sell_price: 39.99,
-    profit_per_order: 24.99,
-    trend_data: [120, 145, 180, 200, 220],
-    category: "beauty",
-    rating: 4.7,
-    reviews_count: 342,
-    description: "Complete skincare routine set",
-    supplier_id: "sup_004",
-    additional_images: [],
-    specifications: { weight: "500g", items: 5 },
-    created_at: "2024-01-12T11:00:00Z",
-    updated_at: "2024-01-12T11:00:00Z",
-    supplier: {
-      id: "sup_004",
-      name: "Beauty Products Hub",
-      company_name: "Beauty Hub Inc",
-      logo: null,
-    },
-  },
-  {
-    id: "pp_002",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-    title: "Wireless Charging Pad",
-    buy_price: 8.5,
-    sell_price: 24.99,
-    profit_per_order: 16.49,
-    trend_data: [80, 95, 110, 125],
-    category: "gadgets",
-    rating: 4.5,
-    reviews_count: 189,
-    description: "Fast wireless charging pad for all devices",
-    supplier_id: "sup_001",
-    additional_images: [],
-    specifications: { power: "15W", compatibility: "Qi-enabled" },
-    created_at: "2024-01-11T15:00:00Z",
-    updated_at: "2024-01-11T15:00:00Z",
-    supplier: {
-      id: "sup_001",
-      name: "Global Electronics Supply",
-      company_name: "Global Electronics",
-      logo: null,
-    },
-  },
-]
+// Use real product picks data from CSV processing
+export const sampleProductPicks: ProductPick[] = realProductPicks.map((pick) => ({
+  ...pick,
+  // Ensure supplier is properly typed (it's null in our data, but the type expects an object)
+  supplier: pick.supplier_id ? {
+    id: pick.supplier_id,
+    name: "Supplier",
+    company_name: null,
+    logo: null,
+  } : undefined,
+}))
+
+
+
 
 
