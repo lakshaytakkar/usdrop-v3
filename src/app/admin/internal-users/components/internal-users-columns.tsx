@@ -17,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { MoreVertical, Eye, Edit, Trash2, UserCog, Mail, Lock, Check } from "lucide-react"
 import { InternalUser } from "@/types/admin/users"
 import { getAvatarUrl } from "@/lib/utils/avatar"
+import { cn } from "@/lib/utils"
 
 interface CreateInternalUsersColumnsProps {
   onViewDetails: (user: InternalUser) => void
@@ -47,31 +48,31 @@ export function createInternalUsersColumns({
   canSuspend = true,
   canActivate = true,
 }: CreateInternalUsersColumnsProps): ColumnDef<InternalUser>[] {
-  const getRoleBadgeVariant = (role: string) => {
+  const getRoleBadgeClassName = (role: string) => {
     switch (role) {
       case "superadmin":
-        return "default" as const
+        return "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
       case "admin":
-        return "default" as const
+        return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
       case "manager":
-        return "secondary" as const
+        return "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800"
       case "executive":
-        return "outline" as const
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-300 dark:border-slate-700"
       default:
-        return "outline" as const
+        return ""
     }
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeClassName = (status: string) => {
     switch (status) {
       case "active":
-        return "default" as const
+        return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"
       case "inactive":
-        return "secondary" as const
+        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
       case "suspended":
-        return "destructive" as const
+        return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
       default:
-        return "outline" as const
+        return ""
     }
   }
 
@@ -135,7 +136,7 @@ export function createInternalUsersColumns({
         const role = row.original.role
         const roleLabel = role.charAt(0).toUpperCase() + role.slice(1)
         return (
-          <Badge variant={getRoleBadgeVariant(role)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={roleLabel}>
+          <Badge variant="outline" onClick={(e) => e.stopPropagation()} className={cn("whitespace-nowrap cursor-pointer border", getRoleBadgeClassName(role))} title={roleLabel}>
             {roleLabel}
           </Badge>
         )
@@ -154,7 +155,7 @@ export function createInternalUsersColumns({
         const status = row.original.status
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
         return (
-          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={statusLabel}>
+          <Badge variant="outline" onClick={(e) => e.stopPropagation()} className={cn("whitespace-nowrap cursor-pointer border", getStatusBadgeClassName(status))} title={statusLabel}>
             {statusLabel}
           </Badge>
         )

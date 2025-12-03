@@ -36,7 +36,7 @@ export const InteractiveStagingCanvas: React.FC = () => {
         const canvasRect = canvasRef.current.getBoundingClientRect();
         
         if (draggingId) {
-            const asset = stagedAssets.find(a => a.id === draggingId);
+            const asset = stagedAssets.find((a: StagedAsset) => a.id === draggingId);
             if (!asset) return;
 
             const assetWidth = canvasRect.width * (asset.scale / 100);
@@ -51,7 +51,7 @@ export const InteractiveStagingCanvas: React.FC = () => {
             updateStagedAsset(draggingId, { x: xPercent, y: yPercent });
 
         } else if (resizingId) {
-            const asset = stagedAssets.find(a => a.id === resizingId);
+            const asset = stagedAssets.find((a: StagedAsset) => a.id === resizingId);
             if (!asset) return;
 
             const assetCenterX = canvasRect.left + canvasRect.width * (asset.x / 100);
@@ -68,7 +68,7 @@ export const InteractiveStagingCanvas: React.FC = () => {
 
     const handleLayerChange = (e: React.MouseEvent<HTMLButtonElement>, id: string, direction: 'up' | 'down') => {
         e.stopPropagation();
-        const asset = stagedAssets.find(a => a.id === id);
+        const asset = stagedAssets.find((a: StagedAsset) => a.id === id);
         if (!asset) return;
         const newZ = asset.z + (direction === 'up' ? 1 : -1);
         updateStagedAsset(id, { z: newZ });
@@ -82,7 +82,7 @@ export const InteractiveStagingCanvas: React.FC = () => {
             onMouseLeave={handleInteractionEnd}
             className="relative w-full aspect-square bg-zinc-800 rounded-lg overflow-hidden border-2 border-zinc-700 shadow-inner"
         >
-            {stagedAssets.sort((a, b) => a.z - b.z).map(asset => (
+            {stagedAssets.sort((a: StagedAsset, b: StagedAsset) => a.z - b.z).map((asset: StagedAsset) => (
                 <div
                     key={asset.id}
                     onMouseDown={(e) => handleDragStart(e, asset)}

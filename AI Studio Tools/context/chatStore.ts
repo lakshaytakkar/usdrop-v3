@@ -1,7 +1,7 @@
 import { GoogleGenAI, Part } from "@google/genai";
 // FIX: Import ChatSession from shared types and remove local definition.
 import type { ChatMessage, ChatSession } from '../types';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { geminiService } from '../services/geminiService';
 import { withRetry } from '../utils/colorUtils';
 
@@ -37,10 +37,10 @@ const initialChatState: ChatState = {
   isGeneratingPrompt: false,
 };
 
-export const createChatSlice: StudioStoreSlice<ChatSlice> = (set, get) => ({
+export const createChatSlice: StudioStoreSlice<ChatSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialChatState,
 
-  setReverseEngineerImage: (base64) => {
+  setReverseEngineerImage: (base64: string | null) => {
     set({ reverseEngineerImage: base64, generatedPrompt: null, error: null });
   },
   
@@ -78,13 +78,13 @@ export const createChatSlice: StudioStoreSlice<ChatSlice> = (set, get) => ({
     }));
   },
 
-  setActiveChat: (chatId) => {
+  setActiveChat: (chatId: string) => {
     if (get().chats[chatId]) {
       set({ activeChatId: chatId });
     }
   },
 
-  deleteChat: (chatId) => {
+  deleteChat: (chatId: string) => {
     set(state => {
       const newChats = { ...state.chats };
       delete newChats[chatId];
@@ -93,7 +93,7 @@ export const createChatSlice: StudioStoreSlice<ChatSlice> = (set, get) => ({
     });
   },
 
-  sendMessage: async (message, imageBase64) => {
+  sendMessage: async (message: string, imageBase64?: string | null) => {
     if (!message.trim() && !imageBase64) return;
 
     let currentChatId = get().activeChatId;

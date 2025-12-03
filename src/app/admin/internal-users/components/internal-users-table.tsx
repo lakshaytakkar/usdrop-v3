@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MoreVertical, Eye, Edit, Trash2, Lock, UserCog } from "lucide-react"
 import { InternalUser } from "@/types/admin/users"
+import { getAvatarUrl } from "@/lib/utils/avatar"
 
 interface InternalUsersTableProps {
   users: InternalUser[]
@@ -125,7 +126,7 @@ export function InternalUsersTable({
                 <TableCell onClick={() => onViewDetails(user)}>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="https://avatar.iran.liara.run/public" />
+                      <AvatarImage src={getAvatarUrl(user.id, user.email)} />
                       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{user.name}</span>

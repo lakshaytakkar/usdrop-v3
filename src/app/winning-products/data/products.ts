@@ -20,6 +20,11 @@ export interface WinningProduct {
   category: ProductCategory;
   isLocked: boolean;
   foundDate: string;
+  revenueGrowthRate: number;
+  itemsSold: number;
+  avgUnitPrice: number;
+  revenueTrend: number[];
+  price: number;
 }
 
 export const winningProducts: WinningProduct[] = [
@@ -31,7 +36,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 125000,
     category: "gadgets",
     isLocked: false,
-    foundDate: "2024-01-15"
+    foundDate: "2024-01-15",
+    revenueGrowthRate: 525,
+    itemsSold: 24840,
+    avgUnitPrice: 208.47,
+    revenueTrend: [45000, 52000, 48000, 61000, 58000, 72000, 68000, 85000, 92000, 105000, 118000, 125000],
+    price: 249.99
   },
   {
     id: 2,
@@ -41,7 +51,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 185000,
     category: "gadgets",
     isLocked: false,
-    foundDate: "2024-01-14"
+    foundDate: "2024-01-14",
+    revenueGrowthRate: 101.3,
+    itemsSold: 59790,
+    avgUnitPrice: 79.80,
+    revenueTrend: [92000, 98000, 105000, 112000, 125000, 138000, 152000, 168000, 175000, 180000, 182000, 185000],
+    price: 199.99
   },
   {
     id: 3,
@@ -51,7 +66,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 98000,
     category: "gadgets",
     isLocked: true,
-    foundDate: "2024-01-13"
+    foundDate: "2024-01-13",
+    revenueGrowthRate: 128.3,
+    itemsSold: 29310,
+    avgUnitPrice: 140.56,
+    revenueTrend: [43000, 48000, 52000, 58000, 62000, 68000, 72000, 78000, 85000, 90000, 94000, 98000],
+    price: 89.99
   },
   {
     id: 4,
@@ -61,7 +81,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 142000,
     category: "fashion",
     isLocked: false,
-    foundDate: "2024-01-12"
+    foundDate: "2024-01-12",
+    revenueGrowthRate: 288.5,
+    itemsSold: 28560,
+    avgUnitPrice: 100.71,
+    revenueTrend: [36000, 42000, 48000, 55000, 62000, 72000, 85000, 98000, 112000, 125000, 135000, 142000],
+    price: 79.99
   },
   {
     id: 5,
@@ -71,7 +96,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 156000,
     category: "fashion",
     isLocked: true,
-    foundDate: "2024-01-11"
+    foundDate: "2024-01-11",
+    revenueGrowthRate: 27.9,
+    itemsSold: 100560,
+    avgUnitPrice: 27.87,
+    revenueTrend: [122000, 128000, 132000, 138000, 142000, 148000, 152000, 154000, 155000, 155500, 156000, 156000],
+    price: 129.99
   },
   {
     id: 6,
@@ -81,7 +111,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 95000,
     category: "home-decor",
     isLocked: false,
-    foundDate: "2024-01-10"
+    foundDate: "2024-01-10",
+    revenueGrowthRate: 145.2,
+    itemsSold: 18950,
+    avgUnitPrice: 38.75,
+    revenueTrend: [39000, 42000, 45000, 52000, 58000, 65000, 72000, 80000, 86000, 90000, 93000, 95000],
+    price: 59.99
   },
   {
     id: 7,
@@ -91,7 +126,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 112000,
     category: "home-decor",
     isLocked: false,
-    foundDate: "2024-01-09"
+    foundDate: "2024-01-09",
+    revenueGrowthRate: 98.5,
+    itemsSold: 22400,
+    avgUnitPrice: 45.20,
+    revenueTrend: [56000, 60000, 65000, 70000, 75000, 82000, 88000, 95000, 100000, 105000, 109000, 112000],
+    price: 79.99
   },
   {
     id: 8,
@@ -101,7 +141,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 87000,
     category: "home-decor",
     isLocked: true,
-    foundDate: "2024-01-08"
+    foundDate: "2024-01-08",
+    revenueGrowthRate: 112.3,
+    itemsSold: 17400,
+    avgUnitPrice: 29.50,
+    revenueTrend: [41000, 45000, 48000, 52000, 58000, 62000, 68000, 72000, 78000, 82000, 85000, 87000],
+    price: 49.99
   },
   {
     id: 9,
@@ -111,7 +156,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 198000,
     category: "beauty",
     isLocked: false,
-    foundDate: "2024-01-07"
+    foundDate: "2024-01-07",
+    revenueGrowthRate: 185.5,
+    itemsSold: 39600,
+    avgUnitPrice: 99.50,
+    revenueTrend: [70000, 85000, 98000, 112000, 128000, 145000, 162000, 175000, 185000, 190000, 195000, 198000],
+    price: 149.99
   },
   {
     id: 10,
@@ -121,7 +171,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 125000,
     category: "beauty",
     isLocked: true,
-    foundDate: "2024-01-06"
+    foundDate: "2024-01-06",
+    revenueGrowthRate: 78.2,
+    itemsSold: 25000,
+    avgUnitPrice: 62.50,
+    revenueTrend: [70000, 75000, 82000, 88000, 95000, 102000, 110000, 118000, 122000, 124000, 125000, 125000],
+    price: 89.99
   },
   {
     id: 11,
@@ -131,7 +186,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 78000,
     category: "beauty",
     isLocked: false,
-    foundDate: "2024-01-05"
+    foundDate: "2024-01-05",
+    revenueGrowthRate: 65.8,
+    itemsSold: 15600,
+    avgUnitPrice: 39.20,
+    revenueTrend: [47000, 50000, 54000, 58000, 62000, 66000, 70000, 73000, 75000, 76000, 77000, 78000],
+    price: 59.99
   },
   {
     id: 12,
@@ -141,7 +201,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 92000,
     category: "sports-fitness",
     isLocked: false,
-    foundDate: "2024-01-04"
+    foundDate: "2024-01-04",
+    revenueGrowthRate: 92.4,
+    itemsSold: 18400,
+    avgUnitPrice: 31.25,
+    revenueTrend: [48000, 52000, 56000, 60000, 65000, 70000, 75000, 80000, 85000, 88000, 90000, 92000],
+    price: 49.99
   },
   {
     id: 13,
@@ -151,7 +216,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 105000,
     category: "sports-fitness",
     isLocked: true,
-    foundDate: "2024-01-03"
+    foundDate: "2024-01-03",
+    revenueGrowthRate: 108.7,
+    itemsSold: 21000,
+    avgUnitPrice: 42.00,
+    revenueTrend: [50000, 55000, 60000, 65000, 72000, 78000, 85000, 92000, 98000, 102000, 104000, 105000],
+    price: 69.99
   },
   {
     id: 14,
@@ -161,7 +231,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 68000,
     category: "sports-fitness",
     isLocked: false,
-    foundDate: "2024-01-02"
+    foundDate: "2024-01-02",
+    revenueGrowthRate: 56.3,
+    itemsSold: 13600,
+    avgUnitPrice: 24.50,
+    revenueTrend: [43500, 46000, 49000, 52000, 55000, 58000, 61000, 63000, 65000, 66000, 67000, 68000],
+    price: 39.99
   },
   {
     id: 15,
@@ -171,7 +246,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 135000,
     category: "kitchen",
     isLocked: false,
-    foundDate: "2024-01-01"
+    foundDate: "2024-01-01",
+    revenueGrowthRate: 125.8,
+    itemsSold: 27000,
+    avgUnitPrice: 67.50,
+    revenueTrend: [60000, 65000, 72000, 78000, 85000, 92000, 100000, 110000, 120000, 128000, 132000, 135000],
+    price: 129.99
   },
   {
     id: 16,
@@ -181,7 +261,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 75000,
     category: "kitchen",
     isLocked: true,
-    foundDate: "2023-12-31"
+    foundDate: "2023-12-31",
+    revenueGrowthRate: 88.5,
+    itemsSold: 15000,
+    avgUnitPrice: 37.50,
+    revenueTrend: [40000, 43000, 47000, 51000, 55000, 59000, 63000, 67000, 70000, 72000, 74000, 75000],
+    price: 59.99
   },
   {
     id: 17,
@@ -191,7 +276,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 62000,
     category: "kitchen",
     isLocked: false,
-    foundDate: "2023-12-30"
+    foundDate: "2023-12-30",
+    revenueGrowthRate: 72.1,
+    itemsSold: 12400,
+    avgUnitPrice: 25.00,
+    revenueTrend: [36000, 38000, 41000, 44000, 47000, 50000, 53000, 56000, 58000, 60000, 61000, 62000],
+    price: 39.99
   },
   {
     id: 18,
@@ -201,7 +291,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 88000,
     category: "home-garden",
     isLocked: false,
-    foundDate: "2023-12-29"
+    foundDate: "2023-12-29",
+    revenueGrowthRate: 95.3,
+    itemsSold: 17600,
+    avgUnitPrice: 33.50,
+    revenueTrend: [45000, 49000, 53000, 58000, 62000, 68000, 73000, 78000, 82000, 85000, 86000, 88000],
+    price: 54.99
   },
   {
     id: 19,
@@ -211,7 +306,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 115000,
     category: "home-garden",
     isLocked: true,
-    foundDate: "2023-12-28"
+    foundDate: "2023-12-28",
+    revenueGrowthRate: 103.6,
+    itemsSold: 23000,
+    avgUnitPrice: 57.50,
+    revenueTrend: [56000, 61000, 66000, 72000, 78000, 85000, 92000, 100000, 107000, 112000, 114000, 115000],
+    price: 89.99
   },
   {
     id: 20,
@@ -221,7 +321,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 72000,
     category: "home-garden",
     isLocked: false,
-    foundDate: "2023-12-27"
+    foundDate: "2023-12-27",
+    revenueGrowthRate: 68.4,
+    itemsSold: 14400,
+    avgUnitPrice: 25.00,
+    revenueTrend: [43000, 46000, 49000, 52000, 55000, 58000, 61000, 64000, 67000, 69000, 71000, 72000],
+    price: 39.99
   },
   {
     id: 21,
@@ -231,7 +336,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 142000,
     category: "pets",
     isLocked: false,
-    foundDate: "2023-12-26"
+    foundDate: "2023-12-26",
+    revenueGrowthRate: 138.2,
+    itemsSold: 28400,
+    avgUnitPrice: 71.00,
+    revenueTrend: [60000, 68000, 75000, 83000, 92000, 102000, 112000, 122000, 132000, 138000, 140000, 142000],
+    price: 119.99
   },
   {
     id: 22,
@@ -241,7 +351,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 58000,
     category: "pets",
     isLocked: true,
-    foundDate: "2023-12-25"
+    foundDate: "2023-12-25",
+    revenueGrowthRate: 54.7,
+    itemsSold: 11600,
+    avgUnitPrice: 20.00,
+    revenueTrend: [37500, 40000, 42000, 45000, 48000, 51000, 53000, 55000, 56000, 57000, 57500, 58000],
+    price: 29.99
   },
   {
     id: 23,
@@ -251,7 +366,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 125000,
     category: "pets",
     isLocked: false,
-    foundDate: "2023-12-24"
+    foundDate: "2023-12-24",
+    revenueGrowthRate: 115.8,
+    itemsSold: 25000,
+    avgUnitPrice: 62.50,
+    revenueTrend: [58000, 64000, 70000, 76000, 83000, 90000, 98000, 105000, 112000, 118000, 122000, 125000],
+    price: 99.99
   },
   {
     id: 24,
@@ -261,7 +381,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 215000,
     category: "mother-kids",
     isLocked: false,
-    foundDate: "2023-12-23"
+    foundDate: "2023-12-23",
+    revenueGrowthRate: 198.5,
+    itemsSold: 43000,
+    avgUnitPrice: 107.50,
+    revenueTrend: [72000, 85000, 98000, 112000, 128000, 145000, 162000, 178000, 192000, 205000, 210000, 215000],
+    price: 199.99
   },
   {
     id: 25,
@@ -271,7 +396,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 95000,
     category: "mother-kids",
     isLocked: true,
-    foundDate: "2023-12-22"
+    foundDate: "2023-12-22",
+    revenueGrowthRate: 82.4,
+    itemsSold: 19000,
+    avgUnitPrice: 38.00,
+    revenueTrend: [52000, 56000, 60000, 65000, 70000, 75000, 80000, 85000, 88000, 91000, 93000, 95000],
+    price: 59.99
   },
   {
     id: 26,
@@ -281,7 +411,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 82000,
     category: "mother-kids",
     isLocked: false,
-    foundDate: "2023-12-21"
+    foundDate: "2023-12-21",
+    revenueGrowthRate: 71.6,
+    itemsSold: 16400,
+    avgUnitPrice: 32.50,
+    revenueTrend: [48000, 51000, 55000, 58000, 62000, 66000, 70000, 73000, 76000, 78000, 80000, 82000],
+    price: 49.99
   },
   {
     id: 27,
@@ -291,7 +426,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 55000,
     category: "other",
     isLocked: false,
-    foundDate: "2023-12-20"
+    foundDate: "2023-12-20",
+    revenueGrowthRate: 48.3,
+    itemsSold: 11000,
+    avgUnitPrice: 18.50,
+    revenueTrend: [37000, 39000, 41000, 44000, 47000, 49000, 51000, 53000, 54000, 54500, 55000, 55000],
+    price: 29.99
   },
   {
     id: 28,
@@ -301,7 +441,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 67000,
     category: "other",
     isLocked: true,
-    foundDate: "2023-12-19"
+    foundDate: "2023-12-19",
+    revenueGrowthRate: 58.9,
+    itemsSold: 13400,
+    avgUnitPrice: 22.50,
+    revenueTrend: [42000, 44000, 47000, 50000, 53000, 56000, 59000, 61000, 63000, 65000, 66000, 67000],
+    price: 34.99
   },
   {
     id: 29,
@@ -311,7 +456,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 92000,
     category: "other",
     isLocked: false,
-    foundDate: "2023-12-18"
+    foundDate: "2023-12-18",
+    revenueGrowthRate: 87.2,
+    itemsSold: 18400,
+    avgUnitPrice: 46.00,
+    revenueTrend: [49000, 53000, 57000, 61000, 66000, 71000, 76000, 81000, 85000, 88000, 90000, 92000],
+    price: 69.99
   },
   {
     id: 30,
@@ -321,7 +471,12 @@ export const winningProducts: WinningProduct[] = [
     potRevenue: 108000,
     category: "gadgets",
     isLocked: true,
-    foundDate: "2023-12-17"
+    foundDate: "2023-12-17",
+    revenueGrowthRate: 96.4,
+    itemsSold: 21600,
+    avgUnitPrice: 54.00,
+    revenueTrend: [55000, 60000, 65000, 70000, 76000, 82000, 88000, 94000, 98000, 102000, 105000, 108000],
+    price: 89.99
   }
 ];
 

@@ -3,11 +3,11 @@ import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export const authService = {
-  signUp: async (email, password) => {
+  signUp: async (email: string, password: string) => {
     return await supabase.auth.signUp({ email, password });
   },
 
-  signInWithEmail: async (email, password) => {
+  signInWithEmail: async (email: string, password: string) => {
     return await supabase.auth.signInWithPassword({ email, password });
   },
   
@@ -42,7 +42,7 @@ export const authService = {
     return data.session;
   },
   
-  onAuthStateChange: (callback) => {
+  onAuthStateChange: (callback: (session: any) => void) => {
     return supabase.auth.onAuthStateChange((event, session) => {
       callback(session);
     });

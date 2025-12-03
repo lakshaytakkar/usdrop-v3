@@ -20,7 +20,7 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 export function ArticleCard({ article, featured = false }: ArticleCardProps) {
   return (
     <Card
-      className={`flex h-full flex-col transition-transform hover:scale-[1.02] ${
+      className={`flex h-full flex-col ${
         featured ? "md:col-span-2" : ""
       }`}
     >
@@ -32,11 +32,6 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        {article.featured && (
-          <div className="absolute top-2 left-2">
-            <Badge>Featured</Badge>
-          </div>
-        )}
       </div>
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-center gap-2">

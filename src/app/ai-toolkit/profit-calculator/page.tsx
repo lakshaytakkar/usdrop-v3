@@ -1,121 +1,103 @@
 "use client"
 
-import { useState } from "react"
+import Image from "next/image"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ProBadge } from "@/components/ui/pro-badge"
-import { Calculator } from "lucide-react"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Play, Coins } from "lucide-react"
+import { ProfitCalculator } from "@/components/ai-tools/profit-calculator"
 
 export default function ProfitCalculatorPage() {
-  const [cost, setCost] = useState("")
-  const [price, setPrice] = useState("")
-  const [shipping, setShipping] = useState("")
-  const [fee, setFee] = useState("")
-
-  const calculateProfit = () => {
-    const costNum = parseFloat(cost) || 0
-    const priceNum = parseFloat(price) || 0
-    const shippingNum = parseFloat(shipping) || 0
-    const feePercent = parseFloat(fee) || 0
-
-    const grossProfit = priceNum - costNum - shippingNum
-    const platformFee = (priceNum * feePercent) / 100
-    const netProfit = grossProfit - platformFee
-    const margin = priceNum > 0 ? ((netProfit / priceNum) * 100) : 0
-
-    return {
-      grossProfit: grossProfit.toFixed(2),
-      netProfit: netProfit.toFixed(2),
-      margin: margin.toFixed(1)
-    }
-  }
-
-  const profit = calculateProfit()
-
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Calculator className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold">Profit Calculator</h1>
-              <ProBadge />
-            </div>
-            <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link href="/" className="hover:text-primary transition-colors">
-                Home
-              </Link>
-              <span>/</span>
-              <Link href="/ai-toolkit" className="hover:text-primary transition-colors">
-                AI Toolkit
-              </Link>
-              <span>/</span>
-              <span>Profit Calculator</span>
-            </nav>
-          </div>
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+          {/* Banner with grainy gradient */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-green-950 to-emerald-800 p-3 text-white h-[77px] flex-shrink-0">
+            {/* Enhanced grainy texture layers */}
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                opacity: 0.5,
+                mixBlendMode: 'overlay'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
+                opacity: 0.4,
+                mixBlendMode: 'multiply'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
+                opacity: 0.3,
+                mixBlendMode: 'screen'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
+                              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
+                opacity: 0.6
+              }}
+            ></div>
 
-          <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10">
-            <CardContent className="p-8">
-              <div className="max-w-2xl">
-                <h2 className="text-2xl font-bold mb-3">Calculate Your Dropshipping Profits</h2>
-                <p className="text-muted-foreground">
-                  Analyze product profitability, calculate margins, estimate ROI, and optimize your 
-                  pricing strategy with our comprehensive profit calculator.
+            {/* Content */}
+            <div className="relative z-10 flex items-center gap-3 h-full">
+              {/* Mascot before text */}
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent">
+                <Image
+                  src="/profit-calculator-mascot.png"
+                  alt="3D mascot with calculator"
+                  fill
+                  className="object-contain"
+                  style={{
+                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
+                  }}
+                  priority
+                  unoptimized
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Profit Calculator</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Analyze product profitability, calculate margins, and optimize your pricing strategy.
                 </p>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Profit Calculator</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Product Cost ($)</label>
-                    <Input type="number" placeholder="0.00" value={cost} onChange={(e) => setCost(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Selling Price ($)</label>
-                    <Input type="number" placeholder="0.00" value={price} onChange={(e) => setPrice(e.target.value)} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Shipping Cost ($)</label>
-                    <Input type="number" placeholder="0.00" value={shipping} onChange={(e) => setShipping(e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Platform Fee (%)</label>
-                    <Input type="number" placeholder="0" value={fee} onChange={(e) => setFee(e.target.value)} />
-                  </div>
-                </div>
-                <div className="pt-4 border-t">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Gross Profit:</span>
-                      <span className="font-semibold">${profit.grossProfit}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Net Profit:</span>
-                      <span className="font-semibold text-primary">${profit.netProfit}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Profit Margin:</span>
-                      <span className="font-semibold">{profit.margin}%</span>
-                    </div>
-                  </div>
-                </div>
+              {/* Credits pill and Tutorial button */}
+              <div className="flex-shrink-0 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <Coins className="h-3 w-3 mr-1 text-[#FFD700]" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6))' }} />
+                  <span className="text-xs">Free to use</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Tutorial</span>
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+
+          <ProfitCalculator />
         </div>
       </SidebarInset>
     </SidebarProvider>

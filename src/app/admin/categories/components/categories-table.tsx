@@ -173,3 +173,12 @@ export function CategoriesTable({
 
 
 
+
+
+
+
+
+
+
+
+

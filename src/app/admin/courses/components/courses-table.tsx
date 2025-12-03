@@ -174,3 +174,12 @@ export function CoursesTable({
 
 
 
+
+
+
+
+
+
+
+
+

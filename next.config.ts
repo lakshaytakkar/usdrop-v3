@@ -45,6 +45,63 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'p19-oec-sg.ibyteimg.com',
       },
+      // Marketplace logo domains
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.chairish.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.ebay.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'creoate.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.fashiongo.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.walmart.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.etsy.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'poshmark.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.mercari.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.bonanza.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.newegg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.wayfair.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.overstock.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'reverb.com',
+      },
     ],
   },
 };

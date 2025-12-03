@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Send, Phone, X } from "lucide-react"
+import { Send, Phone } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ChatbotDialogProps {
@@ -14,7 +14,7 @@ interface ChatbotDialogProps {
   onClose: () => void
   relationshipManagerNumber: string
   pocName: string
-  buttonRef: React.RefObject<HTMLButtonElement>
+  buttonRef: React.RefObject<HTMLButtonElement | null>
 }
 
 interface Message {
@@ -162,7 +162,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
         className={cn(
           "fixed z-50 w-[380px] h-[450px] flex flex-col",
           "bg-background border border-border rounded-lg shadow-xl",
-          "animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+          "animate-in fade-in-0 slide-in-from-bottom-4 duration-300 ease-out"
         )}
         style={{
           top: `${position.top}px`,
@@ -174,7 +174,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage 
-                src="https://avatar.iran.liara.run/public" 
+                src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
                 alt={pocName} 
               />
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -188,12 +188,6 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
                 <span className="text-xs text-muted-foreground">{relationshipManagerNumber}</span>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="rounded-sm opacity-70 hover:opacity-100 transition-opacity p-1"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
 
@@ -209,7 +203,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
               {message.sender === "bot" && (
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage 
-                    src="https://avatar.iran.liara.run/public" 
+                    src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
                     alt={pocName} 
                   />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -241,7 +235,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
             <div className="flex gap-3 justify-start">
               <Avatar className="h-8 w-8 flex-shrink-0">
                 <AvatarImage 
-                  src="https://avatar.iran.liara.run/public" 
+                  src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
                   alt={pocName} 
                 />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">

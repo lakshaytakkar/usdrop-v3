@@ -311,8 +311,8 @@ export default function ArticleDetailPage() {
               status={status}
               views={article?.views || 0}
               readingTime={article?.reading_time || 0}
-              publishedAt={article?.published_at}
-              createdAt={article?.created_at}
+              publishedAt={article?.published_at ?? null}
+              createdAt={article?.created_at ?? null}
               onTitleChange={setTitle}
               onExcerptChange={setExcerpt}
               onCategoryChange={setCategory}

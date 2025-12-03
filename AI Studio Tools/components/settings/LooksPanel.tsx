@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStudio } from '../../context/StudioContext';
 import { Save, Layers, Trash2 } from 'lucide-react';
+import type { Look } from '../../types';
 
 export const LooksPanel: React.FC = () => {
     const { looks, saveLook, applyLook, deleteLook } = useStudio();
@@ -41,7 +42,7 @@ export const LooksPanel: React.FC = () => {
                 <div className="border-t border-zinc-700 pt-4">
                      <h4 className="text-sm font-semibold text-zinc-300 mb-2">My Looks</h4>
                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                        {looks.map(look => (
+                        {looks.map((look: Look) => (
                             <div key={look.id} className="flex items-center justify-between p-2 rounded-md bg-zinc-800/70 hover:bg-zinc-800 transition-colors">
                                 <p className="text-sm text-zinc-200 font-medium truncate pr-2">{look.name}</p>
                                 <div className="flex items-center gap-1 flex-shrink-0">

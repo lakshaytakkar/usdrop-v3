@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Loader2, Download, X, Wand2, User, Shirt, Image as ImageIcon, Hash, Sparkles, RotateCcw, Smartphone, Square, Monitor, Tv } from 'lucide-react';
+import { Loader2, Download, X, Wand2, User, Shirt, Image as ImageIcon, Hash, Sparkles, RotateCcw, Smartphone, Square, Monitor, Tv, RefreshCw } from 'lucide-react';
 import { geminiService } from '@/lib/services/gemini-service';
 import { resizeImageToAspectRatio } from '@/lib/utils/image-resizer';
 import JSZip from 'jszip';
@@ -60,17 +60,81 @@ export function ModelStudio() {
     const [viewState, setViewState] = useState<ViewState>('idle');
     
     // Load user-created models from localStorage
-    const loadUserModels = (): AIModel[] => {
+    // Checks modelStudioLibrary first (thumbnail URLs), then aiStudioMyModels (full objects)
+    const loadUserModels = useCallback((): AIModel[] => {
         try {
-            const saved = localStorage.getItem('aiStudioMyModels');
-            if (saved) {
-                return JSON.parse(saved);
+            // Check if we're on the client side
+            if (typeof window === 'undefined') {
+                return [];
             }
+            
+            // First check modelStudioLibrary (array of thumbnail URL strings)
+            const thumbnailLibrary = localStorage.getItem('modelStudioLibrary');
+            let thumbnailUrls: string[] = [];
+            if (thumbnailLibrary) {
+                try {
+                    const parsed = JSON.parse(thumbnailLibrary);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        thumbnailUrls = parsed.filter((url): url is string => typeof url === 'string');
+                        console.log('Found thumbnail URLs in modelStudioLibrary:', thumbnailUrls.length);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse modelStudioLibrary:', e);
+                }
+            }
+            
+            // Then check aiStudioMyModels (full AIModel objects)
+            const fullModels = localStorage.getItem('aiStudioMyModels');
+            let modelObjects: AIModel[] = [];
+            if (fullModels) {
+                try {
+                    const parsed = JSON.parse(fullModels);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        modelObjects = parsed.filter((m): m is AIModel => m && typeof m === 'object' && m.thumbnail);
+                        console.log('Found full model objects in aiStudioMyModels:', modelObjects.length);
+                    }
+                } catch (e) {
+                    console.error('Failed to parse aiStudioMyModels:', e);
+                }
+            }
+            
+            // Merge: if we have thumbnail URLs, match them with full objects or create minimal objects
+            if (thumbnailUrls.length > 0) {
+                const matchedModels: AIModel[] = thumbnailUrls.map(url => {
+                    // Try to find full model object for this thumbnail
+                    const fullModel = modelObjects.find(m => m.thumbnail === url);
+                    if (fullModel) {
+                        return fullModel;
+                    }
+                    // Create minimal model object from thumbnail URL
+                    return {
+                        id: `model-${url.slice(0, 20)}-${Date.now()}`,
+                        name: 'Custom Model',
+                        thumbnail: url,
+                        description: '',
+                        gender: 'Male' as const,
+                        region: 'Custom',
+                        country: 'Custom',
+                        source: 'user-saved' as const,
+                    };
+                });
+                console.log('Merged models from both sources:', matchedModels.length);
+                return matchedModels;
+            }
+            
+            // If no thumbnails, return full model objects if available
+            if (modelObjects.length > 0) {
+                console.log('Using full model objects:', modelObjects.length);
+                return modelObjects;
+            }
+            
+            console.log('No models found in either localStorage key');
+            return [];
         } catch (error) {
-            console.error("Failed to load user models from localStorage", error);
+            console.error("Failed to load user models:", error);
+            return [];
         }
-        return [];
-    };
+    }, []);
 
     // Initialize with empty array, will be populated by useEffect
     const [localLibrary, setLocalLibrary] = useState<string[]>([]);
@@ -101,50 +165,67 @@ export function ModelStudio() {
         return null;
     };
 
-    // Load and sync user models - keep only last 12
+    // Load only the 12 library models from MODELS_LIBRARY
     const updateModelLibrary = useCallback(() => {
         try {
-            const userModels = loadUserModels();
-            if (userModels.length === 0) {
+            // Check if we're on the client side
+            if (typeof window === 'undefined') {
+                return;
+            }
+            
+            // Only use library models from MODELS_LIBRARY (the 12 models from public/models folder)
+            const libraryModels: AIModel[] = MODELS_LIBRARY.map(model => ({
+                ...model,
+                source: 'library' as const
+            }));
+            
+            console.log('updateModelLibrary called, loading library models:', libraryModels.length);
+            
+            // Validate models have thumbnails
+            const validModels = libraryModels.filter(m => {
+                if (!m || !m.thumbnail) {
+                    return false;
+                }
+                return true;
+            });
+            
+            if (validModels.length === 0) {
+                console.log('No valid models with thumbnails found');
                 setLocalLibrary([]);
                 return;
             }
-            // Sort by ID (timestamp) to get most recent first
-            const sortedModels = [...userModels].sort((a, b) => {
-                const aTime = parseInt(a.id.split('-').pop() || '0');
-                const bTime = parseInt(b.id.split('-').pop() || '0');
-                return bTime - aTime; // Most recent first
-            });
-            // Take only the last 12 user-created models
-            const last12Models = sortedModels.slice(0, 12);
-            const last12Thumbnails = last12Models.map(m => m.thumbnail);
-            setLocalLibrary(last12Thumbnails);
+            
+            // Get thumbnails from library models only
+            const libraryThumbnails = validModels.map(m => m.thumbnail).filter(Boolean) as string[];
+            
+            console.log('Setting library with thumbnails:', libraryThumbnails.length);
+            setLocalLibrary(libraryThumbnails);
         } catch (error) {
             console.error("Error loading models:", error);
             setLocalLibrary([]);
         }
     }, []);
 
-    // Load models on mount
+    // Load models once on mount
     useEffect(() => {
         updateModelLibrary();
-    }, [updateModelLibrary]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only run once on mount, updateModelLibrary is stable with empty deps
 
-    // Listen for changes to user models
+    // Listen for changes to user models (only storage events, no polling)
     useEffect(() => {
         // Listen for storage events (from other tabs/components)
-        const handleStorageChange = () => {
-            updateModelLibrary();
+        const handleStorageChange = (e: StorageEvent) => {
+            // Only react to changes in model-related keys
+            if (e.key === 'modelStudioLibrary' || e.key === 'aiStudioMyModels') {
+                updateModelLibrary();
+            }
         };
         
         window.addEventListener('storage', handleStorageChange);
         
-        // Also check periodically for same-tab updates
-        const interval = setInterval(updateModelLibrary, 2000);
-        
         return () => {
             window.removeEventListener('storage', handleStorageChange);
-            clearInterval(interval);
         };
     }, [updateModelLibrary]);
 
@@ -260,7 +341,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                 setLoadingStep(`Generating model photos (${completed + 1}/${imagesToGenerate})...`);
                 setLoadingProgress(30 + (completed / imagesToGenerate) * 50);
                 
-                const resultUrl = await geminiService.generateStyledImage(finalPrompt, imageUrls);
+                const resultUrl = await geminiService.generateStyledImage(finalPrompt, imageUrls, aspectRatio);
                 completed++;
                 
                 setGeneratedImages(prev => {
@@ -361,94 +442,99 @@ Your single most important, critical, and unbreakable task is to perfectly prese
         setLoadingProgress(0);
     };
 
-    // Loading overlay
+    // Loading screen - contained in content area
     if (viewState === 'generating') {
         return (
-            <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
-                <div className="relative">
-                    {/* Dimmed main content */}
-                    <div className="opacity-30 pointer-events-none">
-                        <div className="grid grid-cols-[2fr_2fr_1fr] gap-4 mb-4">
-                            {/* Section 1: Select Model */}
-                            <Card className="bg-white border-gray-200">
-                                <CardContent className="p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <User className="h-4 w-4 text-primary" />
-                                        <h3 className="text-sm font-semibold text-foreground">Select Model</h3>
-                                    </div>
-                                    {localLibrary.length > 0 ? (
-                                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                                            {localLibrary.slice(0, 3).map((imgUrl, index) => (
-                                                <div key={index} className="aspect-[2/3] rounded-lg overflow-hidden bg-gray-100" />
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="h-[200px] bg-gray-50 rounded" />
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Section 2: Upload Apparel */}
-                            <Card className="bg-white border-gray-200">
-                                <CardContent className="p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Shirt className="h-4 w-4 text-primary" />
-                                        <h3 className="text-sm font-semibold text-foreground">Upload Apparel</h3>
-                                    </div>
-                                    <div className="h-[200px] bg-gray-50 rounded-lg border-2 border-dashed border-gray-300" />
-                                </CardContent>
-                            </Card>
-
-                            {/* Section 3: Generate Button */}
-                            <Card className="bg-white border-gray-200">
-                                <CardContent className="p-4 flex items-center justify-center h-full">
-                                    <Button
-                                        size="lg"
-                                        disabled
-                                        className="w-full bg-primary hover:bg-primary/90 text-white"
-                                    >
-                                        <Wand2 className="mr-2" />
-                                        Generate
-                                    </Button>
-                                </CardContent>
-                            </Card>
+            <div className="w-full max-w-7xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+                <div className="text-center space-y-6 p-8 max-w-md w-full">
+                    <Loader2 className="h-16 w-16 text-foreground animate-spin mx-auto" />
+                    <div className="space-y-3">
+                        <p className="text-xl font-semibold text-foreground">{loadingStep}</p>
+                        <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-foreground transition-all duration-300 ease-in-out"
+                                style={{ width: `${loadingProgress}%` }}
+                            />
                         </div>
-                    </div>
-
-                    {/* Loading overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-lg">
-                        <div className="text-center space-y-4 p-8">
-                            <Loader2 className="h-12 w-12 text-primary animate-spin mx-auto" />
-                            <div className="space-y-2">
-                                <p className="text-lg font-semibold text-foreground">{loadingStep}</p>
-                                <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-primary transition-all duration-300 ease-in-out"
-                                        style={{ width: `${loadingProgress}%` }}
-                                    />
-                                </div>
-                                <p className="text-sm text-muted-foreground">{Math.round(loadingProgress)}%</p>
-                            </div>
-                        </div>
+                        <p className="text-sm text-muted-foreground">{Math.round(loadingProgress)}%</p>
                     </div>
                 </div>
             </div>
         );
     }
 
-    // Results view
+    // Results view - full viewport
     if (viewState === 'results') {
+        // Calculate aspect ratio class based on selected aspect ratio
+        const getAspectRatioClass = () => {
+            switch (aspectRatio) {
+                case '1:1': return 'aspect-square';
+                case '4:5': return 'aspect-[4/5]';
+                case '16:9': return 'aspect-video';
+                case '9:16': return 'aspect-[9/16]';
+                default: return 'aspect-[4/5]';
+            }
+        };
+
         return (
-            <div className="w-full max-w-7xl mx-auto flex flex-col gap-4 transition-all duration-300 ease-in-out">
-                <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
-                    {/* Results grid spans first two columns */}
-                    <div className="col-span-2">
+            <div className="h-screen flex flex-col bg-background">
+                {/* Action buttons header */}
+                <div className="flex-shrink-0 border-b border-border bg-card p-4">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                        <h2 className="text-lg font-semibold text-foreground">Generated Results</h2>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleStartOver}
+                                className={cn(
+                                    "group relative h-10 px-4 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
+                                    "flex items-center justify-center gap-2"
+                                )}
+                            >
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                <span className="relative flex items-center justify-center gap-2 z-10">
+                                    <RotateCcw className="h-4 w-4 text-white" />
+                                    Start Over
+                                </span>
+                            </button>
+                            <button
+                                onClick={handleDownloadAll}
+                                disabled={isDownloading || generatedImages.filter(img => img.status === 'done').length === 0}
+                                className={cn(
+                                    "group relative h-10 px-4 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
+                                    "flex items-center justify-center gap-2",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
+                            >
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                <span className="relative flex items-center justify-center gap-2 z-10">
+                                    {isDownloading ? (
+                                        <>
+                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            Creating ZIP...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-4 w-4 text-white" />
+                                            Download ({generatedImages.filter(img => img.status === 'done').length})
+                                        </>
+                                    )}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Results grid - scrollable */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {generatedImages.map((image, index) => (
-                                <Card key={index} className="bg-white border-gray-200 transition-all duration-300 ease-in-out hover:shadow-md">
+                                <Card key={index} className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
                                     <CardContent className="p-4">
-                                        <div className="aspect-[4/5] w-full bg-gray-50 rounded-lg flex items-center justify-center relative">
-                                            {image.status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-primary" />}
+                                        <div className={`${getAspectRatioClass()} w-full bg-muted rounded-lg flex items-center justify-center relative`}>
+                                            {image.status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-foreground" />}
                                             {image.status === 'error' && (
                                                 <div className="text-center p-4">
                                                     <p className="text-sm text-destructive mb-2">Error</p>
@@ -461,7 +547,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                                     <Button
                                                         size="icon"
                                                         variant="secondary"
-                                                        className="absolute top-2 right-2 bg-white hover:bg-gray-100 border border-gray-300 transition-all duration-200"
+                                                        className="absolute top-2 right-2 bg-background hover:bg-muted border border-border transition-all duration-200"
                                                         onClick={() => {
                                                             const link = document.createElement('a');
                                                             link.href = image.url!;
@@ -469,7 +555,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                                             link.click();
                                                         }}
                                                     >
-                                                        <Download className="h-4 w-4" />
+                                                        <Download className="h-4 w-4 text-foreground" />
                                                     </Button>
                                                 </>
                                             )}
@@ -479,107 +565,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                             ))}
                         </div>
                     </div>
-
-                    {/* Start Over button in same position as Generate */}
-                    <Card className="bg-white border-gray-200">
-                        <CardContent className="p-4 flex flex-col gap-3 h-full">
-                            <Button
-                                onClick={handleStartOver}
-                                size="lg"
-                                variant="outline"
-                                className="w-full bg-white hover:bg-gray-50 text-foreground border-gray-300 transition-all duration-200"
-                            >
-                                <RotateCcw className="mr-2" />
-                                Start Over
-                            </Button>
-                            <Button
-                                onClick={handleDownloadAll}
-                                disabled={isDownloading || generatedImages.filter(img => img.status === 'done').length === 0}
-                                size="lg"
-                                className="w-full bg-primary hover:bg-primary/90 text-white transition-all duration-200"
-                            >
-                                {isDownloading ? (
-                                    <>
-                                        <Loader2 className="animate-spin mr-2" />
-                                        Creating ZIP...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Download className="mr-2" />
-                                        Download ({generatedImages.filter(img => img.status === 'done').length})
-                                    </>
-                                )}
-                            </Button>
-                        </CardContent>
-                    </Card>
                 </div>
-
-                {/* Configuration settings below results - Right side */}
-                <Card className="bg-white border-gray-200 transition-all duration-300 ease-in-out">
-                    <CardContent className="p-4">
-                        <div className="space-y-4">
-                            {/* Aspect Ratio - Radio Group */}
-                            <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <ImageIcon className="h-4 w-4 text-primary" />
-                                    <Label className="text-sm font-medium text-foreground">Aspect Ratio</Label>
-                                </div>
-                                <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="grid grid-cols-2 gap-2">
-                                    {ASPECT_RATIOS.map(ratio => {
-                                        const IconComponent = ratio.icon;
-                                        return (
-                                            <div key={ratio.id} className="flex items-center space-x-2">
-                                                <RadioGroupItem value={ratio.id} id={ratio.id} className="text-primary border-primary" />
-                                                <Label htmlFor={ratio.id} className="text-xs cursor-pointer flex items-center gap-1">
-                                                    <IconComponent className="h-3 w-3" />
-                                                    <span>{ratio.label}</span>
-                                                </Label>
-                                            </div>
-                                        );
-                                    })}
-                                </RadioGroup>
-                            </div>
-
-                            {/* Number of Images - Radio Group */}
-                            <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Hash className="h-4 w-4 text-primary" />
-                                    <Label className="text-sm font-medium text-foreground">Number of Images</Label>
-                                </div>
-                                <RadioGroup value={numberOfImages.toString()} onValueChange={(val) => setNumberOfImages(parseInt(val))} className="flex gap-2">
-                                    {NUMBER_OF_IMAGES.map(num => (
-                                        <div key={num} className="flex items-center space-x-2 flex-1">
-                                            <RadioGroupItem value={num.toString()} id={`num-${num}`} className="text-primary border-primary" />
-                                            <Label htmlFor={`num-${num}`} className="text-xs cursor-pointer flex-1 text-center">
-                                                {num}
-                                            </Label>
-                                        </div>
-                                    ))}
-                                </RadioGroup>
-                            </div>
-
-                            {/* E-commerce Pack - Dropdown */}
-                            <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Sparkles className="h-4 w-4 text-primary" />
-                                    <Label className="text-sm font-medium text-foreground">E-commerce Pack</Label>
-                                </div>
-                                <Select value={ecommercePack} onValueChange={setEcommercePack}>
-                                    <SelectTrigger className="w-full bg-white border-gray-300 text-foreground">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {ECOMMERCE_PACK_OPTIONS.map(option => (
-                                            <SelectItem key={option.id} value={option.id} className="text-foreground">
-                                                {option.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
         );
     }
@@ -589,59 +575,101 @@ Your single most important, critical, and unbreakable task is to perfectly prese
         <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
                 {/* Section 1 (40%): Select Model */}
-                <Card className="bg-white border-gray-200 transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
-                        <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                            <User className="h-4 w-4 text-primary" />
-                            <h3 className="text-sm font-semibold text-foreground">Select Model</h3>
+                        <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                <User className="h-4 w-4 text-foreground" />
+                                <h3 className="text-sm font-semibold text-foreground">Select Model</h3>
+                            </div>
+                            <Button
+                                onClick={() => updateModelLibrary()}
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                title="Refresh models"
+                            >
+                                <RefreshCw className="h-3 w-3 text-foreground" />
+                            </Button>
                         </div>
                         {localLibrary.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-5 flex-1 overflow-y-auto pb-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-1.5 flex-1 overflow-y-auto pb-2">
                                 {localLibrary.map((imgUrl, index) => {
                                     const model = getModelByThumbnail(imgUrl);
                                     const isSelected = uploadedModel === imgUrl;
                                     return (
                                         <div
-                                            key={index}
-                                            onClick={() => handleSelectFromLibrary(imgUrl)}
-                                            className={cn(
-                                                "relative aspect-[2/3] rounded-lg overflow-hidden cursor-pointer border-2",
-                                                isSelected
-                                                    ? "border-primary"
-                                                    : "border-transparent hover:border-gray-300"
-                                            )}
+                                            key={`${imgUrl}-${index}`}
+                                            className="w-full min-w-0 flex justify-center"
                                         >
-                                            <img 
-                                                src={imgUrl} 
-                                                className="w-full h-full object-cover" 
-                                                alt={model?.name || `Model ${index + 1}`}
-                                                loading="lazy"
-                                            />
-                                            
-                                            {/* Minimal selection indicator */}
-                                            {isSelected && (
-                                                <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1.5">
-                                                    <User className="h-3 w-3" />
+                                            <div
+                                                onClick={() => handleSelectFromLibrary(imgUrl)}
+                                                className={cn(
+                                                    "relative rounded-lg overflow-hidden cursor-pointer border-2 group",
+                                                    "aspect-[2/3] w-[86%]",
+                                                    isSelected
+                                                        ? "border-primary"
+                                                        : "border-transparent hover:border-gray-300"
+                                                )}
+                                            >
+                                                <img 
+                                                    src={imgUrl} 
+                                                    className="w-full h-full object-cover pointer-events-none" 
+                                                    alt={model?.name || `Model ${index + 1}`}
+                                                    loading="lazy"
+                                                />
+                                                
+                                                {/* Hover overlay with name, age, and city */}
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end pointer-events-none">
+                                                    <div className="w-full p-3 text-white">
+                                                        <div className="text-sm font-semibold">{model?.name || 'Model'}</div>
+                                                        {model?.age && (
+                                                            <div className="text-xs text-white/90">{model.age} years old</div>
+                                                        )}
+                                                        {model?.country && (
+                                                            <div className="text-xs text-white/90">{model.country}</div>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            )}
+                                                
+                                                {/* Minimal selection indicator */}
+                                                {isSelected && (
+                                                    <div className="absolute top-2 right-2 bg-foreground text-background rounded-full p-1.5 z-10 pointer-events-none">
+                                                        <User className="h-3 w-3 text-background" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
                             </div>
                         ) : (
                             <div className="text-center text-muted-foreground py-8">
-                                <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">No models in library</p>
+                                <User className="h-8 w-8 mx-auto mb-2 opacity-50 text-foreground" />
+                                <p className="text-sm mb-3">No models in library</p>
+                                <button
+                                    onClick={() => updateModelLibrary()}
+                                    className={cn(
+                                        "group relative h-9 px-3 rounded-md text-xs font-medium text-white transition-all duration-300 cursor-pointer",
+                                        "flex items-center justify-center gap-2"
+                                    )}
+                                >
+                                    <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                    <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                    <span className="relative flex items-center justify-center gap-2 z-10">
+                                        Refresh
+                                    </span>
+                                </button>
                             </div>
                         )}
                     </CardContent>
                 </Card>
 
                 {/* Section 2 (40%): Upload Apparel */}
-                <Card className="bg-white border-gray-200 transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                            <Shirt className="h-4 w-4 text-primary" />
+                            <Shirt className="h-4 w-4 text-foreground" />
                             <h3 className="text-sm font-semibold text-foreground">Upload Apparel</h3>
                         </div>
 
@@ -651,11 +679,11 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                 "cursor-pointer flex-1 w-full flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 ease-in-out p-4",
                                 isApparelDragActive
                                     ? "border-primary bg-primary/10"
-                                    : "border-gray-300 hover:border-gray-400 bg-gray-50"
+                                    : "border-border hover:border-foreground/20 bg-muted"
                             )}
                         >
                             <input {...getApparelInputProps()} />
-                            <Shirt className="h-8 w-8 text-muted-foreground mb-2" />
+                            <Shirt className="h-8 w-8 text-foreground mb-2" />
                             <span className="text-xs font-medium text-foreground">Drag &apos;n&apos; drop or click to browse</span>
                         </div>
 
@@ -680,25 +708,32 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                 </Card>
 
                 {/* Section 3 (20%): Generate Button + Configuration Settings */}
-                <Card className="bg-white border-gray-200 transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="space-y-4">
                             {/* Generate Button */}
-                            <Button
+                            <button
                                 onClick={handleGenerate}
                                 disabled={!uploadedModel || apparelImages.length === 0}
-                                size="lg"
-                                className="w-full bg-primary hover:bg-primary/90 text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={cn(
+                                    "group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
+                                    "flex items-center justify-center gap-2",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
                             >
-                                <Wand2 className="mr-2" />
-                                Generate
-                            </Button>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                <span className="relative flex items-center justify-center gap-2 z-10">
+                                    <Wand2 className="h-4 w-4 text-white" />
+                                    Generate
+                                </span>
+                            </button>
 
                             {/* Configuration Settings */}
                             {/* Aspect Ratio - Radio Group */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <ImageIcon className="h-4 w-4 text-primary" />
+                                    <ImageIcon className="h-4 w-4 text-foreground" />
                                     <Label className="text-sm font-medium text-foreground">Aspect Ratio</Label>
                                 </div>
                                 <RadioGroup value={aspectRatio} onValueChange={setAspectRatio} className="grid grid-cols-2 gap-2">
@@ -706,9 +741,9 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                         const IconComponent = ratio.icon;
                                         return (
                                             <div key={ratio.id} className="flex items-center space-x-2">
-                                                <RadioGroupItem value={ratio.id} id={ratio.id} className="text-primary border-primary" />
-                                                <Label htmlFor={ratio.id} className="text-xs cursor-pointer flex items-center gap-1">
-                                                    <IconComponent className="h-3 w-3" />
+                                                <RadioGroupItem value={ratio.id} id={ratio.id} className="border-foreground text-foreground data-[state=checked]:border-foreground [&[data-state=checked]>span>svg]:fill-foreground [&[data-state=checked]>span>svg]:text-foreground" />
+                                                <Label htmlFor={ratio.id} className="text-xs cursor-pointer flex items-center gap-1 text-foreground">
+                                                    <IconComponent className="h-3 w-3 text-foreground" />
                                                     <span>{ratio.label}</span>
                                                 </Label>
                                             </div>
@@ -720,14 +755,14 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                             {/* Number of Images - Radio Group */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Hash className="h-4 w-4 text-primary" />
+                                    <Hash className="h-4 w-4 text-foreground" />
                                     <Label className="text-sm font-medium text-foreground">Number of Images</Label>
                                 </div>
                                 <RadioGroup value={numberOfImages.toString()} onValueChange={(val) => setNumberOfImages(parseInt(val))} className="flex gap-2">
                                     {NUMBER_OF_IMAGES.map(num => (
                                         <div key={num} className="flex items-center space-x-2 flex-1">
-                                            <RadioGroupItem value={num.toString()} id={`num-${num}`} className="text-primary border-primary" />
-                                            <Label htmlFor={`num-${num}`} className="text-xs cursor-pointer flex-1 text-center">
+                                            <RadioGroupItem value={num.toString()} id={`num-${num}`} className="border-foreground text-foreground data-[state=checked]:border-foreground [&[data-state=checked]>span>svg]:fill-foreground [&[data-state=checked]>span>svg]:text-foreground" />
+                                            <Label htmlFor={`num-${num}`} className="text-xs cursor-pointer flex-1 text-center text-foreground">
                                                 {num}
                                             </Label>
                                         </div>
@@ -738,16 +773,16 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                             {/* E-commerce Pack - Dropdown */}
                             <div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <Sparkles className="h-4 w-4 text-primary" />
+                                    <Sparkles className="h-4 w-4 text-foreground" />
                                     <Label className="text-sm font-medium text-foreground">E-commerce Pack</Label>
                                 </div>
                                 <Select value={ecommercePack} onValueChange={setEcommercePack}>
-                                    <SelectTrigger className="w-full bg-white border-gray-300 text-foreground">
+                                    <SelectTrigger className="w-full bg-background border-border text-foreground hover:bg-muted">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-background border-border">
                                         {ECOMMERCE_PACK_OPTIONS.map(option => (
-                                            <SelectItem key={option.id} value={option.id} className="text-foreground">
+                                            <SelectItem key={option.id} value={option.id} className="text-foreground focus:bg-muted">
                                                 {option.label}
                                             </SelectItem>
                                         ))}

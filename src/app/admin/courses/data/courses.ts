@@ -226,7 +226,7 @@ export const sampleCourses: Course[] = [
     instructor_id: "instructor_002",
     instructor_name: "Jane Doe",
     instructor_avatar: null,
-    thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400",
+    thumbnail: "/images/thumbnail-landscape-1764451401501.png",
     duration: "6 hours",
     lessons_count: 18,
     students_count: 890,

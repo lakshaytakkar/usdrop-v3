@@ -1,5 +1,5 @@
 import type { ReimagineCreativeControls, ReimagineState } from '../types';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 
 export interface ReimagineActions {
   setReimagineSourcePhoto: (base64: string | null) => void;
@@ -24,10 +24,10 @@ const initialReimagineState: ReimagineState = {
   },
 };
 
-export const createReimagineSlice: StudioStoreSlice<ReimagineSlice> = (set, get) => ({
+export const createReimagineSlice: StudioStoreSlice<ReimagineSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialReimagineState,
 
-  setReimagineSourcePhoto: (base64) => {
+  setReimagineSourcePhoto: (base64: string | null) => {
     if (base64) {
       set({ reimagineSourcePhoto: base64, generatedImages: null, activeImageIndex: null, error: null });
       // Clear other mode inputs when a source photo is uploaded, but preserve reimagine-specific inputs.
@@ -52,7 +52,7 @@ export const createReimagineSlice: StudioStoreSlice<ReimagineSlice> = (set, get)
     }
   },
 
-  setNewModelPhoto: (base64) => {
+  setNewModelPhoto: (base64: string | null) => {
     set({ newModelPhoto: base64 });
     const { reimagineSourcePhoto } = get();
     if (base64 && reimagineSourcePhoto) {
@@ -65,14 +65,14 @@ export const createReimagineSlice: StudioStoreSlice<ReimagineSlice> = (set, get)
     }
   },
 
-  setNewProductPhoto: (base64) => {
+  setNewProductPhoto: (base64: string | null) => {
     set({ newProductPhoto: base64 });
     if (base64) {
       get().updateReimagineControl('newProductDescription', '');
     }
   },
 
-  updateReimagineControl: (key, value) => {
+  updateReimagineControl: <K extends keyof ReimagineCreativeControls>(key: K, value: ReimagineCreativeControls[K]) => {
     set(state => ({
       reimagineControls: { ...state.reimagineControls, [key]: value }
     }));

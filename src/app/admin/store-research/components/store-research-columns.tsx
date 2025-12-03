@@ -97,7 +97,7 @@ export function createStoreResearchColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Popularity Rank" />,
       cell: ({ row }) => (
         <span className="text-sm" onClick={(e) => e.stopPropagation()}>
-          #{row.original.data.popularityRank.toLocaleString()}
+          #{row.original.data.popularityRank?.toLocaleString() ?? 'N/A'}
         </span>
       ),
     },
@@ -107,7 +107,7 @@ export function createStoreResearchColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Growth" />,
       cell: ({ row }) => (
         <span className="text-emerald-600 font-medium" onClick={(e) => e.stopPropagation()}>
-          +{row.original.data.growth.toFixed(1)}%
+          +{row.original.data.growth?.toFixed(1) ?? '0.0'}%
         </span>
       ),
     },
@@ -117,7 +117,7 @@ export function createStoreResearchColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Monthly Traffic" />,
       cell: ({ row }) => (
         <span className="text-sm" onClick={(e) => e.stopPropagation()}>
-          {numberFormatter.format(row.original.data.monthlyTraffic)}
+          {row.original.data.monthlyTraffic ? numberFormatter.format(row.original.data.monthlyTraffic) : 'N/A'}
         </span>
       ),
     },
@@ -127,7 +127,7 @@ export function createStoreResearchColumns({
       header: ({ column }) => <DataTableColumnHeader column={column} title="Monthly Revenue" />,
       cell: ({ row }) => (
         <span className="font-medium" onClick={(e) => e.stopPropagation()}>
-          {currencyFormatter.format(row.original.data.monthlyRevenue)}
+          {row.original.data.monthlyRevenue ? currencyFormatter.format(row.original.data.monthlyRevenue) : 'N/A'}
         </span>
       ),
     },

@@ -30,6 +30,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { cn } from "@/lib/utils"
 import {
   generateSecurePassword,
   getPasswordStrengthLabel,
@@ -42,6 +44,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export default function AdminInternalUsersPage() {
   const router = useRouter()
@@ -108,13 +111,6 @@ export default function AdminInternalUsersPage() {
         user.email.toLowerCase().includes(searchLower)
     )
   }, [memberSearch, internalUsersForAssignee])
-  
-  // Available members (excluding owner and already selected members)
-  const availableMembers = useMemo(() => {
-    return filteredMembers.filter(
-      (user) => user.id !== tempOwner && !tempMembers.includes(user.id)
-    )
-  }, [filteredMembers, tempOwner, tempMembers])
   
   const handleOpenAssigneeModal = () => {
     setTempOwner(assignedOwner)
@@ -470,7 +466,25 @@ export default function AdminInternalUsersPage() {
     input.accept = ".csv,.xlsx,.xls"
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
+      if (!file) {
+        showInfo("No file selected")
+        return
+      }
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024 // 10MB
+      if (file.size > maxSize) {
+        showError("File size exceeds 10MB limit. Please select a smaller file.")
+        return
+      }
+
+      // Validate file type
+      const validExtensions = [".csv", ".xlsx", ".xls"]
+      const fileExtension = "." + file.name.split(".").pop()?.toLowerCase()
+      if (!validExtensions.includes(fileExtension)) {
+        showError("Invalid file type. Please select a CSV or Excel file (.csv, .xlsx, .xls)")
+        return
+      }
 
       try {
         setBulkActionLoading("upload")
@@ -479,17 +493,17 @@ export default function AdminInternalUsersPage() {
         console.log("Bulk upload file:", file.name)
         // Simulate processing
         await new Promise((resolve) => setTimeout(resolve, 1000))
-        showInfo(`Bulk upload functionality will be implemented. File: ${file.name}`)
+        showSuccess(`Bulk upload functionality will be implemented. File: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`)
       } catch (err) {
         console.error("Error uploading file:", err)
-        const errorMessage = err instanceof Error ? err.message : "Failed to upload file"
+        const errorMessage = err instanceof Error ? err.message : "Failed to upload file. Please try again."
         showError(errorMessage)
       } finally {
         setBulkActionLoading(null)
       }
     }
     input.click()
-  }, [showInfo, showError])
+  }, [showInfo, showError, showSuccess])
 
   const handlePaginationChange = useCallback((p: number, s: number) => {
     if (p !== page) setPage(p)
@@ -638,9 +652,9 @@ export default function AdminInternalUsersPage() {
   ]
 
   const quickFilters = [
-    { id: "active", label: "Active", icon: Check },
-    { id: "inactive", label: "Inactive", icon: AlertCircle },
-    { id: "suspended", label: "Suspended", icon: Lock },
+    { id: "active", label: "Active", count: 0 },
+    { id: "inactive", label: "Inactive", count: 0 },
+    { id: "suspended", label: "Suspended", count: 0 },
   ]
 
   // Prepare toolbar buttons based on selection
@@ -651,6 +665,10 @@ export default function AdminInternalUsersPage() {
           label: bulkActionLoading === "delete" ? "Deleting..." : "Delete Selected",
           icon: bulkActionLoading === "delete" ? <Loader size="sm" className="mr-2" /> : <Trash2 className="h-4 w-4" />,
           onClick: async () => {
+            if (selectedUsers.length === 0) {
+              showError("No users selected. Please select at least one user to delete.")
+              return
+            }
             setBulkActionLoading("delete")
             try {
               // TODO: Replace with real API call
@@ -679,6 +697,10 @@ export default function AdminInternalUsersPage() {
           disabled: !canSuspend || bulkActionLoading !== null,
           tooltip: !canSuspend ? "You don't have permission to suspend users" : undefined,
           onClick: async () => {
+            if (selectedUsers.length === 0) {
+              showError("No users selected. Please select at least one user to suspend.")
+              return
+            }
             if (!canSuspend) {
               showError("You don't have permission to suspend users")
               return
@@ -717,6 +739,10 @@ export default function AdminInternalUsersPage() {
           disabled: !canActivate || bulkActionLoading !== null,
           tooltip: !canActivate ? "You don't have permission to activate users" : undefined,
           onClick: async () => {
+            if (selectedUsers.length === 0) {
+              showError("No users selected. Please select at least one user to activate.")
+              return
+            }
             if (!canActivate) {
               showError("You don't have permission to activate users")
               return
@@ -784,71 +810,73 @@ export default function AdminInternalUsersPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Internal Users</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage internal users and their roles. Internal users have role-based access (admin, manager, executive).
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {assignedOwner || assignedMembers.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center -space-x-2">
-                {assignedOwner && (() => {
-                  const owner = internalUsersForAssignee.find(u => u.id === assignedOwner)
-                  return (
-                    <Avatar className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {owner?.name.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })()}
-                {assignedMembers.slice(0, 3).map((memberId) => {
-                  const member = internalUsersForAssignee.find(u => u.id === memberId)
-                  return (
-                    <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {member?.name.charAt(0) || "M"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })}
-                {assignedMembers.length > 3 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                    <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
-                  </div>
-                )}
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-white">Internal Users</h1>
+            <p className="text-xs text-white/90 mt-0.5">
+              Manage internal users and their roles. Internal users have role-based access (admin, manager, executive).
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {assignedOwner || assignedMembers.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center -space-x-2">
+                  {assignedOwner && (() => {
+                    const owner = internalUsersForAssignee.find(u => u.id === assignedOwner)
+                    return (
+                      <Avatar className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {owner?.name.charAt(0) || "O"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })()}
+                  {assignedMembers.slice(0, 3).map((memberId) => {
+                    const member = internalUsersForAssignee.find(u => u.id === memberId)
+                    return (
+                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {member?.name.charAt(0) || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })}
+                  {assignedMembers.length > 3 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleOpenAssigneeModal}
+                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Assignee
+                </Button>
               </div>
+            ) : (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
               </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleOpenAssigneeModal}
-              className="whitespace-nowrap cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Assignee
-            </Button>
-          )}
-          {selectedUsers.length > 0 && (
-            <span className="text-sm font-medium">
-              {selectedUsers.length} user{selectedUsers.length !== 1 ? "s" : ""} selected
-            </span>
-          )}
+            )}
+            {selectedUsers.length > 0 && (
+              <span className="text-sm font-medium text-white">
+                {selectedUsers.length} user{selectedUsers.length !== 1 ? "s" : ""} selected
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1000,7 +1028,17 @@ export default function AdminInternalUsersPage() {
           <div className="space-y-4 py-4">
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="name">Name *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Enter the user's full name as it should appear in the system</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Input
                 id="name"
                 value={formData.name}
@@ -1016,7 +1054,17 @@ export default function AdminInternalUsersPage() {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="email">Email *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Email must be unique and will be used for login</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Input
                 id="email"
                 type="email"
@@ -1034,8 +1082,18 @@ export default function AdminInternalUsersPage() {
             {/* Password - Only for new users */}
             {!editingUser && (
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="password">Password *</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Password must be at least 8 characters long. Use the generate button for a secure password.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <Input
                       id="password"
@@ -1049,37 +1107,58 @@ export default function AdminInternalUsersPage() {
                       className={formErrors.password ? "border-destructive pr-20" : "pr-20"}
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 cursor-pointer"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{showPassword ? "Hide password" : "Show password"}</p>
+                        </TooltipContent>
+                      </Tooltip>
                       {formData.password && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={handleCopyPassword}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer"
+                              onClick={handleCopyPassword}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy password to clipboard</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGeneratePassword}
-                    className="flex-shrink-0"
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Generate
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleGeneratePassword}
+                        className="flex-shrink-0 cursor-pointer"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Generate
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Generate a secure random password</p>
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
                 {formData.password && (
                   <div className="space-y-1.5">
@@ -1103,7 +1182,17 @@ export default function AdminInternalUsersPage() {
 
             {/* Role */}
             <div className="space-y-2">
-              <Label htmlFor="role">Role *</Label>
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="role">Role *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Role determines the user's access level and permissions in the system</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value as InternalUserRole })}>
                 <SelectTrigger id="role">
                   <SelectValue />
@@ -1127,10 +1216,11 @@ export default function AdminInternalUsersPage() {
                 setFormErrors({})
               }}
               disabled={formLoading}
+              className="cursor-pointer"
             >
               Cancel
             </Button>
-            <Button onClick={handleFormSubmit} disabled={formLoading} className="cursor-pointer">
+            <Button onClick={handleFormSubmit} disabled={formLoading} variant="default" className="cursor-pointer">
               {formLoading ? (
                 <>
                   <Loader size="sm" className="mr-2" />
@@ -1247,77 +1337,115 @@ export default function AdminInternalUsersPage() {
             {/* Members Section */}
             <div className="space-y-2">
               <Label htmlFor="members">Members</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-start"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {memberSearch || "Search users to add..."}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Search users..." 
-                      value={memberSearch}
-                      onValueChange={setMemberSearch}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No users found.</CommandEmpty>
-                      <CommandGroup>
-                        {availableMembers.map((user) => (
-                          <CommandItem
-                            key={user.id}
-                            value={user.id}
-                            onSelect={() => handleAddMember(user.id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
-                                <AvatarFallback className="text-xs">
-                                  {user.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium">{user.name}</p>
-                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                              </div>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
               
-              {/* Selected Members */}
-              {tempMembers.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tempMembers.map((memberId) => {
-                    const member = internalUsersForAssignee.find(u => u.id === memberId)
-                    if (!member) return null
-                    return (
-                      <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={getAvatarUrl(memberId, member.email)} />
-                          <AvatarFallback className="text-xs">
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.name}
-                        <button
-                          onClick={() => handleRemoveMember(memberId)}
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+              {/* Top Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="members-search"
+                  placeholder="Search users..."
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              {/* User List */}
+              <div className="border rounded-md max-h-[300px] overflow-y-auto">
+                {filteredMembers.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No users found
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredMembers.map((user) => {
+                      const isSelected = tempMembers.includes(user.id)
+                      const isOwner = tempOwner === user.id
+                      return (
+                        <div
+                          key={user.id}
+                          onClick={() => {
+                            if (isOwner) return // Can't select owner as member
+                            if (isSelected) {
+                              handleRemoveMember(user.id)
+                            } else {
+                              handleAddMember(user.id)
+                            }
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 p-3 cursor-pointer hover:bg-accent transition-colors",
+                            isSelected && "bg-accent",
+                            isOwner && "opacity-50 cursor-not-allowed"
+                          )}
                         >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )
-                  })}
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={isOwner}
+                            onCheckedChange={(checked) => {
+                              if (isOwner) return
+                              if (checked) {
+                                handleAddMember(user.id)
+                              } else {
+                                handleRemoveMember(user.id)
+                              }
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="cursor-pointer"
+                          />
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={getAvatarUrl(user.id, user.email)} />
+                            <AvatarFallback className="text-xs">
+                              {user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{user.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          </div>
+                          {isOwner && (
+                            <Badge variant="outline" className="text-xs">
+                              Owner
+                            </Badge>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+              
+              {/* Selected Members Summary */}
+              {tempMembers.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {tempMembers.length} member{tempMembers.length !== 1 ? 's' : ''} selected
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {tempMembers.map((memberId) => {
+                      const member = internalUsersForAssignee.find(u => u.id === memberId)
+                      if (!member) return null
+                      return (
+                        <Badge key={memberId} variant="secondary" className="flex items-center gap-1.5">
+                          <Avatar className="h-4 w-4">
+                            <AvatarImage src={getAvatarUrl(memberId, member.email)} />
+                            <AvatarFallback className="text-xs">
+                              {member.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs">{member.name}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRemoveMember(memberId)
+                            }}
+                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      )
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -1326,7 +1454,7 @@ export default function AdminInternalUsersPage() {
             <Button variant="outline" onClick={() => setAssigneeModalOpen(false)} className="cursor-pointer">
               Cancel
             </Button>
-            <Button onClick={handleSaveAssignees} className="cursor-pointer">
+            <Button onClick={handleSaveAssignees} variant="default" className="cursor-pointer">
               Save Changes
             </Button>
           </DialogFooter>

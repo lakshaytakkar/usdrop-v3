@@ -30,5 +30,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "mcp-servers"]
+  "exclude": ["node_modules", "mcp-servers", "AI Studio Tools", "usdrop-landing"]
 }

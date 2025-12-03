@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Newspaper, Search, Book } from "lucide-react"
+import { Newspaper, Search, Book, Play } from "lucide-react"
 import { ArticleCard } from "./components/article-card"
 import { Article, sampleArticles } from "./data/articles"
 
@@ -36,37 +37,80 @@ export default function IntelligencePage() {
     })
   }, [searchQuery, selectedCategory])
 
-  const featuredArticles = filteredArticles.filter((a) => a.featured)
-  const otherArticles = filteredArticles.filter((a) => !a.featured)
-
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Newspaper className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold">Intelligence</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Stay ahead with dropshipping insights, trends, and expert strategies
-            </p>
-          </div>
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+          {/* Premium Banner with grainy gradient */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 via-violet-950 to-purple-800 p-3 text-white h-[77px] flex-shrink-0">
+            {/* Enhanced grainy texture layers */}
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                opacity: 0.5,
+                mixBlendMode: 'overlay'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
+                opacity: 0.4,
+                mixBlendMode: 'multiply'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
+                opacity: 0.3,
+                mixBlendMode: 'screen'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
+                              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
+                opacity: 0.6
+              }}
+            ></div>
 
-          {/* Hero Section */}
-          <Card className="bg-gradient-to-r from-primary/10 to-purple-500/10">
-            <CardContent className="p-8">
-              <div className="max-w-2xl">
-                <h2 className="text-2xl font-bold mb-3">Stay Ahead with Dropshipping Insights</h2>
-                <p className="text-muted-foreground">
-                  Get the latest trends, strategies, and tips from industry experts. Learn from real
-                  case studies and actionable guides to grow your business.
+            {/* Content */}
+            <div className="relative z-10 flex items-center gap-3 h-full">
+              {/* Icon/Mascot */}
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
+                <Newspaper 
+                  className="h-12 w-12 text-white"
+                  style={{
+                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
+                  }}
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Intelligence</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Stay ahead with dropshipping insights, trends, and expert strategies from industry leaders.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+
+              {/* Action buttons */}
+              <div className="flex-shrink-0 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Tutorial</span>
+                </Button>
+              </div>
+            </div>
+          </div>
 
           {/* Filters */}
           <Card>
@@ -97,27 +141,15 @@ export default function IntelligencePage() {
             </CardContent>
           </Card>
 
-          {/* Featured Articles */}
-          {featuredArticles.length > 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Featured Articles</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {featuredArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} featured={article.featured} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Other Articles */}
-          {otherArticles.length > 0 && (
+          {/* Articles */}
+          {filteredArticles.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Book className="h-5 w-5" />
                 Latest Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {otherArticles.map((article) => (
+                {filteredArticles.map((article) => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
               </div>

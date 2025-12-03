@@ -1,6 +1,6 @@
 import type { PhotoshootConcept, GeneratedPhotoshootImage } from '../types';
 import { geminiService } from '../services/geminiService';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { withRetry } from '../utils/colorUtils';
 import { resizeImage } from '../utils/imageResizer';
 
@@ -35,10 +35,10 @@ const initialPhotoshootState: PhotoshootState = {
     isGeneratingPhotoshoot: false,
 };
 
-export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, get) => ({
+export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
     ...initialPhotoshootState,
 
-    setSourceImage: async (base64) => {
+    setSourceImage: async (base64: string | null) => {
         set({ 
             sourceImage: base64, 
             sourceImagePreview: null, 
@@ -62,19 +62,19 @@ export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, ge
         const { sourceImage } = get();
         if (!sourceImage) return;
 
-        set({ isGeneratingConcepts: true, error: null, concepts: [], selectedConceptIds: [] });
+        set({ isGeneratingConcepts: true, concepts: [], selectedConceptIds: [] });
         try {
             // FIX: Correctly call the new 'generateConceptSuggestions' method. This resolves the error on this line and the following '.map' error.
             const newConcepts = await withRetry(() => geminiService.generateConceptSuggestions(sourceImage));
             set({ concepts: newConcepts, selectedConceptIds: newConcepts.map(c => c.id) });
         } catch (e: any) {
-            set({ error: e.message || "Failed to generate concepts." });
+            console.error("Failed to generate concepts:", e);
         } finally {
             set({ isGeneratingConcepts: false });
         }
     },
 
-    toggleConceptSelection: (conceptId) => {
+    toggleConceptSelection: (conceptId: string) => {
         set(state => {
             const newSelection = state.selectedConceptIds.includes(conceptId)
                 ? state.selectedConceptIds.filter(id => id !== conceptId)
@@ -101,9 +101,9 @@ export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, ge
             set(state => ({
                 generatedPhotoshootImages: state.generatedPhotoshootImages.map(img =>
                     img.conceptId === conceptId ? { ...img, status: 'error', error: message } : img
-                ),
-                error: message // also set a general error for visibility
+                )
             }));
+            console.error("Failed to generate photoshoot image:", message);
         }
     },
 
@@ -111,7 +111,7 @@ export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, ge
         const { selectedConceptIds } = get();
         if (selectedConceptIds.length === 0) return;
 
-        set({ isGeneratingPhotoshoot: true, error: null });
+        set({ isGeneratingPhotoshoot: true });
         
         const imagesToGenerate: GeneratedPhotoshootImage[] = selectedConceptIds.map(conceptId => ({
             id: `${conceptId}-${Date.now()}`,
@@ -126,7 +126,7 @@ export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, ge
         set({ isGeneratingPhotoshoot: false });
     },
 
-    retryPhotoshootImage: async (imageId) => {
+    retryPhotoshootImage: async (imageId: string) => {
         const imageToRetry = get().generatedPhotoshootImages.find(img => img.id === imageId);
         if (!imageToRetry) return;
 
@@ -137,5 +137,5 @@ export const createPhotoshootSlice: StudioStoreSlice<PhotoshootSlice> = (set, ge
         }));
 
         await get()._generateSingleImage(imageToRetry.conceptId);
-    }
-}));
+    },
+});

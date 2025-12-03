@@ -142,10 +142,10 @@ export default function ExternalUserDetailPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       {/* Topbar with Back Button, Breadcrumbs and Navigation */}
       <div className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-        <div className="flex h-14 items-center gap-2 px-3">
+        <div className="flex h-14 items-center gap-2 px-2">
           {/* Back Button - Small Arrow */}
           <Button
             variant="ghost"
@@ -194,11 +194,11 @@ export default function ExternalUserDetailPage() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto px-2 pt-1">
 
       {/* User Header */}
       <Card className="mb-2">
-        <CardHeader className="pb-2 px-4 pt-4">
+        <CardHeader className="pb-2 px-4 pt-2.5">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2.5">
               <Avatar className="h-10 w-10">
@@ -284,7 +284,7 @@ export default function ExternalUserDetailPage() {
         </TabsList>
 
         <div className="flex-1 overflow-y-auto">
-          <TabsContent value="overview" className="space-y-2 mt-0">
+          <TabsContent value="overview" className="space-y-2 mt-2">
             <Card>
               <CardHeader className="pb-2 px-4 pt-3">
                 <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
@@ -323,10 +323,10 @@ export default function ExternalUserDetailPage() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Credits</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">Credits</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-4 pb-3">
                 <div className="flex items-center gap-3">
                   <Coins className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -338,26 +338,26 @@ export default function ExternalUserDetailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="subscription" className="space-y-4">
+          <TabsContent value="subscription" className="space-y-2 mt-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Subscription Details</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">Subscription Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-muted-foreground" />
+              <CardContent className="space-y-2 pt-0 px-4 pb-3">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Plan</p>
-                    <Badge variant={getPlanBadgeVariant(user.plan)}>
+                    <p className="text-xs text-muted-foreground">Plan</p>
+                    <Badge variant={getPlanBadgeVariant(user.plan)} className="text-xs">
                       {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
                     </Badge>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Subscription Date</p>
-                    <p className="font-medium">
+                    <p className="text-xs text-muted-foreground">Subscription Date</p>
+                    <p className="text-sm font-medium">
                       {new Date(user.subscriptionDate).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -366,11 +366,11 @@ export default function ExternalUserDetailPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Expiry Date</p>
-                    <p className="font-medium">
+                    <p className="text-xs text-muted-foreground">Expiry Date</p>
+                    <p className="text-sm font-medium">
                       {(user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -379,32 +379,35 @@ export default function ExternalUserDetailPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant={getStatusBadgeVariant(user.status)}>
-                    {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                  </Badge>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <Badge variant={getStatusBadgeVariant(user.status)} className="text-xs">
+                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                    </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-4">
+          <TabsContent value="activity" className="space-y-2 mt-2">
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-4 pb-3">
                 <p className="text-sm text-muted-foreground">Activity log will be displayed here</p>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4">
+          <TabsContent value="settings" className="space-y-2 mt-2">
             <Card>
-              <CardHeader>
-                <CardTitle>User Settings</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">User Settings</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-4 pb-3">
                 <p className="text-sm text-muted-foreground">Settings and preferences will be displayed here</p>
               </CardContent>
             </Card>

@@ -14,9 +14,9 @@ export default function LogoStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-900 via-cyan-950 to-teal-800 p-4 md:p-5 text-white h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-900 via-cyan-950 to-teal-800 p-3 text-white h-[77px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -52,9 +52,9 @@ export default function LogoStudioPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-4 h-full">
+            <div className="relative z-10 flex items-center gap-3 h-full">
               {/* Mascot before text */}
-              <div className="relative w-[120px] h-[110px] md:w-[140px] md:h-[130px] flex-shrink-0 bg-transparent">
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent">
                 <Image
                   src="/logo-studio-mascot.png"
                   alt="3D mascot with logo design tool"
@@ -69,10 +69,9 @@ export default function LogoStudioPage() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold mb-1.5 leading-tight">USDrop Logo Studio</h2>
-                <p className="text-white/85 text-xs md:text-sm leading-relaxed">
-                  Apply your logo to multiple images in bulk. Customize placement, size, and opacity, 
-                  then download all watermarked images as a ZIP file.
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Whitelabelling</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Apply your logo to multiple images in bulk. Customize placement, size, and opacity.
                 </p>
               </div>
 
@@ -80,10 +79,11 @@ export default function LogoStudioPage() {
               <div className="flex-shrink-0">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
                 >
-                  <Play className="h-4 w-4" />
-                  Video Tutorial
+                  <Play className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Tutorial</span>
                 </Button>
               </div>
             </div>

@@ -20,8 +20,18 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Plus, Trash2, TrendingUp, Check, DollarSign, ArrowUpRight, ArrowDownRight, Package, Copy, Edit, RefreshCw, Download, Layers, X, UserPlus, Search } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { createCategoriesColumns } from "./components/categories-columns"
+import { AdminCategoryCard } from "./components/admin-category-card"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { ProductCategory } from "@/types/admin/categories"
@@ -29,7 +39,6 @@ import { sampleCategories } from "./data/categories"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
-import { Loader } from "@/components/ui/loader"
 import { format } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
@@ -39,6 +48,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
 import { InternalUser } from "@/types/admin/users"
+import { DataTable } from "@/components/data-table/data-table"
+import { createCategoriesColumns } from "./components/categories-columns"
 
 export default function AdminCategoriesPage() {
   const router = useRouter()
@@ -85,11 +96,11 @@ export default function AdminCategoriesPage() {
 
   // Quick filters (3-5 important ones)
   const quickFilters = [
-    { id: "trending", label: "Trending", icon: TrendingUp },
-    { id: "high_profit", label: "High Profit", icon: DollarSign },
-    { id: "high_growth", label: "High Growth", icon: ArrowUpRight },
-    { id: "with_products", label: "With Products", icon: Package },
-    { id: "parent_categories", label: "Parent Categories", icon: Layers },
+    { id: "trending", label: "Trending", count: 0 },
+    { id: "high_profit", label: "High Profit", count: 0 },
+    { id: "high_growth", label: "High Growth", count: 0 },
+    { id: "with_products", label: "With Products", count: 0 },
+    { id: "parent_categories", label: "Parent Categories", count: 0 },
   ]
 
   // Filter members based on search
@@ -466,37 +477,35 @@ export default function AdminCategoriesPage() {
     setQuickViewOpen(true)
   }, [])
 
-  const columns = useMemo(
-    () =>
-      createCategoriesColumns({
-        onViewDetails: handleViewDetails,
-        onQuickView: handleQuickView,
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onCopyCategoryId: handleCopyCategoryId,
-        onCopySlug: handleCopySlug,
-        onToggleTrending: handleToggleTrending,
-        onViewProducts: handleViewProducts,
-        onViewSubcategories: handleViewSubcategories,
-        onDuplicate: handleDuplicate,
-        canEdit,
-        canDelete,
-      }),
-    [
-      handleViewDetails,
-      handleQuickView,
-      handleEdit,
-      handleDelete,
-      handleCopyCategoryId,
-      handleCopySlug,
-      handleToggleTrending,
-      handleViewProducts,
-      handleViewSubcategories,
-      handleDuplicate,
+  const columns = useMemo(() => {
+    return createCategoriesColumns({
+      onViewDetails: handleViewDetails,
+      onQuickView: handleQuickView,
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+      onCopyCategoryId: handleCopyCategoryId,
+      onCopySlug: handleCopySlug,
+      onToggleTrending: handleToggleTrending,
+      onViewProducts: handleViewProducts,
+      onViewSubcategories: handleViewSubcategories,
+      onDuplicate: handleDuplicate,
       canEdit,
       canDelete,
-    ]
-  )
+    })
+  }, [
+    handleViewDetails,
+    handleQuickView,
+    handleEdit,
+    handleDelete,
+    handleCopyCategoryId,
+    handleCopySlug,
+    handleToggleTrending,
+    handleViewProducts,
+    handleViewSubcategories,
+    handleDuplicate,
+    canEdit,
+    canDelete,
+  ])
 
   const parentOptions = parentCategories.map((cat) => ({
     label: cat.name,
@@ -546,66 +555,68 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Categories</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage product categories
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {assignedOwner || assignedMembers.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center -space-x-2">
-                {assignedOwner && (() => {
-                  const owner = internalUsers.find(u => u.id === assignedOwner)
-                  return (
-                    <Avatar className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {owner?.name.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })()}
-                {assignedMembers.slice(0, 3).map((memberId) => {
-                  const member = internalUsers.find(u => u.id === memberId)
-                  return (
-                    <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {member?.name.charAt(0) || "M"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })}
-                {assignedMembers.length > 3 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                    <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
-                  </div>
-                )}
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-white">Categories</h1>
+            <p className="text-xs text-white/90 mt-0.5">
+              Manage product categories
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {assignedOwner || assignedMembers.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center -space-x-2">
+                  {assignedOwner && (() => {
+                    const owner = internalUsers.find(u => u.id === assignedOwner)
+                    return (
+                      <Avatar className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {owner?.name.charAt(0) || "O"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })()}
+                  {assignedMembers.slice(0, 3).map((memberId) => {
+                    const member = internalUsers.find(u => u.id === memberId)
+                    return (
+                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {member?.name.charAt(0) || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })}
+                  {assignedMembers.length > 3 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleOpenAssigneeModal}
+                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Assignee
+                </Button>
               </div>
+            ) : (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
               </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleOpenAssigneeModal}
-              className="whitespace-nowrap cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Assignee
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

@@ -59,11 +59,11 @@ const tags = [
 ]
 
 const sampleAuthors = [
-  { id: "author-001", name: "Sarah Johnson", email: "sarah@usdrop.com", avatar: null },
-  { id: "author-002", name: "Michael Chen", email: "michael@usdrop.com", avatar: null },
-  { id: "author-003", name: "Emily Rodriguez", email: "emily@usdrop.com", avatar: null },
-  { id: "author-004", name: "David Kim", email: "david@usdrop.com", avatar: null },
-  { id: "author-005", name: "Jessica Martinez", email: "jessica@usdrop.com", avatar: null },
+  { id: "author-001", name: "Sarah Johnson", email: "sarah@usdrop.com", avatar: undefined },
+  { id: "author-002", name: "Michael Chen", email: "michael@usdrop.com", avatar: undefined },
+  { id: "author-003", name: "Emily Rodriguez", email: "emily@usdrop.com", avatar: undefined },
+  { id: "author-004", name: "David Kim", email: "david@usdrop.com", avatar: undefined },
+  { id: "author-005", name: "Jessica Martinez", email: "jessica@usdrop.com", avatar: undefined },
 ]
 
 const articleTitles = [
@@ -233,7 +233,7 @@ export const sampleArticles: Article[] = articleTitles.map((title, index) => {
     author_id: author.id,
     author: {
       ...author,
-      avatar: author.avatar || null,
+      avatar: author.avatar || undefined,
     },
     status,
     published_at,

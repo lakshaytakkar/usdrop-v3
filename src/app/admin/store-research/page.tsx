@@ -232,13 +232,13 @@ export default function AdminStoreResearchPage() {
             <div>
               <p className="text-xs text-muted-foreground mb-1">Monthly Traffic</p>
               <p className="text-sm font-medium">
-                {new Intl.NumberFormat("en-US", { notation: "compact" }).format(selectedEntryForQuickView.data.monthlyTraffic)}
+                {selectedEntryForQuickView.data.monthlyTraffic ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(selectedEntryForQuickView.data.monthlyTraffic) : 'N/A'}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Monthly Revenue</p>
               <p className="text-sm font-medium">
-                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(selectedEntryForQuickView.data.monthlyRevenue)}
+                {selectedEntryForQuickView.data.monthlyRevenue ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(selectedEntryForQuickView.data.monthlyRevenue) : 'N/A'}
               </p>
             </div>
             <div className="flex gap-2 pt-2">

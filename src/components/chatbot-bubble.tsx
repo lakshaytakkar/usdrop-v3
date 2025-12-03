@@ -18,7 +18,7 @@ export function ChatbotBubble() {
     <>
       <button
         ref={buttonRef}
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "fixed bottom-6 right-6 z-50 flex items-center gap-2.5",
           "bg-background border border-border rounded-full shadow-lg",
@@ -30,7 +30,7 @@ export function ChatbotBubble() {
         <div className="relative">
           <Avatar className="h-10 w-10 ring-2 ring-primary/20">
             <AvatarImage 
-              src="https://avatar.iran.liara.run/public" 
+              src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
               alt={pocName} 
             />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">

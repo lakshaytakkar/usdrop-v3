@@ -47,7 +47,7 @@ export const ImageToolbar: React.FC = () => {
 
     const handleDownload = () => {
         const link = document.createElement('a');
-        if (activeImage) {
+        if (activeImage && activeImageIndex !== null) {
             link.href = activeImage;
             link.download = `virtual-photoshoot-${activeImageIndex + 1}.jpg`;
         }

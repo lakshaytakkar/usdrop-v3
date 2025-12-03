@@ -1,6 +1,5 @@
 "use client"
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,26 +11,28 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { RainbowButton } from "@/components/ui/rainbow-button"
+import { AIChatbotDialog } from "@/components/ai-chatbot-dialog"
+import { cn } from "@/lib/utils"
 import { 
   Gift, 
-  UserPlus, 
   Moon, 
   Sun, 
   GraduationCap, 
   Bell,
   Settings,
   Gem,
-  Palette,
-  ArrowLeftRight,
   LogOut,
-  ArrowUpRight,
   Sparkles,
+  HelpCircle,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
+import Link from "next/link"
 
 export function Topbar() {
   const [theme, setTheme] = useState<"light" | "dark">("light")
   const [mounted, setMounted] = useState(false)
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
+  const aiButtonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -47,26 +48,24 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Left side - Sidebar Toggle */}
-        <div className="flex items-center gap-3">
-          <SidebarTrigger className="-ml-1" />
-        </div>
-
-        {/* Right side - Action Buttons and Profile Menu */}
+    <header className={cn(
+      "sticky top-0 z-40 w-full border-b border-border",
+      isAIChatOpen 
+        ? "bg-background backdrop-blur-none" 
+        : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+    )}>
+      <div className="flex h-16 items-center justify-end px-2">
+        {/* Action Buttons and Profile Menu */}
         <div className="flex items-center gap-2">
           {/* Ask USDrop AI Button */}
           <RainbowButton
+            ref={aiButtonRef}
             size="lg"
-            className="hidden sm:flex items-center gap-2 h-10 rounded-lg font-sans font-bold px-4"
-            onClick={() => {
-              // Handle Ask USDrop AI click - you can add navigation or modal here
-              console.log("Ask USDrop AI clicked")
-            }}
+            className="hidden sm:flex items-center gap-2 h-[36.8px] rounded-lg font-sans px-[14.72px]"
+            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
           >
             <Sparkles className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-bold whitespace-nowrap">Ask USDrop AI</span>
+            <span className="text-sm font-normal whitespace-nowrap">Ask USDrop AI</span>
           </RainbowButton>
 
           <Button
@@ -76,16 +75,6 @@ export function Topbar() {
           >
             <Gift className="h-4 w-4" />
             <span className="hidden lg:inline">Refer and get reward</span>
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden sm:flex cursor-pointer"
-            title="Invite"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span className="sr-only">Invite</span>
           </Button>
 
           <Button
@@ -104,6 +93,19 @@ export function Topbar() {
               <Moon className="h-4 w-4" />
             )}
             <span className="sr-only">Toggle theme</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="cursor-pointer"
+            title="Help"
+            asChild
+          >
+            <Link href="/help">
+              <HelpCircle className="h-4 w-4" />
+              <span className="sr-only">Help</span>
+            </Link>
           </Button>
 
           <Button
@@ -166,20 +168,8 @@ export function Topbar() {
                 Subscriptions
               </DropdownMenuItem>
               <DropdownMenuItem className="cursor-pointer">
-                <Palette className="mr-2 h-4 w-4" />
-                Brand kits
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Invite members
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
                 <Gift className="mr-2 h-4 w-4" />
                 Refer and get reward
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <ArrowLeftRight className="mr-2 h-4 w-4" />
-                Switch team / brand
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
@@ -193,6 +183,13 @@ export function Topbar() {
           )}
         </div>
       </div>
+
+      {/* AI Chatbot Dialog */}
+      <AIChatbotDialog 
+        isOpen={isAIChatOpen} 
+        onClose={() => setIsAIChatOpen(false)}
+        buttonRef={aiButtonRef}
+      />
     </header>
   )
 }

@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState, DragEvent, ChangeEvent } from 'react';
-import { UploadCloud, Loader2, Download, RotateCcw } from 'lucide-react';
+import { UploadCloud, Loader2, Download, RotateCcw, Wand2 } from 'lucide-react';
 import { geminiService } from '@/lib/services/gemini-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import JSZip from 'jszip';
 
-type View = 'config' | 'result';
+type ViewState = 'idle' | 'generating' | 'results';
 
 interface GeneratedImageState {
     status: 'pending' | 'done' | 'error';
@@ -57,15 +58,15 @@ const Uploader = ({ onImageUpload }: { onImageUpload: (file: File) => void }) =>
             htmlFor="product-upload" 
             className={cn(
                 "cursor-pointer aspect-[4/5] w-full max-w-md flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-colors",
-                isDragOver ? "border-primary bg-primary/10" : "border-muted bg-muted/50 hover:border-primary/50"
+                isDragOver ? "border-primary bg-primary/10" : "border-border hover:border-foreground/20 bg-muted"
             )} 
             onDrop={handleDrop} 
             onDragOver={(e) => e.preventDefault()} 
             onDragEnter={(e) => handleDragEvents(e, true)} 
             onDragLeave={(e) => handleDragEvents(e, false)}
         >
-            <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
-            <span className="text-sm font-medium">Drop your image here</span>
+            <UploadCloud className="h-6 w-6 text-foreground mb-2" />
+            <span className="text-xs font-medium text-foreground">Drop your image here</span>
             <span className="text-xs text-muted-foreground mt-1">or click to upload</span>
             <input id="product-upload" type="file" className="hidden" accept="image/png, image/jpeg, image/webp" onChange={handleFileChange} />
         </label>
@@ -83,29 +84,29 @@ interface ResultCardProps {
 
 const ResultCard: React.FC<ResultCardProps> = ({ title, imageUrl, status, error, onRetry, onDownload }) => {
     return (
-        <Card>
+        <Card className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
             <CardContent className="p-4">
-                <h3 className="font-semibold text-base mb-2 text-center">{title}</h3>
-                <div className="aspect-[4/5] w-full bg-muted rounded-lg border flex items-center justify-center text-muted-foreground text-center relative overflow-hidden group">
-                    {status === 'pending' && <Loader2 className="animate-spin h-10 w-10 text-primary" />}
+                <h3 className="font-semibold text-sm mb-2 text-center text-foreground">{title}</h3>
+                <div className="aspect-[4/5] w-full bg-muted rounded-lg border border-border flex items-center justify-center text-muted-foreground text-center relative overflow-hidden group">
+                    {status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-foreground" />}
                     {status === 'error' && (
-                        <div className="p-4 text-destructive">
-                            <p className="font-semibold mb-2">Generation Failed</p>
+                        <div className="p-4 text-center">
+                            <p className="text-sm text-destructive mb-2 font-semibold">Error</p>
                             <p className="text-xs text-muted-foreground mb-4">{error}</p>
-                            <Button onClick={onRetry} variant="destructive" size="sm">Retry</Button>
+                            <Button onClick={onRetry} variant="destructive" size="sm" className="text-xs">Retry</Button>
                         </div>
                     )}
                     {status === 'done' && imageUrl && (
                         <>
-                            <img src={imageUrl} alt={title} className="w-full h-full object-contain" />
-                            <div className="absolute top-2 right-2 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button onClick={onDownload} size="icon" variant="secondary" aria-label="Download">
-                                    <Download className="h-4 w-4" />
-                                </Button>
-                                <Button onClick={onRetry} size="icon" variant="secondary" aria-label="Regenerate">
-                                    <RotateCcw className="h-4 w-4" />
-                                </Button>
-                            </div>
+                            <img src={imageUrl} alt={title} className="w-full h-full object-cover rounded-lg" />
+                            <Button
+                                size="icon"
+                                variant="secondary"
+                                className="absolute top-2 right-2 bg-background hover:bg-muted border border-border transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                onClick={onDownload}
+                            >
+                                <Download className="h-4 w-4 text-foreground" />
+                            </Button>
                         </>
                     )}
                 </div>
@@ -115,11 +116,14 @@ const ResultCard: React.FC<ResultCardProps> = ({ title, imageUrl, status, error,
 }
 
 export function ProductSceneGenerator() {
-    const [view, setView] = useState<View>('config');
+    const [viewState, setViewState] = useState<ViewState>('idle');
     const [uploadedImage, setUploadedImage] = useState<string | null>(null);
     const [selectedAngles, setSelectedAngles] = useState<string[]>([]);
     const [generatedImages, setGeneratedImages] = useState<Record<string, GeneratedImageState>>({});
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [loadingStep, setLoadingStep] = useState<string>('');
+    const [loadingProgress, setLoadingProgress] = useState<number>(0);
 
     const handleImageUpload = (file: File) => {
         const reader = new FileReader();
@@ -156,8 +160,11 @@ export function ProductSceneGenerator() {
 
     const handleGenerateAll = async () => {
         if (!uploadedImage || selectedAngles.length === 0) return;
+
+        setViewState('generating');
         setIsGenerating(true);
-        setView('result');
+        setLoadingStep('Preparing images...');
+        setLoadingProgress(10);
 
         const initialStates: Record<string, GeneratedImageState> = {};
         selectedAngles.forEach(id => {
@@ -165,27 +172,66 @@ export function ProductSceneGenerator() {
         });
         setGeneratedImages(initialStates);
 
+        // Simulate progress update
+        setTimeout(() => {
+            setLoadingStep('Generating product images...');
+            setLoadingProgress(30);
+        }, 500);
+
         const concurrencyLimit = 3;
         const queue = [...selectedAngles];
+        let completed = 0;
+        const totalImages = selectedAngles.length;
+
+        const processAngle = async (angleId: string) => {
+            try {
+                setLoadingStep(`Generating product images (${completed + 1}/${totalImages})...`);
+                setLoadingProgress(30 + (completed / totalImages) * 50);
+                
+                await handleGenerateSingle(angleId);
+                completed++;
+
+                if (completed === totalImages) {
+                    setLoadingStep('Processing results...');
+                    setLoadingProgress(85);
+                    setTimeout(() => {
+                        setLoadingStep('Almost done...');
+                        setLoadingProgress(95);
+                        setTimeout(() => {
+                            setLoadingProgress(100);
+                            setIsGenerating(false);
+                            setViewState('results');
+                        }, 300);
+                    }, 500);
+                }
+            } catch (err) {
+                completed++;
+                if (completed === totalImages) {
+                    setIsGenerating(false);
+                    setViewState('results');
+                }
+            }
+        };
 
         const workers = Array(concurrencyLimit).fill(null).map(async () => {
             while (queue.length > 0) {
                 const angleId = queue.shift();
                 if (angleId) {
-                    await handleGenerateSingle(angleId);
+                    await processAngle(angleId);
                 }
             }
         });
 
         await Promise.all(workers);
-        setIsGenerating(false);
     };
 
     const handleStartOver = () => {
+        setViewState('idle');
         setUploadedImage(null);
         setSelectedAngles([]);
         setGeneratedImages({});
-        setView('config');
+        setLoadingStep('');
+        setLoadingProgress(0);
     };
 
     const handleDownload = (url: string | undefined, filename: string) => {
@@ -197,96 +243,253 @@ export function ProductSceneGenerator() {
         link.click();
         document.body.removeChild(link);
     };
-    
-    const generateButtonText = isGenerating ? "Generating..." : `Generate (${selectedAngles.length})`;
 
-    const renderConfigView = () => (
-        <div className="w-full grid md:grid-cols-2 gap-8 items-start">
-            <div className="flex flex-col items-center gap-4">
-                <h3 className="font-bold text-xl mb-1">1. Upload Your Product</h3>
-                {uploadedImage ? (
-                    <div className="relative group aspect-[4/5] w-full max-w-sm rounded-md overflow-hidden">
-                        <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
-                        <Button 
-                            onClick={() => setUploadedImage(null)} 
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-label="Remove image"
-                        >
-                            ×
-                        </Button>
+    const handleDownloadAll = async () => {
+        setIsDownloading(true);
+        try {
+            const imagesToZip: Array<{ url: string; filename: string }> = [];
+            
+            // Add original image if available
+            if (uploadedImage) {
+                imagesToZip.push({ url: uploadedImage, filename: 'original' });
+            }
+
+            // Add all generated images
+            Object.entries(generatedImages).forEach(([angleId, state]) => {
+                if (state.status === 'done' && state.url) {
+                    const angle = ANGLE_OPTIONS.find(a => a.id === angleId);
+                    imagesToZip.push({ 
+                        url: state.url, 
+                        filename: angle ? angle.label.toLowerCase().replace(/\s+/g, '-') : angleId 
+                    });
+                }
+            });
+
+            if (imagesToZip.length === 0) {
+                alert('No images to download.');
+                setIsDownloading(false);
+                return;
+            }
+
+            const zip = new JSZip();
+
+            for (let i = 0; i < imagesToZip.length; i++) {
+                const { url, filename } = imagesToZip[i];
+                const match = url.match(/^data:(image\/(?:png|jpeg|webp));base64,(.*)$/);
+                if (match) {
+                    const mimeType = match[1];
+                    const base64Data = match[2];
+                    const extension = mimeType.split('/')[1] || 'jpg';
+                    zip.file(`product-scene-${filename}-${i + 1}.${extension}`, base64Data, { base64: true });
+                } else {
+                    // If URL is not base64, fetch it
+                    try {
+                        const response = await fetch(url);
+                        const blob = await response.blob();
+                        const extension = blob.type.split('/')[1] || 'jpg';
+                        zip.file(`product-scene-${filename}-${i + 1}.${extension}`, blob);
+                    } catch (error) {
+                        console.error(`Failed to fetch image ${filename}:`, error);
+                    }
+                }
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = 'product-scene-images.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error("Failed to create or download ZIP:", error);
+            alert('Failed to create ZIP file.');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    // Loading screen - contained in content area
+    if (viewState === 'generating') {
+        return (
+            <div className="w-full max-w-7xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
+                <div className="text-center space-y-6 p-8 max-w-md w-full">
+                    <Loader2 className="h-16 w-16 text-foreground animate-spin mx-auto" />
+                    <div className="space-y-3">
+                        <p className="text-xl font-semibold text-foreground">{loadingStep}</p>
+                        <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-foreground transition-all duration-300 ease-in-out"
+                                style={{ width: `${loadingProgress}%` }}
+                            />
+                        </div>
+                        <p className="text-sm text-muted-foreground">{Math.round(loadingProgress)}%</p>
                     </div>
-                ) : (
-                    <Uploader onImageUpload={handleImageUpload} />
-                )}
+                </div>
             </div>
-            <Card>
-                <CardContent className="p-6">
-                    <div className={cn(!uploadedImage && "opacity-50 pointer-events-none")}>
-                        <h3 className="font-bold text-xl mb-2">2. Select Angles</h3>
-                        <p className="text-muted-foreground text-sm mb-4">Choose one or more angles to generate.</p>
-                        <div className="flex flex-wrap gap-2">
-                            {ANGLE_OPTIONS.map(angle => (
-                                <Button
-                                    key={angle.id} 
-                                    onClick={() => toggleAngle(angle.id)} 
-                                    variant={selectedAngles.includes(angle.id) ? "default" : "outline"}
-                                    size="sm"
-                                >
-                                    {angle.label}
-                                </Button>
-                            ))}
+        );
+    }
+
+    // Results view - full viewport
+    if (viewState === 'results') {
+        return (
+            <div className="h-screen flex flex-col bg-background">
+                {/* Action buttons header */}
+                <div className="flex-shrink-0 border-b border-border bg-card p-4">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                        <h2 className="text-lg font-semibold text-foreground">Generated Results</h2>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleStartOver}
+                                className={cn(
+                                    "group relative h-10 px-4 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
+                                    "flex items-center justify-center gap-2"
+                                )}
+                            >
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                <span className="relative flex items-center justify-center gap-2 z-10">
+                                    <RotateCcw className="h-4 w-4 text-white" />
+                                    Start Over
+                                </span>
+                            </button>
+                            <button
+                                onClick={handleDownloadAll}
+                                disabled={isDownloading || Object.values(generatedImages).filter(img => img.status === 'done').length === 0}
+                                className={cn(
+                                    "group relative h-10 px-4 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
+                                    "flex items-center justify-center gap-2",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
+                            >
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                                <span className="relative flex items-center justify-center gap-2 z-10">
+                                    {isDownloading ? (
+                                        <>
+                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            Creating ZIP...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="h-4 w-4 text-white" />
+                                            Download ({Object.values(generatedImages).filter(img => img.status === 'done').length + (uploadedImage ? 1 : 0)})
+                                        </>
+                                    )}
+                                </span>
+                            </button>
                         </div>
                     </div>
-                    <Button 
+                </div>
+
+                {/* Results grid - scrollable */}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {uploadedImage && (
+                                <ResultCard 
+                                    title="Original" 
+                                    imageUrl={uploadedImage} 
+                                    status='done' 
+                                    onRetry={() => {}} 
+                                    onDownload={() => handleDownload(uploadedImage, 'original')} 
+                                />
+                            )}
+                            {Object.entries(generatedImages).map(([angleId, state]: [string, GeneratedImageState]) => {
+                                const angle = ANGLE_OPTIONS.find(a => a.id === angleId);
+                                if (!angle) return null;
+                                return (
+                                    <ResultCard 
+                                        key={angleId} 
+                                        title={angle.label} 
+                                        imageUrl={state.url} 
+                                        status={state.status} 
+                                        error={state.error} 
+                                        onRetry={() => handleGenerateSingle(angleId)} 
+                                        onDownload={() => handleDownload(state.url, angleId)} 
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Idle view - Main layout
+    const renderConfigView = () => (
+        <div className="w-full grid md:grid-cols-2 gap-4 h-[calc(100vh-280px)] max-h-[calc(100vh-280px)]">
+            <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-full flex flex-col max-h-full overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col overflow-hidden">
+                    <h3 className="font-bold text-sm mb-3 text-foreground flex-shrink-0">1. Upload Your Product</h3>
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-0 overflow-hidden">
+                        {uploadedImage ? (
+                            <div className="relative group w-full h-full max-h-full flex items-center justify-center">
+                                <div className="relative w-full max-w-sm aspect-[4/5] max-h-full rounded-md overflow-hidden border border-border">
+                                    <img src={uploadedImage} alt="Uploaded" className="w-full h-full object-cover" />
+                                    <Button 
+                                        onClick={() => setUploadedImage(null)} 
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        aria-label="Remove image"
+                                    >
+                                        ×
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <Uploader onImageUpload={handleImageUpload} />
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-full flex flex-col max-h-full overflow-hidden">
+                <CardContent className="p-4 h-full flex flex-col overflow-hidden">
+                    <h3 className="font-bold text-sm mb-2 text-foreground flex-shrink-0">2. Select Angles</h3>
+                    <p className="text-muted-foreground text-xs mb-2 flex-shrink-0">Choose one or more angles to generate.</p>
+                    <div className="flex flex-wrap gap-1.5 flex-1 min-h-0 overflow-y-auto pb-2">
+                        {ANGLE_OPTIONS.map(angle => (
+                            <Button
+                                key={angle.id} 
+                                onClick={() => toggleAngle(angle.id)} 
+                                variant={selectedAngles.includes(angle.id) ? "default" : "outline"}
+                                size="sm"
+                                className="text-xs"
+                                disabled={!uploadedImage}
+                            >
+                                {angle.label}
+                            </Button>
+                        ))}
+                    </div>
+                    <button
                         onClick={handleGenerateAll} 
-                        disabled={!uploadedImage || selectedAngles.length === 0 || isGenerating} 
-                        className="w-full mt-4"
-                        size="lg"
+                        disabled={!uploadedImage || selectedAngles.length === 0 || isGenerating}
+                        className={cn(
+                            "group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer mt-3 flex-shrink-0",
+                            "flex items-center justify-center gap-2",
+                            "disabled:opacity-50 disabled:cursor-not-allowed"
+                        )}
                     >
-                        {generateButtonText}
-                    </Button>
+                        <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                        <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                        <span className="relative flex items-center justify-center gap-2 z-10">
+                            <Wand2 className="h-4 w-4 text-white" />
+                            {isGenerating ? "Generating..." : `Generate (${selectedAngles.length})`}
+                        </span>
+                    </button>
                 </CardContent>
             </Card>
         </div>
     );
 
-    const renderResultView = () => (
-        <div className="w-full flex flex-col items-center gap-8">
-            <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <ResultCard 
-                    title="Original" 
-                    imageUrl={uploadedImage!} 
-                    status='done' 
-                    onRetry={() => {}} 
-                    onDownload={() => handleDownload(uploadedImage, 'original')} 
-                />
-                {Object.entries(generatedImages).map(([angleId, state]: [string, GeneratedImageState]) => {
-                    const angle = ANGLE_OPTIONS.find(a => a.id === angleId);
-                    if (!angle) return null;
-                    return (
-                        <ResultCard 
-                            key={angleId} 
-                            title={angle.label} 
-                            imageUrl={state.url} 
-                            status={state.status} 
-                            error={state.error} 
-                            onRetry={() => handleGenerateSingle(angleId)} 
-                            onDownload={() => handleDownload(state.url, angleId)} 
-                        />
-                    );
-                })}
-            </div>
-            <Button onClick={handleStartOver} variant="outline" size="lg">
-                Start Over
-            </Button>
-        </div>
-    );
-    
     return (
-        <div className="w-full max-w-7xl mx-auto flex flex-col items-center">
-            {view === 'config' ? renderConfigView() : renderResultView()}
+        <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
+            {renderConfigView()}
         </div>
     );
 }

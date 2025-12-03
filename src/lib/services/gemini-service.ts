@@ -1,9 +1,12 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
 
 if (!API_KEY) {
-  console.warn("GEMINI_API_KEY environment variable not set. Using mock service.");
+  console.warn("GEMINI_API_KEY or API_KEY environment variable not set. Using mock service.");
+  console.warn("Please set NEXT_PUBLIC_GEMINI_API_KEY, GEMINI_API_KEY, or API_KEY in your .env file");
+} else {
+  console.log("Gemini API key found, using real API");
 }
 
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
@@ -43,11 +46,18 @@ const mockGenerateWithImagen = async (prompt: string, aspectRatio: string): Prom
     });
 };
 
-const mockGenerateStyledImage = async (prompt: string, images: string[]): Promise<string> => {
+const mockGenerateStyledImage = async (prompt: string, images: string[], aspectRatio: string = '4:5'): Promise<string> => {
     console.log("--- MOCK API CALL: generateStyledImage ---");
+    console.log("Aspect Ratio:", aspectRatio);
     await new Promise(resolve => setTimeout(resolve, 1500));
+    let width = 1024;
+    let height = 1280; // default 4:5
+    if (aspectRatio === '1:1') { width = 1024; height = 1024; }
+    if (aspectRatio === '4:5') { width = 1024; height = 1280; }
+    if (aspectRatio === '16:9') { width = 1280; height = 720; }
+    if (aspectRatio === '9:16') { width = 720; height = 1280; }
     const seed = (prompt.length % 100);
-    const imageUrl = `https://picsum.photos/seed/${seed}/1024/1365`;
+    const imageUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
     const response = await fetch(imageUrl);
     const blob = await response.blob();
     return new Promise<string>((resolve, reject) => {
@@ -84,8 +94,11 @@ export const geminiService = {
           });
 
           if (response.generatedImages && response.generatedImages.length > 0) {
-              const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-              return `data:image/png;base64,${base64ImageBytes}`;
+              const image = response.generatedImages[0].image;
+              if (!image || !image.imageBytes) {
+                  throw new Error("Imagen generation failed to return image bytes.");
+              }
+              return `data:image/png;base64,${image.imageBytes}`;
           }
           throw new Error("Imagen generation failed to return an image.");
       } catch (error) {
@@ -94,9 +107,17 @@ export const geminiService = {
       }
   },
 
-  generateStyledImage: async (prompt: string, images: string[]): Promise<string> => {
-    if (!ai) return mockGenerateStyledImage(prompt, images);
+  generateStyledImage: async (prompt: string, images: string[], aspectRatio: string = '4:5'): Promise<string> => {
+    if (!ai) {
+      console.warn("AI client not initialized, using mock service");
+      return mockGenerateStyledImage(prompt, images, aspectRatio);
+    }
+    
     try {
+        console.log("Calling Gemini API with model: gemini-2.5-flash-image");
+        console.log("Aspect ratio:", aspectRatio);
+        console.log("Number of input images:", images.length);
+        
         const parts: any[] = [{ text: prompt }];
         for (const imageB64 of images) {
             const { mimeType, data } = parseDataUrl(imageB64);
@@ -109,23 +130,84 @@ export const geminiService = {
             config: {
                 responseModalities: [Modality.IMAGE],
                 imageConfig: {
-                    aspectRatio: '4:5'
+                    aspectRatio: aspectRatio as '1:1' | '4:5' | '16:9' | '9:16'
                 }
             },
         });
 
+        // Log response structure for debugging
+        console.log("API Response received. Structure:", {
+            hasCandidates: !!response.candidates,
+            candidatesLength: response.candidates?.length,
+            responseKeys: Object.keys(response),
+            firstCandidateKeys: response.candidates?.[0] ? Object.keys(response.candidates[0]) : null
+        });
+
+        // Check for safety ratings or blocked content
         if (response.candidates && response.candidates.length > 0) {
-            for (const part of response.candidates[0].content.parts) {
-                if (part.inlineData) {
+            const candidate = response.candidates[0];
+            
+            // Check for finish reason (safety blocking)
+            if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+                const reason = candidate.finishReason;
+                const safetyRatings = candidate.safetyRatings || [];
+                console.error("Generation blocked. Finish reason:", reason);
+                console.error("Safety ratings:", safetyRatings);
+                throw new Error(`Image generation was blocked. Reason: ${reason}. This may be due to content safety filters.`);
+            }
+            
+            // Get content - try different possible structures
+            const content = candidate.content;
+            
+            if (!content) {
+                console.error("Response structure:", {
+                    candidateKeys: Object.keys(candidate),
+                    finishReason: candidate.finishReason,
+                    safetyRatings: candidate.safetyRatings
+                });
+                throw new Error("Response content is missing. The API may have blocked the request.");
+            }
+            
+            if (!content.parts || !Array.isArray(content.parts) || content.parts.length === 0) {
+                console.error("Response structure:", {
+                    hasContent: !!content,
+                    contentKeys: content ? Object.keys(content) : [],
+                    hasParts: !!content?.parts,
+                    partsType: typeof content?.parts,
+                    partsLength: content?.parts?.length
+                });
+                throw new Error("Response parts are missing or empty.");
+            }
+            
+            // Look for image in parts
+            for (const part of content.parts) {
+                if (part.inlineData && part.inlineData.data) {
                     const base64ImageBytes: string = part.inlineData.data;
-                    const mimeType = part.inlineData.mimeType;
+                    const mimeType = part.inlineData.mimeType || 'image/png';
+                    if (!base64ImageBytes) {
+                        continue; // Try next part
+                    }
+                    console.log("Successfully generated image from Gemini API");
                     return `data:${mimeType};base64,${base64ImageBytes}`;
                 }
             }
+            
+            // If we get here, no image was found in parts
+            console.error("No image found in response parts. Parts structure:", content.parts.map(p => ({
+                hasInlineData: !!p.inlineData,
+                hasText: !!p.text,
+                keys: Object.keys(p)
+            })));
+            throw new Error("No image data found in API response parts.");
         }
-        throw new Error("Styled image generation failed to return an image.");
+        
+        // No candidates in response
+        console.error("No candidates in response. Full response:", JSON.stringify(response, null, 2));
+        throw new Error("API response contains no candidates. The request may have been rejected.");
     } catch (error) {
         console.error("Error generating styled image with Gemini:", error);
+        console.error("Error details:", error instanceof Error ? error.message : String(error));
+        // Don't fall back to mock, throw the error so user knows it failed
         throw error;
     }
   },
@@ -168,6 +250,9 @@ Return ONLY a JSON array of four objects.` };
             }
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as Array<{ id: string; name: string; description: string; prompt: string }>;
         if (!Array.isArray(parsed) || parsed.length === 0) {

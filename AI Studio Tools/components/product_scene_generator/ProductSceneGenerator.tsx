@@ -196,7 +196,7 @@ export default function ProductSceneGenerator({ onBack }: { onBack: () => void }
     const renderResultView = () => (
         <div className="w-full flex flex-col items-center gap-8">
             <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                 <ResultCard title="Original" imageUrl={uploadedImage!} status='done' onRetry={() => {}} onDownload={() => handleDownload(uploadedImage, 'original')} />
+                 <ResultCard title="Original" imageUrl={uploadedImage!} status='done' onRetry={() => {}} onDownload={() => handleDownload(uploadedImage ?? undefined, 'original')} />
                  {Object.entries(generatedImages).map(([angleId, state]: [string, GeneratedImageState]) => {
                      const angle = ANGLE_OPTIONS.find(a => a.id === angleId);
                      if (!angle) return null;

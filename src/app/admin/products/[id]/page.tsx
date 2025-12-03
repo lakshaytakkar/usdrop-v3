@@ -441,8 +441,8 @@ export default function ProductDetailPage() {
                       {(product as HandPickedProduct).unlock_price && (
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Unlock Price</p>
-                          <p className="text-lg font-semibold">
-                            ${(product as HandPickedProduct).unlock_price.toFixed(2)}
+                          <p className="text-lg font-semibold"> 
+                            ${(product as HandPickedProduct).unlock_price?.toFixed(2) ?? '0.00'}
                           </p>
                         </div>
                       )}

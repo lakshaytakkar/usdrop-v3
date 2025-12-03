@@ -1,4 +1,5 @@
-import { ModulePermissionGroup, PermissionLevel, ExternalPlanPermissionDefinition, ExternalUserModulePermissionGroup } from "@/types/admin/permissions"
+import { ModulePermissionGroup, ExternalPlanPermissionDefinition, ExternalUserModulePermissionGroup } from "@/types/admin/permissions"
+import { PermissionLevel } from "@/types/admin/users"
 
 export const mockPermissionDefinitions: ModulePermissionGroup[] = [
   {

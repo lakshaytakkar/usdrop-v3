@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Heart, Eye, MousePointerClick, ExternalLink, Download } from "lucide-react"
 import { MetaAd } from "../data/ads"
 

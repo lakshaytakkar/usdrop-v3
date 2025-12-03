@@ -69,8 +69,8 @@ export const StudioView: React.FC = () => {
       const modelCount = Math.max(1, selectedModels.length);
       if (studioMode !== 'apparel') return numberOfImages * modelCount;
       if (isSocialMediaPack) return 4 * modelCount;
-      if (ecommercePack !== 'none') {
-          return ECOMMERCE_PACKS[ecommercePack].shots.length * modelCount;
+      if (ecommercePack !== 'none' && ecommercePack in ECOMMERCE_PACKS) {
+          return ECOMMERCE_PACKS[ecommercePack as keyof typeof ECOMMERCE_PACKS].shots.length * modelCount;
       }
       return numberOfImages * modelCount;
   };
@@ -85,7 +85,7 @@ export const StudioView: React.FC = () => {
              {(() => {
                 if (error && !isEditing) return <ErrorState />;
                 
-                if (isGenerating && (!generatedImages || generatedImages.every(img => img === null))) {
+                if (isGenerating && (!generatedImages || generatedImages.every((img: string | null) => img === null))) {
                     return <GenerationPlaceholder message={loadingMessage} />;
                 }
                 
@@ -129,7 +129,7 @@ export const StudioView: React.FC = () => {
                 
                 {/* Thumbnails Bar */}
                 <div className="h-32 bg-zinc-900/60 backdrop-blur-xl rounded-lg border border-white/10 p-3 flex items-center gap-3 overflow-x-auto model-filter-scrollbar">
-                    {imagesToDisplay && imagesToDisplay.map((imageB64, index) => (
+                    {imagesToDisplay && imagesToDisplay.map((imageB64: string | null, index: number) => (
                         imageB64 ? (
                             <div 
                                 key={index} 

@@ -4,6 +4,7 @@ import { ModelCard } from './ModelCard';
 import { ToggleSwitch } from '../shared/ToggleSwitch';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, Star } from 'lucide-react';
+import type { AIModel } from '../../types';
 
 export const MyModelsLibrary: React.FC = () => {
     const { myModels, handleModelSelection, selectedModels, isBatchMode, setIsBatchMode } = useStudio();
@@ -47,11 +48,11 @@ export const MyModelsLibrary: React.FC = () => {
 
             <div className="flex-grow overflow-y-auto pr-2 animate-fade-in">
                 <div className="grid grid-cols-2 gap-4">
-                    {myModels.map(model => (
+                    {myModels.map((model: AIModel) => (
                        <ModelCard 
                            key={model.id}
                            model={model}
-                           isSelected={selectedModels.some(m => m.id === model.id)}
+                           isSelected={selectedModels.some((m: AIModel) => m.id === model.id)}
                            onSelect={() => handleModelSelection(model)}
                        />
                     ))}

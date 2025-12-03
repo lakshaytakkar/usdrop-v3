@@ -640,11 +640,11 @@ export default function AdminOrdersPage() {
 
   // Only 3-5 most important quick filters
   const quickFilters = [
-    { id: "paid", label: "Paid", icon: Check },
-    { id: "created", label: "Pending", icon: AlertCircle, isWarning: true },
-    { id: "failed", label: "Failed", icon: X },
-    { id: "needs_attention", label: "Needs Attention", icon: AlertCircle, isWarning: true },
-    { id: "high_value", label: "High Value", icon: DollarSign },
+    { id: "paid", label: "Paid", count: 0 },
+    { id: "created", label: "Pending", count: 0 },
+    { id: "failed", label: "Failed", count: 0 },
+    { id: "needs_attention", label: "Needs Attention", count: 0 },
+    { id: "high_value", label: "High Value", count: 0 },
   ]
 
   const handlePaginationChange = useCallback((p: number, s: number) => {
@@ -703,8 +703,14 @@ export default function AdminOrdersPage() {
       metadata: orderData.metadata || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      user: users.find((u) => u.id === orderData.user_id),
-      plan: plans.find((p) => p.id === orderData.plan_id),
+      user: users.find((u) => u.id === orderData.user_id) ? {
+        ...users.find((u) => u.id === orderData.user_id)!,
+        avatar_url: null,
+      } : undefined,
+      plan: plans.find((p) => p.id === orderData.plan_id) ? {
+        ...plans.find((p) => p.id === orderData.plan_id)!,
+        slug: '',
+      } : undefined,
     }
     setOrders((prev) => [newOrder, ...prev])
   }
@@ -776,64 +782,66 @@ export default function AdminOrdersPage() {
   return (
     <>
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-        <div className="flex items-center justify-between mb-3 flex-shrink-0">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">Orders</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Manage payment orders and transactions</p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {assignedOwner || assignedMembers.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center -space-x-2">
-                  {assignedOwner && (() => {
-                    const owner = internalUsers.find(u => u.id === assignedOwner)
-                    return (
-                      <Avatar className="h-8 w-8 border-2 border-background">
-                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                        <AvatarFallback className="text-xs">
-                          {owner?.name.charAt(0) || "O"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })()}
-                  {assignedMembers.slice(0, 3).map((memberId) => {
-                    const member = internalUsers.find(u => u.id === memberId)
-                    return (
-                      <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
-                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                        <AvatarFallback className="text-xs">
-                          {member?.name.charAt(0) || "M"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })}
-                  {assignedMembers.length > 3 && (
-                    <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                      <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
-                    </div>
-                  )}
+        <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight text-white">Orders</h1>
+              <p className="text-xs text-white/90 mt-0.5">Manage payment orders and transactions</p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {assignedOwner || assignedMembers.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center -space-x-2">
+                    {assignedOwner && (() => {
+                      const owner = internalUsers.find(u => u.id === assignedOwner)
+                      return (
+                        <Avatar className="h-8 w-8 border-2 border-white/20">
+                          <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                          <AvatarFallback className="text-xs bg-white/20 text-white">
+                            {owner?.name.charAt(0) || "O"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )
+                    })()}
+                    {assignedMembers.slice(0, 3).map((memberId) => {
+                      const member = internalUsers.find(u => u.id === memberId)
+                      return (
+                        <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
+                          <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                          <AvatarFallback className="text-xs bg-white/20 text-white">
+                            {member?.name.charAt(0) || "M"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )
+                    })}
+                    {assignedMembers.length > 3 && (
+                      <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                        <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleOpenAssigneeModal}
+                    className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Assignee
+                  </Button>
                 </div>
+              ) : (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={handleOpenAssigneeModal}
-                  className="whitespace-nowrap cursor-pointer"
+                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Assignee
                 </Button>
-              </div>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Assignee
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
@@ -1005,9 +1013,6 @@ export default function AdminOrdersPage() {
               }
             }, [selectedOrders, bulkActionLoading, canRefund, canEdit, handleBulkRefund, handleBulkMarkAsPaid, handleBulkExport, handleBulkSendEmail, showError])}
             onDateRangeChange={setDateRange}
-            quickFilters={quickFilters}
-            selectedQuickFilter={quickFilter}
-            onQuickFilterChange={setQuickFilter}
           />
         </div>
       </div>

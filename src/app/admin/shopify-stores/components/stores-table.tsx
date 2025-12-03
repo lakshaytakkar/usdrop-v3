@@ -111,7 +111,7 @@ export function StoresTable({
                   </div>
                 </TableCell>
                 <TableCell className="text-sm">
-                  {formatRelativeTime(store.connectedAt)}
+                  {store.connectedAt ? formatRelativeTime(store.connectedAt) : 'N/A'}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -140,6 +140,7 @@ export function StoresTable({
     </Table>
   )
 }
+
 
 
 

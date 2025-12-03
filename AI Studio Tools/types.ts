@@ -89,7 +89,7 @@ export interface Scene {
 export type GenerationMode = 'image';
 
 // FIX: Add 'chat' to StudioMode to allow switching to the new Chat Studio.
-// FIX: Add 'logo-studio' to StudioMode to support the Logo Studio.
+// FIX: Add 'logo-studio' to StudioMode to support the Whitelabelling.
 export type StudioMode = 'apparel' | 'product' | 'design' | 'reimagine' | 'product-scene-generator' | 'photoshoot' | 'chat' | 'logo-studio';
 
 export interface AspectRatio {
@@ -111,6 +111,7 @@ export interface AIModel {
   country: string;
   gender: 'Male' | 'Female';
   source?: 'library' | 'user-saved';
+  age?: number;
 }
 
 export type ApparelCategory = 'Top' | 'Bottom' | 'Full Body' | 'Outerwear' | 'Accessory' | 'Footwear' | 'Uncategorized';

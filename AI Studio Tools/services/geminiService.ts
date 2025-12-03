@@ -328,8 +328,11 @@ export const geminiService = {
           });
 
           if (response.generatedImages && response.generatedImages.length > 0) {
-              const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-              return `data:image/png;base64,${base64ImageBytes}`;
+              const image = response.generatedImages[0].image;
+              if (!image || !image.imageBytes) {
+                  throw new Error("Imagen generation failed to return image bytes.");
+              }
+              return `data:image/png;base64,${image.imageBytes}`;
           }
           throw new Error("Imagen generation failed to return an image.");
       } catch (error) {
@@ -374,10 +377,17 @@ export const geminiService = {
         });
 
         if (response.candidates && response.candidates.length > 0) {
-            for (const part of response.candidates[0].content.parts) {
+            const content = response.candidates[0].content;
+            if (!content || !content.parts) {
+                throw new Error("Response content or parts are missing.");
+            }
+            for (const part of content.parts) {
                 if (part.inlineData) {
-                    const base64ImageBytes: string = part.inlineData.data;
+                    const base64ImageBytes = part.inlineData.data;
                     const mimeType = part.inlineData.mimeType;
+                    if (!base64ImageBytes || !mimeType) {
+                        throw new Error("Inline data is missing required fields.");
+                    }
                     return `data:${mimeType};base64,${base64ImageBytes}`;
                 }
             }
@@ -415,6 +425,9 @@ export const geminiService = {
             }
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as { category: ApparelCategory };
         return {
@@ -453,6 +466,9 @@ export const geminiService = {
             }
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as { orderedIds: string[] };
         return parsed.orderedIds || [];
@@ -487,6 +503,9 @@ export const geminiService = {
           }
       });
       
+      if (!response.text) {
+          throw new Error("Response text is missing.");
+      }
       const jsonString = response.text.trim();
       return JSON.parse(jsonString) as Pick<AIModel, 'name' | 'description' | 'gender'>;
 
@@ -508,6 +527,9 @@ export const geminiService = {
             contents: { parts: [imagePart, textPart] },
         });
         
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         return response.text.trim();
     } catch (error) {
         console.error("Error naming product:", error);
@@ -557,6 +579,9 @@ export const geminiService = {
             }
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as SceneSuggestion[];
         return parsed || [];
@@ -583,10 +608,17 @@ export const geminiService = {
       });
 
       if (response.candidates && response.candidates.length > 0) {
-        for (const part of response.candidates[0].content.parts) {
+        const content = response.candidates[0].content;
+        if (!content || !content.parts) {
+            throw new Error("Response content or parts are missing.");
+        }
+        for (const part of content.parts) {
             if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
+                const base64ImageBytes = part.inlineData.data;
                 const mimeType = part.inlineData.mimeType;
+                if (!base64ImageBytes || !mimeType) {
+                    throw new Error("Inline data is missing required fields.");
+                }
                 return `data:${mimeType};base64,${base64ImageBytes}`;
             }
         }
@@ -614,10 +646,17 @@ export const geminiService = {
       });
 
       if (response.candidates && response.candidates.length > 0) {
-        for (const part of response.candidates[0].content.parts) {
+        const content = response.candidates[0].content;
+        if (!content || !content.parts) {
+            throw new Error("Response content or parts are missing.");
+        }
+        for (const part of content.parts) {
             if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
+                const base64ImageBytes = part.inlineData.data;
                 const mimeType = part.inlineData.mimeType;
+                if (!base64ImageBytes || !mimeType) {
+                    throw new Error("Inline data is missing required fields.");
+                }
                 return `data:${mimeType};base64,${base64ImageBytes}`;
             }
         }
@@ -648,7 +687,10 @@ export const geminiService = {
         model: 'gemini-2.5-flash',
         contents: { parts: [imagePart, textPart] },
       });
-      
+
+      if (!response.text) {
+          throw new Error("Response text is missing.");
+      }
       return response.text;
     } catch (error) {
       console.error("Error describing image style with Gemini:", error);
@@ -728,6 +770,9 @@ export const geminiService = {
             },
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const suggestions = JSON.parse(jsonString) as ArtDirectorSuggestion[];
 
@@ -791,6 +836,9 @@ Return ONLY a JSON array of 4 objects.`;
                 }
             }
         });
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as { name: string; description: string }[];
         if (parsed.length !== 4) {
@@ -843,6 +891,9 @@ Return ONLY a JSON array of four objects.` };
             }
         });
 
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         const jsonString = response.text.trim();
         const parsed = JSON.parse(jsonString) as PhotoshootConcept[];
         if (!Array.isArray(parsed) || parsed.length === 0) {
@@ -892,10 +943,17 @@ Return ONLY a JSON array of four objects.` };
             
             let imageFound = false;
             if (response.candidates && response.candidates.length > 0) {
-                for (const part of response.candidates[0].content.parts) {
+                const content = response.candidates[0].content;
+                if (!content || !content.parts) {
+                    throw new Error("Response content or parts are missing.");
+                }
+                for (const part of content.parts) {
                     if (part.inlineData) {
-                        const base64ImageBytes: string = part.inlineData.data;
+                        const base64ImageBytes = part.inlineData.data;
                         const mimeType = part.inlineData.mimeType;
+                        if (!base64ImageBytes || !mimeType) {
+                            throw new Error("Inline data is missing required fields.");
+                        }
                         const imageB64 = `data:${mimeType};base64,${base64ImageBytes}`;
                         onImageGenerated(imageB64, i);
                         imageFound = true;
@@ -973,10 +1031,17 @@ Do NOT change any part of the image outside the masked area.`
         });
         
         if (response.candidates && response.candidates.length > 0) {
-            for (const part of response.candidates[0].content.parts) {
+            const content = response.candidates[0].content;
+            if (!content || !content.parts) {
+                throw new Error("Response content or parts are missing.");
+            }
+            for (const part of content.parts) {
                 if (part.inlineData) {
-                    const base64ImageBytes: string = part.inlineData.data;
+                    const base64ImageBytes = part.inlineData.data;
                     const mimeType = part.inlineData.mimeType;
+                    if (!base64ImageBytes || !mimeType) {
+                        throw new Error("Inline data is missing required fields.");
+                    }
                     return `data:${mimeType};base64,${base64ImageBytes}`;
                 }
             }
@@ -1004,6 +1069,9 @@ Do NOT change any part of the image outside the masked area.`
             contents: { parts: [imagePart, textPart] },
         });
         
+        if (!response.text) {
+            throw new Error("Response text is missing.");
+        }
         return response.text.trim();
     } catch (error) {
         console.error("Error reverse engineering prompt:", error);

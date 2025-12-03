@@ -83,50 +83,48 @@
 }
 
 :root {
-  --radius: 0.75rem;
   --background: oklch(1.0000 0 0);
   --foreground: oklch(0.1206 0.0203 282.9203);
   --card: oklch(1.0000 0 0);
   --card-foreground: oklch(0.1206 0.0203 282.9203);
   --popover: oklch(1.0000 0 0);
   --popover-foreground: oklch(0.1206 0.0203 282.9203);
-  --primary: oklch(0.4505 0.2403 284.8930);
+  --primary: oklch(0.4099 0.2135 264.0522);
   --primary-foreground: oklch(0.9791 0 0);
   --secondary: oklch(0.9601 0.0093 286.2229);
   --secondary-foreground: oklch(0.3500 0.1498 285.3249);
   --muted: oklch(0.9601 0.0093 286.2229);
   --muted-foreground: oklch(0.5503 0.0495 284.6582);
-  --accent: oklch(0.9407 0.0202 282.9526);
-  --accent-foreground: oklch(0.3500 0.1498 285.3249);
+  --accent: oklch(0.9601 0.0093 264.0522);
+  --accent-foreground: oklch(0.4099 0.2135 264.0522);
   --destructive: oklch(0.6292 0.1901 22.7134);
+  --destructive-foreground: oklch(1.0000 0 0);
   --border: oklch(0.9209 0.0094 286.2133);
   --input: oklch(0.9209 0.0094 286.2133);
-  --ring: oklch(0.4505 0.2403 284.8930);
-  --chart-1: oklch(0.4505 0.2403 284.8930);
+  --ring: oklch(0.4099 0.2135 264.0522);
+  --chart-1: oklch(0.4099 0.2135 264.0522);
   --chart-2: oklch(0.6000 0.2004 329.7870);
   --chart-3: oklch(0.5566 0.1400 244.9518);
   --chart-4: oklch(0.7151 0.1216 201.6738);
   --chart-5: oklch(0.6002 0.1500 30.0911);
   --sidebar: oklch(0.9803 0.0053 286.3017);
   --sidebar-foreground: oklch(0.2007 0.0199 284.4646);
-  --sidebar-primary: oklch(0.4505 0.2403 284.8930);
+  --sidebar-primary: oklch(0.4099 0.2135 264.0522);
   --sidebar-primary-foreground: oklch(0.9791 0 0);
   --sidebar-accent: oklch(0.9394 0.0107 286.1917);
   --sidebar-accent-foreground: oklch(0.2007 0.0199 284.4646);
   --sidebar-border: oklch(0.9209 0.0094 286.2133);
-  --sidebar-ring: oklch(0.4505 0.2403 284.8930);
-  --destructive-foreground: oklch(1.0000 0 0);
+  --sidebar-ring: oklch(0.4099 0.2135 264.0522);
   --font-sans: DM Sans, ui-sans-serif, sans-serif, system-ui;
   --font-serif: "Georgia", serif;
   --font-mono: "Geist Mono", "Fira Code", monospace;
-  --shadow-color: #1b171c;
-  --shadow-opacity: 0.1;
+  --radius: 0.75rem;
+  --shadow-x: 0px;
+  --shadow-y: 1px;
   --shadow-blur: 8px;
   --shadow-spread: -2px;
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 1px;
-  --letter-spacing: 0em;
-  --spacing: 0.25rem;
+  --shadow-opacity: 0.1;
+  --shadow-color: #1b171c;
   --shadow-2xs: 0px 1px 8px -2px hsl(288 9.8039% 10% / 0.05);
   --shadow-xs: 0px 1px 8px -2px hsl(288 9.8039% 10% / 0.05);
   --shadow-sm: 0px 1px 8px -2px hsl(288 9.8039% 10% / 0.10), 0px 1px 2px -3px hsl(288 9.8039% 10% / 0.10);
@@ -136,11 +134,7 @@
   --shadow-xl: 0px 1px 8px -2px hsl(288 9.8039% 10% / 0.10), 0px 8px 10px -3px hsl(288 9.8039% 10% / 0.10);
   --shadow-2xl: 0px 1px 8px -2px hsl(288 9.8039% 10% / 0.25);
   --tracking-normal: 0em;
-  --color-1: oklch(66.2% 0.225 25.9);
-  --color-2: oklch(60.4% 0.26 302);
-  --color-3: oklch(69.6% 0.165 251);
-  --color-4: oklch(80.2% 0.134 225);
-  --color-5: oklch(90.7% 0.231 133);
+  --spacing: 0.25rem;
 }
 
 .dark {
@@ -159,6 +153,7 @@
   --accent: oklch(0.2511 0.0394 285.3667);
   --accent-foreground: oklch(0.9791 0 0);
   --destructive: oklch(0.5989 0.2000 22.9576);
+  --destructive-foreground: oklch(1.0000 0 0);
   --border: oklch(0.2187 0.0214 284.4903);
   --input: oklch(0.2187 0.0214 284.4903);
   --ring: oklch(0.5945 0.2325 285.8306);
@@ -175,19 +170,16 @@
   --sidebar-accent-foreground: oklch(0.9791 0 0);
   --sidebar-border: oklch(0.2187 0.0214 284.4903);
   --sidebar-ring: oklch(0.5945 0.2325 285.8306);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --radius: 0.5rem;
   --font-sans: DM Sans, ui-sans-serif, sans-serif, system-ui;
   --font-serif: Georgia, serif;
   --font-mono: Geist Mono, monospace;
-  --shadow-color: #000000;
-  --shadow-opacity: 0.18;
+  --radius: 0.5rem;
+  --shadow-x: 0px;
+  --shadow-y: 1px;
   --shadow-blur: 2px;
   --shadow-spread: 0px;
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 1px;
-  --letter-spacing: 0em;
-  --spacing: 0.25rem;
+  --shadow-opacity: 0.18;
+  --shadow-color: #000000;
   --shadow-2xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.09);
   --shadow-xs: 0px 1px 2px 0px hsl(0 0% 0% / 0.09);
   --shadow-sm: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 1px 2px -1px hsl(0 0% 0% / 0.18);
@@ -196,11 +188,18 @@
   --shadow-lg: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 4px 6px -1px hsl(0 0% 0% / 0.18);
   --shadow-xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.18), 0px 8px 10px -1px hsl(0 0% 0% / 0.18);
   --shadow-2xl: 0px 1px 2px 0px hsl(0 0% 0% / 0.45);
-  --color-1: oklch(66.2% 0.225 25.9);
-  --color-2: oklch(60.4% 0.26 302);
-  --color-3: oklch(69.6% 0.165 251);
-  --color-4: oklch(80.2% 0.134 225);
-  --color-5: oklch(90.7% 0.231 133);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+@font-face {
+  font-family: 'Happy Face';
+  src: url('/fonts/HappyFace-SemiBold.woff2') format('woff2'),
+       url('/fonts/HappyFace-SemiBold.woff') format('woff'),
+       url('/fonts/HappyFace-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
 }
 
 @layer base {
@@ -254,4 +253,48 @@
   100% {
     transform: translateX(100%);
   }
+}
+
+@keyframes gradientShine {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes metallicShine {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.dropshipping-gradient-text {
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 25%, #3b82f6 50%, #06b6d4 75%, #ec4899 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShine 4s ease infinite;
+  position: relative;
+  display: inline-block;
+}
+
+.dropshipping-shine {
+  background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.8) 50%, transparent 60%, transparent 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: metallicShine 3s ease-in-out infinite;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 1;
 }

@@ -148,7 +148,7 @@ const CreativeDirectorChatPanel: React.FC = () => {
     return (
         <div className="flex flex-col h-full max-w-3xl mx-auto w-full">
             <div className="flex-grow overflow-y-auto pr-2 space-y-6">
-                {activeChat.history.map((msg, index) => (
+                {activeChat.history.map((msg: ChatMessage, index: number) => (
                     <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                         {msg.role === 'model' && <div className="w-8 h-8 rounded-full bg-violet-500/20 flex items-center justify-center flex-shrink-0 mt-1"><Bot size={18} className="text-violet-300"/></div>}
                         <div className={`p-3 rounded-xl max-w-lg ${msg.role === 'user' ? 'bg-zinc-700 text-white' : 'bg-zinc-800 text-zinc-300'}`}>
@@ -253,7 +253,7 @@ const ChatAssetLibrary = () => {
                     <p className="text-xs text-zinc-500 text-center py-4">Images from your chats will appear here.</p>
                 ) : (
                     <div className="grid grid-cols-3 gap-2">
-                        {chatAssets.map((asset, index) => (
+                        {chatAssets.map((asset: string, index: number) => (
                             <div key={index} className="aspect-square bg-zinc-800 rounded-md overflow-hidden">
                                 <img src={asset} alt={`Asset ${index}`} className="w-full h-full object-cover"/>
                             </div>

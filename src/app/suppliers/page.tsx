@@ -7,6 +7,7 @@ import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -14,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Package, Search, Info, Users } from "lucide-react"
+import { Package, Search, Users, HelpCircle } from "lucide-react"
 import { SupplierCard } from "./components/supplier-card"
 import { Supplier, sampleSuppliers } from "./data/suppliers"
 
@@ -59,32 +60,75 @@ export default function SuppliersPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Package className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl md:text-4xl font-bold">Suppliers</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Connect with verified suppliers offering exclusive products
-            </p>
-          </div>
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+          {/* Premium Banner with grainy gradient */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[77px] flex-shrink-0">
+            {/* Enhanced grainy texture layers */}
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                opacity: 0.5,
+                mixBlendMode: 'overlay'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
+                opacity: 0.4,
+                mixBlendMode: 'multiply'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
+                opacity: 0.3,
+                mixBlendMode: 'screen'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
+                              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
+                opacity: 0.6
+              }}
+            ></div>
 
-          {/* Info Card */}
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Info className="h-8 w-8 text-primary flex-shrink-0" />
-                <div>
-                  <h3 className="text-lg font-semibold mb-2">Verified Private Suppliers</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Connect with verified suppliers offering exclusive products, competitive pricing,
-                    and reliable fulfillment. All suppliers are vetted for quality and performance.
-                  </p>
-                </div>
+            {/* Content */}
+            <div className="relative z-10 flex items-center gap-3 h-full">
+              {/* Icon/Mascot */}
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
+                <Package 
+                  className="h-12 w-12 text-white"
+                  style={{
+                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
+                  }}
+                />
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Suppliers</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Connect with verified suppliers offering exclusive products, competitive pricing, and reliable fulfillment.
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex-shrink-0 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <HelpCircle className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Learn More</span>
+                </Button>
+              </div>
+            </div>
+          </div>
 
           {/* Filters */}
           <Card>

@@ -55,6 +55,9 @@ export function CourseSettingsPanel({
       ...course,
       ...formData,
       instructor_id: formData.instructor_id || null,
+      level: (formData.level as "Beginner" | "Intermediate" | "Advanced" | null) || null,
+      category: formData.category || null,
+      thumbnail: formData.thumbnail || null,
     })
   }
 
@@ -197,6 +200,7 @@ export function CourseSettingsPanel({
     </div>
   )
 }
+
 
 
 

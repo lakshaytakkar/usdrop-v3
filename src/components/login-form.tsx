@@ -60,11 +60,10 @@ export function LoginForm({
               <Field>
                 <button
                   type="submit"
-                  className="group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]"
+                  className="group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer"
                 >
-                  <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-900 via-blue-700 to-purple-900"></span>
-                  <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-950 via-blue-800 to-purple-950 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                  <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/10 via-transparent to-transparent"></span>
+                  <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                  <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
                   <span className="relative flex items-center justify-center gap-2 z-10">
                     Login
                   </span>

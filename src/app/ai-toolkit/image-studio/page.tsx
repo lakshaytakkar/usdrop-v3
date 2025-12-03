@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Button } from "@/components/ui/button"
-import { Play } from "lucide-react"
+import { Play, Coins } from "lucide-react"
 import { ProductSceneGenerator } from "@/components/ai-tools/product-scene-generator"
 
 export default function ImageStudioPage() {
@@ -14,9 +14,9 @@ export default function ImageStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-800 p-4 md:p-5 text-white h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-black via-gray-900 to-black p-3 text-white h-[77px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -52,9 +52,9 @@ export default function ImageStudioPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-4 h-full">
+            <div className="relative z-10 flex items-center gap-3 h-full">
               {/* Mascot before text */}
-              <div className="relative w-[120px] h-[110px] md:w-[140px] md:h-[130px] flex-shrink-0 bg-transparent">
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent">
                 <Image
                   src="/image-studio-mascot-removebg-preview.png"
                   alt="3D mascot with camera"
@@ -69,21 +69,29 @@ export default function ImageStudioPage() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold mb-1.5 leading-tight">USDrop Image Generator</h2>
-                <p className="text-white/85 text-xs md:text-sm leading-relaxed">
-                  Generate multiple photorealistic views of your product from different angles. 
-                  Create front, back, side, and detail shots from a single product image.
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Image Generator</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Generate multiple photorealistic views of your product from different angles.
                 </p>
               </div>
 
-              {/* Video Tutorial button in right corner */}
-              <div className="flex-shrink-0">
+              {/* Credits pill and Tutorial button */}
+              <div className="flex-shrink-0 flex items-center gap-2">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
                 >
-                  <Play className="h-4 w-4" />
-                  Video Tutorial
+                  <Coins className="h-3 w-3 mr-1 text-[#FFD700]" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6))' }} />
+                  <span className="text-xs">3 credits per image</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Tutorial</span>
                 </Button>
               </div>
             </div>

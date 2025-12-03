@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { ColumnDef, SortingState, ColumnFiltersState } from "@tanstack/react-table"
+import { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -22,9 +22,19 @@ import {
 } from "@/components/ui/tabs"
 import { Plus, Lock, LockOpen, Trash2, MoreVertical, Eye, Star, DollarSign, TrendingUp, Package, Building, Copy, Edit, Download, RefreshCw, Calendar, ArrowUpRight, UserPlus, X, Search, Upload } from "lucide-react"
 import Image from "next/image"
-import { DataTable } from "@/components/data-table/data-table"
+import { AdminProductCard } from "./components/admin-product-card"
+import { Input } from "@/components/ui/input"
 import { createHandPickedColumns } from "./components/hand-picked-columns"
 import { createProductPicksColumns } from "./components/product-picks-columns"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Filter, Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
 import { sampleHandPickedProducts, sampleProductPicks } from "./data/products"
 import { format } from "date-fns"
@@ -32,16 +42,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
 import { Loader } from "@/components/ui/loader"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { PageAssigneeModal } from "@/components/ui/page-assignee-modal"
 import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
 import { InternalUser } from "@/types/admin/users"
 import { getAvatarUrl } from "@/lib/utils/avatar"
@@ -87,27 +88,24 @@ export default function AdminProductsPage() {
   const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
   const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
   const [assignedMembers, setAssignedMembers] = useState<string[]>([])
-  const [memberSearch, setMemberSearch] = useState("")
-  const [tempOwner, setTempOwner] = useState<string | null>(null)
-  const [tempMembers, setTempMembers] = useState<string[]>([])
   
   const internalUsers = sampleInternalUsers
 
   // Quick filters per product type
   const handPickedQuickFilters = [
-    { id: "high_profit", label: "High Profit", icon: DollarSign },
-    { id: "high_revenue", label: "High Revenue", icon: TrendingUp },
-    { id: "locked", label: "Locked", icon: Lock },
-    { id: "unlocked", label: "Unlocked", icon: LockOpen },
-    { id: "recent", label: "Recent", icon: Calendar },
+    { id: "high_profit", label: "High Profit", count: 0 },
+    { id: "high_revenue", label: "High Revenue", count: 0 },
+    { id: "locked", label: "Locked", count: 0 },
+    { id: "unlocked", label: "Unlocked", count: 0 },
+    { id: "recent", label: "Recent", count: 0 },
   ]
 
   const productPicksQuickFilters = [
-    { id: "high_profit", label: "High Profit", icon: DollarSign },
-    { id: "high_rated", label: "High Rated", icon: Star },
-    { id: "with_supplier", label: "With Supplier", icon: Building },
-    { id: "recent", label: "Recent", icon: Calendar },
-    { id: "trending", label: "Trending", icon: TrendingUp },
+    { id: "high_profit", label: "High Profit", count: 0 },
+    { id: "high_rated", label: "High Rated", count: 0 },
+    { id: "with_supplier", label: "With Supplier", count: 0 },
+    { id: "recent", label: "Recent", count: 0 },
+    { id: "trending", label: "Trending", count: 0 },
   ]
 
 
@@ -764,109 +762,76 @@ export default function AdminProductsPage() {
     }
   }, [selectedProducts, bulkActionLoading, activeTab, canLockUnlock, canDelete, canCreate, handleBulkLock, handleBulkUnlock, handleBulkDelete, handleBulkExport, handleBulkUpload, showError, router, setSelectedProducts])
 
-  const currentColumns = activeTab === "hand-picked" ? handPickedColumns : productPicksColumns
   const currentQuickFilters = activeTab === "hand-picked" ? handPickedQuickFilters : productPicksQuickFilters
   
-  // Filter members based on search
-  const filteredMembers = useMemo(() => {
-    if (!memberSearch) return internalUsers
-    const searchLower = memberSearch.toLowerCase()
-    return internalUsers.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower)
-    )
-  }, [memberSearch, internalUsers])
-  
-  // Available members (excluding owner and already selected members)
-  const availableMembers = useMemo(() => {
-    return filteredMembers.filter(
-      (user) => user.id !== tempOwner && !tempMembers.includes(user.id)
-    )
-  }, [filteredMembers, tempOwner, tempMembers])
-  
-  const handleOpenAssigneeModal = () => {
-    setTempOwner(assignedOwner)
-    setTempMembers([...assignedMembers])
-    setMemberSearch("")
-    setAssigneeModalOpen(true)
-  }
-  
-  const handleSaveAssignees = () => {
-    setAssignedOwner(tempOwner)
-    setAssignedMembers(tempMembers)
-    setAssigneeModalOpen(false)
-  }
-  
-  const handleAddMember = (memberId: string) => {
-    if (!tempMembers.includes(memberId)) {
-      setTempMembers([...tempMembers, memberId])
-    }
-    setMemberSearch("")
-  }
-  
-  const handleRemoveMember = (memberId: string) => {
-    setTempMembers(tempMembers.filter(id => id !== memberId))
+  const handleSaveAssignees = (owner: string | null, members: string[]) => {
+    setAssignedOwner(owner)
+    setAssignedMembers(members)
+    showSuccess("Assignees updated successfully")
   }
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-      <div>
-          <h1 className="text-lg font-semibold tracking-tight">Products</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage hand-picked products and product picks
-          </p>
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-white">Products</h1>
+            <p className="text-xs text-white/90 mt-0.5">
+              Manage hand-picked products and product picks
+            </p>
           </div>
-        <div className="flex items-center gap-2">
-          {assignedOwner || assignedMembers.length > 0 ? (
-            <div className="flex items-center gap-2">
-              {assignedOwner && (
-                <Avatar className="h-8 w-8 border-2 border-background">
-                  <AvatarImage src={getAvatarUrl(assignedOwner, internalUsers.find(u => u.id === assignedOwner)?.email || "")} />
-                  <AvatarFallback className="text-xs">
-                    {internalUsers.find(u => u.id === assignedOwner)?.name.charAt(0) || "O"}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              {assignedMembers.slice(0, 3).map((memberId) => {
-                const member = internalUsers.find(u => u.id === memberId)
-                if (!member) return null
-                return (
-                  <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
-                    <AvatarImage src={getAvatarUrl(memberId, member.email)} />
-                    <AvatarFallback className="text-xs">
-                      {member.name.charAt(0) || "M"}
-                    </AvatarFallback>
-                  </Avatar>
-                )
-              })}
-              {assignedMembers.length > 3 && (
-                <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                  <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {assignedOwner || assignedMembers.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center -space-x-2">
+                  {assignedOwner && (
+                    <Avatar className="h-8 w-8 border-2 border-white/20">
+                      <AvatarImage src={getAvatarUrl(assignedOwner, internalUsers.find(u => u.id === assignedOwner)?.email || "")} />
+                      <AvatarFallback className="text-xs bg-white/20 text-white">
+                        {internalUsers.find(u => u.id === assignedOwner)?.name.charAt(0) || "O"}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                  {assignedMembers.slice(0, 3).map((memberId) => {
+                    const member = internalUsers.find(u => u.id === memberId)
+                    if (!member) return null
+                    return (
+                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(memberId, member.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {member.name.charAt(0) || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })}
+                  {assignedMembers.length > 3 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
+                    </div>
+                  )}
                 </div>
-              )}
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setAssigneeModalOpen(true)}
+                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Assignee
+                </Button>
+              </div>
+            ) : (
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
+                onClick={() => setAssigneeModalOpen(true)}
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
               </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleOpenAssigneeModal}
-              className="whitespace-nowrap cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Assignee
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -906,57 +871,141 @@ export default function AdminProductsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4 mt-4">
-          {initialLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-muted-foreground">Loading products...</div>
-            </div>
-          ) : (
-            <>
-              {/* DataTable */}
-              <div className="flex-1 overflow-hidden min-h-0">
-              <DataTable
-                columns={currentColumns as ColumnDef<ProductUnion>[]}
-                data={paginatedProducts as ProductUnion[]}
-                pageCount={pageCount}
-              onPaginationChange={(p, s) => {
-                setPage(p)
-                setPageSize(s)
-                }}
-                onSortingChange={setSorting}
-                onFilterChange={setColumnFilters}
-                onSearchChange={setSearchQuery}
-              loading={loading}
-              initialLoading={initialLoading}
-                searchPlaceholder="Search products..."
-                page={page}
-                pageSize={pageSize}
-                enableRowSelection={true}
-                onRowSelectionChange={setSelectedProducts}
-              onRowClick={handleRowClick}
-                  onDateRangeChange={setDateRange}
-                  quickFilters={currentQuickFilters}
-                  selectedQuickFilter={quickFilter}
-                  onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
-                filterConfig={[
-                  {
-                    columnId: "category",
-                    title: "Category",
-                    options: categoryOptions,
-                  },
-                  ...(activeTab === "hand-picked"
-                    ? [
-                        {
-                          columnId: "is_locked",
-                          title: "Lock Status",
-                          options: lockOptions,
-                        },
-                      ]
-                    : []),
-                ]}
-                  secondaryButtons={secondaryButtons}
+          {/* Toolbar */}
+          <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
               />
+              {currentQuickFilters.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={quickFilter ? "default" : "outline"}
+                      size="sm"
+                      className="h-8 px-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {currentQuickFilters.map((filter) => (
+                      <DropdownMenuItem
+                        key={filter.id}
+                        onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
+                        className={cn(
+                          "cursor-pointer",
+                          quickFilter === filter.id && "bg-accent"
+                        )}
+                      >
+                        <span>{filter.label}</span>
+                        {quickFilter === filter.id && (
+                          <Check className="h-4 w-4 ml-auto" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    {quickFilter && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setQuickFilter(null)}
+                          className="cursor-pointer"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Clear Filter
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {secondaryButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant={button.variant || "outline"}
+                  size="sm"
+                  onClick={button.onClick}
+                  disabled={button.disabled}
+                  className="h-8"
+                >
+                  {button.icon}
+                  {button.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grid View */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {initialLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader size="sm" />
+                  <span>Loading products...</span>
+                </div>
               </div>
-            </>
+            ) : paginatedProducts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                <p className="text-sm text-muted-foreground">No products found</p>
+                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {paginatedProducts.map((product) => (
+                  <AdminProductCard
+                    key={product.id}
+                    product={product}
+                    productType={activeTab}
+                    onEdit={handleEdit}
+                    onViewDetails={handleViewDetails}
+                    onDelete={handleDelete}
+                    onToggleLock={handleToggleLock}
+                    onDuplicate={handleDuplicate}
+                    onViewCategory={handleViewCategory}
+                    onViewSupplier={handleViewSupplier}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canLockUnlock={canLockUnlock}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {!initialLoading && paginatedProducts.length > 0 && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredProducts.length)} of {filteredProducts.length} products
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Page {page} of {pageCount}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+                  disabled={page === pageCount}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </TabsContent>
       </Tabs>
@@ -1128,123 +1177,14 @@ export default function AdminProductsPage() {
       </Dialog>
 
       {/* Add Assignee Modal */}
-      <Dialog open={assigneeModalOpen} onOpenChange={setAssigneeModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Page Access Control</DialogTitle>
-            <DialogDescription>
-              Manage ownership and access for this page
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Owner Section */}
-            <div className="space-y-2">
-              <Label htmlFor="owner">Owner</Label>
-              <Select value={tempOwner || ""} onValueChange={setTempOwner}>
-                <SelectTrigger id="owner" className="w-full">
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {internalUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                The owner is responsible for maintaining this page
-              </p>
-            </div>
-
-            {/* Members Section */}
-            <div className="space-y-2">
-              <Label htmlFor="members">Members</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-start"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {memberSearch || "Search users to add..."}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Search users..." 
-                      value={memberSearch}
-                      onValueChange={setMemberSearch}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No users found.</CommandEmpty>
-                      <CommandGroup>
-                        {availableMembers.map((user) => (
-                          <CommandItem
-                            key={user.id}
-                            value={user.id}
-                            onSelect={() => handleAddMember(user.id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
-                                <AvatarFallback className="text-xs">
-                                  {user.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium">{user.name}</p>
-                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                              </div>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              
-              {/* Selected Members */}
-              {tempMembers.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tempMembers.map((memberId) => {
-                    const member = internalUsers.find(u => u.id === memberId)
-                    if (!member) return null
-                    return (
-                      <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={getAvatarUrl(memberId, member.email)} />
-                          <AvatarFallback className="text-xs">
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.name}
-                        <button
-                          onClick={() => handleRemoveMember(memberId)}
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAssigneeModalOpen(false)} className="cursor-pointer">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAssignees} className="cursor-pointer">
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PageAssigneeModal
+        open={assigneeModalOpen}
+        onOpenChange={setAssigneeModalOpen}
+        internalUsers={internalUsers}
+        assignedOwner={assignedOwner}
+        assignedMembers={assignedMembers}
+        onSave={handleSaveAssignees}
+      />
     </div>
   )
 }

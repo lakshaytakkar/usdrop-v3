@@ -112,9 +112,9 @@ export default function ProductHuntPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setSelectedCategory("all")}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                   selectedCategory === "all"
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white"
                     : "bg-muted text-muted-foreground hover:bg-accent"
                 }`}
               >
@@ -127,9 +127,9 @@ export default function ProductHuntPage() {
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors capitalize ${
+                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors capitalize cursor-pointer ${
                       selectedCategory === category
-                        ? "bg-primary text-primary-foreground"
+                        ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white"
                         : "bg-muted text-muted-foreground hover:bg-accent"
                     }`}
                   >
@@ -167,7 +167,7 @@ export default function ProductHuntPage() {
                 onClick={loadMore}
                 disabled={isLoading}
                 size="lg"
-                className="min-w-[200px]"
+                className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
               >
                 {isLoading ? (
                   <>

@@ -16,6 +16,7 @@ import { MoreVertical, Eye, Edit, Trash2, Lock, Check, ArrowUp, Clock, AlertCirc
 import { ExternalUser } from "@/types/admin/users"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getAvatarUrl } from "@/lib/utils/avatar"
+import { cn } from "@/lib/utils"
 
 interface CreateExternalUsersColumnsProps {
   onViewDetails: (user: ExternalUser) => void
@@ -52,33 +53,33 @@ export function createExternalUsersColumns({
   canActivate = true,
   canUpsell = true,
 }: CreateExternalUsersColumnsProps): ColumnDef<ExternalUser>[] {
-  const getPlanBadgeVariant = (plan: string) => {
+  const getPlanBadgeClassName = (plan: string) => {
     switch (plan) {
       case "premium":
-        return "default" as const
+        return "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
       case "enterprise":
-        return "default" as const
+        return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
       case "pro":
-        return "secondary" as const
+        return "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800"
       case "trial":
-        return "outline" as const
+        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
       case "free":
-        return "outline" as const
+        return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-300 dark:border-slate-700"
       default:
-        return "outline" as const
+        return ""
     }
   }
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeClassName = (status: string) => {
     switch (status) {
       case "active":
-        return "default" as const
+        return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"
       case "inactive":
-        return "secondary" as const
+        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
       case "suspended":
-        return "destructive" as const
+        return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
       default:
-        return "outline" as const
+        return ""
     }
   }
 
@@ -157,7 +158,7 @@ export function createExternalUsersColumns({
         const planLabel = user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
         return (
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Badge variant={getPlanBadgeVariant(user.plan)} className="whitespace-nowrap" title={planLabel}>
+            <Badge variant="outline" className={cn("whitespace-nowrap border cursor-pointer", getPlanBadgeClassName(user.plan))} title={planLabel}>
               {planLabel}
             </Badge>
             {user.isTrial && user.trialEndsAt && <Clock className="h-4 w-4 text-amber-600" />}
@@ -216,7 +217,7 @@ export function createExternalUsersColumns({
         const status = row.original.status
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
         return (
-          <Badge variant={getStatusBadgeVariant(status)} onClick={(e) => e.stopPropagation()} className="whitespace-nowrap" title={statusLabel}>
+          <Badge variant="outline" onClick={(e) => e.stopPropagation()} className={cn("whitespace-nowrap cursor-pointer border", getStatusBadgeClassName(status))} title={statusLabel}>
             {statusLabel}
           </Badge>
         )

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Book, Users, Star } from "lucide-react"
+import { Clock, Book, Users, Star, Play, PlayCircle } from "lucide-react"
 import { Course } from "../data/courses"
 
 interface CourseCardProps {
@@ -29,8 +29,8 @@ export function CourseCard({ course }: CourseCardProps) {
   const progress = course.modules.length > 0 ? (completedModules / course.modules.length) * 100 : 0
 
   return (
-    <Card className="flex h-full flex-col transition-transform hover:scale-[1.02]">
-      <div className="relative w-full h-48 overflow-hidden rounded-t-xl">
+    <Card className="flex h-full flex-col">
+      <div className="relative w-full aspect-video overflow-hidden rounded-t-xl">
         <Image
           src={course.thumbnail}
           alt={course.title}
@@ -59,8 +59,9 @@ export function CourseCard({ course }: CourseCardProps) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant="outline">{course.category}</Badge>
-          <Badge variant="outline">{course.level}</Badge>
+          {course.tags.map((tag, index) => (
+            <Badge key={index} variant="outline">{tag}</Badge>
+          ))}
         </div>
 
         <div className="flex items-center justify-between text-xs pt-2 border-t">
@@ -98,13 +99,30 @@ export function CourseCard({ course }: CourseCardProps) {
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-sm font-semibold">{course.rating}</span>
           </div>
-          <span className="text-lg font-bold text-primary">
-            {course.price === 0 ? "Free" : currencyFormatter.format(course.price)}
+          <span
+            className="inline-flex items-center justify-center rounded-full font-semibold px-2 py-0.5 text-xs"
+            style={{
+              background: "linear-gradient(135deg, #facc15 0%, #fbbf24 25%, #f59e0b 50%, #fbbf24 75%, #facc15 100%)",
+              color: "#fef9c3",
+              border: "1px solid rgba(253, 224, 71, 0.6)",
+            }}
+          >
+            Included
           </span>
         </div>
 
-        <Button className="w-full mt-2">
-          {progress > 0 ? "Continue Learning" : "Start Course"}
+        <Button className="w-full mt-2 bg-black text-white hover:bg-black/90 cursor-pointer">
+          {progress > 0 ? (
+            <>
+              <PlayCircle className="h-4 w-4" />
+              Continue Learning
+            </>
+          ) : (
+            <>
+              <Play className="h-4 w-4" />
+              Start Course
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>

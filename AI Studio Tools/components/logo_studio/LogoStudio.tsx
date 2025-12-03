@@ -207,7 +207,7 @@ const LogoStudio: React.FC<LogoStudioProps> = ({ onBack }) => {
                 </header>
                 <div className="text-center mb-10">
                     <h2 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-400 mb-2 flex items-center justify-center gap-4 tracking-tight">
-                        Logo Studio
+                        Whitelabelling
                     </h2>
                     <p className="text-lg text-zinc-400 mt-2">Apply your logo to images in bulk.</p>
                 </div>

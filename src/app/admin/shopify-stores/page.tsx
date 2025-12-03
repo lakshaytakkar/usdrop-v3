@@ -10,9 +10,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Users, RefreshCw, Link2, Trash2, Download, Copy, Check } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { createShopifyStoresColumns } from "./components/shopify-stores-columns"
+import { Plus, Users, RefreshCw, Link2, Trash2, Download, Copy, Check, ShoppingBag, Filter, X } from "lucide-react"
+import { AdminShopifyStoreCard } from "./components/admin-shopify-store-card"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import { ShopifyStore, StoreProduct } from "@/app/shopify-stores/data/stores"
 import { adminSampleStores } from "./data/stores"
 import { getAllStoreProducts } from "./data/products"
@@ -244,22 +253,6 @@ export default function AdminShopifyStoresPage() {
     // TODO: Implement CSV export
   }
 
-  const columns = useMemo(
-    () =>
-      createShopifyStoresColumns({
-        onViewDetails: handleViewDetails,
-        onEdit: handleEdit,
-        onSync: handleSync,
-        onAddProducts: handleAddProducts,
-        onViewProducts: handleViewProducts,
-        onDisconnect: handleDisconnect,
-        onDelete: handleDelete,
-        onCopyStoreId: handleCopyStoreId,
-        onCopyUrl: handleCopyUrl,
-        onVisitStore: handleVisitStore,
-      }),
-    []
-  )
 
   const filterConfig = [
     {
@@ -285,11 +278,11 @@ export default function AdminShopifyStoresPage() {
   ]
 
   const quickFilters = [
-    { id: "connected", label: "Connected" },
-    { id: "high-revenue", label: "High Revenue" },
-    { id: "high-traffic", label: "High Traffic" },
-    { id: "recently-synced", label: "Recently Synced" },
-    { id: "needs-sync", label: "Needs Sync", isWarning: true },
+    { id: "connected", label: "Connected", count: 0 },
+    { id: "high-revenue", label: "High Revenue", count: 0 },
+    { id: "high-traffic", label: "High Traffic", count: 0 },
+    { id: "recently-synced", label: "Recently Synced", count: 0 },
+    { id: "needs-sync", label: "Needs Sync", count: 0 },
   ]
 
   const secondaryButtons: Array<{
@@ -303,31 +296,34 @@ export default function AdminShopifyStoresPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="relative w-8 h-8 flex-shrink-0">
-            <Image
-              src="/shopify_glyph.svg"
-              alt="Shopify"
-              fill
-              className="object-contain"
-            />
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="relative w-8 h-8 flex-shrink-0">
+              <Image
+                src="/shopify_glyph.svg"
+                alt="Shopify"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight text-white">Shopify Stores</h1>
+              <p className="text-xs text-white/90 mt-0.5">
+                Manage connected Shopify stores
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">Shopify Stores</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage connected Shopify stores
-            </p>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAssigneeModalOpen(true)}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Add Assignee
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setAssigneeModalOpen(true)}
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Add Assignee
-        </Button>
       </div>
 
       {/* Status Tabs */}
@@ -420,42 +416,147 @@ export default function AdminShopifyStoresPage() {
         </div>
       )}
 
-      {initialLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-muted-foreground">Loading stores...</div>
+      {/* Toolbar */}
+      <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <Input
+            placeholder="Search stores, URLs, users, niches..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
+          />
+          {quickFilters.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={quickFilter ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {quickFilters.map((filter) => (
+                  <DropdownMenuItem
+                    key={filter.id}
+                    onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
+                    className={cn(
+                      "cursor-pointer",
+                      quickFilter === filter.id && "bg-accent"
+                    )}
+                  >
+                    <span>{filter.label}</span>
+                    {quickFilter === filter.id && (
+                      <Check className="h-4 w-4 ml-auto" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                {quickFilter && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setQuickFilter(null)}
+                      className="cursor-pointer"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Filter
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={paginatedStores}
-          pageCount={pageCount}
-          onPaginationChange={(p, s) => {
-            setPage(p)
-            setPageSize(s)
-          }}
-          onSortingChange={setSorting}
-          onFilterChange={setFilters}
-          onSearchChange={setSearch}
-          loading={loading}
-          initialLoading={initialLoading}
-          filterConfig={filterConfig}
-          searchPlaceholder="Search stores, URLs, users, niches..."
-          page={page}
-          pageSize={pageSize}
-          onAdd={() => {
-            showInfo("Opening add store dialog...")
-            // TODO: Open add store modal
-          }}
-          addButtonText="Add Store"
-          addButtonIcon={<Plus className="h-4 w-4" />}
-          secondaryButtons={secondaryButtons}
-          enableRowSelection={true}
-          onRowSelectionChange={setSelectedStores}
-          onRowClick={handleRowClick}
-          quickFilters={quickFilters}
-          selectedQuickFilter={quickFilter}
-          onQuickFilterChange={setQuickFilter}
-        />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {secondaryButtons.map((button, index) => (
+            <Button
+              key={index}
+              variant={button.variant || "outline"}
+              size="sm"
+              onClick={button.onClick}
+              disabled={button.disabled}
+              className="h-8"
+            >
+              {button.icon}
+              {button.label}
+            </Button>
+          ))}
+          <Button
+            onClick={() => {
+              showInfo("Opening add store dialog...")
+              // TODO: Open add store modal
+            }}
+            size="sm"
+            className="h-8"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Store
+          </Button>
+        </div>
+      </div>
+
+      {/* Grid View */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {initialLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader size="sm" />
+              <span>Loading stores...</span>
+            </div>
+          </div>
+        ) : paginatedStores.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+            <p className="text-sm text-muted-foreground">No stores found</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {paginatedStores.map((store) => (
+              <AdminShopifyStoreCard
+                key={store.id}
+                store={store}
+                onEdit={handleEdit}
+                onViewDetails={handleViewDetails}
+                onSync={handleSync}
+                onDelete={handleDelete}
+                canEdit={true}
+                canDelete={true}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {!initialLoading && paginatedStores.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredStores.length)} of {filteredStores.length} stores
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Page {page} of {pageCount}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+              disabled={page === pageCount}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}

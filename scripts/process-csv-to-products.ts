@@ -160,7 +160,7 @@ function processRow(row: CSVRow): ProcessedProduct | null {
   const profitPerOrder = Number((sellPrice - buyPrice).toFixed(2));
   
   // Parse specifications
-  const specifications = parseJSON<Record<string, any>>(row.specifications, null);
+  const specifications = parseJSON<Record<string, any>>(row.specifications, {});
   
   // Get reviews count
   const reviewsCount = parseInt(row.reviews_count) || 0;

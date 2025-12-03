@@ -7,7 +7,7 @@ import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProBadge } from "@/components/ui/pro-badge"
 import { Button } from "@/components/ui/button"
-import { Wand2, Image as ImageIcon, Badge, Calculator, Presentation, Sparkles, User, Target, Play } from "lucide-react"
+import { Image as ImageIcon, Badge, Calculator, Presentation, Sparkles, User, Play, Truck } from "lucide-react"
 import Link from "next/link"
 
 const tools = [
@@ -22,7 +22,7 @@ const tools = [
   {
     id: "logo-studio",
     icon: Badge,
-    title: "Logo Studio",
+    title: "Whitelabelling",
     description: "Create and design your brand logo",
     url: "/ai-toolkit/logo-studio",
     isPro: true,
@@ -33,6 +33,14 @@ const tools = [
     title: "Profit Calculator",
     description: "Calculate dropshipping profits and margins",
     url: "/ai-toolkit/profit-calculator",
+    isPro: true,
+  },
+  {
+    id: "shipping-calculator",
+    icon: Truck,
+    title: "Shipping Calculator",
+    description: "Calculate shipping costs and delivery times",
+    url: "/ai-toolkit/shipping-calculator",
     isPro: true,
   },
   {
@@ -57,22 +65,6 @@ const tools = [
     title: "Model Studio",
     description: "Create model ads for apparel products",
     url: "/ai-toolkit/model-studio",
-    isPro: true,
-  },
-  {
-    id: "brand-studio",
-    icon: Badge,
-    title: "Brand Studio",
-    description: "Embed logos on product images",
-    url: "/ai-toolkit/brand-studio",
-    isPro: true,
-  },
-  {
-    id: "audience-studio",
-    icon: Target,
-    title: "Audience Studio",
-    description: "Plan and analyze target audiences",
-    url: "/ai-toolkit/audience-studio",
     isPro: true,
   },
 ]

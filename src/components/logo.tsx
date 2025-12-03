@@ -12,7 +12,7 @@ export function Logo({ className }: { className?: string }) {
             <span className="text-2xl font-bold tracking-tight text-foreground">USDrop</span>
             <span className="text-2xl font-bold text-blue-600">AI</span>
             <span className="ml-1 text-lg font-medium text-muted-foreground">
-                {isAdminRoute ? "Admin" : "Studio"}
+                {isAdminRoute ? "Admin" : "Platform"}
             </span>
         </Link>
     )

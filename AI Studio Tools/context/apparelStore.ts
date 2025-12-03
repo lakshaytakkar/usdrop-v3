@@ -2,7 +2,7 @@ import type { AIModel, ApparelCreativeControls, ApparelItem, ArtDirectorSuggesti
 // FIX: Import BACKGROUNDS_LIBRARY to resolve reference error.
 import { APERTURES_LIBRARY, BACKGROUNDS_LIBRARY, CAMERA_ANGLES_LIBRARY, COLOR_GRADING_PRESETS, EXPRESSIONS, FABRIC_TYPES_LIBRARY, FOCAL_LENGTHS_LIBRARY, LIGHTING_PRESETS, SHOT_TYPES_LIBRARY, LIGHTING_DIRECTIONS_LIBRARY, LIGHT_QUALITIES_LIBRARY, CATCHLIGHT_STYLES_LIBRARY } from '../constants';
 import { geminiService } from '../services/geminiService';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { withRetry } from '../utils/colorUtils';
 
 export interface ApparelState {
@@ -116,11 +116,11 @@ const initialApparelState: Omit<ApparelState, 'preConceptState'> = {
   looks: [],
 };
 
-export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => ({
+export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialApparelState,
   preConceptState: null,
 
-  setUploadedModelImage: (base64) => {
+  setUploadedModelImage: (base64: string | null) => {
       const isProductMode = get().studioMode === 'product';
       set({ uploadedModelImage: base64 });
       if (base64) {
@@ -139,14 +139,14 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
   
-  setSelectedModels: (models) => set({ 
+  setSelectedModels: (models: AIModel[]) => set({ 
       selectedModels: models, 
       ...(get().studioMode === 'product' ? {} : { productImage: null, productImageCutout: null, stagedAssets: [] }),
       mockupImage: null, 
       designImage: null 
   }),
   
-  setIsBatchMode: (mode) => {
+  setIsBatchMode: (mode: boolean) => {
       const isProductMode = get().studioMode === 'product';
       set({ isBatchMode: mode });
       if (mode) {
@@ -163,7 +163,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
 
-  handleModelSelection: (model) => {
+  handleModelSelection: (model: AIModel) => {
       const isProductMode = get().studioMode === 'product';
       set({ 
           uploadedModelImage: null, 
@@ -183,7 +183,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
   
-  saveModel: async (imageB64) => {
+  saveModel: async (imageB64: string) => {
     set({ isSavingModel: true, error: null });
     try {
         const modelDetails = await withRetry(() => geminiService.describeModel(imageB64));
@@ -213,7 +213,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
     }
   },
 
-  setPromptedModelDescription: (description) => {
+  setPromptedModelDescription: (description: string) => {
       const isProductMode = get().studioMode === 'product';
       set({ promptedModelDescription: description });
       if (description.trim()) {
@@ -228,7 +228,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
 
-  generateAIModel: async (prompt) => {
+  generateAIModel: async (prompt: string) => {
     if (!prompt.trim()) return;
     set({ isGeneratingModel: true, error: null });
     try {
@@ -249,7 +249,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
     }
   },
 
-  addApparelItem: async (base64) => {
+  addApparelItem: async (base64: string) => {
       set({ error: null, artDirectorSuggestions: null, appliedSuggestionId: null });
       const newItem: ApparelItem = { 
           id: Date.now().toString(), 
@@ -287,7 +287,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
 
-  removeApparelItem: (id) => {
+  removeApparelItem: (id: string) => {
       set(state => {
           const newApparel = state.apparel.filter(item => item.id !== id);
           return {
@@ -297,7 +297,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       });
   },
 
-  reorderApparel: (dragIndex, hoverIndex) => {
+  reorderApparel: (dragIndex: number, hoverIndex: number) => {
     set(state => {
       const newApparel = [...state.apparel];
       const draggedItem = newApparel[dragIndex];
@@ -328,19 +328,19 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
     }
   },
 
-  updateApparelItemDescription: (id, description) => {
+  updateApparelItemDescription: (id: string, description: string) => {
       set(state => ({
           apparel: state.apparel.map(item => item.id === id ? { ...item, description } : item)
       }));
   },
 
-  updateApparelItemCategory: (id, category) => {
+  updateApparelItemCategory: (id: string, category: ApparelCategory) => {
       set(state => ({
           apparel: state.apparel.map(item => item.id === id ? { ...item, category } : item)
       }));
   },
   
-  updateApparelItemView: (id, viewType, base64) => {
+  updateApparelItemView: (id: string, viewType: 'back' | 'detail', base64: string | null) => {
     set(state => ({
         apparel: state.apparel.map(item => {
             if (item.id === id) {
@@ -352,7 +352,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
     }));
   },
 
-  removeModelFromApparel: async (itemId) => {
+  removeModelFromApparel: async (itemId: string) => {
     const item = get().apparel.find(i => i.id === itemId);
     if (!item) return;
 
@@ -411,32 +411,32 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
 
-  updateApparelControl: (key, value) => {
+  updateApparelControl: <K extends keyof ApparelCreativeControls>(key: K, value: ApparelCreativeControls[K]) => {
       set(state => ({ apparelControls: { ...state.apparelControls, [key]: value } }));
   },
   
-  setEcommercePack: (pack) => {
+  setEcommercePack: (pack: EcommercePack) => {
       set({ ecommercePack: pack });
       if (pack !== 'none') {
           set({ isSocialMediaPack: false, isCompletePack: false });
       }
   },
 
-  setIsSocialMediaPack: (isSocial) => {
+  setIsSocialMediaPack: (isSocial: boolean) => {
       set({ isSocialMediaPack: isSocial });
       if (isSocial) {
           set({ ecommercePack: 'none', isCompletePack: false });
       }
   },
 
-  setIsCompletePack: (isComplete) => {
+  setIsCompletePack: (isComplete: boolean) => {
       set({ isCompletePack: isComplete });
       if (isComplete) {
           set({ ecommercePack: 'none', isSocialMediaPack: false });
       }
   },
 
-  applyArtDirectorSuggestion: (suggestion) => {
+  applyArtDirectorSuggestion: (suggestion: ArtDirectorSuggestion) => {
     if (get().appliedSuggestionId === null) {
         set(state => ({
             preConceptState: {
@@ -485,7 +485,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
     });
   },
 
-  saveLook: (name) => {
+  saveLook: (name: string) => {
       if (!name.trim()) return;
       const { apparelControls, scene } = get();
       const newLook: Look = {
@@ -497,7 +497,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       set(state => ({ looks: [...state.looks, newLook] }));
   },
 
-  applyLook: (id) => {
+  applyLook: (id: string) => {
       const look = get().looks.find(l => l.id === id);
       if (look) {
           set({
@@ -507,7 +507,7 @@ export const createApparelSlice: StudioStoreSlice<ApparelSlice> = (set, get) => 
       }
   },
 
-  deleteLook: (id) => {
+  deleteLook: (id: string) => {
       set(state => ({ looks: state.looks.filter(l => l.id !== id) }));
   },
 });

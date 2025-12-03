@@ -31,14 +31,21 @@ import {
 } from "lucide-react"
 import { InternalUser } from "@/types/admin/users"
 import { sampleInternalUsers } from "../data/users"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
+import { Loader } from "@/components/ui/loader"
 
 export default function InternalUserDetailPage() {
   const router = useRouter()
   const params = useParams()
   const userId = params?.id as string
+  const { showSuccess, showError, showInfo } = useToast()
 
   const [user, setUser] = useState<InternalUser | null>(null)
   const [allUsers, setAllUsers] = useState<InternalUser[]>(sampleInternalUsers)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [suspendConfirmOpen, setSuspendConfirmOpen] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
     // Find current user
@@ -94,42 +101,92 @@ export default function InternalUserDetailPage() {
     }
   }
 
-  // Handler functions (placeholder - should be connected to actual handlers)
+  // Handler functions
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    console.log("Edit user:", user.id)
+    router.push(`/admin/internal-users?edit=${user.id}`)
   }
 
   const handleSendEmail = () => {
-    // TODO: Implement send email
-    console.log("Send email to:", user.email)
+    showInfo(`Email functionality will be implemented. User: ${user.email}`)
   }
 
   const handleManagePermissions = () => {
-    // TODO: Implement manage permissions
-    console.log("Manage permissions for:", user.id)
+    showInfo(`Manage permissions functionality will be implemented for user: ${user.name}`)
   }
 
   const handleSuspend = () => {
-    // TODO: Implement suspend
-    console.log("Suspend user:", user.id)
+    setSuspendConfirmOpen(true)
   }
 
-  const handleActivate = () => {
-    // TODO: Implement activate
-    console.log("Activate user:", user.id)
+  const confirmSuspend = async () => {
+    if (!user) return
+    setActionLoading("suspend")
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setAllUsers(
+        allUsers.map((u) =>
+          u.id === user.id ? { ...u, status: "suspended" as const, updatedAt: new Date() } : u
+        )
+      )
+      setUser({ ...user, status: "suspended" as const, updatedAt: new Date() })
+      setSuspendConfirmOpen(false)
+      showSuccess(`User "${user.name}" has been suspended`)
+    } catch (err) {
+      console.error("Error suspending user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to suspend user. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleActivate = async () => {
+    if (!user) return
+    setActionLoading("activate")
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      setAllUsers(
+        allUsers.map((u) =>
+          u.id === user.id ? { ...u, status: "active" as const, updatedAt: new Date() } : u
+        )
+      )
+      setUser({ ...user, status: "active" as const, updatedAt: new Date() })
+      showSuccess(`User "${user.name}" has been activated`)
+    } catch (err) {
+      console.error("Error activating user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to activate user. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   const handleDelete = () => {
-    // TODO: Implement delete
-    console.log("Delete user:", user.id)
+    setDeleteConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!user) return
+    setActionLoading("delete")
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      const deletedUserName = user.name
+      router.push("/admin/internal-users")
+      showSuccess(`User "${deletedUserName}" has been deleted successfully`)
+    } catch (err) {
+      console.error("Error deleting user:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete user. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       {/* Topbar with Back Button, Breadcrumbs and Navigation */}
       <div className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-        <div className="flex h-14 items-center gap-2 px-3">
+        <div className="flex h-14 items-center gap-2 px-2">
           {/* Back Button - Small Arrow */}
           <Button
             variant="ghost"
@@ -178,11 +235,11 @@ export default function InternalUserDetailPage() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto px-2 pt-1">
 
       {/* User Header */}
       <Card className="mb-2">
-        <CardHeader className="pb-2 px-4 pt-4">
+        <CardHeader className="pb-2 px-4 pt-2.5">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2.5">
               <Avatar className="h-10 w-10">
@@ -301,12 +358,12 @@ export default function InternalUserDetailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="role" className="space-y-4">
+          <TabsContent value="role" className="space-y-2 mt-0">
             <Card>
-              <CardHeader>
-                <CardTitle>Role & Permissions</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">Role & Permissions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2 pt-0 px-4 pb-3">
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
@@ -331,23 +388,23 @@ export default function InternalUserDetailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-4">
+          <TabsContent value="activity" className="space-y-2 mt-0">
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-4 pb-3">
                 <p className="text-sm text-muted-foreground">Activity log will be displayed here</p>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-4">
+          <TabsContent value="settings" className="space-y-2 mt-0">
             <Card>
-              <CardHeader>
-                <CardTitle>User Settings</CardTitle>
+              <CardHeader className="pb-2 px-4 pt-3">
+                <CardTitle className="text-sm font-semibold">User Settings</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0 px-4 pb-3">
                 <p className="text-sm text-muted-foreground">Settings and preferences will be displayed here</p>
               </CardContent>
             </Card>
@@ -355,6 +412,80 @@ export default function InternalUserDetailPage() {
         </div>
       </Tabs>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-4">
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {user && (
+            <div className="space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">User:</span> {user.name}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Email:</span> {user.email}
+              </p>
+            </div>
+          )}
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} disabled={actionLoading === "delete"} className="cursor-pointer">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete} disabled={actionLoading === "delete"} className="cursor-pointer">
+              {actionLoading === "delete" ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Suspend Confirmation Dialog */}
+      <Dialog open={suspendConfirmOpen} onOpenChange={setSuspendConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader className="pb-4">
+            <DialogTitle>Suspend User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to suspend this user? They will not be able to access the platform.
+            </DialogDescription>
+          </DialogHeader>
+          {user && (
+            <div className="space-y-2">
+              <p className="text-sm">
+                <span className="font-medium">User:</span> {user.name}
+              </p>
+              <p className="text-sm">
+                <span className="font-medium">Email:</span> {user.email}
+              </p>
+            </div>
+          )}
+          <DialogFooter className="pt-4 border-t">
+            <Button variant="outline" onClick={() => setSuspendConfirmOpen(false)} disabled={actionLoading === "suspend"} className="cursor-pointer">
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmSuspend} disabled={actionLoading === "suspend"} className="cursor-pointer">
+              {actionLoading === "suspend" ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  Suspending...
+                </>
+              ) : (
+                "Suspend"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

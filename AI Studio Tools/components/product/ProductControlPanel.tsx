@@ -18,6 +18,7 @@ import { OptionSelector } from '../shared/OptionSelector';
 import { ToggleSwitch } from '../shared/ToggleSwitch';
 import { Sparkles, Film, Type, Save, Layers, Trash2, User } from 'lucide-react';
 import { SettingSection } from '../settings/SettingSection';
+import type { ProductSceneTemplate } from '../../types';
 
 export const ProductControlPanel: React.FC = () => {
     const { productControls, updateProductControl, sceneTemplates, saveSceneTemplate, applySceneTemplate, deleteSceneTemplate, selectedModels, uploadedModelImage } = useStudio();
@@ -180,7 +181,7 @@ export const ProductControlPanel: React.FC = () => {
                         <div className="border-t border-zinc-700 pt-4">
                              <h4 className="text-sm font-semibold text-zinc-300 mb-2">My Templates</h4>
                              <div className="space-y-2">
-                                {sceneTemplates.map(template => (
+                                {sceneTemplates.map((template: ProductSceneTemplate) => (
                                     <div key={template.id} className="flex items-center justify-between p-2 rounded-md bg-zinc-800">
                                         <p className="text-sm text-zinc-200">{template.name}</p>
                                         <div className="flex items-center gap-1">

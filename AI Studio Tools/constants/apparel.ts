@@ -1,275 +1,125 @@
 import type { AIModel, ShotType, EcommercePack, PackShot, Expression, Fabric } from '../types';
 
 export const MODELS_LIBRARY: AIModel[] = [
-    { 
-        id: 'm1', 
-        name: 'Sasha', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3772510/pexels-photo-3772510.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A professional female fashion model in her early 20s, with long, straight blonde hair, sharp cheekbones, and a confident gaze. She has a slender, athletic build. European ethnicity.',
-        region: 'European',
-        country: 'Germany'
-    },
-    { 
-        id: 'm2', 
-        name: 'Kenji', 
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/428340/pexels-photo-428340.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A male streetwear model in his mid-20s, with short, dark, curly hair and a friendly smile. He has a lean build and a cool, relaxed demeanor. East Asian ethnicity.',
-        region: 'Asian',
-        country: 'Japan'
-    },
-    { 
-        id: 'm3', 
-        name: 'Maria', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3778223/pexels-photo-3778223.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A versatile female commercial model in her late 20s, with warm brown skin, shoulder-length wavy dark hair, and expressive brown eyes. She has an average build and a warm, approachable look. Latina/Hispanic ethnicity.',
-        region: 'Latin',
-        country: 'Mexico'
-    },
-     { 
-        id: 'm4', 
-        name: 'David', 
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/936043/pexels-photo-936043.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A rugged male model in his early 30s, with a short beard, piercing blue eyes, and light brown hair. He has a muscular build, suitable for outdoor or workwear brands. Caucasian ethnicity.',
-        region: 'European',
-        country: 'USA'
-    },
-    { 
-        id: 'm5', 
-        name: 'Priya', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3762800/pexels-photo-3762800.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A graceful female fashion model in her mid-20s, with long, dark wavy hair, expressive almond-shaped brown eyes, and warm olive skin. She has a poised and elegant presence. South Asian/Indian ethnicity.',
-        region: 'Asian',
-        country: 'India'
-    },
-    { 
-        id: 'm6', 
-        name: 'Chloe', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3220617/pexels-photo-3220617.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'An approachable female model in her early 20s with freckles, red curly hair, and green eyes. She has a slim build and a cheerful, friendly vibe. Irish ethnicity.',
-        region: 'European',
-        country: 'Ireland'
-    },
-    { 
-        id: 'm7', 
-        name: 'Jamal', 
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/1853542/pexels-photo-1853542.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A sharp male model in his late 20s with short, well-groomed dreadlocks and a confident expression. He has a strong jawline and an athletic build. African-American ethnicity.',
-        region: 'African',
-        country: 'USA'
-    },
-    { 
-        id: 'm8', 
-        name: 'Isabella', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3755440/pexels-photo-3755440.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A high-fashion female model in her early 20s, with sleek, black hair in a bob cut, sharp angular features, and a sophisticated look. She has a tall, slender frame. Brazilian ethnicity.',
-        region: 'Latin',
-        country: 'Brazil'
-    },
-    { 
-        id: 'm9', 
-        name: 'Omar', 
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A mature male model in his late 30s with salt-and-pepper hair, a well-maintained short beard, and kind eyes. He has a distinguished and trustworthy appearance. Middle Eastern ethnicity.',
-        region: 'Middle Eastern',
-        country: 'Egypt'
-    },
-    { 
-        id: 'm10', 
-        name: 'Anja', 
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/3775164/pexels-photo-3775164.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2', 
-        description: 'A striking female model with platinum blonde short hair, bold eyebrows, and an androgynous look. She is in her mid-20s with a lean, strong physique. Scandinavian ethnicity.',
-        region: 'European',
-        country: 'Sweden'
-    },
     {
-        id: 'm11',
-        name: 'Aisha',
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A vibrant female model from Mumbai in her early 20s, with expressive dark eyes, long black hair, and a warm, engaging smile. Perfect for both traditional and contemporary fashion. Indian ethnicity.',
-        region: 'Asian',
-        country: 'India'
-    },
-    {
-        id: 'm12',
-        name: 'Jackson',
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/1212984/pexels-photo-1212984.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A male model from California in his mid-20s, with a sun-kissed look, blonde hair, and a laid-back, athletic vibe. Ideal for lifestyle and sportswear brands. Caucasian ethnicity.',
-        region: 'European',
-        country: 'USA'
-    },
-    {
-        id: 'm13',
-        name: 'Amélie',
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/1382731/pexels-photo-1382731.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'An elegant female model from Paris in her late 20s, with chic brunette hair, classic features, and a sophisticated aura. Embodies effortless French style. European ethnicity.',
-        region: 'European',
-        country: 'France'
-    },
-    {
-        id: 'm14',
-        name: 'Li Wei',
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/2896434/pexels-photo-2896434.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A sharp, high-fashion male model from Shanghai in his early 20s. Features striking, angular features, and a modern, edgy look. East Asian ethnicity.',
-        region: 'Asian',
-        country: 'China'
-    },
-    {
-        id: 'm15',
-        name: 'Sofia',
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/1848565/pexels-photo-1848565.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A charismatic female model from Colombia with tan skin, voluminous curly brown hair, and a joyful, energetic presence. Perfect for vibrant and summer collections. Latina ethnicity.',
-        region: 'Latin',
-        country: 'Colombia'
-    },
-    {
-        id: 'm16',
-        name: 'Khalid',
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A luxurious male model from Dubai in his early 30s, with a perfectly groomed beard, intense gaze, and a polished, upscale look. Suited for luxury and formal wear. Emirati ethnicity.',
-        region: 'Middle Eastern',
-        country: 'UAE'
-    },
-    {
-        id: 'm17',
-        name: 'Adanna',
-        gender: 'Female',
-        thumbnail: 'https://images.pexels.com/photos/2776353/pexels-photo-2776353.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A stunning female model from Nigeria with rich dark skin, braided hair, and a powerful, regal presence. Ideal for bold and couture fashion. Nigerian ethnicity.',
-        region: 'African',
-        country: 'Nigeria'
-    },
-    {
-        id: 'm18',
-        name: 'Mike',
-        gender: 'Male',
-        thumbnail: 'https://images.pexels.com/photos/1680172/pexels-photo-1680172.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&dpr=2',
-        description: 'A strong male model from New York, with a confident attitude, and a versatile look that fits both streetwear and high fashion. African-American ethnicity.',
-        region: 'African',
-        country: 'USA'
-    },
-    {
-        id: 'm19',
+        id: 'm1',
         name: 'Ryan',
         gender: 'Male',
         thumbnail: '/models/model-american-male-young-1.png',
         description: 'A professional young American male model in his mid-20s, with a clean-cut appearance and confident expression. Perfect for business and formal wear. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 25
     },
     {
-        id: 'm20',
+        id: 'm2',
         name: 'Emma',
         gender: 'Female',
         thumbnail: '/models/model-american-female-young-1.png',
         description: 'A vibrant young American female model in her early 20s, with a friendly smile and natural beauty. Ideal for commercial and lifestyle fashion. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 22
     },
     {
-        id: 'm21',
+        id: 'm3',
         name: 'Robert',
         gender: 'Male',
         thumbnail: '/models/model-american-male-old-1.png',
         description: 'A distinguished mature American male model in his late 50s, with salt-and-pepper hair and a confident, professional appearance. Perfect for luxury and executive brands. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 58
     },
     {
-        id: 'm22',
+        id: 'm4',
         name: 'Patricia',
         gender: 'Female',
         thumbnail: '/models/model-american-female-old-1.png',
         description: 'An elegant mature American female model in her late 50s, with sophisticated style and refined presence. Ideal for luxury and mature fashion markets. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 57
     },
     {
-        id: 'm23',
+        id: 'm5',
         name: 'Arjun',
         gender: 'Male',
         thumbnail: '/models/model-indian-male-young-1.png',
         description: 'A confident young Indian male model in his mid-20s, with South Asian features and a professional appearance. Perfect for contemporary and traditional fashion. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 26
     },
     {
-        id: 'm24',
+        id: 'm6',
         name: 'Kavya',
         gender: 'Female',
         thumbnail: '/models/model-indian-female-young-1.png',
         description: 'A beautiful young Indian female model in her early 20s, with South Asian features and a warm, engaging smile. Ideal for both traditional and modern fashion. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 23
     },
     {
-        id: 'm25',
+        id: 'm7',
         name: 'Vikram',
         gender: 'Male',
         thumbnail: '/models/model-indian-male-old-1.png',
         description: 'A distinguished mature Indian male model in his late 50s, with salt-and-pepper beard and a confident, professional appearance. Perfect for luxury and executive brands. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 59
     },
     {
-        id: 'm26',
+        id: 'm8',
         name: 'Meera',
         gender: 'Female',
         thumbnail: '/models/model-indian-female-old-1.png',
         description: 'An elegant mature Indian female model in her late 50s, with sophisticated South Asian features and traditional elegance. Ideal for luxury and traditional fashion. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 56
     },
     {
-        id: 'm27',
+        id: 'm9',
         name: 'Tyler',
         gender: 'Male',
         thumbnail: '/models/model-american-male-young-2.png',
         description: 'A versatile young American male model in his mid-20s, with an athletic build and casual confident look. Perfect for lifestyle and sportswear brands. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 24
     },
     {
-        id: 'm28',
+        id: 'm10',
         name: 'Sophia',
         gender: 'Female',
         thumbnail: '/models/model-american-female-young-2.png',
         description: 'A vibrant young American female model in her early 20s, with a modern style and engaging personality. Ideal for contemporary and trendy fashion. Caucasian ethnicity.',
         region: 'European',
-        country: 'USA'
+        country: 'USA',
+        age: 21
     },
     {
-        id: 'm29',
+        id: 'm11',
         name: 'Rohan',
         gender: 'Male',
         thumbnail: '/models/model-indian-male-young-2.png',
         description: 'A professional young Indian male model in his mid-20s, with a contemporary South Asian look and modern style. Perfect for business and contemporary fashion. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 25
     },
     {
-        id: 'm30',
+        id: 'm12',
         name: 'Ananya',
         gender: 'Female',
         thumbnail: '/models/model-indian-female-young-2.png',
         description: 'A stunning young Indian female model in her early 20s, with contemporary South Asian beauty and modern fashion sense. Ideal for contemporary and fusion fashion. Indian ethnicity.',
         region: 'Asian',
-        country: 'India'
+        country: 'India',
+        age: 22
     }
 ];
 

@@ -91,7 +91,7 @@ export const StudioModeSwitcher: React.FC = () => {
                         ${studioMode === 'logo-studio' ? 'bg-zinc-700 text-white' : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100'}`}
                     >
                         <Stamp size={16} />
-                        <span>Logo Studio</span>
+                        <span>Whitelabelling</span>
                     </button>
                      <button
                         onClick={() => handleModeChange('photoshoot')}

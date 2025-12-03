@@ -18,15 +18,24 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Globe, ExternalLink, TrendingUp, DollarSign, ArrowUpRight, AlertCircle, Package } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { createCompetitorStoresColumns } from "./components/competitor-stores-columns"
+import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Globe, ExternalLink, TrendingUp, DollarSign, ArrowUpRight, AlertCircle, Package, Check } from "lucide-react"
+import { AdminCompetitorStoreCard } from "./components/admin-competitor-store-card"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import { CompetitorStore, sampleCompetitorStores } from "./data/stores"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
-import { Loader } from "@/components/ui/loader"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -34,7 +43,6 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
-import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -177,10 +185,10 @@ export default function AdminCompetitorStoresPage() {
 
   // Quick filters
   const quickFilters = [
-    { id: "high_traffic", label: "High Traffic", icon: TrendingUp },
-    { id: "high_revenue", label: "High Revenue", icon: DollarSign },
-    { id: "high_growth", label: "High Growth", icon: ArrowUpRight },
-    { id: "verified", label: "Verified", icon: CheckCircle2 },
+    { id: "high_traffic", label: "High Traffic", count: 0 },
+    { id: "high_revenue", label: "High Revenue", count: 0 },
+    { id: "high_growth", label: "High Growth", count: 0 },
+    { id: "verified", label: "Verified", count: 0 },
   ]
 
   // Filter stores based on search, filters, status tab, date range, and quick filters
@@ -545,6 +553,29 @@ export default function AdminCompetitorStoresPage() {
     setFormOpen(true)
   }, [canEdit, showError])
 
+  const handleDuplicate = useCallback(async (store: CompetitorStore) => {
+    if (!canCreate) {
+      showError("You don't have permission to create stores")
+      return
+    }
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      const duplicatedStore: CompetitorStore = {
+        ...store,
+        id: `cs_${Date.now()}`,
+        name: `${store.name} (Copy)`,
+        verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      setStores((prev) => [...prev, duplicatedStore])
+      showSuccess(`Store "${duplicatedStore.name}" duplicated successfully`)
+      await fetchStores()
+    } catch (err) {
+      showError("Failed to duplicate store")
+    }
+  }, [canCreate, showSuccess, showError, fetchStores])
+
   const handleCreate = useCallback(() => {
     if (!canCreate) {
       showError("You don't have permission to create stores")
@@ -688,47 +719,20 @@ export default function AdminCompetitorStoresPage() {
     setQuickViewOpen(true)
   }, [])
 
-  const columns = useMemo(
-    () =>
-      createCompetitorStoresColumns({
-        onViewDetails: handleViewDetails,
-        onQuickView: handleQuickView,
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onCopyStoreId: handleCopyStoreId,
-        onCopyUrl: handleCopyUrl,
-        onToggleVerify: handleToggleVerify,
-        onVisitStore: handleVisitStore,
-        onViewProducts: handleViewProducts,
-        canEdit,
-        canDelete,
-        canVerify,
-      }),
-    [
-      handleViewDetails,
-      handleQuickView,
-      handleEdit,
-      handleDelete,
-      handleCopyStoreId,
-      handleCopyUrl,
-      handleToggleVerify,
-      handleVisitStore,
-      handleViewProducts,
-      canEdit,
-      canDelete,
-      canVerify,
-    ]
-  )
 
-  const categoryOptions = categories.map((cat) => ({
-    label: cat,
-    value: cat,
-  }))
+  const categoryOptions = categories
+    .filter((cat): cat is string => !!cat)
+    .map((cat) => ({
+      label: cat,
+      value: cat,
+    }))
 
-  const countryOptions = countries.map((country) => ({
-    label: country,
-    value: country,
-  }))
+  const countryOptions = countries
+    .filter((country): country is string => !!country)
+    .map((country) => ({
+      label: country,
+      value: country,
+    }))
 
   const filterConfig = [
     {
@@ -806,23 +810,24 @@ export default function AdminCompetitorStoresPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Competitor Stores</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage competitor store data and analytics
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-white">Competitor Stores</h1>
+            <p className="text-xs text-white/90 mt-0.5">
+              Manage competitor store data and analytics
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
           {assignedOwner || assignedMembers.length > 0 ? (
             <div className="flex items-center gap-2">
               <div className="flex items-center -space-x-2">
                 {assignedOwner && (() => {
                   const owner = internalUsers.find(u => u.id === assignedOwner)
                   return (
-                    <Avatar className="h-8 w-8 border-2 border-background">
+                    <Avatar className="h-8 w-8 border-2 border-white/20">
                       <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                      <AvatarFallback className="text-xs">
+                      <AvatarFallback className="text-xs bg-white/20 text-white">
                         {owner?.name.charAt(0) || "O"}
                       </AvatarFallback>
                     </Avatar>
@@ -840,8 +845,8 @@ export default function AdminCompetitorStoresPage() {
                   )
                 })}
                 {assignedMembers.length > 3 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                    <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
+                  <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                    <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
                   </div>
                 )}
               </div>
@@ -849,7 +854,7 @@ export default function AdminCompetitorStoresPage() {
                 variant="outline" 
                 size="sm"
                 onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
@@ -866,6 +871,7 @@ export default function AdminCompetitorStoresPage() {
               Add Assignee
             </Button>
           )}
+          </div>
         </div>
       </div>
 
@@ -922,35 +928,139 @@ export default function AdminCompetitorStoresPage() {
             </Tabs>
           </div>
 
-          {/* DataTable */}
-          <div className="flex-1 overflow-hidden min-h-0">
-            <DataTable
-              columns={columns}
-              data={paginatedStores}
-              pageCount={pageCount}
-              onPaginationChange={(p, s) => {
-                setPage(p)
-                setPageSize(s)
-              }}
-              onSortingChange={setSorting}
-              onFilterChange={setColumnFilters}
-              onSearchChange={setSearchQuery}
-              loading={loading}
-              initialLoading={initialLoading}
-              filterConfig={filterConfig}
-              searchPlaceholder="Search stores..."
-              page={page}
-              pageSize={pageSize}
-              enableRowSelection={true}
-              onRowSelectionChange={setSelectedStores}
-              onRowClick={handleRowClick}
-              onDateRangeChange={setDateRange}
-              quickFilters={quickFilters}
-              selectedQuickFilter={quickFilter}
-              onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
-              secondaryButtons={secondaryButtons}
-            />
+          {/* Toolbar */}
+          <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <Input
+                placeholder="Search stores..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
+              />
+              {quickFilters.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={quickFilter ? "default" : "outline"}
+                      size="sm"
+                      className="h-8 px-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {quickFilters.map((filter) => (
+                      <DropdownMenuItem
+                        key={filter.id}
+                        onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
+                        className={cn(
+                          "cursor-pointer",
+                          quickFilter === filter.id && "bg-accent"
+                        )}
+                      >
+                        <span>{filter.label}</span>
+                        {quickFilter === filter.id && (
+                          <Check className="h-4 w-4 ml-auto" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    {quickFilter && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setQuickFilter(null)}
+                          className="cursor-pointer"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Clear Filter
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {secondaryButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant={button.variant || "outline"}
+                  size="sm"
+                  onClick={button.onClick}
+                  disabled={button.disabled}
+                  className="h-8"
+                >
+                  {button.icon}
+                  {button.label}
+                </Button>
+              ))}
+            </div>
           </div>
+
+          {/* Grid View */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {initialLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader size="sm" />
+                  <span>Loading stores...</span>
+                </div>
+              </div>
+            ) : paginatedStores.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                <p className="text-sm text-muted-foreground">No stores found</p>
+                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {paginatedStores.map((store) => (
+                  <AdminCompetitorStoreCard
+                    key={store.id}
+                    store={store}
+                    onEdit={handleEdit}
+                    onViewDetails={handleViewDetails}
+                    onDelete={handleDelete}
+                    onVerify={handleToggleVerify}
+                    onDuplicate={handleDuplicate}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canVerify={canVerify}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {!initialLoading && paginatedStores.length > 0 && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredStores.length)} of {filteredStores.length} stores
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Page {page} of {pageCount}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+                  disabled={page === pageCount}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

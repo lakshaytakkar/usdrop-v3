@@ -18,16 +18,25 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Mail, Globe, Package, Check, AlertCircle } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { createSuppliersColumns } from "./components/suppliers-columns"
+import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Mail, Globe, Package, Check, AlertCircle, Building } from "lucide-react"
+import { AdminSupplierCard } from "./components/admin-supplier-card"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Filter } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import { Supplier } from "@/app/suppliers/data/suppliers"
 import { adminSampleSuppliers } from "./data/suppliers"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
-import { Loader } from "@/components/ui/loader"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -35,7 +44,6 @@ import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
-import { Input } from "@/components/ui/input"
 import Image from "next/image"
 
 export default function AdminSuppliersPage() {
@@ -167,9 +175,9 @@ export default function AdminSuppliersPage() {
 
   // Quick filters
   const quickFilters = [
-    { id: "verified", label: "Verified", icon: CheckCircle2 },
-    { id: "high_rating", label: "High Rating", icon: Star },
-    { id: "unverified", label: "Unverified", icon: AlertCircle },
+    { id: "verified", label: "Verified", count: 0 },
+    { id: "high_rating", label: "High Rating", count: 0 },
+    { id: "unverified", label: "Unverified", count: 0 },
   ]
 
   // Filter suppliers based on search, filters, status tab, date range, and quick filters
@@ -511,6 +519,27 @@ export default function AdminSuppliersPage() {
     setFormOpen(true)
   }, [canEdit, showError])
 
+  const handleDuplicate = useCallback(async (supplier: Supplier) => {
+    if (!canCreate) {
+      showError("You don't have permission to create suppliers")
+      return
+    }
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      const duplicatedSupplier: Supplier = {
+        ...supplier,
+        id: `supplier_${Date.now()}`,
+        name: `${supplier.name} (Copy)`,
+        verified: false,
+      }
+      setSuppliers((prev) => [...prev, duplicatedSupplier])
+      showSuccess(`Supplier "${duplicatedSupplier.name}" duplicated successfully`)
+      await fetchSuppliers()
+    } catch (err) {
+      showError("Failed to duplicate supplier")
+    }
+  }, [canCreate, showSuccess, showError, fetchSuppliers])
+
   const handleCreate = useCallback(() => {
     if (!canCreate) {
       showError("You don't have permission to create suppliers")
@@ -580,7 +609,7 @@ export default function AdminSuppliersPage() {
                   verified: formData.verified,
                   specialties: formData.specialties,
                   description: formData.description,
-                  contactEmail: formData.contactEmail || undefined,
+                  contactEmail: formData.contactEmail || '',
                   website: formData.website || undefined,
                   logo: formData.logo || undefined,
                 }
@@ -674,35 +703,6 @@ export default function AdminSuppliersPage() {
     setQuickViewOpen(true)
   }, [])
 
-  const columns = useMemo(
-    () =>
-      createSuppliersColumns({
-        onViewDetails: handleViewDetails,
-        onQuickView: handleQuickView,
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onCopySupplierId: handleCopySupplierId,
-        onCopyEmail: handleCopyEmail,
-        onToggleVerify: handleToggleVerify,
-        onViewProducts: handleViewProducts,
-        canEdit,
-        canDelete,
-        canVerify,
-      }),
-    [
-      handleViewDetails,
-      handleQuickView,
-      handleEdit,
-      handleDelete,
-      handleCopySupplierId,
-      handleCopyEmail,
-      handleToggleVerify,
-      handleViewProducts,
-      canEdit,
-      canDelete,
-      canVerify,
-    ]
-  )
 
   const categoryOptions = categories.map((cat) => ({
     label: cat,
@@ -790,66 +790,68 @@ export default function AdminSuppliersPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Suppliers</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Manage suppliers and vendor information
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {assignedOwner || assignedMembers.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center -space-x-2">
-                {assignedOwner && (() => {
-                  const owner = internalUsers.find(u => u.id === assignedOwner)
-                  return (
-                    <Avatar className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {owner?.name.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })()}
-                {assignedMembers.slice(0, 3).map((memberId) => {
-                  const member = internalUsers.find(u => u.id === memberId)
-                  return (
-                    <Avatar key={memberId} className="h-8 w-8 border-2 border-background">
-                      <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                      <AvatarFallback className="text-xs">
-                        {member?.name.charAt(0) || "M"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })}
-                {assignedMembers.length > 3 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                    <span className="text-xs font-medium">+{assignedMembers.length - 3}</span>
-                  </div>
-                )}
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-white">Suppliers</h1>
+            <p className="text-xs text-white/90 mt-0.5">
+              Manage suppliers and vendor information
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {assignedOwner || assignedMembers.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center -space-x-2">
+                  {assignedOwner && (() => {
+                    const owner = internalUsers.find(u => u.id === assignedOwner)
+                    return (
+                      <Avatar className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {owner?.name.charAt(0) || "O"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })()}
+                  {assignedMembers.slice(0, 3).map((memberId) => {
+                    const member = internalUsers.find(u => u.id === memberId)
+                    return (
+                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
+                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
+                        <AvatarFallback className="text-xs bg-white/20 text-white">
+                          {member?.name.charAt(0) || "M"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )
+                  })}
+                  {assignedMembers.length > 3 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleOpenAssigneeModal}
+                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Assignee
+                </Button>
               </div>
+            ) : (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer"
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
               </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleOpenAssigneeModal}
-              className="whitespace-nowrap cursor-pointer"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Assignee
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -900,35 +902,139 @@ export default function AdminSuppliersPage() {
             </Tabs>
           </div>
 
-          {/* DataTable */}
-          <div className="flex-1 overflow-hidden min-h-0">
-            <DataTable
-              columns={columns}
-              data={paginatedSuppliers}
-              pageCount={pageCount}
-              onPaginationChange={(p, s) => {
-                setPage(p)
-                setPageSize(s)
-              }}
-              onSortingChange={setSorting}
-              onFilterChange={setColumnFilters}
-              onSearchChange={setSearchQuery}
-              loading={loading}
-              initialLoading={initialLoading}
-              filterConfig={filterConfig}
-              searchPlaceholder="Search suppliers..."
-              page={page}
-              pageSize={pageSize}
-              enableRowSelection={true}
-              onRowSelectionChange={setSelectedSuppliers}
-              onRowClick={handleRowClick}
-              onDateRangeChange={setDateRange}
-              quickFilters={quickFilters}
-              selectedQuickFilter={quickFilter}
-              onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
-              secondaryButtons={secondaryButtons}
-            />
+          {/* Toolbar */}
+          <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <Input
+                placeholder="Search suppliers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
+              />
+              {quickFilters.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={quickFilter ? "default" : "outline"}
+                      size="sm"
+                      className="h-8 px-2"
+                    >
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {quickFilters.map((filter) => (
+                      <DropdownMenuItem
+                        key={filter.id}
+                        onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
+                        className={cn(
+                          "cursor-pointer",
+                          quickFilter === filter.id && "bg-accent"
+                        )}
+                      >
+                        <span>{filter.label}</span>
+                        {quickFilter === filter.id && (
+                          <Check className="h-4 w-4 ml-auto" />
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    {quickFilter && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setQuickFilter(null)}
+                          className="cursor-pointer"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Clear Filter
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {secondaryButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  variant={button.variant || "outline"}
+                  size="sm"
+                  onClick={button.onClick}
+                  disabled={button.disabled}
+                  className="h-8"
+                >
+                  {button.icon}
+                  {button.label}
+                </Button>
+              ))}
+            </div>
           </div>
+
+          {/* Grid View */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {initialLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader size="sm" />
+                  <span>Loading suppliers...</span>
+                </div>
+              </div>
+            ) : paginatedSuppliers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <Building className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+                <p className="text-sm text-muted-foreground">No suppliers found</p>
+                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {paginatedSuppliers.map((supplier) => (
+                  <AdminSupplierCard
+                    key={supplier.id}
+                    supplier={supplier}
+                    onEdit={handleEdit}
+                    onViewDetails={handleViewDetails}
+                    onDelete={handleDelete}
+                    onVerify={handleToggleVerify}
+                    onDuplicate={handleDuplicate}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    canVerify={canVerify}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {!initialLoading && paginatedSuppliers.length > 0 && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredSuppliers.length)} of {filteredSuppliers.length} suppliers
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Page {page} of {pageCount}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+                  disabled={page === pageCount}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       )}
 

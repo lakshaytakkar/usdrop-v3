@@ -38,6 +38,7 @@ interface DataTableToolbarProps<TData> {
     variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'destructive' | 'link'
     disabled?: boolean
     tooltip?: string
+    className?: string
   }>
   aiGenerateButton?: {
     label: string
@@ -195,7 +196,7 @@ export function DataTableToolbar<TData>({
               onClick={button.onClick}
               variant={button.variant || 'outline'}
               size="sm"
-              className="h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap cursor-pointer"
+              className={cn("h-8 px-2 sm:px-3 flex-shrink-0 whitespace-nowrap cursor-pointer", button.className)}
               disabled={button.disabled}
             >
               {button.icon && <span className="hidden sm:inline mr-1.5">{button.icon}</span>}

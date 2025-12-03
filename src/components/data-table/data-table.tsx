@@ -313,7 +313,10 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length + (enableRowSelection ? 1 : 0)} className="h-24 text-center shrink-0">
-                  No results.
+                  <div className="flex flex-col items-center justify-center gap-2 py-4">
+                    <p className="text-sm text-muted-foreground">No users found</p>
+                    <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

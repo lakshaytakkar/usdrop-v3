@@ -4,6 +4,7 @@ import { Shirt, Sparkles, Loader2 } from 'lucide-react';
 import { useStudio } from '../../context/StudioContext';
 import { ApparelItemCard } from './ApparelItemCard';
 import { AIEnhancements } from '../enhancements/AIEnhancements';
+import type { ApparelItem } from '../../types';
 
 export const ApparelUploader: React.FC = () => {
     const { 
@@ -86,7 +87,7 @@ export const ApparelUploader: React.FC = () => {
                 className="flex-grow overflow-y-auto space-y-3 pr-1"
                 onDragLeave={() => setDragOverIndex(null)}
             >
-               {apparel.map((item, index) => (
+               {apparel.map((item: ApparelItem, index: number) => (
                    <div
                         key={item.id}
                         draggable

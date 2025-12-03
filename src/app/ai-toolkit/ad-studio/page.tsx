@@ -5,10 +5,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Play } from "lucide-react"
+import { AdStudio } from "@/components/ai-tools/ad-studio"
 
 export default function AdStudioPage() {
   return (
@@ -16,9 +14,9 @@ export default function AdStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-amber-950 to-orange-800 p-4 md:p-5 text-white h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-amber-950 to-orange-800 p-3 text-white h-[77px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -54,9 +52,9 @@ export default function AdStudioPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-4 h-full">
+            <div className="relative z-10 flex items-center gap-3 h-full">
               {/* Mascot before text */}
-              <div className="relative w-[120px] h-[110px] md:w-[140px] md:h-[130px] flex-shrink-0 bg-transparent">
+              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent">
                 <Image
                   src="/ad-studio-mascot.png"
                   alt="3D mascot with megaphone"
@@ -71,47 +69,28 @@ export default function AdStudioPage() {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold mb-1.5 leading-tight">USDrop Ad Creator</h2>
-                <p className="text-white/85 text-xs md:text-sm leading-relaxed">
+                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Ad Creator</h2>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
                   Create compelling ad creatives with AI. Generate images, videos, and copy that 
                   convert. Test different variations and optimize for better performance.
                 </p>
               </div>
 
-              {/* Video Tutorial button in right corner */}
+              {/* Tutorial button */}
               <div className="flex-shrink-0">
                 <Button 
                   variant="outline" 
+                  size="sm"
                   className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
                 >
-                  <Play className="h-4 w-4" />
-                  Video Tutorial
+                  <Play className="h-3 w-3 mr-1" />
+                  <span className="text-xs">Tutorial</span>
                 </Button>
               </div>
             </div>
           </div>
 
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Ad Creative Generator</h3>
-              <p className="text-muted-foreground mb-6">
-                Generate compelling ad creatives with AI. This feature is coming soon with full ad generation capabilities.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Product Description</label>
-                  <Textarea placeholder="Describe your product..." rows={4} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Target Audience</label>
-                  <Input placeholder="e.g., Fashion enthusiasts, 25-35" />
-                </div>
-                <Button disabled className="w-full">
-                  Generate Ad Creative (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <AdStudio />
         </div>
       </SidebarInset>
     </SidebarProvider>

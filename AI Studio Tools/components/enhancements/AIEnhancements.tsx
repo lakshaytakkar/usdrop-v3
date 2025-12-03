@@ -2,6 +2,7 @@ import React from 'react';
 import { Lightbulb, Check, Loader2, X } from 'lucide-react';
 import { useStudio } from '../../context/StudioContext';
 import { SHOT_TYPES_LIBRARY, LIGHTING_PRESETS, BACKGROUNDS_LIBRARY } from '../../constants';
+import type { ArtDirectorSuggestion } from '../../types';
 
 export const AIEnhancements: React.FC = () => {
     const { artDirectorSuggestions, isFetchingSuggestion, applyArtDirectorSuggestion, appliedSuggestionId, removeArtDirectorSuggestion } = useStudio();
@@ -32,7 +33,7 @@ export const AIEnhancements: React.FC = () => {
             </div>
             
             <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 model-filter-scrollbar">
-                {artDirectorSuggestions.map((suggestion) => {
+                {artDirectorSuggestions.map((suggestion: ArtDirectorSuggestion) => {
                     const shotType = SHOT_TYPES_LIBRARY.find(p => p.id === suggestion.shotTypeId);
                     const lighting = LIGHTING_PRESETS.find(l => l.id === suggestion.lightingId);
                     const background = BACKGROUNDS_LIBRARY.find(b => b.id === suggestion.backgroundId);

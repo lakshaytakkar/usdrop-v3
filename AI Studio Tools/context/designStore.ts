@@ -1,6 +1,6 @@
 import type { DesignInput, DesignPlacementControls } from '../types';
 import { getDominantColor } from '../utils/colorExtractor';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { geminiService } from '../services/geminiService';
 import { withRetry } from '../utils/colorUtils';
 
@@ -52,10 +52,10 @@ const initialDesignState: DesignState = {
   isGeneratingDesign: false,
 };
 
-export const createDesignSlice: StudioStoreSlice<DesignSlice> = (set, get) => ({
+export const createDesignSlice: StudioStoreSlice<DesignSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialDesignState,
   
-  setMockupImage: async (image) => {
+  setMockupImage: async (image: DesignInput | null) => {
       set({ mockupImage: image });
       if (image) {
           try {
@@ -68,17 +68,17 @@ export const createDesignSlice: StudioStoreSlice<DesignSlice> = (set, get) => ({
       }
   },
 
-  setDesignImage: (image) => set({ designImage: image }),
+  setDesignImage: (image: DesignInput | null) => set({ designImage: image }),
   
-  setBackDesignImage: (image) => set({ backDesignImage: image }),
+  setBackDesignImage: (image: DesignInput | null) => set({ backDesignImage: image }),
   
-  updateDesignPlacementControl: (key, value) => {
+  updateDesignPlacementControl: <K extends keyof DesignPlacementControls>(key: K, value: DesignPlacementControls[K]) => {
       set(state => ({ 
           designPlacementControls: { ...state.designPlacementControls, [key]: value } 
       }));
   },
   
-  updateDesignSideControl: (side, key, value) => {
+  updateDesignSideControl: (side: 'front' | 'back', key: keyof DesignPlacementControls['front'], value: any) => {
       set(state => ({
           designPlacementControls: {
               ...state.designPlacementControls,
@@ -90,7 +90,7 @@ export const createDesignSlice: StudioStoreSlice<DesignSlice> = (set, get) => ({
       }));
   },
 
-  generateAIDesign: async (prompt) => {
+  generateAIDesign: async (prompt: string) => {
     if (!prompt.trim()) return;
     set({ isGeneratingDesign: true, error: null });
     try {

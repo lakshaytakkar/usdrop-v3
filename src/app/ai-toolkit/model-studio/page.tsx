@@ -70,19 +70,21 @@ export default function ModelStudioPage() {
 
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Model Creator</h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-white/85 text-xs leading-tight">
-                    Generate professional model advertisements for your apparel products.
-                  </p>
-                  <div className="flex items-center gap-1 text-white/90">
-                    <Coins className="h-3 w-3 text-[#FFD700]" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6))' }} />
-                    <span className="text-xs font-medium">3 credits per image</span>
-                  </div>
-                </div>
+                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                  Generate professional model advertisements for your apparel products.
+                </p>
               </div>
 
-              {/* Video Tutorial button in right corner */}
-              <div className="flex-shrink-0">
+              {/* Credits pill and Tutorial button */}
+              <div className="flex-shrink-0 flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                >
+                  <Coins className="h-3 w-3 mr-1 text-[#FFD700]" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.6))' }} />
+                  <span className="text-xs">3 credits per image</span>
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"

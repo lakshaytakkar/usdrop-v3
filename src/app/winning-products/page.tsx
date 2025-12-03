@@ -7,8 +7,10 @@ import { Topbar } from "@/components/topbar"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
-import { WinningProductCard } from "./components/product-card"
+import { WinningProductsTable } from "./components/winning-products-table"
+import { QuickFilters, QuickFilterType } from "./components/quick-filters"
 import { winningProducts, ProductCategory, WinningProduct } from "./data/products"
 import { 
   Trophy, 
@@ -23,7 +25,9 @@ import {
   Box,
   Baby,
   Dog,
-  Leaf
+  Leaf,
+  Search,
+  Play
 } from "lucide-react"
 
 const categories = [
@@ -55,9 +59,46 @@ export default function WinningProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>("all")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [quickFilter, setQuickFilter] = useState<QuickFilterType>(null)
 
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = [...winningProducts]
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(query) ||
+        p.category.toLowerCase().includes(query)
+      )
+    }
+
+    // Quick filter
+    if (quickFilter) {
+      switch (quickFilter) {
+        case "top-new":
+          // Products found within last 14 days
+          const twoWeeksAgo = new Date()
+          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14)
+          filtered = filtered.filter(p => 
+            new Date(p.foundDate) >= twoWeeksAgo
+          )
+          break
+        case "high-potential":
+          // High profit margin (>45%) or high revenue (>100k)
+          filtered = filtered.filter(p => 
+            p.profitMargin > 45 || p.potRevenue > 100000
+          )
+          break
+        case "sales-grow":
+          // High growth rate (>100%)
+          filtered = filtered.filter(p => 
+            p.revenueGrowthRate > 100
+          )
+          break
+      }
+    }
 
     // Category filter
     if (selectedCategory !== "all") {
@@ -85,7 +126,7 @@ export default function WinningProductsPage() {
     })
 
     return filtered
-  }, [selectedCategory, sortBy])
+  }, [selectedCategory, sortBy, searchQuery, quickFilter])
 
   const stats = useMemo(() => {
     const avgProfit = winningProducts.reduce((sum, p) => sum + p.profitMargin, 0) / winningProducts.length
@@ -106,16 +147,74 @@ export default function WinningProductsPage() {
         <AppSidebar />
         <SidebarInset>
           <Topbar />
-          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
-            {/* Header */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy className="h-8 w-8 text-primary" />
-                <h1 className="text-3xl md:text-4xl font-bold">Winning Products</h1>
+          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+            {/* Premium Banner with grainy gradient */}
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-yellow-900 via-amber-950 to-yellow-800 p-3 text-white h-[77px] flex-shrink-0">
+              {/* Enhanced grainy texture layers */}
+              <div 
+                className="absolute inset-0 z-0"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                  opacity: 0.5,
+                  mixBlendMode: 'overlay'
+                }}
+              ></div>
+              <div 
+                className="absolute inset-0 z-0"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
+                  opacity: 0.4,
+                  mixBlendMode: 'multiply'
+                }}
+              ></div>
+              <div 
+                className="absolute inset-0 z-0"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
+                  opacity: 0.3,
+                  mixBlendMode: 'screen'
+                }}
+              ></div>
+              <div 
+                className="absolute inset-0 z-0"
+                style={{
+                  background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
+                                repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
+                  opacity: 0.6
+                }}
+              ></div>
+
+              {/* Content */}
+              <div className="relative z-10 flex items-center gap-3 h-full">
+                {/* Icon/Mascot */}
+                <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
+                  <Trophy 
+                    className="h-12 w-12 text-white"
+                    style={{
+                      filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
+                    }}
+                  />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Winning Products</h2>
+                  <p className="text-white/85 text-xs leading-tight mt-0.5">
+                    Expert-curated products with high profit potential to boost your dropshipping success.
+                  </p>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex-shrink-0 flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    <span className="text-xs">Tutorial</span>
+                  </Button>
+                </div>
               </div>
-              <p className="text-muted-foreground">
-                Expert-curated products with high profit potential
-              </p>
             </div>
 
             {/* Stats Cards */}
@@ -165,7 +264,25 @@ export default function WinningProductsPage() {
               </Card>
             </div>
 
-            {/* Filters */}
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-full max-w-md"
+              />
+            </div>
+
+            {/* Quick Filters */}
+            <QuickFilters
+              selectedFilter={quickFilter}
+              onFilterChange={setQuickFilter}
+            />
+
+            {/* Filters and Sort */}
             <Card className="p-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
@@ -207,7 +324,11 @@ export default function WinningProductsPage() {
                     variant={selectedCategory === category.id ? "default" : "outline"}
                     size="sm"
                     onClick={() => setSelectedCategory(category.id)}
-                    className="flex items-center gap-2"
+                    className={`flex items-center gap-2 cursor-pointer ${
+                      selectedCategory === category.id 
+                        ? "bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700" 
+                        : ""
+                    }`}
                   >
                     <Icon className="h-4 w-4" />
                     {category.label}
@@ -216,29 +337,15 @@ export default function WinningProductsPage() {
               })}
             </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {filteredAndSortedProducts.map((product) => (
-                <WinningProductCard
-                  key={product.id}
-                  product={product}
-                  onLockedClick={() => setIsUpsellOpen(true)}
-                />
-              ))}
-            </div>
-
-            {/* Empty State */}
-            {filteredAndSortedProducts.length === 0 && (
-              <Card className="p-12">
-                <div className="text-center">
-                  <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No products found</h3>
-                  <p className="text-muted-foreground">
-                    Try selecting a different category or changing your filters.
-                  </p>
-                </div>
-              </Card>
-            )}
+            {/* Products Table */}
+            <WinningProductsTable
+              products={filteredAndSortedProducts}
+              onProductClick={(product) => {
+                // Handle product click - could navigate to detail page
+                console.log("View product:", product.id)
+              }}
+              onLockedClick={() => setIsUpsellOpen(true)}
+            />
           </div>
         </SidebarInset>
       </SidebarProvider>

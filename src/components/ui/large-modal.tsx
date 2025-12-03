@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 interface LargeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  title: string
+  title: string | React.ReactNode
   children: React.ReactNode
   footer?: React.ReactNode
   className?: string
@@ -36,7 +36,7 @@ export function LargeModal({
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4">
+        <div className="flex-1 overflow-hidden min-h-0 px-6 py-4">
           {children}
         </div>
 

@@ -44,8 +44,16 @@ import {
   Calculator,
   Presentation,
   User,
-  Target,
+  Truck,
   LucideIcon,
+  Map,
+  Video,
+  ExternalLink,
+  Mail,
+  FileText,
+  Zap,
+  Droplets,
+  FileSearch,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -92,6 +100,11 @@ const aiLearnItems = [
     icon: Newspaper,
     url: "/intelligence",
   },
+  {
+    title: "Webinars",
+    icon: Video,
+    url: "/webinars",
+  },
 ]
 
 // USDrop AI Fulfilment items
@@ -101,15 +114,21 @@ const aiFulfilmentItems: Array<{ title: string; icon: LucideIcon; url: string; i
     icon: Package,
     url: "/suppliers",
   },
+  {
+    title: "Selling Channels",
+    icon: ExternalLink,
+    url: "/selling-channels",
+  },
+  {
+    title: "Shipping Calculator",
+    icon: Truck,
+    url: "/ai-toolkit/shipping-calculator",
+    isPro: true,
+  },
 ]
 
 // USDrop AI Studio items
 const aiStudioItems = [
-  {
-    title: "AI Studio",
-    icon: Sparkles,
-    url: "/ai-studio",
-  },
   {
     title: "Image Studio",
     icon: Image,
@@ -117,7 +136,7 @@ const aiStudioItems = [
     isPro: true,
   },
   {
-    title: "Logo Studio",
+    title: "Whitelabelling",
     icon: Badge,
     url: "/ai-toolkit/logo-studio",
     isPro: true,
@@ -141,18 +160,6 @@ const aiStudioItems = [
     isPro: true,
   },
   {
-    title: "Brand Studio",
-    icon: Badge,
-    url: "/ai-toolkit/brand-studio",
-    isPro: true,
-  },
-  {
-    title: "Audience Studio",
-    icon: Target,
-    url: "/ai-toolkit/audience-studio",
-    isPro: true,
-  },
-  {
     title: "Profit Calculator",
     icon: Calculator,
     url: "/ai-toolkit/profit-calculator",
@@ -168,12 +175,17 @@ const aiWorkspaceItems = [
     url: "/",
   },
   {
-    title: "Picklist",
+    title: "My Journey",
+    icon: Map,
+    url: "/my-journey",
+  },
+  {
+    title: "My Products",
     icon: Bookmark,
     url: "/picklist",
   },
   {
-    title: "Shopify Stores",
+    title: "My Shopify Store",
     icon: ShoppingBag,
     url: "/shopify-stores",
   },
@@ -252,6 +264,30 @@ const adminResearchItems = [
     title: "Shopify Stores",
     icon: ShoppingBag,
     url: "/admin/shopify-stores",
+  },
+]
+
+// Admin Email Automation items
+const adminEmailAutomationItems = [
+  {
+    title: "Templates",
+    icon: FileText,
+    url: "/admin/email-automation/templates",
+  },
+  {
+    title: "Automations",
+    icon: Zap,
+    url: "/admin/email-automation/automations",
+  },
+  {
+    title: "Drip Campaigns",
+    icon: Droplets,
+    url: "/admin/email-automation/drips",
+  },
+  {
+    title: "Email Logs",
+    icon: FileSearch,
+    url: "/admin/email-automation/logs",
   },
 ]
 
@@ -497,6 +533,25 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminResearchItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                        <Link href={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* Email Automation Section */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Email Automation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminEmailAutomationItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>

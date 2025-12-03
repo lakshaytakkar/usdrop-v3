@@ -3,10 +3,11 @@ import { Layers, Sparkles, Wand2, Loader2, PlusCircle, Trash2 } from 'lucide-rea
 import { useStudio } from '../../context/StudioContext';
 import { useDropzone } from 'react-dropzone';
 import { InteractiveStagingCanvas } from './InteractiveStagingCanvas';
+import type { StagedAsset, SceneSuggestion } from '../../types';
 
 const CompanionAssetsManager: React.FC = () => {
     const { stagedAssets, addCompanionAsset, removeCompanionAsset } = useStudio();
-    const companionAssets = stagedAssets.filter(a => a.id !== 'product');
+    const companionAssets = stagedAssets.filter((a: StagedAsset) => a.id !== 'product');
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         acceptedFiles.forEach(file => {
@@ -30,7 +31,7 @@ const CompanionAssetsManager: React.FC = () => {
             <p className="text-sm font-medium text-zinc-300 mb-2">Companion Assets</p>
              <p className="text-xs text-zinc-500 mb-3">Add packaging or other products to stage them together. Drag them on the canvas above.</p>
             <div className="flex flex-wrap gap-2">
-                {companionAssets.map((asset) => (
+                {companionAssets.map((asset: StagedAsset) => (
                     <div key={asset.id} className="relative group w-20 h-20 flex-shrink-0">
                         <img src={asset.base64} alt={`Companion asset`} className="w-full h-full object-cover rounded-md border border-white/10" />
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-md flex items-center justify-center">
@@ -111,7 +112,7 @@ export const PropsPanel: React.FC = () => {
 
                  {sceneSuggestions.length > 0 && (
                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        {sceneSuggestions.map((suggestion, index) => (
+                        {sceneSuggestions.map((suggestion: SceneSuggestion, index: number) => (
                            <div key={index} className="flex flex-col gap-2 p-2 bg-zinc-900 rounded-lg border border-white/5">
                                 <div className="aspect-square w-full rounded-md bg-zinc-800 relative overflow-hidden shimmer-bg">
                                    {suggestion.previewImageB64 && (

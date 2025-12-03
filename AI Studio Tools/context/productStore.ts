@@ -1,7 +1,7 @@
 import type { ProductCreativeControls, ProductEcommercePack, ProductSceneTemplate, StagedAsset, SceneSuggestion } from '../types';
 import { APERTURES_LIBRARY, CAMERA_ANGLES_LIBRARY_PRODUCT, COLOR_GRADING_PRESETS, FOCAL_LENGTHS_LIBRARY, LIGHTING_DIRECTIONS_LIBRARY, LIGHT_QUALITIES_LIBRARY, CATCHLIGHT_STYLES_LIBRARY, SURFACE_LIBRARY, PRODUCT_MATERIAL_LIBRARY, THEMED_SCENE_TEMPLATES, SHOT_TYPES_LIBRARY, EXPRESSIONS, PRODUCT_INTERACTION_LIBRARY } from '../constants';
 import { geminiService } from '../services/geminiService';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { getDominantColor } from '../utils/colorExtractor';
 import { getComplementaryColor, withRetry } from '../utils/colorUtils';
 
@@ -81,10 +81,10 @@ const initialProductState: ProductState = {
   productEcommercePack: 'none',
 };
 
-export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => ({
+export const createProductSlice: StudioStoreSlice<ProductSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialProductState,
 
-  setProductImage: async (base64) => {
+  setProductImage: async (base64: string | null) => {
     set({ 
         productImage: base64, 
         productImageCutout: null, 
@@ -131,7 +131,7 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
     }
   },
   
-  setProductName: (name) => set({ productName: name }),
+  setProductName: (name: string) => set({ productName: name }),
 
   performBackgroundRemoval: async () => {
       const { productImage } = get();
@@ -151,7 +151,7 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
       }
   },
 
-  setUseCutout: (useCutout) => {
+  setUseCutout: (useCutout: boolean) => {
       const { productImage, productImageCutout, stagedAssets } = get();
       const imageToUse = useCutout ? productImageCutout : productImage;
       if (!imageToUse) return;
@@ -163,7 +163,7 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
       set({ isCutout: useCutout });
   },
 
-  updateProductControl: (key, value) => {
+  updateProductControl: <K extends keyof ProductCreativeControls>(key: K, value: ProductCreativeControls[K]) => {
       set(state => ({ productControls: { ...state.productControls, [key]: value } }));
   },
 
@@ -209,15 +209,15 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
       }
   },
   
-  addCompanionAsset: (base64) => {
+  addCompanionAsset: (base64: string) => {
     const newId = `companion_${Date.now()}`;
     const newAsset: StagedAsset = { id: newId, base64, x: 25, y: 25, z: 0, scale: 30 };
     set(state => ({ stagedAssets: [...state.stagedAssets, newAsset] }));
   },
   
-  removeCompanionAsset: (id) => set(state => ({ stagedAssets: state.stagedAssets.filter(asset => asset.id !== id) })),
+  removeCompanionAsset: (id: string) => set(state => ({ stagedAssets: state.stagedAssets.filter(asset => asset.id !== id) })),
   
-  updateStagedAsset: (id, partialAsset) => {
+  updateStagedAsset: (id: string, partialAsset: Partial<StagedAsset>) => {
     set(state => ({
         stagedAssets: state.stagedAssets.map(asset => 
             asset.id === id ? { ...asset, ...partialAsset } : asset
@@ -225,7 +225,7 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
     }));
   },
 
-  saveSceneTemplate: (name) => {
+  saveSceneTemplate: (name: string) => {
     if (!name.trim()) return;
     const { scene, productControls, stagedAssets } = get();
     const newTemplate: ProductSceneTemplate = {
@@ -241,7 +241,7 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
     }));
   },
 
-  applySceneTemplate: (id) => {
+  applySceneTemplate: (id: string) => {
     const template = get().sceneTemplates.find(t => t.id === id) || THEMED_SCENE_TEMPLATES.find(t => t.id === id);
     if (template) {
       get().updateScene(template.scene);
@@ -252,11 +252,11 @@ export const createProductSlice: StudioStoreSlice<ProductSlice> = (set, get) => 
     }
   },
 
-  deleteSceneTemplate: (id) => {
+  deleteSceneTemplate: (id: string) => {
     set(state => ({
       sceneTemplates: state.sceneTemplates.filter(t => t.id !== id)
     }));
   },
 
-  setProductEcommercePack: (pack) => set({ productEcommercePack: pack }),
+  setProductEcommercePack: (pack: ProductEcommercePack) => set({ productEcommercePack: pack }),
 });

@@ -12,8 +12,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Plus, Trash2, Download, Eye, Archive, Calendar, Star, Pin, TrendingUp, FileText } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { createIntelligenceColumns } from "./components/intelligence-columns"
+import { AdminArticleCard } from "./components/admin-article-card"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Filter, Check, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import { Article } from "./data/articles"
 import { sampleArticles } from "./data/articles"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
@@ -260,19 +270,6 @@ export default function AdminIntelligencePage() {
     // TODO: Implement CSV export
   }
 
-  const columns = useMemo(
-    () =>
-      createIntelligenceColumns({
-        onViewDetails: handleViewDetails,
-        onEdit: handleEdit,
-        onPublish: handlePublish,
-        onUnpublish: handleUnpublish,
-        onDuplicate: handleDuplicate,
-        onDelete: handleDelete,
-        onCopyLink: handleCopyLink,
-      }),
-    []
-  )
 
   const filterConfig = [
     {
@@ -296,11 +293,11 @@ export default function AdminIntelligencePage() {
   ]
 
   const quickFilters = [
-    { id: "featured", label: "Featured", icon: Star },
-    { id: "pinned", label: "Pinned", icon: Pin },
-    { id: "recent", label: "Recent", icon: Calendar },
-    { id: "high-views", label: "High Views", icon: TrendingUp },
-    { id: "needs-review", label: "Needs Review", isWarning: true },
+    { id: "featured", label: "Featured", count: 0 },
+    { id: "pinned", label: "Pinned", count: 0 },
+    { id: "recent", label: "Recent", count: 0 },
+    { id: "high-views", label: "High Views", count: 0 },
+    { id: "needs-review", label: "Needs Review", count: 0 },
   ]
 
   if (!canView) {
@@ -315,25 +312,28 @@ export default function AdminIntelligencePage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <FileText className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">USDrop Intelligence</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage blog articles and content
-            </p>
+      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <FileText className="h-6 w-6 text-white" />
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight text-white">USDrop Intelligence</h1>
+              <p className="text-xs text-white/90 mt-0.5">
+                Manage blog articles and content
+              </p>
+            </div>
           </div>
+          {canCreate && (
+            <Button
+              size="sm"
+              onClick={() => router.push("/admin/intelligence/new")}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Article
+            </Button>
+          )}
         </div>
-        {canCreate && (
-          <Button
-            size="sm"
-            onClick={() => router.push("/admin/intelligence/new")}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Article
-          </Button>
-        )}
       </div>
 
       {/* Status Tabs */}
@@ -441,38 +441,135 @@ export default function AdminIntelligencePage() {
         </div>
       )}
 
-      {initialLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-muted-foreground">Loading articles...</div>
+      {/* Toolbar */}
+      <div className="mb-4 flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <Input
+            placeholder="Search articles, authors, tags, categories..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
+          />
+          {quickFilters.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={quickFilter ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 px-2"
+                >
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                {quickFilters.map((filter) => (
+                  <DropdownMenuItem
+                    key={filter.id}
+                    onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
+                    className={cn(
+                      "cursor-pointer",
+                      quickFilter === filter.id && "bg-accent"
+                    )}
+                  >
+                    <span>{filter.label}</span>
+                    {quickFilter === filter.id && (
+                      <Check className="h-4 w-4 ml-auto" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                {quickFilter && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setQuickFilter(null)}
+                      className="cursor-pointer"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear Filter
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-      ) : (
-        <DataTable
-          columns={columns}
-          data={paginatedArticles}
-          pageCount={pageCount}
-          onPaginationChange={(p, s) => {
-            setPage(p)
-            setPageSize(s)
-          }}
-          onSortingChange={setSorting}
-          onFilterChange={setFilters}
-          onSearchChange={setSearch}
-          loading={loading}
-          initialLoading={initialLoading}
-          filterConfig={filterConfig}
-          searchPlaceholder="Search articles, authors, tags, categories..."
-          page={page}
-          pageSize={pageSize}
-          onAdd={canCreate ? () => router.push("/admin/intelligence/new") : undefined}
-          addButtonText="Add Article"
-          addButtonIcon={<Plus className="h-4 w-4" />}
-          enableRowSelection={true}
-          onRowSelectionChange={setSelectedArticles}
-          onRowClick={handleRowClick}
-          quickFilters={quickFilters}
-          selectedQuickFilter={quickFilter}
-          onQuickFilterChange={setQuickFilter}
-        />
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {canCreate && (
+            <Button
+              onClick={() => router.push("/admin/intelligence/new")}
+              size="sm"
+              className="h-8"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Article
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Grid View */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {initialLoading ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader size="sm" />
+              <span>Loading articles...</span>
+            </div>
+          </div>
+        ) : paginatedArticles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
+            <p className="text-sm text-muted-foreground">No articles found</p>
+            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {paginatedArticles.map((article) => (
+              <AdminArticleCard
+                key={article.id}
+                article={article}
+                onEdit={handleEdit}
+                onViewDetails={handleViewDetails}
+                onDelete={handleDelete}
+                onPublish={article.status === "published" ? handleUnpublish : handlePublish}
+                onDuplicate={handleDuplicate}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                canPublish={canPublish}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {!initialLoading && paginatedArticles.length > 0 && (
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredArticles.length)} of {filteredArticles.length} articles
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Page {page} of {pageCount}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+              disabled={page === pageCount}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}

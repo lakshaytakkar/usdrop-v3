@@ -137,17 +137,19 @@ export function createCoursesColumns({
     {
       id: "modules",
       header: "Modules",
+      size: 180,
+      minSize: 160,
       cell: ({ row }) => {
         const course = row.original
         const moduleCount = course.modules?.length || 0
         const chapterCount = course.modules?.reduce((sum, m) => sum + (m.chapters?.length || 0), 0) || 0
         return (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
-            <Badge variant="outline" className="text-xs">
-              {moduleCount} Modules
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+            <Badge variant="outline" className="text-xs whitespace-nowrap">
+              {moduleCount} {moduleCount === 1 ? 'Module' : 'Modules'}
             </Badge>
-            <span>•</span>
-            <span>{chapterCount} Chapters</span>
+            <span className="text-muted-foreground/60">•</span>
+            <span className="whitespace-nowrap">{chapterCount} {chapterCount === 1 ? 'Chap' : 'Chaps'}</span>
           </div>
         )
       },
@@ -179,7 +181,7 @@ export function createCoursesColumns({
           <div onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer focus:outline-none focus-visible:outline-none focus-visible:ring-0">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

@@ -1,21 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wand2, ArrowRight, Command } from 'lucide-react';
+import { Wand2, ArrowRight } from 'lucide-react';
 
 // --- Reusable Components ---
 
-const LogoMarquee: React.FC = () => (
-    <div className="relative w-full overflow-hidden py-12 bg-zinc-950">
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-zinc-950 via-transparent to-zinc-950"></div>
-        <div className="flex animate-marquee-infinite">
-            {Array(6).fill(["Momentum", "Quantum", "Apex", "Zenith", "Catalyst", "Evolve", "Vertex"]).flat().map((name, index) => (
-                <div key={index} className="flex-shrink-0 flex items-center gap-2 mx-8">
-                    <Command size={20} className="text-zinc-600" />
-                    <span className="font-semibold text-xl text-zinc-600">{name}</span>
-                </div>
-            ))}
+const LogoMarquee: React.FC = () => {
+    const companies = [
+        { name: "Shopify", logo: "/images/logos/shopify.svg" },
+        { name: "Stripe", logo: "/images/logos/stripe.svg" },
+        { name: "Amazon", logo: "/images/logos/amazon.svg" },
+        { name: "Google", logo: "/images/logos/google.svg" },
+        { name: "Microsoft", logo: "/images/logos/microsoft.svg" },
+        { name: "Apple", logo: "/images/logos/apple.svg" },
+        { name: "Meta", logo: "/images/logos/meta.svg" }
+    ];
+
+    return (
+        <div className="relative w-full overflow-hidden py-12 bg-zinc-950">
+            <div className="absolute inset-0 z-10 bg-gradient-to-r from-zinc-950 via-transparent to-zinc-950"></div>
+            <div className="flex animate-marquee-infinite">
+                {Array(6).fill(companies).flat().map((company, index) => (
+                    <div key={index} className="flex-shrink-0 flex items-center justify-center mx-8 h-12">
+                        <img 
+                            src={company.logo} 
+                            alt={`${company.name} logo`}
+                            className="h-full w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+                            style={{ maxWidth: '150px' }}
+                        />
+                    </div>
+                ))}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- Page Sections (Overhauled) ---
 

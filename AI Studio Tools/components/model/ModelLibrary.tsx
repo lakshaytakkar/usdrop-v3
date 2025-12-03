@@ -5,6 +5,7 @@ import { ModelCard } from './ModelCard';
 import { ToggleSwitch } from '../shared/ToggleSwitch';
 import { useAuth } from '../../context/AuthContext';
 import { Lock } from 'lucide-react';
+import type { AIModel } from '../../types';
 
 export const ModelLibrary: React.FC = () => {
     const { handleModelSelection, selectedModels, isBatchMode, setIsBatchMode } = useStudio();
@@ -61,7 +62,7 @@ export const ModelLibrary: React.FC = () => {
                        <ModelCard 
                            key={model.id}
                            model={model}
-                           isSelected={selectedModels.some(m => m.id === model.id)}
+                           isSelected={selectedModels.some((m: AIModel) => m.id === model.id)}
                            onSelect={() => handleModelSelection(model)}
                        />
                     ))}

@@ -57,7 +57,12 @@ export default function ProductDetailPage() {
           <Topbar />
           <div className="flex flex-1 flex-col items-center justify-center p-8">
             <h1 className="text-2xl font-bold mb-4">Product not found</h1>
-            <Button onClick={() => router.push("/product-hunt")}>Back to Products</Button>
+            <Button 
+              onClick={() => router.push("/product-hunt")}
+              className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 cursor-pointer"
+            >
+              Back to Products
+            </Button>
           </div>
         </SidebarInset>
       </SidebarProvider>
@@ -80,14 +85,14 @@ export default function ProductDetailPage() {
             <nav className="flex items-center gap-2 text-sm text-muted-foreground">
               <button 
                 onClick={() => router.push("/")}
-                className="hover:text-foreground transition-colors"
+                className="hover:text-foreground transition-colors cursor-pointer"
               >
                 Home
               </button>
               <span>/</span>
               <button 
                 onClick={() => router.push("/product-hunt")}
-                className="hover:text-foreground transition-colors"
+                className="hover:text-foreground transition-colors cursor-pointer"
               >
                 Product Hunt
               </button>
@@ -102,7 +107,7 @@ export default function ProductDetailPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => router.push(`/product-hunt/${prevProduct.id}`)}
-                  className="h-8"
+                  className="h-8 cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Prev
@@ -112,7 +117,7 @@ export default function ProductDetailPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => router.push("/product-hunt")}
-                className="h-8"
+                className="h-8 cursor-pointer"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back
@@ -122,7 +127,7 @@ export default function ProductDetailPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => router.push(`/product-hunt/${nextProduct.id}`)}
-                  className="h-8"
+                  className="h-8 cursor-pointer"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-1" />
@@ -134,7 +139,7 @@ export default function ProductDetailPage() {
           {/* Added Date and Tutorial */}
           <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
             <span>Added to USDrop {productDetail.addedDate}</span>
-            <button className="flex items-center gap-1 hover:text-foreground transition-colors">
+            <button className="flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer">
               <Play className="h-4 w-4" />
               Watch Tutorial
             </button>
@@ -173,7 +178,7 @@ export default function ProductDetailPage() {
                 {productDetail.fullDescription && (
                   <button
                     onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="text-sm text-primary hover:underline mt-1"
+                    className="text-sm text-blue-600 hover:underline mt-1 cursor-pointer"
                   >
                     {showFullDescription ? "Show less" : "Show more"}
                   </button>
@@ -202,25 +207,25 @@ export default function ProductDetailPage() {
 
               {/* Supplier Links */}
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" className="w-full" asChild>
+                <Button variant="outline" size="sm" className="w-full cursor-pointer" asChild>
                   <a href={productDetail.supplierLinks?.aliexpress} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     AliExpress
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full" asChild>
+                <Button variant="outline" size="sm" className="w-full cursor-pointer" asChild>
                   <a href={productDetail.supplierLinks?.amazon} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Amazon
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full" asChild>
+                <Button variant="outline" size="sm" className="w-full cursor-pointer" asChild>
                   <a href={productDetail.supplierLinks?.facebookAd} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Facebook Ad
                   </a>
                 </Button>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full cursor-pointer">
                   Find Best Supplier
                 </Button>
               </div>
@@ -230,7 +235,7 @@ export default function ProductDetailPage() {
                 <p className="text-sm text-muted-foreground mb-2">
                   Need help choosing products? Store review, targeting, scaling, sales advice?
                 </p>
-                <Button variant="outline" size="sm" className="w-full">
+                <Button variant="outline" size="sm" className="w-full cursor-pointer">
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Chat now
                 </Button>
@@ -262,7 +267,7 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               </div>
-              <Button>
+              <Button className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 cursor-pointer">
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Import to Shopify
               </Button>
@@ -419,6 +424,7 @@ export default function ProductDetailPage() {
               variant="ghost"
               size="sm"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="cursor-pointer"
             >
               Scroll to top
             </Button>

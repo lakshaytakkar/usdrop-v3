@@ -3,6 +3,7 @@ export interface ShopifyStore {
   user_id: string // External user who owns this store
   name: string
   url: string
+  logo?: string
   status: "connected" | "disconnected" | "syncing" | "error"
   connected_at: string
   last_synced_at: string | null

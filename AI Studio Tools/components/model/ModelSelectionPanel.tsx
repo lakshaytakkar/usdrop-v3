@@ -6,6 +6,7 @@ import { TabButton } from '../shared/TabButton';
 import { useStudio } from '../../context/StudioContext';
 import { ModelPrompter } from './ModelPrompter';
 import { MyModelsLibrary } from './MyModelsLibrary';
+import type { AIModel } from '../../types';
 
 // New main tab structure
 type Tab = 'upload' | 'prompt' | 'models';
@@ -40,7 +41,7 @@ export const ModelSelectionPanel: React.FC = () => {
         } else if (selectedModels.length > 0) {
             setActiveTab('models');
             // Determine if the selected models are from the library or user's agency
-            const isUserSaved = selectedModels.every(m => m.source === 'user-saved');
+            const isUserSaved = selectedModels.every((m: AIModel) => m.source === 'user-saved');
             setActiveModelSource(isUserSaved ? 'my_agency' : 'library');
         }
     }, [isBatchMode, uploadedModelImage, promptedModelDescription, selectedModels]);
@@ -60,7 +61,7 @@ export const ModelSelectionPanel: React.FC = () => {
             setUploadedModelImage(null);
             setPromptedModelDescription('');
             // Default to library when clicking the main 'Models' tab, unless there are already selected agency models
-            const isUserSaved = selectedModels.every(m => m.source === 'user-saved');
+            const isUserSaved = selectedModels.every((m: AIModel) => m.source === 'user-saved');
             setActiveModelSource(isUserSaved ? 'my_agency' : 'library');
         }
         

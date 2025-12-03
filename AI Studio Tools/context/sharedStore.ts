@@ -25,7 +25,7 @@ import {
 } from '../constants';
 import { promptService } from '../services/promptService';
 import { geminiService } from '../services/geminiService';
-import type { StudioStoreSlice } from './StudioContext';
+import type { StudioStoreSlice, StudioStore } from './StudioContext';
 import { withRetry } from '../utils/colorUtils';
 // FIX: Correctly import PLAN_DETAILS from permissionsService
 import { PLAN_DETAILS } from '../services/permissionsService';
@@ -120,24 +120,24 @@ const initialSharedState: SharedState = {
 };
 
 
-export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
+export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set: (partial: Partial<StudioStore> | ((state: StudioStore) => Partial<StudioStore>)) => void, get: () => StudioStore) => ({
   ...initialSharedState,
 
-  setStudioMode: (mode) => set({ studioMode: mode }),
+  setStudioMode: (mode: StudioMode) => set({ studioMode: mode }),
 
-  updateScene: (updates) => {
+  updateScene: (updates: Partial<Scene>) => {
     set(state => ({ scene: { ...state.scene, ...updates } }));
   },
 
-  selectAspectRatio: (aspectRatio) => set({ aspectRatio }),
+  selectAspectRatio: (aspectRatio: AspectRatio) => set({ aspectRatio }),
 
-  setNumberOfImages: (count) => set({ numberOfImages: count }),
+  setNumberOfImages: (count: number) => set({ numberOfImages: count }),
 
-  setActiveImageIndex: (index) => set({ activeImageIndex: index, generatedVideoUrl: null }),
+  setActiveImageIndex: (index: number | null) => set({ activeImageIndex: index, generatedVideoUrl: null }),
 
   clearError: () => set({ error: null }),
   
-  setStyleReferenceImage: (base64) => set({ styleReferenceImage: base64 }),
+  setStyleReferenceImage: (base64: string | null) => set({ styleReferenceImage: base64 }),
 
   cancelCurrentProcess: () => {
     if (generationController) {
@@ -146,7 +146,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     set({ isGenerating: false, loadingMessage: '' });
   },
 
-  generateAsset: async (user, onGenerationComplete) => {
+  generateAsset: async (user: User | null, onGenerationComplete: (count: number) => Promise<void>) => {
     // --- RATE LIMIT TRACKING ---
     const now = Date.now();
     const oneMinuteAgo = now - 60000;
@@ -229,7 +229,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
 
                 const overriddenControls = { ...state.apparelControls, shotType, expression, cameraAngle };
                 
-                const { parts } = promptService.generatePrompt({ ...state, studioMode: 'apparel', generationMode: 'image', apparelControls: overriddenControls, baseLookImageB64: baseLookImageB64 });
+                const { parts } = promptService.generatePrompt({ ...state, studioMode: 'apparel', generationMode: 'image', apparelControls: overriddenControls, aspectRatio: state.aspectRatio.value, baseLookImageB64: baseLookImageB64 });
 
                 await withRetry(() => geminiService.generatePhotoshootImage(parts, state.aspectRatio.value, 1, overriddenControls.negativePrompt, (imageB64) => {
                     if (!baseLookImageB64) {
@@ -294,7 +294,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
 
             } else {
                 const offset = modelIndex * numberOfImages;
-                const { parts } = promptService.generatePrompt({ studioMode: 'apparel', generationMode: 'image', ...get() });
+                const { parts } = promptService.generatePrompt({ ...get(), studioMode: 'apparel', generationMode: 'image', aspectRatio: get().aspectRatio.value });
                 await withRetry(() => geminiService.generatePhotoshootImage(parts, get().aspectRatio.value, numberOfImages, apparelControls.negativePrompt, (imageB64, index) => {
                   set(state => {
                     const newImages = [...(state.generatedImages || [])];
@@ -344,7 +344,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
                     const cameraAngle = CAMERA_ANGLES_LIBRARY.find(c => c.id === shot.cameraAngleId) || state.productControls.cameraAngle;
 
                     const overriddenControls = { ...state.productControls, shotType, expression, cameraAngle };
-                    const { parts } = promptService.generatePrompt({ ...state, studioMode: 'product', generationMode: 'image', productControls: overriddenControls, modelReferenceImage: modelReferenceImage });
+                    const { parts } = promptService.generatePrompt({ ...state, studioMode: 'product', generationMode: 'image', productControls: overriddenControls, aspectRatio: state.aspectRatio.value, modelReferenceImage: modelReferenceImage });
 
                     await withRetry(() => geminiService.generatePhotoshootImage(parts, state.aspectRatio.value, 1, overriddenControls.negativePrompt, (imageB64) => {
                         if (!modelReferenceImage) {
@@ -375,7 +375,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     
                 const overriddenControls = { ...state.productControls, cameraAngle, focalLength };
                 
-                const { parts } = promptService.generatePrompt({ ...state, studioMode: 'product', generationMode: 'image', productControls: overriddenControls });
+                const { parts } = promptService.generatePrompt({ ...state, studioMode: 'product', generationMode: 'image', productControls: overriddenControls, aspectRatio: state.aspectRatio.value });
     
                 await withRetry(() => geminiService.generatePhotoshootImage(parts, state.aspectRatio.value, 1, overriddenControls.negativePrompt, (imageB64) => {
                     set(currentState => {
@@ -394,7 +394,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
             for (const [modelIndex, model] of modelsToProcess.entries()) {
                 if (model) set({ selectedModels: [model] });
                 
-                const { parts } = promptService.generatePrompt({ studioMode: 'product', generationMode: 'image', ...get() });
+                const { parts } = promptService.generatePrompt({ ...get(), studioMode: 'product', generationMode: 'image', aspectRatio: get().aspectRatio.value });
                 const { productControls } = get();
                 
                 await withRetry(() => geminiService.generatePhotoshootImage(parts, get().aspectRatio.value, numberOfImages, productControls.negativePrompt, (imageB64, index) => {
@@ -412,7 +412,10 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
         await onGenerationComplete(totalGeneratedThisRun);
         
       } else if (studioMode === 'design') {
-        const { designPlacementControls, backDesignImage, numberOfImages } = get();
+        const { designPlacementControls, backDesignImage, numberOfImages, mockupImage, designImage } = get();
+        if (!mockupImage || !designImage) {
+            throw new Error("Mockup image and design image are required for design mode.");
+        }
         const isPackMode = designPlacementControls.isMockupPackActive;
         let totalGeneratedThisRun = 0;
 
@@ -424,6 +427,9 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
             for (const [index, shot] of packShots.entries()) {
                 set({ loadingMessage: `Generating Mockup Pack... (${index + 1}/${totalImages})` });
                 const state = get();
+                if (!state.mockupImage || !state.designImage) {
+                    throw new Error("Mockup image and design image are required for design mode.");
+                }
                 const overriddenControls = {
                     ...state.designPlacementControls,
                     cameraAngle: shot.angle,
@@ -435,6 +441,9 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
                     studioMode: 'design',
                     shotView: shot.view,
                     designPlacementControls: overriddenControls,
+                    aspectRatio: state.aspectRatio.value,
+                    mockupImage: state.mockupImage,
+                    designImage: state.designImage,
                 });
 
                 await withRetry(() => geminiService.generatePhotoshootImage(parts, state.aspectRatio.value, 1, undefined, (imageB64) => {
@@ -450,7 +459,11 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
             totalGeneratedThisRun = totalImages;
         } else {
             set({ generatedImages: Array(numberOfImages).fill(null), activeImageIndex: 0 });
-            const { parts } = promptService.generatePrompt({ studioMode: 'design', shotView: 'front', ...get() });
+            const state = get();
+            if (!state.mockupImage || !state.designImage) {
+                throw new Error("Mockup image and design image are required for design mode.");
+            }
+            const { parts } = promptService.generatePrompt({ ...state, studioMode: 'design', shotView: 'front', aspectRatio: state.aspectRatio.value, mockupImage: state.mockupImage, designImage: state.designImage });
             await withRetry(() => geminiService.generatePhotoshootImage(parts, get().aspectRatio.value, numberOfImages, undefined, (imageB64, index) => {
                 set(state => {
                     const newImages = [...(state.generatedImages || Array(numberOfImages).fill(null))];
@@ -462,8 +475,12 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
         }
         await onGenerationComplete(totalGeneratedThisRun);
       } else if (studioMode === 'reimagine') {
-        const { parts } = promptService.generatePrompt({ studioMode: 'reimagine', ...get() });
-        const { numberOfImages, reimagineControls } = get();
+        const state = get();
+        if (!state.reimagineSourcePhoto) {
+            throw new Error("Source photo is required for reimagine mode.");
+        }
+        const { parts } = promptService.generatePrompt({ ...state, studioMode: 'reimagine', aspectRatio: state.aspectRatio.value, reimagineSourcePhoto: state.reimagineSourcePhoto });
+        const { numberOfImages, reimagineControls } = state;
         await withRetry(() => geminiService.generatePhotoshootImage(parts, get().aspectRatio.value, numberOfImages, reimagineControls.negativePrompt, (imageB64, index) => {
             set(state => {
                 const newImages = [...(state.generatedImages || Array(numberOfImages).fill(null))];
@@ -481,7 +498,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     }
   },
 
-  generateBackView: async (onGenerationComplete) => {
+  generateBackView: async (onGenerationComplete: (count: number) => Promise<void>) => {
     if (get().isGenerating) return;
 
     // Rate limit check
@@ -509,10 +526,17 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
         const placeholders = Array(numberOfImages).fill(null);
         set({ generatedImages: [...existingImages, ...placeholders] });
 
+        const state = get();
+        if (!state.mockupImage || !state.designImage) {
+            throw new Error("Mockup image and design image are required for design mode.");
+        }
         const { parts } = promptService.generatePrompt({
+            ...state,
             studioMode: 'design',
             shotView: 'back',
-            ...get(),
+            aspectRatio: state.aspectRatio.value,
+            mockupImage: state.mockupImage,
+            designImage: state.designImage,
         });
 
         let generatedCount = 0;
@@ -543,7 +567,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     }
   },
 
-  startEditing: (index) => {
+  startEditing: (index: number) => {
     const original = get().generatedImages?.[index];
     if (original) {
       set({ isEditing: true, imageBeingEdited: { original, index }, error: null });
@@ -578,7 +602,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
       }
   },
   
-  applyGenerativeEdit: async (maskB64, prompt, apparelRefB64) => {
+  applyGenerativeEdit: async (maskB64: string, prompt: string, apparelRefB64?: string | null) => {
     const { activeImageIndex, generatedImages } = get();
     if (activeImageIndex === null || !generatedImages?.[activeImageIndex]) return;
 
@@ -610,11 +634,11 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     }
   },
   
-  applyColorGrade: async(grade) => {},
+  applyColorGrade: async(grade: ColorGrade) => {},
   applyRealismBoost: async() => {},
-  applyFilmGrain: async(strength) => {},
+  applyFilmGrain: async(strength: 'Subtle' | 'Medium') => {},
   applyHologramEffect: async() => {},
-  generateVideoFromImage: async (animation, onGenerationComplete) => {
+  generateVideoFromImage: async (animation: Animation, onGenerationComplete: (count: number) => Promise<void>) => {
     const { studioMode, activeImageIndex, generatedImages, aspectRatio } = get();
     if (activeImageIndex === null || !generatedImages || !generatedImages[activeImageIndex]) {
         set({ error: "No reference image selected to generate a video from." });
@@ -642,9 +666,9 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
         let promptParams: any;
 
         if (studioMode === 'apparel') {
-            promptParams = { ...get(), studioMode: 'apparel', generationMode: 'video', animation };
+            promptParams = { ...get(), studioMode: 'apparel' as const, generationMode: 'video', animation, aspectRatio: get().aspectRatio.value };
         } else if (studioMode === 'product') {
-            promptParams = { ...get(), studioMode: 'product', generationMode: 'video', animation };
+            promptParams = { ...get(), studioMode: 'product' as const, generationMode: 'video', animation, aspectRatio: get().aspectRatio.value };
         } else {
             throw new Error("Video generation is not supported in this mode.");
         }
@@ -700,7 +724,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
         generationController = null;
     }
 },
-  generatePackFromReference: async (onGenerationComplete) => {
+  generatePackFromReference: async (onGenerationComplete: (count: number) => Promise<void>) => {
     const { studioMode, activeImageIndex, generatedImages } = get();
     if (activeImageIndex === null || !generatedImages || !generatedImages[activeImageIndex]) {
       set({ error: "No reference image selected to generate a pack." });
@@ -744,6 +768,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
                 studioMode: 'apparel',
                 generationMode: 'image',
                 apparelControls: overriddenControls,
+                aspectRatio: state.aspectRatio.value,
                 baseLookImageB64: referenceImageB64,
             });
 
@@ -788,6 +813,7 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
                 studioMode: 'product',
                 generationMode: 'image',
                 productControls: overriddenControls,
+                aspectRatio: state.aspectRatio.value,
                 modelReferenceImage: referenceImageB64, 
             });
 
@@ -811,9 +837,9 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
       set({ isGenerating: false, generationCount: get().generationCount + 1 });
     }
   },
-  generateColorways: async(colors, onGenerationComplete) => {},
+  generateColorways: async(colors: string[], onGenerationComplete: (count: number) => Promise<void>) => {},
   
-  generateAIBackground: async (prompt) => {
+  generateAIBackground: async (prompt: string) => {
     set({ isGeneratingBackground: true, error: null });
     try {
       const imageB64 = await withRetry(() => geminiService.generateWithImagen(prompt, '16:9'));
@@ -832,6 +858,6 @@ export const createSharedSlice: StudioStoreSlice<SharedSlice> = (set, get) => ({
     }
   },
 
-  setGuideActive: (isActive) => set({ isGuideActive: isActive }),
-  setBestPracticesModalOpen: (isOpen) => set({ isBestPracticesModalOpen: isOpen }),
+  setGuideActive: (isActive: boolean) => set({ isGuideActive: isActive }),
+  setBestPracticesModalOpen: (isOpen: boolean) => set({ isBestPracticesModalOpen: isOpen }),
 });

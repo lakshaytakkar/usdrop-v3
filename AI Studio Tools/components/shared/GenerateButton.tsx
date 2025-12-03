@@ -61,7 +61,7 @@ export const GenerateButton: React.FC = () => {
     if (isGenerating) return 'Generating...';
     if (studioMode === 'apparel') {
         if (isSocialMediaPack) return 'Generate Social Pack';
-        if (ecommercePack !== 'none') return `Generate ${ECOMMERCE_PACKS[ecommercePack].name}`;
+        if (ecommercePack !== 'none' && ecommercePack in ECOMMERCE_PACKS) return `Generate ${ECOMMERCE_PACKS[ecommercePack as keyof typeof ECOMMERCE_PACKS].name}`;
         if (selectedModels.length > 1) return `Generate (${selectedModels.length})`;
     }
     if (studioMode === 'reimagine') return 'Re-imagine';

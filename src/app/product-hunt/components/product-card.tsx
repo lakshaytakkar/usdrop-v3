@@ -96,10 +96,10 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
         {/* Save Button */}
         <button
           onClick={() => setIsSaved(!isSaved)}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-all shadow-sm"
+          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-all shadow-sm cursor-pointer"
         >
           <Bookmark 
-            className={`h-4 w-4 ${isSaved ? "fill-primary text-primary" : "text-muted-foreground"}`} 
+            className={`h-4 w-4 ${isSaved ? "fill-blue-600 text-blue-600" : "text-muted-foreground"}`} 
           />
         </button>
 
@@ -221,13 +221,16 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 h-8 text-xs"
+            className="flex-1 h-8 text-xs cursor-pointer"
             onClick={() => window.location.href = `/product-hunt/${product.id}`}
           >
             <Eye className="h-3 w-3 mr-1" />
             Details
           </Button>
-          <Button size="sm" className="flex-1 h-8 text-xs">
+          <Button 
+            size="sm" 
+            className="flex-1 h-8 text-xs bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 cursor-pointer"
+          >
             <Bookmark className="h-3 w-3 mr-1" />
             Save
           </Button>

@@ -101,7 +101,7 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Connected at</span>
                   <span className="text-sm font-medium">
-                    {formatRelativeTime(store.connectedAt)}
+                    {store.connectedAt ? formatRelativeTime(store.connectedAt) : 'N/A'}
                   </span>
                 </div>
               </div>

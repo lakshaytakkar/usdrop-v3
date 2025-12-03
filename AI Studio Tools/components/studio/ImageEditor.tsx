@@ -235,7 +235,7 @@ export const ImageEditor: React.FC = () => {
                             </label>
                             <p className="text-xs text-zinc-400 mt-1 mb-3">Optionally, select an apparel item to paint into the masked area.</p>
                             <div className="grid grid-cols-4 gap-2">
-                                {apparel.map(item => (
+                                {apparel.map((item: ApparelItem) => (
                                     <button 
                                       key={item.id}
                                       onClick={() => handleApparelSelect(item)}
