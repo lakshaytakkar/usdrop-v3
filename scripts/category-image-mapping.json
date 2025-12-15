@@ -1,0 +1,69 @@
+{
+  "electronics": {
+    "name": "Electronics",
+    "slug": "electronics",
+    "imageFile": "generated-2025-12-15T21-09-56-136Z-kyv8sn.png",
+    "prompt": "A modern, clean product photography style image showing a sleek smartphone and wireless earbuds on a minimalist white background. Professional e-commerce product shot, soft lighting, high quality, 1:1 aspect ratio, centered composition, vibrant but not oversaturated colors."
+  },
+  "fashion": {
+    "name": "Fashion & Accessories",
+    "slug": "fashion",
+    "imageFile": "generated-2025-12-15T21-11-07-554Z-lty0vz.png",
+    "prompt": "A stylish product photography image showing a curated selection of fashion accessories - a leather handbag, sunglasses, and a watch arranged elegantly on a neutral background. Professional e-commerce style, soft natural lighting, 1:1 aspect ratio, clean and modern aesthetic."
+  },
+  "home-garden": {
+    "name": "Home & Garden",
+    "slug": "home-garden",
+    "imageFile": "generated-2025-12-15T21-12-14-669Z-04swty.png",
+    "prompt": "A beautiful home decor product photography image showing a modern vase with plants and decorative items arranged on a wooden surface. Warm, inviting lighting, professional e-commerce style, 1:1 aspect ratio, cozy and stylish composition."
+  },
+  "beauty": {
+    "name": "Beauty & Personal Care",
+    "slug": "beauty",
+    "imageFile": "generated-2025-12-15T21-13-16-390Z-7f86cl.png",
+    "prompt": "A clean, professional beauty product photography image showing skincare bottles and makeup items arranged on a marble surface with soft natural lighting. Minimalist aesthetic, high quality, 1:1 aspect ratio, elegant and modern composition."
+  },
+  "sports-fitness": {
+    "name": "Sports & Fitness",
+    "slug": "sports-fitness",
+    "imageFile": "generated-2025-12-15T21-14-09-627Z-1dnnu0.png",
+    "prompt": "A dynamic sports product photography image showing fitness equipment like dumbbells, resistance bands, and a water bottle arranged on a clean background. Energetic but professional style, good lighting, 1:1 aspect ratio, active lifestyle aesthetic."
+  },
+  "kitchen": {
+    "name": "Kitchen & Dining",
+    "slug": "kitchen",
+    "imageFile": "generated-2025-12-15T21-15-02-217Z-id3nwf.png",
+    "prompt": "A modern kitchen product photography image showing kitchen gadgets and utensils arranged on a clean countertop. Professional e-commerce style, natural lighting, 1:1 aspect ratio, clean and functional aesthetic."
+  },
+  "automotive": {
+    "name": "Automotive",
+    "slug": "automotive",
+    "imageFile": "generated-2025-12-15T21-16-06-113Z-biu6jv.png",
+    "prompt": "A sleek automotive product photography image showing car accessories like a phone mount, car charger, and air freshener arranged on a dark surface. Professional style, dramatic lighting, 1:1 aspect ratio, modern and sleek composition."
+  },
+  "pets": {
+    "name": "Pet Supplies",
+    "slug": "pets",
+    "imageFile": "generated-2025-12-15T21-16-55-214Z-88jc8m.png",
+    "prompt": "A friendly pet product photography image showing pet toys, a food bowl, and accessories arranged on a light background. Warm and inviting style, soft lighting, 1:1 aspect ratio, pet-friendly aesthetic."
+  },
+  "office-supplies": {
+    "name": "Office Supplies",
+    "slug": "office-supplies",
+    "imageFile": "generated-2025-12-15T21-17-53-285Z-ccn3e4.png",
+    "prompt": "A professional office product photography image showing stationery, notebooks, and office accessories arranged on a clean desk. Business style, bright lighting, 1:1 aspect ratio, organized and efficient aesthetic."
+  },
+  "mother-kids": {
+    "name": "Baby & Kids",
+    "slug": "mother-kids",
+    "imageFile": "generated-2025-12-15T21-18-46-518Z-lweef3.png",
+    "prompt": "A gentle baby product photography image showing baby toys, bottles, and accessories arranged on a soft, pastel background. Safe and caring style, soft lighting, 1:1 aspect ratio, warm and nurturing aesthetic."
+  },
+  "jewelry": {
+    "name": "Jewelry & Watches",
+    "slug": "jewelry",
+    "imageFile": "generated-2025-12-15T21-19-43-132Z-mxga9v.png",
+    "prompt": "A luxurious jewelry product photography image showing elegant watches and jewelry pieces arranged on a velvet surface. High-end style, dramatic lighting, 1:1 aspect ratio, sophisticated and premium aesthetic."
+  }
+}
+

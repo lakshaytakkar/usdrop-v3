@@ -28,7 +28,7 @@ import {
   ArrowDownRight,
 } from "lucide-react"
 import { ProductCategory } from "@/types/admin/categories"
-import { sampleCategories } from "../data/categories"
+import { Category } from "@/types/categories"
 import Image from "next/image"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
@@ -45,13 +45,65 @@ export default function CategoryDetailPage() {
   const { hasPermission: canDelete } = useHasPermission("categories.delete")
 
   const [category, setCategory] = useState<ProductCategory | null>(null)
-  const [allCategories, setAllCategories] = useState<ProductCategory[]>(sampleCategories)
+  const [allCategories, setAllCategories] = useState<ProductCategory[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Transform API Category to ProductCategory
+  const transformToProductCategory = (cat: Category): ProductCategory => {
+    return {
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description || '',
+      image: cat.image,
+      parent_category_id: cat.parent_category_id,
+      parent_category: cat.parent_category ? {
+        id: cat.parent_category.id,
+        name: cat.parent_category.name,
+        slug: cat.parent_category.slug,
+      } : undefined,
+      trending: cat.trending || false,
+      product_count: cat.product_count || 0,
+      avg_profit_margin: cat.avg_profit_margin || null,
+      growth_percentage: cat.growth_percentage || null,
+      created_at: cat.created_at,
+      updated_at: cat.updated_at,
+    }
+  }
 
   useEffect(() => {
-    // Find current category
-    const currentCategory = allCategories.find((c) => c.id === categoryId)
-    setCategory(currentCategory || null)
-  }, [categoryId, allCategories])
+    const fetchCategory = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch the specific category
+        const categoryResponse = await fetch(`/api/categories/${categoryId}`)
+        if (!categoryResponse.ok) {
+          throw new Error('Failed to fetch category')
+        }
+        const categoryData = await categoryResponse.json()
+        const apiCategory: Category = categoryData.category
+        setCategory(transformToProductCategory(apiCategory))
+        
+        // Fetch all categories for navigation
+        const allCategoriesResponse = await fetch('/api/categories?include_subcategories=true')
+        if (allCategoriesResponse.ok) {
+          const allCategoriesData = await allCategoriesResponse.json()
+          const allCats: Category[] = allCategoriesData.categories || []
+          setAllCategories(allCats.map(transformToProductCategory))
+        }
+      } catch (err) {
+        console.error('Error fetching category:', err)
+        showError('Failed to load category')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    if (categoryId) {
+      fetchCategory()
+    }
+  }, [categoryId, showError])
 
   // Find previous and next categories
   const { prevCategory, nextCategory } = useMemo(() => {
@@ -69,6 +121,16 @@ export default function CategoryDetailPage() {
     if (!category) return []
     return allCategories.filter((c) => c.parent_category_id === category.id)
   }, [category, allCategories])
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex items-center justify-center p-8">
+          <div className="text-muted-foreground">Loading category...</div>
+        </div>
+      </div>
+    )
+  }
 
   if (!category) {
     return (

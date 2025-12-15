@@ -1,11 +1,13 @@
 "use client"
 
+import Image from "next/image"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Button } from "@/components/ui/button"
-import { Play, Coins, Plane } from "lucide-react"
+import { Play, Coins } from "lucide-react"
 import { ShippingCalculator } from "@/components/ai-tools/shipping-calculator"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function ShippingCalculatorPage() {
   return (
@@ -13,9 +15,9 @@ export default function ShippingCalculatorPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-cyan-950 to-blue-800 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-cyan-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -51,21 +53,22 @@ export default function ShippingCalculatorPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Flight icon before text */}
-              <div className="flex-shrink-0">
-                <Plane 
-                  className="h-8 w-8 text-white" 
-                  style={{
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-                    strokeWidth: 2.5
-                  }}
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/shipping-calculator.png"
+                    alt="Shipping Calculator"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Shipping Calculator</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Shipping Calculator</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Calculate shipping costs, delivery times, and optimize your fulfillment strategy.
                 </p>
               </div>
@@ -93,6 +96,7 @@ export default function ShippingCalculatorPage() {
           </div>
 
           <ShippingCalculator />
+          <OnboardingProgressOverlay pageName="Shipping Calculator" />
         </div>
       </SidebarInset>
     </SidebarProvider>

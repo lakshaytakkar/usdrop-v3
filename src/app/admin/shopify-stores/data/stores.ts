@@ -61,6 +61,13 @@ function generateUser(index: number) {
   }
 }
 
+/**
+ * @deprecated This file is deprecated - use the API endpoint /api/admin/shopify-stores instead
+ * Keeping this temporarily for backward compatibility
+ * TODO: Remove all references to adminSampleStores
+ * 
+ * To seed Shopify stores, use: npx tsx scripts/seed-shopify-stores.ts
+ */
 // Generate stores
 export const adminSampleStores: ShopifyStore[] = Array.from({ length: 220 }, (_, index) => {
   const niche = niches[index % niches.length]

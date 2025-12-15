@@ -1,15 +1,102 @@
 "use client"
 
+import { useState, useEffect, useCallback } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { GraduationCap, Play } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Play, CheckCircle2, Users } from "lucide-react"
+import Image from "next/image"
 import { CourseCard } from "./components/course-card"
-import { sampleCourses } from "./data/courses"
+import { Course as APICourse } from "@/types/courses"
+import { Course } from "./data/courses"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
+
+// Mentor features for the banner
+const mentorFeatures = [
+  "7-Figure Store Scaling",
+  "Advanced Ad Strategies",
+  "Product Research Secrets",
+  "Conversion Optimization",
+]
+
+// Transform API Course to legacy Course format for CourseCard component
+function transformCourse(apiCourse: APICourse): Course {
+  // Convert duration_minutes to "X hours" format
+  const formatDuration = (minutes: number | null): string => {
+    if (!minutes) return "0 hours"
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours === 0) return `${mins} min`
+    if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`
+    return `${hours}h ${mins}m`
+  }
+
+  return {
+    id: apiCourse.id,
+    title: apiCourse.title,
+    description: apiCourse.description || "",
+    instructor: apiCourse.instructor_name || "Instructor",
+    instructorAvatar: apiCourse.instructor_avatar || "/images/default-avatar.png",
+    thumbnail: apiCourse.thumbnail || "/images/default-course.png",
+    duration: formatDuration(apiCourse.duration_minutes),
+    lessons: apiCourse.lessons_count,
+    students: apiCourse.students_count,
+    rating: apiCourse.rating || 0,
+    price: apiCourse.price,
+    category: apiCourse.category || "",
+    level: apiCourse.level || "Beginner",
+    featured: apiCourse.featured,
+    tags: apiCourse.tags || [],
+    modules: apiCourse.modules?.map((module) => ({
+      id: module.id,
+      title: module.title,
+      duration: module.duration_minutes 
+        ? `${Math.floor(module.duration_minutes / 60)}h ${module.duration_minutes % 60}m`
+        : "0 min",
+      lessons: module.chapters?.length || 0,
+      completed: false, // Will be updated based on enrollment progress
+      description: module.description || undefined,
+      thumbnail: module.thumbnail || undefined,
+    })) || [],
+  }
+}
 
 export default function AcademyPage() {
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/courses?published=true')
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch courses')
+      }
+      
+      const data = await response.json()
+      const transformedCourses = data.courses.map(transformCourse)
+      setCourses(transformedCourses)
+    } catch (err) {
+      console.error("Error fetching courses:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to load courses. Please try again."
+      setError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchCourses()
+  }, [fetchCourses])
 
   return (
     <SidebarProvider>
@@ -17,69 +104,62 @@ export default function AcademyPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
-          {/* Premium Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-900 via-orange-950 to-amber-800 p-3 text-white h-[77px] flex-shrink-0">
-            {/* Enhanced grainy texture layers */}
-            <div 
-              className="absolute inset-0 z-0"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-                opacity: 0.5,
-                mixBlendMode: 'overlay'
-              }}
-            ></div>
-            <div 
-              className="absolute inset-0 z-0"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
-                opacity: 0.4,
-                mixBlendMode: 'multiply'
-              }}
-            ></div>
-            <div 
-              className="absolute inset-0 z-0"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
-                opacity: 0.3,
-                mixBlendMode: 'screen'
-              }}
-            ></div>
-            <div 
-              className="absolute inset-0 z-0"
-              style={{
-                background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
-                              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
-                opacity: 0.6
-              }}
-            ></div>
+          {/* Mentor Introduction Banner */}
+          <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 h-[154px] flex-shrink-0">
+            {/* Subtle blue gradient background */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60 -mr-20 -mt-20 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-50 rounded-full blur-2xl opacity-40 -ml-10 -mb-10 pointer-events-none" />
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Icon/Mascot */}
-              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
-                <GraduationCap 
-                  className="h-12 w-12 text-white"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* Mentor Portrait */}
+              <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 -my-2">
+                <div className="relative w-full h-full rounded-xl overflow-hidden border-2 border-blue-100 shadow-md">
+                  <Image
+                    src="/images/mentor-portrait.png"
+                    alt="Mr. Suprans - Your Mentor"
+                    fill
+                    className="object-cover object-top"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Academy</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
-                  Master dropshipping with expert courses and step-by-step guidance from industry professionals.
+                {/* Badge */}
+                <Badge
+                  variant="outline"
+                  className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-700 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide mb-2"
+                >
+                  <Users className="h-3 w-3" />
+                  <span>HEAD MENTOR & STRATEGIST</span>
+                </Badge>
+
+                <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">
+                  Learn from <span className="text-blue-600">Mr. Suprans</span>
+                </h2>
+                <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5 line-clamp-1">
+                  14+ years of e-commerce expertise and 25k+ students mentored
                 </p>
+
+                {/* Quick Features */}
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                  {mentorFeatures.slice(0, 4).map((feature, index) => (
+                    <div key={index} className="flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />
+                      <span className="text-[11px] text-slate-600">{feature}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex-shrink-0 flex items-center gap-2">
-                <Button 
+              {/* Action button */}
+              <div className="flex-shrink-0 hidden sm:flex items-center">
+                <Button
                   size="sm"
-                  className="bg-black text-white hover:bg-black/90 border-black cursor-pointer"
+                  className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
                 >
                   <Play className="h-3 w-3" />
-                  <span className="text-xs">Tutorial</span>
+                  <span className="text-xs">Watch Intro</span>
                 </Button>
               </div>
             </div>
@@ -87,11 +167,48 @@ export default function AcademyPage() {
 
           {/* All Courses */}
           <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-              {sampleCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
-            </div>
+            {loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className="rounded-xl border bg-card overflow-hidden">
+                    <Skeleton className="aspect-video w-full" />
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            {!loading && !error && courses.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                No courses available at the moment.
+              </div>
+            )}
+            
+            {!loading && !error && courses.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                {courses.map((course) => (
+                  <CourseCard key={course.id} course={course} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </SidebarInset>

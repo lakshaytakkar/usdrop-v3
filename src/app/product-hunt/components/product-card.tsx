@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,10 +14,14 @@ import {
   Flame,
   Lock
 } from "lucide-react"
-import { Area, AreaChart } from "recharts"
+import { SlideTextButton } from "@/components/ui/slide-text-button"
+import { useToast } from "@/hooks/use-toast"
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   ChartConfig,
   ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@/components/ui/chart"
 
 interface ProductCardProps {
@@ -38,8 +43,12 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, isLocked = false, onLockedClick }: ProductCardProps) {
+  const router = useRouter()
+  const { showSuccess, showError } = useToast()
   const [imageError, setImageError] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [currentTagIndex, setCurrentTagIndex] = useState(0)
 
   const profitMargin = product.sellPrice > 0 
     ? ((product.profitPerOrder / product.sellPrice) * 100).toFixed(1)
@@ -49,6 +58,26 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
   const trendDirection = product.trendData.length >= 2
     ? product.trendData[product.trendData.length - 1] > product.trendData[0] ? "up" : "down"
     : "neutral"
+
+  // Create array of tags to rotate through
+  const tags = [
+    ...(product.trending ? [{ type: 'trending', label: 'Trending', icon: Flame, bg: 'bg-orange-500/90', text: 'text-white' }] : []),
+    { type: 'category', label: product.category || 'Uncategorized', icon: null, bg: 'bg-secondary/90', text: 'text-secondary-foreground' }
+  ]
+
+  // Rotate through tags every 3 seconds
+  useEffect(() => {
+    if (tags.length <= 1) {
+      setCurrentTagIndex(0)
+      return
+    }
+    
+    const interval = setInterval(() => {
+      setCurrentTagIndex((prev) => (prev + 1) % tags.length)
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [tags.length])
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 p-0">
@@ -80,31 +109,90 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           />
         )}
         
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex gap-1.5">
-          {product.trending && (
-            <Badge className="bg-orange-500/90 text-white border-0 text-xs px-2 py-0.5">
-              <Flame className="h-3 w-3 mr-1" />
-              Trending
-            </Badge>
+        {/* Rotating Badges - Animated Upward Rotation */}
+        <div className="absolute top-2 left-2 z-20 flex flex-col gap-1.5">
+          {tags.length > 1 ? (
+            <div className="relative h-7 overflow-hidden">
+              {tags.map((tag, index) => {
+                const TagIcon = tag.icon
+                const isActive = index === currentTagIndex
+                const prevIndex = currentTagIndex === 0 ? tags.length - 1 : currentTagIndex - 1
+                const isPrevious = index === prevIndex
+                
+                return (
+                  <div
+                    key={`${tag.type}-${index}`}
+                    className={`absolute inset-0 ${tag.bg} ${tag.text} border-0 text-xs px-2 py-1.5 rounded-md shadow-sm transition-all duration-500 ease-in-out ${
+                      isActive 
+                        ? 'translate-y-0 opacity-100 z-10' 
+                        : isPrevious
+                          ? '-translate-y-full opacity-0 z-0'
+                          : 'translate-y-full opacity-0 z-0'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center h-full">
+                      {TagIcon ? (
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                          <TagIcon className="h-3 w-3" />
+                          <span>{tag.label}</span>
+                        </span>
+                      ) : (
+                        <span className="whitespace-nowrap">{tag.label}</span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            tags.map((tag, index) => {
+              const TagIcon = tag.icon
+              return (
+                <div
+                  key={`${tag.type}-${index}`}
+                  className={`${tag.bg} ${tag.text} border-0 text-xs px-2 py-1.5 rounded-md shadow-sm`}
+                >
+                  {TagIcon ? (
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                      <TagIcon className="h-3 w-3" />
+                      <span>{tag.label}</span>
+                    </span>
+                  ) : (
+                    <span className="whitespace-nowrap">{tag.label}</span>
+                  )}
+                </div>
+              )
+            })
           )}
-          <Badge variant="secondary" className="text-xs px-2 py-0.5">
-            {product.category}
-          </Badge>
         </div>
 
-        {/* Save Button */}
-        <button
-          onClick={() => setIsSaved(!isSaved)}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/90 hover:bg-white transition-all shadow-sm cursor-pointer"
-        >
-          <Bookmark 
-            className={`h-4 w-4 ${isSaved ? "fill-blue-600 text-blue-600" : "text-muted-foreground"}`} 
-          />
-        </button>
+        {/* Top Country Pill with US Flag */}
+        <div className="absolute top-2 right-2 z-20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 hover:bg-white transition-all shadow-sm backdrop-blur-sm">
+            <span className="text-xs font-medium text-foreground whitespace-nowrap">Top Country:</span>
+            <div className="relative w-4 h-3 flex-shrink-0 overflow-hidden rounded-sm">
+              <Image
+                src="/images/ui/united-states.png"
+                alt="United States flag"
+                width={16}
+                height={12}
+                className="object-cover"
+                priority
+                unoptimized
+              />
+            </div>
+          </div>
+        </div>
 
-        {/* Overlay on hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-200" />
+        {/* View Details Overlay on hover - Only show when not locked */}
+        {!isLocked && (
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 z-30">
+            <div className="flex items-center gap-2 text-white font-medium">
+              <span className="font-mono uppercase tracking-wider">VIEW DETAILS</span>
+              <Eye className="h-5 w-5" />
+            </div>
+          </div>
+        )}
         
         {/* Locked Overlay - Only on Image */}
         {isLocked && (
@@ -144,8 +232,8 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
         <div className="h-12 w-full">
           <ChartContainer 
             config={{
-              value: {
-                label: "Trend",
+              orders: {
+                label: "Orders",
                 color: trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)",
               },
             } satisfies ChartConfig}
@@ -154,9 +242,9 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
             <AreaChart
               data={product.trendData.map((value, index) => ({
                 index,
-                value,
+                orders: value,
               }))}
-              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+              margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
             >
               <defs>
                 <linearGradient id={`gradient-${product.id}`} x1="0" y1="0" x2="0" y2="1">
@@ -172,8 +260,15 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
                   />
                 </linearGradient>
               </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="transparent" />
+              <XAxis hide dataKey="index" />
+              <YAxis hide />
+              <ChartTooltip
+                cursor={{ stroke: trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)", strokeWidth: 1, strokeDasharray: "3 3" }}
+                content={<ChartTooltipContent className="min-w-[100px]" />}
+              />
               <Area
-                dataKey="value"
+                dataKey="orders"
                 type="monotone"
                 fill={`url(#gradient-${product.id})`}
                 fillOpacity={1}
@@ -216,24 +311,67 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           <span>({product.reviews})</span>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex-1 h-8 text-xs cursor-pointer"
-            onClick={() => window.location.href = `/product-hunt/${product.id}`}
-          >
-            <Eye className="h-3 w-3 mr-1" />
-            Details
-          </Button>
-          <Button 
-            size="sm" 
-            className="flex-1 h-8 text-xs bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 cursor-pointer"
-          >
-            <Bookmark className="h-3 w-3 mr-1" />
-            Save
-          </Button>
+        {/* Action Button */}
+        <div className="pt-1">
+          <SlideTextButton
+            defaultText="Save Product"
+            hoverText="Add to My Products"
+            icon={
+              <Image
+                src="/images/ui/save-icon.png"
+                alt="Save icon"
+                width={20}
+                height={20}
+                className="object-contain"
+              />
+            }
+            onClick={async (e) => {
+              e.stopPropagation()
+              
+              if (isSaving) return
+              
+              try {
+                setIsSaving(true)
+                
+                const response = await fetch('/api/picklist', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    productId: product.id,
+                    source: 'product-hunt',
+                  }),
+                })
+
+                const data = await response.json()
+
+                if (!response.ok) {
+                  if (response.status === 409 && data.alreadyExists) {
+                    showError("This product is already in your list.")
+                    setIsSaved(true)
+                    return
+                  }
+                  throw new Error(data.error || 'Failed to save product')
+                }
+
+                setIsSaved(true)
+                showSuccess("Product added to your list!")
+
+                // Dispatch event to update sidebar badge
+                window.dispatchEvent(new CustomEvent("picklist-updated"))
+
+                // Navigate to my-products page
+                router.push('/my-products')
+              } catch (error) {
+                console.error('Error saving product:', error)
+                showError(error instanceof Error ? error.message : "Failed to save product. Please try again.")
+              } finally {
+                setIsSaving(false)
+              }
+            }}
+            disabled={isSaving || isSaved}
+          />
         </div>
 
         {/* Skeleton Overlay for Locked State */}

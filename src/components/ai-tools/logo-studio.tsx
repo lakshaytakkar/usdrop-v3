@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import AILoadingState from '@/components/kokonutui/ai-loading';
 
 type ViewState = 'idle' | 'processing' | 'results';
 
@@ -301,19 +302,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
     if (viewState === 'processing') {
         return (
             <div className="w-full max-w-7xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-                <div className="text-center space-y-6 p-8 max-w-md w-full">
-                    <Loader2 className="h-16 w-16 text-foreground animate-spin mx-auto" />
-                    <div className="space-y-3">
-                        <p className="text-xl font-semibold text-foreground">{loadingStep}</p>
-                        <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-foreground transition-all duration-300 ease-in-out"
-                                style={{ width: `${processingProgress}%` }}
-                            />
-                        </div>
-                        <p className="text-sm text-muted-foreground">{Math.round(processingProgress)}%</p>
-                    </div>
-                </div>
+                <AILoadingState />
             </div>
         );
     }

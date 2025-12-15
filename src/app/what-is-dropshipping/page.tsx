@@ -1,9 +1,9 @@
 "use client"
 
-import { Header } from '@/components/landing/Header';
-import { DropshippingTimeline } from '@/components/landing/DropshippingTimeline';
-import { Footer } from '@/components/landing/Footer';
-import { ChatBot } from '@/components/landing/ChatBot';
+import { Header } from '@/components/landing-deprecated/Header';
+import { DropshippingTimeline } from '@/components/landing-deprecated/DropshippingTimeline';
+import { Footer } from '@/components/landing-deprecated/Footer';
+import { ChatBot } from '@/components/landing-deprecated/ChatBot';
 
 export default function WhatIsDropshippingPage() {
   return (

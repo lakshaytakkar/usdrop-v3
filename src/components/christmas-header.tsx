@@ -8,9 +8,9 @@ import { useEffect } from "react"
 export function ChristmasHeader() {
   // Select a few 3D icons to display (you can change these)
   const iconPaths = [
-    "/christmas 3d icons]/Object 01.png",
-    "/christmas 3d icons]/Object 05.png",
-    "/christmas 3d icons]/Object 10.png",
+    "/christmas-icons/Object 01.png",
+    "/christmas-icons/Object 05.png",
+    "/christmas-icons/Object 10.png",
   ]
 
   useEffect(() => {

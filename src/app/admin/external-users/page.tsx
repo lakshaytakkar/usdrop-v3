@@ -16,7 +16,7 @@ import { DataTable } from "@/components/data-table/data-table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createExternalUsersColumns } from "@/app/admin/external-users/components/external-users-columns"
 import { ExternalUser, ExternalUserPlan, UserStatus } from "@/types/admin/users"
-import { sampleExternalUsers } from "@/app/admin/external-users/data/users"
+import { SubscriptionPlan } from "@/types/admin/plans"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import {
   Select,
@@ -48,6 +48,7 @@ import { InternalUser } from "@/types/admin/users"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission, useHasPermissions } from "@/hooks/use-has-permission"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export default function ExternalUsersPage() {
   const router = useRouter()
@@ -62,6 +63,8 @@ export default function ExternalUsersPage() {
   const { hasPermission: canUpsell } = useHasPermission("external_users.upsell")
   
   const [users, setUsers] = useState<ExternalUser[]>([])
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const [plansLoading, setPlansLoading] = useState(true)
   const [initialLoading, setInitialLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -88,10 +91,18 @@ export default function ExternalUsersPage() {
     email: "",
     password: "",
     plan: "free" as ExternalUserPlan,
+    status: "active" as UserStatus,
     phoneNumber: "",
     credits: 0,
+    username: "",
+    avatarUrl: "",
+    subscriptionStartDate: null as Date | null,
+    subscriptionEndDate: null as Date | null,
+    isTrial: false,
+    trialEndsAt: null as Date | null,
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [creditsModalOpen, setCreditsModalOpen] = useState(false)
   const [userForCredits, setUserForCredits] = useState<ExternalUser | null>(null)
@@ -107,9 +118,55 @@ export default function ExternalUsersPage() {
   const [tempOwner, setTempOwner] = useState<string | null>(null)
   const [tempMembers, setTempMembers] = useState<string[]>([])
 
-  const plans = useMemo(() => ["free", "trial", "basic", "pro", "premium", "enterprise"], [])
-  
   const internalUsers = sampleInternalUsers
+  
+  // Fetch plans from API
+  const fetchPlans = useCallback(async () => {
+    try {
+      setPlansLoading(true)
+      const response = await fetch("/api/admin/plans")
+      if (!response.ok) {
+        throw new Error("Failed to fetch plans")
+      }
+      const data = await response.json()
+      // Map API response to SubscriptionPlan interface (convert date strings to Date objects)
+      const plansData: SubscriptionPlan[] = data.map((plan: {
+        id: string
+        name: string
+        slug: string
+        description: string | null
+        priceMonthly: number
+        priceAnnual: number | null
+        priceYearly: number | null
+        features: string[]
+        popular: boolean
+        active: boolean
+        isPublic: boolean
+        displayOrder: number
+        keyPointers: string | null
+        trialDays: number
+        createdAt: string | null
+        updatedAt: string | null
+      }) => ({
+        ...plan,
+        createdAt: plan.createdAt ? new Date(plan.createdAt) : null,
+        updatedAt: plan.updatedAt ? new Date(plan.updatedAt) : null,
+      }))
+      // Filter to only active plans
+      setPlans(plansData.filter(plan => plan.active))
+    } catch (err) {
+      console.error("Error fetching plans:", err)
+      // Fallback to empty array if fetch fails
+      setPlans([])
+    } finally {
+      setPlansLoading(false)
+    }
+  }, [])
+
+  // Fetch plans on mount
+  useEffect(() => {
+    fetchPlans()
+  }, [fetchPlans])
   
   // Filter members based on search
   const filteredMembers = useMemo(() => {
@@ -150,7 +207,7 @@ export default function ExternalUsersPage() {
   const planCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     plans.forEach((plan) => {
-      counts[plan] = users.filter((u) => u.plan === plan).length
+      counts[plan.slug] = users.filter((u) => u.plan === plan.slug).length
     })
     counts.all = users.length
     return counts
@@ -286,21 +343,56 @@ export default function ExternalUsersPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      // For now, simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(sampleExternalUsers)
+      
+      const response = await fetch("/api/admin/external-users")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch users")
+      }
+      
+      const data = await response.json()
+      
+      // Map API response to ExternalUser interface (convert date strings to Date objects)
+      const users: ExternalUser[] = data.map((user: {
+        id: string
+        name: string
+        email: string
+        plan: string
+        status: string
+        subscriptionDate: string
+        expiryDate: string
+        createdAt: string
+        updatedAt: string
+        isTrial?: boolean
+        trialEndsAt?: string | null
+        subscriptionStatus?: string
+        credits?: number
+        phoneNumber?: string
+        username?: string
+        avatarUrl?: string
+      }) => ({
+        ...user,
+        subscriptionDate: new Date(user.subscriptionDate),
+        expiryDate: new Date(user.expiryDate),
+        createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt),
+        trialEndsAt: user.trialEndsAt ? new Date(user.trialEndsAt) : null,
+      }))
+      
+      setUsers(users)
       // Don't show toast on initial load - only for user actions
     } catch (err) {
       console.error("Error fetching users:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load users. Please check your connection and try again."
       setError(errorMessage)
-      showError(errorMessage)
+      if (!initialLoading) {
+        showError(errorMessage)
+      }
     } finally {
       setLoading(false)
       setInitialLoading(false)
     }
-  }, [showError])
+  }, [showError, initialLoading])
 
   // Fetch users on mount
   useEffect(() => {
@@ -328,10 +420,18 @@ export default function ExternalUsersPage() {
       email: user.email,
       password: "",
       plan: user.plan,
+      status: user.status || "active",
       phoneNumber: user.phoneNumber || "",
       credits: user.credits || 0,
+      username: user.username || "",
+      avatarUrl: user.avatarUrl || "",
+      subscriptionStartDate: user.subscriptionDate ? new Date(user.subscriptionDate) : null,
+      subscriptionEndDate: user.expiryDate ? new Date(user.expiryDate) : null,
+      isTrial: user.isTrial || false,
+      trialEndsAt: user.trialEndsAt ? new Date(user.trialEndsAt) : null,
     })
     setFormErrors({})
+    setShowAdvancedOptions(false)
     setFormOpen(true)
   }, [])
 
@@ -372,22 +472,22 @@ export default function ExternalUsersPage() {
 
     setActionLoading("credits")
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(
-        users.map((u) =>
-          u.id === userForCredits.id
-            ? {
-                ...u,
-                credits:
-                  creditsAction === "add"
-                    ? (u.credits || 0) + amount
-                    : Math.max(0, (u.credits || 0) - amount),
-                updatedAt: new Date(),
-              }
-            : u
-        )
-      )
+      const currentCredits = userForCredits.credits || 0
+      const newCredits = creditsAction === "add"
+        ? currentCredits + amount
+        : Math.max(0, currentCredits - amount)
+      
+      const response = await fetch(`/api/admin/external-users/${userForCredits.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credits: newCredits }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update credits")
+      }
+      
       setCreditsModalOpen(false)
       const creditsUserName = userForCredits.name
       setUserForCredits(null)
@@ -418,9 +518,15 @@ export default function ExternalUsersPage() {
     if (!userToDelete) return
     setActionLoading("delete")
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(users.filter((u) => u.id !== userToDelete.id))
+      const response = await fetch(`/api/admin/external-users/${userToDelete.id}`, {
+        method: "DELETE",
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete user")
+      }
+      
       setDeleteConfirmOpen(false)
       const deletedUserName = userToDelete.name
       setUserToDelete(null)
@@ -450,13 +556,17 @@ export default function ExternalUsersPage() {
     if (!userToSuspend) return
     setActionLoading("suspend")
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(
-        users.map((u) =>
-          u.id === userToSuspend.id ? { ...u, status: "suspended" as const, updatedAt: new Date() } : u
-        )
-      )
+      const response = await fetch(`/api/admin/external-users/${userToSuspend.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "suspended" }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to suspend user")
+      }
+      
       setSuspendConfirmOpen(false)
       const suspendedUserName = userToSuspend.name
       setUserToSuspend(null)
@@ -480,13 +590,17 @@ export default function ExternalUsersPage() {
     }
     setActionLoading(`activate-${user.id}`)
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
-          u.id === user.id ? { ...u, status: "active" as const, updatedAt: new Date() } : u
-        )
-      )
+      const response = await fetch(`/api/admin/external-users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to activate user")
+      }
+      
       showSuccess(`User "${user.name}" has been activated`)
       // Refresh data after activate
       await fetchUsers()
@@ -507,17 +621,26 @@ export default function ExternalUsersPage() {
     }
     setActionLoading(`upsell-${user.id}`)
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      const planIndex = plans.indexOf(user.plan)
-      const nextPlanIndex = planIndex < plans.length - 1 ? planIndex + 1 : planIndex
-      const nextPlan = plans[nextPlanIndex] || user.plan
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
-          u.id === user.id ? { ...u, plan: nextPlan as ExternalUserPlan, updatedAt: new Date() } : u
-        )
-      )
-      showSuccess(`User "${user.name}" has been upgraded to ${nextPlan.charAt(0).toUpperCase() + nextPlan.slice(1)} plan`)
+      const currentPlanIndex = plans.findIndex(p => p.slug === user.plan)
+      const nextPlanIndex = currentPlanIndex < plans.length - 1 ? currentPlanIndex + 1 : currentPlanIndex
+      const nextPlan = plans[nextPlanIndex] || plans.find(p => p.slug === user.plan)
+      
+      if (!nextPlan) {
+        throw new Error("No plan found")
+      }
+      
+      const response = await fetch(`/api/admin/external-users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: nextPlan.slug }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to upgrade user")
+      }
+      
+      showSuccess(`User "${user.name}" has been upgraded to ${nextPlan.name} plan`)
       // Refresh data after upsell
       await fetchUsers()
     } catch (err) {
@@ -677,6 +800,40 @@ export default function ExternalUsersPage() {
     }
     if (!editingUser && !formData.password) errors.password = "Password is required"
     if (formData.password && formData.password.length < 8) errors.password = "Password must be at least 8 characters"
+    
+    // Validate phone number format if provided
+    if (formData.phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+      errors.phoneNumber = "Invalid phone number format. Use international format (e.g., +1234567890)"
+    }
+    
+    // Validate username uniqueness if provided
+    if (formData.username) {
+      const duplicateUsername = users.find(
+        (u) => u.username?.toLowerCase() === formData.username.toLowerCase() && u.id !== editingUser?.id
+      )
+      if (duplicateUsername) {
+        errors.username = "This username is already in use"
+      }
+    }
+    
+    // Validate avatar URL format if provided
+    if (formData.avatarUrl && !/^https?:\/\/.+\..+/.test(formData.avatarUrl)) {
+      errors.avatarUrl = "Invalid URL format. Must start with http:// or https://"
+    }
+    
+    // Validate subscription dates
+    if (formData.subscriptionStartDate && formData.subscriptionEndDate) {
+      if (formData.subscriptionEndDate < formData.subscriptionStartDate) {
+        errors.subscriptionEndDate = "End date must be after start date"
+      }
+    }
+    
+    // Validate trial dates
+    if (formData.isTrial && formData.trialEndsAt && formData.subscriptionStartDate) {
+      if (formData.trialEndsAt < formData.subscriptionStartDate) {
+        errors.trialEndsAt = "Trial end date must be after subscription start date"
+      }
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -685,57 +842,94 @@ export default function ExternalUsersPage() {
 
     setFormLoading(true)
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
+      let response: Response
+      
       if (editingUser) {
-        setUsers(
-          users.map((u) =>
-            u.id === editingUser.id
-              ? {
-                  ...u,
-                  name: formData.name,
-                  email: formData.email,
-                  plan: formData.plan,
-                  phoneNumber: formData.phoneNumber,
-                  credits: formData.credits,
-                  updatedAt: new Date(),
-                }
-              : u
-          )
-        )
-      } else {
-        const newUser: ExternalUser = {
-          id: `ext_${Date.now()}`,
+        const updateData: Record<string, unknown> = {
           name: formData.name,
           email: formData.email,
           plan: formData.plan,
-          status: "active",
-          subscriptionDate: new Date(),
-          expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isTrial: formData.plan === "trial",
-          trialEndsAt: formData.plan === "trial" ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null,
-          subscriptionStatus: "active",
+          status: formData.status,
           credits: formData.credits,
-          phoneNumber: formData.phoneNumber,
         }
-        setUsers([...users, newUser])
+        
+        // Only include optional fields if they have values
+        if (formData.phoneNumber) updateData.phoneNumber = formData.phoneNumber
+        if (formData.username) updateData.username = formData.username
+        if (formData.avatarUrl) updateData.avatarUrl = formData.avatarUrl
+        if (formData.subscriptionStartDate) updateData.subscriptionStartDate = formData.subscriptionStartDate.toISOString()
+        if (formData.subscriptionEndDate) updateData.subscriptionEndDate = formData.subscriptionEndDate.toISOString()
+        if (formData.isTrial !== undefined) {
+          updateData.isTrial = formData.isTrial
+          updateData.subscriptionStatus = formData.isTrial ? 'trial' : 'active'
+        }
+        if (formData.trialEndsAt) updateData.trialEndsAt = formData.trialEndsAt.toISOString()
+        if (formData.password) updateData.password = formData.password // Password reset
+        
+        response = await fetch(`/api/admin/external-users/${editingUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        })
+      } else {
+        response = await fetch('/api/admin/external-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            plan: formData.plan,
+            status: formData.status,
+            credits: formData.credits,
+            phoneNumber: formData.phoneNumber || undefined,
+            username: formData.username || undefined,
+            avatarUrl: formData.avatarUrl || undefined,
+            subscriptionStartDate: formData.subscriptionStartDate?.toISOString(),
+            subscriptionEndDate: formData.subscriptionEndDate?.toISOString(),
+            isTrial: formData.isTrial,
+            trialEndsAt: formData.trialEndsAt?.toISOString(),
+          }),
+        })
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save user')
       }
 
+      const userData = await response.json()
+      
       setFormOpen(false)
       setEditingUser(null)
+      const defaultPlan = plans.length > 0 ? plans[0].slug : "free"
       setFormData({
         name: "",
         email: "",
         password: "",
-        plan: "free",
+        plan: defaultPlan as ExternalUserPlan,
+        status: "active",
         phoneNumber: "",
         credits: 0,
+        username: "",
+        avatarUrl: "",
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        isTrial: false,
+        trialEndsAt: null,
       })
       setFormErrors({})
       setShowPassword(false)
+      
+      // Refresh data after create/update
+      await fetchUsers()
+      
+      showSuccess(
+        editingUser
+          ? `User "${userData.name}" has been updated successfully`
+          : `User "${userData.name}" has been created successfully`
+      )
+      setShowAdvancedOptions(false)
       const userName = formData.name
       showSuccess(editingUser 
         ? `User "${userName}" has been updated successfully`
@@ -754,18 +948,27 @@ export default function ExternalUsersPage() {
 
   useEffect(() => {
     if (formOpen && !editingUser) {
+      const defaultPlan = plans.length > 0 ? plans[0].slug : "free"
       setFormData({
         name: "",
         email: "",
         password: "",
-        plan: "free",
+        plan: defaultPlan as ExternalUserPlan,
+        status: "active",
         phoneNumber: "",
         credits: 0,
+        username: "",
+        avatarUrl: "",
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        isTrial: false,
+        trialEndsAt: null,
       })
       setFormErrors({})
       setShowPassword(false)
+      setShowAdvancedOptions(false)
     }
-  }, [formOpen, editingUser])
+  }, [formOpen, editingUser, plans])
 
   const filterConfig = [
     {
@@ -1034,10 +1237,10 @@ export default function ExternalUsersPage() {
               </Badge>
             </TabsTrigger>
             {plans.map((plan) => (
-              <TabsTrigger key={plan} value={plan} className="cursor-pointer">
-                {plan.charAt(0).toUpperCase() + plan.slice(1)}
+              <TabsTrigger key={plan.slug} value={plan.slug} className="cursor-pointer">
+                {plan.name}
                 <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                  {planCounts[plan] || 0}
+                  {planCounts[plan.slug] || 0}
                 </Badge>
               </TabsTrigger>
             ))}
@@ -1163,7 +1366,7 @@ export default function ExternalUsersPage() {
                       <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Enter the user's full name as it should appear in the system</p>
+                      <p>Enter the user&apos;s full name as it should appear in the system</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -1308,28 +1511,6 @@ export default function ExternalUsersPage() {
                 </div>
               )}
 
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Optional phone number for WhatsApp notifications and contact</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  placeholder="+1234567890"
-                />
-              </div>
-
               {/* Plan */}
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
@@ -1339,20 +1520,53 @@ export default function ExternalUsersPage() {
                       <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Select the subscription plan that determines the user's access level and features</p>
+                      <p>Select the subscription plan that determines the user&apos;s access level and features</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Select value={formData.plan} onValueChange={(value) => setFormData({ ...formData, plan: value as ExternalUserPlan })}>
+                <Select 
+                  value={formData.plan} 
+                  onValueChange={(value) => setFormData({ ...formData, plan: value as ExternalUserPlan })}
+                  disabled={plansLoading}
+                >
                   <SelectTrigger id="plan">
+                    <SelectValue placeholder={plansLoading ? "Loading plans..." : "Select a plan"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans.length === 0 && !plansLoading ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">No plans available</div>
+                    ) : (
+                      plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.slug}>
+                          {plan.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="status">Status</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>User account status. Active users can access the system, suspended users cannot.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as UserStatus })}>
+                  <SelectTrigger id="status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {plans.map((plan) => (
-                      <SelectItem key={plan} value={plan}>
-                        {plan.charAt(0).toUpperCase() + plan.slice(1)}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1379,6 +1593,318 @@ export default function ExternalUsersPage() {
                   placeholder="0"
                 />
               </div>
+
+              {/* More Options - Expandable Section */}
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="more-options" className="border-none">
+                  <AccordionTrigger className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>More Options</span>
+                      {(() => {
+                        const filledCount = [
+                          formData.phoneNumber,
+                          formData.username,
+                          formData.avatarUrl,
+                          formData.subscriptionStartDate,
+                          formData.subscriptionEndDate,
+                          formData.isTrial,
+                          formData.trialEndsAt,
+                          editingUser && formData.password ? formData.password : null,
+                        ].filter(Boolean).length
+                        return filledCount > 0 ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {filledCount} filled
+                          </Badge>
+                        ) : null
+                      })()}
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    {/* Phone Number */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Optional phone number for WhatsApp notifications and contact</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phoneNumber}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phoneNumber: e.target.value })
+                          if (formErrors.phoneNumber) setFormErrors({ ...formErrors, phoneNumber: "" })
+                        }}
+                        onBlur={() => {
+                          if (formData.phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+                            setFormErrors({ ...formErrors, phoneNumber: "Invalid phone number format" })
+                          }
+                        }}
+                        placeholder="+1234567890"
+                        className={formErrors.phoneNumber ? "border-destructive" : ""}
+                      />
+                      {formErrors.phoneNumber && <p className="text-xs text-destructive">{formErrors.phoneNumber}</p>}
+                    </div>
+
+                    {/* Username */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="username">Username</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Optional unique username. If not provided, email will be used.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="username"
+                        value={formData.username}
+                        onChange={(e) => {
+                          setFormData({ ...formData, username: e.target.value })
+                          if (formErrors.username) setFormErrors({ ...formErrors, username: "" })
+                        }}
+                        onBlur={() => {
+                          if (formData.username) {
+                            const duplicateUsername = users.find(
+                              (u) => u.username?.toLowerCase() === formData.username.toLowerCase() && u.id !== editingUser?.id
+                            )
+                            if (duplicateUsername) {
+                              setFormErrors({ ...formErrors, username: "This username is already in use" })
+                            }
+                          }
+                        }}
+                        placeholder="username"
+                        className={formErrors.username ? "border-destructive" : ""}
+                      />
+                      {formErrors.username && <p className="text-xs text-destructive">{formErrors.username}</p>}
+                    </div>
+
+                    {/* Avatar URL */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="avatarUrl">Avatar URL</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Optional URL to user&apos;s avatar image</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <Input
+                        id="avatarUrl"
+                        type="url"
+                        value={formData.avatarUrl}
+                        onChange={(e) => {
+                          setFormData({ ...formData, avatarUrl: e.target.value })
+                          if (formErrors.avatarUrl) setFormErrors({ ...formErrors, avatarUrl: "" })
+                        }}
+                        onBlur={() => {
+                          if (formData.avatarUrl && !/^https?:\/\/.+\..+/.test(formData.avatarUrl)) {
+                            setFormErrors({ ...formErrors, avatarUrl: "Invalid URL format" })
+                          }
+                        }}
+                        placeholder="https://example.com/avatar.jpg"
+                        className={formErrors.avatarUrl ? "border-destructive" : ""}
+                      />
+                      {formErrors.avatarUrl && <p className="text-xs text-destructive">{formErrors.avatarUrl}</p>}
+                    </div>
+
+                    {/* Subscription Dates */}
+                    <div className="space-y-4 border-t pt-4">
+                      <div className="text-sm font-medium">Subscription Dates</div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="subscriptionStartDate">Subscription Start Date</Label>
+                        <Input
+                          id="subscriptionStartDate"
+                          type="datetime-local"
+                          value={formData.subscriptionStartDate ? new Date(formData.subscriptionStartDate.getTime() - formData.subscriptionStartDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+                          onChange={(e) => {
+                            setFormData({ 
+                              ...formData, 
+                              subscriptionStartDate: e.target.value ? new Date(e.target.value) : null 
+                            })
+                            if (formErrors.subscriptionStartDate) setFormErrors({ ...formErrors, subscriptionStartDate: "" })
+                          }}
+                          className={formErrors.subscriptionStartDate ? "border-destructive" : ""}
+                        />
+                        {formErrors.subscriptionStartDate && <p className="text-xs text-destructive">{formErrors.subscriptionStartDate}</p>}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="subscriptionEndDate">Subscription End Date</Label>
+                        <Input
+                          id="subscriptionEndDate"
+                          type="datetime-local"
+                          value={formData.subscriptionEndDate ? new Date(formData.subscriptionEndDate.getTime() - formData.subscriptionEndDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+                          onChange={(e) => {
+                            setFormData({ 
+                              ...formData, 
+                              subscriptionEndDate: e.target.value ? new Date(e.target.value) : null 
+                            })
+                            if (formErrors.subscriptionEndDate) setFormErrors({ ...formErrors, subscriptionEndDate: "" })
+                          }}
+                          className={formErrors.subscriptionEndDate ? "border-destructive" : ""}
+                        />
+                        {formErrors.subscriptionEndDate && <p className="text-xs text-destructive">{formErrors.subscriptionEndDate}</p>}
+                      </div>
+                    </div>
+
+                    {/* Trial Settings */}
+                    <div className="space-y-4 border-t pt-4">
+                      <div className="text-sm font-medium">Trial Settings</div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="isTrial"
+                          checked={formData.isTrial}
+                          onCheckedChange={(checked) => {
+                            setFormData({ 
+                              ...formData, 
+                              isTrial: checked as boolean
+                            })
+                          }}
+                        />
+                        <Label htmlFor="isTrial" className="text-sm font-normal cursor-pointer">
+                          User is on trial subscription
+                        </Label>
+                      </div>
+
+                      {formData.isTrial && (
+                        <div className="space-y-2">
+                          <Label htmlFor="trialEndsAt">Trial Ends At</Label>
+                          <Input
+                            id="trialEndsAt"
+                            type="datetime-local"
+                            value={formData.trialEndsAt ? new Date(formData.trialEndsAt.getTime() - formData.trialEndsAt.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+                            onChange={(e) => {
+                              setFormData({ 
+                                ...formData, 
+                                trialEndsAt: e.target.value ? new Date(e.target.value) : null 
+                              })
+                              if (formErrors.trialEndsAt) setFormErrors({ ...formErrors, trialEndsAt: "" })
+                            }}
+                            className={formErrors.trialEndsAt ? "border-destructive" : ""}
+                          />
+                          {formErrors.trialEndsAt && <p className="text-xs text-destructive">{formErrors.trialEndsAt}</p>}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Password Reset - Edit Mode Only */}
+                    {editingUser && (
+                      <div className="space-y-2 border-t pt-4">
+                        <div className="flex items-center gap-1.5">
+                          <Label htmlFor="passwordReset">Change Password</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Leave blank to keep current password. Enter new password to change it.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              id="passwordReset"
+                              type={showPassword ? "text" : "password"}
+                              value={formData.password}
+                              onChange={(e) => {
+                                setFormData({ ...formData, password: e.target.value })
+                                if (formErrors.password) setFormErrors({ ...formErrors, password: "" })
+                              }}
+                              placeholder="Leave blank to keep current password"
+                              className={formErrors.password ? "border-destructive pr-20" : "pr-20"}
+                            />
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 cursor-pointer"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                  >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{showPassword ? "Hide password" : "Show password"}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              {formData.password && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 cursor-pointer"
+                                      onClick={handleCopyPassword}
+                                    >
+                                      <Copy className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Copy password to clipboard</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleGeneratePassword}
+                                className="flex-shrink-0 cursor-pointer"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Generate
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Generate a secure random password</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        {formData.password && (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">Password strength:</span>
+                              <span className={`font-medium ${getPasswordStrengthColor(formData.password)}`}>
+                                {getPasswordStrengthLabel(formData.password)}
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all ${getPasswordStrengthBarColor(formData.password)}`}
+                                style={{ width: `${getPasswordStrengthProgress(formData.password)}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {formErrors.password && <p className="text-xs text-destructive">{formErrors.password}</p>}
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
             <DialogFooter className="pt-4 border-t">
               <Button

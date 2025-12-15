@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -23,7 +23,6 @@ import {
 import { cn } from "@/lib/utils"
 import { Loader } from "@/components/ui/loader"
 import { ShopifyStore, StoreProduct } from "@/app/shopify-stores/data/stores"
-import { adminSampleStores } from "./data/stores"
 import { getAllStoreProducts } from "./data/products"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { StoreDetailDrawer } from "./components/store-detail-drawer"
@@ -34,9 +33,10 @@ import { useToast } from "@/hooks/use-toast"
 
 export default function AdminShopifyStoresPage() {
   const { showSuccess, showError, showInfo } = useToast()
-  const [stores] = useState<ShopifyStore[]>(adminSampleStores)
+  const [stores, setStores] = useState<ShopifyStore[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [pageCount, setPageCount] = useState(0)
@@ -52,6 +52,51 @@ export default function AdminShopifyStoresPage() {
   const [selectedStore, setSelectedStore] = useState<ShopifyStore | null>(null)
   const [storeProducts, setStoreProducts] = useState<Record<string, StoreProduct[]>>({})
   const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
+
+  // Fetch stores from API
+  const fetchStores = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = new URLSearchParams()
+      if (statusTab !== "all") {
+        params.append("status", statusTab)
+      }
+      if (search) {
+        params.append("search", search)
+      }
+      params.append("page", page.toString())
+      params.append("pageSize", pageSize.toString())
+      
+      const response = await fetch(`/api/admin/shopify-stores?${params.toString()}`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch stores")
+      }
+      
+      const data = await response.json()
+      const storesData: ShopifyStore[] = data.stores || []
+      
+      setStores(storesData)
+      setPageCount(data.totalPages || 0)
+    } catch (err) {
+      console.error("Error fetching stores:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to load stores. Please check your connection and try again."
+      setError(errorMessage)
+      if (!initialLoading) {
+        showError(errorMessage)
+      }
+    } finally {
+      setLoading(false)
+      setInitialLoading(false)
+    }
+  }, [statusTab, search, page, pageSize, initialLoading, showError])
+
+  // Initial fetch
+  useEffect(() => {
+    fetchStores()
+  }, [fetchStores])
 
   // Load products for all stores
   useEffect(() => {
@@ -146,10 +191,7 @@ export default function AdminShopifyStoresPage() {
     return filteredStores.slice(start, end)
   }, [filteredStores, page, pageSize])
 
-  useEffect(() => {
-    setPageCount(Math.ceil(filteredStores.length / pageSize))
-    setInitialLoading(false)
-  }, [filteredStores.length, pageSize])
+  // Remove this useEffect as pageCount is now set from API response
 
   // Handlers
   const handleViewDetails = (store: ShopifyStore) => {
@@ -167,12 +209,31 @@ export default function AdminShopifyStoresPage() {
   }
 
   const handleSync = async (store: ShopifyStore) => {
-    setLoading(true)
-    showInfo(`Syncing ${store.name}...`)
-    // Simulate sync
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setLoading(false)
-    showSuccess(`${store.name} has been synced successfully`)
+    try {
+      setLoading(true)
+      showInfo(`Syncing ${store.name}...`)
+      
+      const response = await fetch(`/api/shopify-stores/${store.id}/sync`, {
+        method: 'POST',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to sync store')
+      }
+      
+      const data = await response.json()
+      showSuccess(`${store.name} has been synced successfully`)
+      
+      // Refresh stores list
+      await fetchStores()
+    } catch (err) {
+      console.error("Error syncing store:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to sync store"
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleAddProducts = (store: ShopifyStore) => {
@@ -186,8 +247,32 @@ export default function AdminShopifyStoresPage() {
   }
 
   const handleDisconnect = async (store: ShopifyStore) => {
-    showInfo(`Disconnecting ${store.name}...`)
-    // TODO: Implement disconnect
+    try {
+      setLoading(true)
+      showInfo(`Disconnecting ${store.name}...`)
+      
+      const response = await fetch(`/api/admin/shopify-stores/${store.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'disconnected' }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to disconnect store')
+      }
+      
+      showSuccess(`${store.name} has been disconnected`)
+      
+      // Refresh stores list
+      await fetchStores()
+    } catch (err) {
+      console.error("Error disconnecting store:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to disconnect store"
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleDelete = (store: ShopifyStore) => {
@@ -197,12 +282,38 @@ export default function AdminShopifyStoresPage() {
 
   const confirmDelete = async () => {
     if (!storeToDelete) return
-    setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setLoading(false)
-    setDeleteConfirmOpen(false)
-    showSuccess(`${storeToDelete.name} has been deleted`)
-    setStoreToDelete(null)
+    
+    try {
+      setLoading(true)
+      
+      // Delete all selected stores
+      const storesToDelete = selectedStores.length > 0 ? selectedStores : [storeToDelete]
+      
+      for (const store of storesToDelete) {
+        const response = await fetch(`/api/admin/shopify-stores/${store.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || `Failed to delete ${store.name}`)
+        }
+      }
+      
+      setDeleteConfirmOpen(false)
+      setStoreToDelete(null)
+      setSelectedStores([])
+      showSuccess(`${storesToDelete.length} store${storesToDelete.length !== 1 ? 's' : ''} deleted successfully`)
+      
+      // Refresh stores list
+      await fetchStores()
+    } catch (err) {
+      console.error("Error deleting store:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete store"
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCopyStoreId = (store: ShopifyStore) => {
@@ -223,22 +334,58 @@ export default function AdminShopifyStoresPage() {
   // Bulk actions
   const handleBulkSync = async () => {
     if (selectedStores.length === 0) return
-    setLoading(true)
-    showInfo(`Syncing ${selectedStores.length} stores...`)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setLoading(false)
-    setSelectedStores([])
-    showSuccess(`${selectedStores.length} stores synced successfully`)
+    
+    try {
+      setLoading(true)
+      showInfo(`Syncing ${selectedStores.length} stores...`)
+      
+      const syncPromises = selectedStores.map(store =>
+        fetch(`/api/shopify-stores/${store.id}/sync`, { method: 'POST' })
+      )
+      
+      await Promise.all(syncPromises)
+      
+      setSelectedStores([])
+      showSuccess(`${selectedStores.length} stores synced successfully`)
+      
+      // Refresh stores list
+      await fetchStores()
+    } catch (err) {
+      console.error("Error syncing stores:", err)
+      showError("Failed to sync some stores")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleBulkDisconnect = async () => {
     if (selectedStores.length === 0) return
-    setLoading(true)
-    showInfo(`Disconnecting ${selectedStores.length} stores...`)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    setLoading(false)
-    setSelectedStores([])
-    showSuccess(`${selectedStores.length} stores disconnected`)
+    
+    try {
+      setLoading(true)
+      showInfo(`Disconnecting ${selectedStores.length} stores...`)
+      
+      const disconnectPromises = selectedStores.map(store =>
+        fetch(`/api/admin/shopify-stores/${store.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'disconnected' }),
+        })
+      )
+      
+      await Promise.all(disconnectPromises)
+      
+      setSelectedStores([])
+      showSuccess(`${selectedStores.length} stores disconnected`)
+      
+      // Refresh stores list
+      await fetchStores()
+    } catch (err) {
+      console.error("Error disconnecting stores:", err)
+      showError("Failed to disconnect some stores")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleBulkDelete = () => {

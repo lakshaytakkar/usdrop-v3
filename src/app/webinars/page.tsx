@@ -7,7 +7,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
-import { Video, Play, Clock } from "lucide-react"
+import { Play, Clock } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Webinar, sampleWebinars } from "./data/webinars"
 import { WebinarModal } from "./components/webinar-modal"
@@ -92,7 +93,7 @@ export default function WebinarsPage() {
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-blue-500 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-blue-500 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -128,20 +129,22 @@ export default function WebinarsPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Video icon before text */}
-              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
-                <Video 
-                  className="h-8 w-8 text-white"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/webinars.png"
+                    alt="Webinars"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Webinars</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Webinars</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Join live webinars and watch recordings of past sessions.
                 </p>
               </div>

@@ -5,7 +5,23 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Store, Edit, MoreVertical, CheckCircle2, TrendingUp, Globe, ExternalLink, Users } from "lucide-react"
-import { CompetitorStore } from "../data/stores"
+// Using local interface matching the UI format
+interface CompetitorStore {
+  id: string
+  name: string
+  url: string
+  logo?: string
+  category: string
+  country?: string
+  monthly_traffic: number
+  monthly_revenue: number | null
+  growth: number
+  products_count?: number
+  rating?: number
+  verified: boolean
+  created_at: string
+  updated_at: string
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -188,5 +204,7 @@ export function AdminCompetitorStoreCard({
     </Card>
   )
 }
+
+
 
 

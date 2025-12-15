@@ -11,11 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Trash2, Lock, Eye, UserPlus, Check, EyeOff, AlertCircle, X, Search, Star, DollarSign, Calendar, Edit } from "lucide-react"
+import { Plus, Trash2, Lock, Eye, UserPlus, Check, EyeOff, AlertCircle, X, Search, Star, DollarSign, Calendar, Edit, RefreshCw } from "lucide-react"
 import { DataTable } from "@/components/data-table/data-table"
 import { createPlansColumns } from "./components/plans-columns"
-import { SubscriptionPlan } from "@/types/admin/plans"
-import { samplePlans } from "./data/plans"
+import { SubscriptionPlan, PlanFormData } from "@/types/admin/plans"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { LargeModal } from "@/components/ui/large-modal"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -24,6 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import {
@@ -34,15 +37,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
-import { InternalUser } from "@/types/admin/users"
 import { Loader } from "@/components/ui/loader"
 import { useToast } from "@/hooks/use-toast"
+import { generateSlugFromName, validatePlanSlug } from "@/lib/utils/plan-helpers"
 
 export default function AdminPlansPage() {
-  const router = useRouter()
   const { showSuccess, showError } = useToast()
   
-  const [plans, setPlans] = useState<SubscriptionPlan[]>(samplePlans)
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -59,6 +61,23 @@ export default function AdminPlansPage() {
   const [selectedPlanForQuickView, setSelectedPlanForQuickView] = useState<SubscriptionPlan | null>(null)
   const [selectedPlans, setSelectedPlans] = useState<SubscriptionPlan[]>([])
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [formData, setFormData] = useState<PlanFormData>({
+    name: "",
+    slug: "",
+    description: "",
+    priceMonthly: 0,
+    priceAnnual: undefined,
+    priceYearly: undefined,
+    features: [],
+    popular: false,
+    active: true,
+    isPublic: true,
+    displayOrder: 0,
+    keyPointers: "",
+    trialDays: 0,
+  })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [formLoading, setFormLoading] = useState(false)
   const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
   const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
   const [assignedMembers, setAssignedMembers] = useState<string[]>([])
@@ -158,10 +177,65 @@ export default function AdminPlansPage() {
     return filteredPlans.slice(start, end)
   }, [filteredPlans, page, pageSize])
 
+  const fetchPlans = useCallback(async () => {
+    try {
+      setLoading(true)
+      
+      const response = await fetch("/api/admin/plans")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch plans")
+      }
+      
+      const data = await response.json()
+      
+      // Map API response to SubscriptionPlan interface (convert date strings to Date objects)
+      const plansData: SubscriptionPlan[] = data.map((plan: {
+        id: string
+        name: string
+        slug: string
+        description: string | null
+        priceMonthly: number
+        priceAnnual: number | null
+        priceYearly: number | null
+        features: string[]
+        popular: boolean
+        active: boolean
+        isPublic: boolean
+        displayOrder: number
+        keyPointers: string | null
+        trialDays: number
+        createdAt: string | null
+        updatedAt: string | null
+      }) => ({
+        ...plan,
+        createdAt: plan.createdAt ? new Date(plan.createdAt) : null,
+        updatedAt: plan.updatedAt ? new Date(plan.updatedAt) : null,
+      }))
+      
+      setPlans(plansData)
+    } catch (err) {
+      console.error("Error fetching plans:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to load plans. Please check your connection and try again."
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+      setInitialLoading(false)
+    }
+  }, [showError])
+
+  // Fetch plans on mount
+  useEffect(() => {
+    fetchPlans()
+  }, [fetchPlans])
+
   useEffect(() => {
     setPageCount(Math.ceil(filteredPlans.length / pageSize))
-    setInitialLoading(false)
-  }, [filteredPlans.length, pageSize])
+    // Reset to page 1 if current page is out of bounds
+    if (page > Math.ceil(filteredPlans.length / pageSize) && filteredPlans.length > 0) {
+      setPage(1)
+    }
+  }, [filteredPlans.length, pageSize, page])
 
   const handleViewDetails = useCallback((plan: SubscriptionPlan) => {
     setSelectedPlanForQuickView(plan)
@@ -178,27 +252,245 @@ export default function AdminPlansPage() {
     setQuickViewOpen(true)
   }, [])
 
-  const handleEdit = (plan: SubscriptionPlan) => {
+  const handleEdit = useCallback((plan: SubscriptionPlan) => {
     setEditingPlan(plan)
+    setFormData({
+      name: plan.name,
+      slug: plan.slug,
+      description: plan.description || "",
+      priceMonthly: plan.priceMonthly,
+      priceAnnual: plan.priceAnnual ?? undefined,
+      priceYearly: plan.priceYearly ?? undefined,
+      features: plan.features || [],
+      popular: plan.popular,
+      active: plan.active,
+      isPublic: plan.isPublic,
+      displayOrder: plan.displayOrder,
+      keyPointers: plan.keyPointers || "",
+      trialDays: plan.trialDays,
+    })
+    setFormErrors({})
     setFormOpen(true)
+  }, [])
+
+  const handleFormSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    console.log("Form submit triggered", { editingPlan, formData })
+    
+    const errors: Record<string, string> = {}
+    
+    // Validate name
+    if (!formData.name?.trim()) {
+      errors.name = "Name is required"
+    }
+    
+    // Validate slug
+    if (!formData.slug?.trim()) {
+      errors.slug = "Slug is required"
+    } else if (!validatePlanSlug(formData.slug)) {
+      errors.slug = "Slug must be lowercase, alphanumeric, and can only contain hyphens and underscores"
+    } else {
+      // Check for duplicate slug (excluding current plan if editing)
+      const duplicatePlan = plans.find(
+        (p) => p.slug.toLowerCase() === formData.slug.toLowerCase() && p.id !== editingPlan?.id
+      )
+      if (duplicatePlan) {
+        errors.slug = "This slug is already in use"
+      }
+    }
+    
+    // Validate priceMonthly
+    if (formData.priceMonthly === undefined || formData.priceMonthly === null || formData.priceMonthly < 0) {
+      errors.priceMonthly = "Monthly price must be 0 or greater"
+    }
+    
+    // Validate priceAnnual
+    if (formData.priceAnnual !== undefined && formData.priceAnnual !== null && formData.priceAnnual < 0) {
+      errors.priceAnnual = "Annual price must be 0 or greater"
+    }
+    
+    // Validate priceYearly
+    if (formData.priceYearly !== undefined && formData.priceYearly !== null && formData.priceYearly < 0) {
+      errors.priceYearly = "Yearly price must be 0 or greater"
+    }
+    
+    // Validate trialDays
+    if (formData.trialDays < 0) {
+      errors.trialDays = "Trial days must be 0 or greater"
+    }
+    
+    // Validate displayOrder
+    if (formData.displayOrder < 0) {
+      errors.displayOrder = "Display order must be 0 or greater"
+    }
+    
+    // Validate features (remove empty ones)
+    const validFeatures = (formData.features || []).filter(f => f && typeof f === 'string' && f.trim().length > 0)
+    if (validFeatures.length === 0) {
+      errors.features = "At least one feature is required"
+    }
+
+    if (Object.keys(errors).length > 0) {
+      console.log("Validation errors:", errors)
+      setFormErrors(errors)
+      // Scroll to first error field
+      setTimeout(() => {
+        const firstErrorKey = Object.keys(errors)[0]
+        const errorElementId = 
+          firstErrorKey === "name" ? "plan-name" :
+          firstErrorKey === "slug" ? "plan-slug" :
+          firstErrorKey === "description" ? "plan-description" :
+          firstErrorKey === "priceMonthly" ? "price-monthly" :
+          firstErrorKey === "priceAnnual" ? "price-annual" :
+          firstErrorKey === "priceYearly" ? "price-yearly" :
+          firstErrorKey === "features" ? "plan-form" :
+          firstErrorKey === "displayOrder" ? "display-order" :
+          firstErrorKey === "trialDays" ? "trial-days" :
+          firstErrorKey === "keyPointers" ? "key-pointers" : null
+        
+        if (errorElementId) {
+          const errorElement = document.getElementById(errorElementId)
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: "smooth", block: "center" })
+            if (errorElement instanceof HTMLInputElement || errorElement instanceof HTMLTextAreaElement) {
+              errorElement.focus()
+            }
+          }
+        }
+      }, 100)
+      return
+    }
+
+    setFormLoading(true)
+    try {
+      let response: Response
+      
+      // Auto-generate slug if empty
+      const finalSlug = formData.slug || generateSlugFromName(formData.name)
+      
+      // Filter out empty features
+      const finalFeatures = (formData.features || []).filter(f => f && typeof f === 'string' && f.trim().length > 0)
+      
+      const requestBody = {
+        name: formData.name.trim(),
+        slug: finalSlug,
+        description: formData.description?.trim() || undefined,
+        priceMonthly: Number(formData.priceMonthly),
+        priceAnnual: formData.priceAnnual !== undefined && formData.priceAnnual !== null ? Number(formData.priceAnnual) : undefined,
+        priceYearly: formData.priceYearly !== undefined && formData.priceYearly !== null ? Number(formData.priceYearly) : undefined,
+        features: finalFeatures,
+        popular: Boolean(formData.popular),
+        active: Boolean(formData.active),
+        isPublic: Boolean(formData.isPublic),
+        displayOrder: Number(formData.displayOrder),
+        keyPointers: formData.keyPointers?.trim() || undefined,
+        trialDays: Number(formData.trialDays),
+      }
+      
+      console.log("Submitting plan:", { editingPlan: editingPlan?.id, requestBody })
+      
+      if (editingPlan) {
+        response = await fetch(`/api/admin/plans/${editingPlan.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        })
+      } else {
+        response = await fetch('/api/admin/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        })
+      }
+      
+      console.log("Response status:", response.status, response.statusText)
+      
+      if (!response.ok) {
+        let errorData
+        try {
+          errorData = await response.json()
+        } catch (parseError) {
+          const text = await response.text()
+          throw new Error(`Server error: ${response.status} ${response.statusText}. ${text}`)
+        }
+        throw new Error(errorData.error || `Failed to save plan: ${response.status} ${response.statusText}`)
+      }
+
+      let planData
+      try {
+        planData = await response.json()
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError)
+        throw new Error("Invalid response from server")
+      }
+      
+      console.log("Plan saved successfully:", planData)
+      
+      setFormOpen(false)
+      setEditingPlan(null)
+      setFormData({
+        name: "",
+        slug: "",
+        description: "",
+        priceMonthly: 0,
+        priceAnnual: undefined,
+        priceYearly: undefined,
+        features: [],
+        popular: false,
+        active: true,
+        isPublic: true,
+        displayOrder: 0,
+        keyPointers: "",
+        trialDays: 0,
+      })
+      setFormErrors({})
+      
+      // Refresh data after create/update
+      await fetchPlans()
+      
+      showSuccess(
+        editingPlan
+          ? `Plan "${planData.name}" has been updated successfully`
+          : `Plan "${planData.name}" has been created successfully`
+      )
+    } catch (err) {
+      console.error("Error saving plan:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to save plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setFormLoading(false)
+    }
   }
 
-  const handleDelete = (plan: SubscriptionPlan) => {
+  const handleDelete = useCallback((plan: SubscriptionPlan) => {
     setPlanToDelete(plan)
     setDeleteConfirmOpen(true)
-  }
+  }, [])
 
   const confirmDelete = async () => {
     if (!planToDelete) return
     setActionLoading("delete")
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const response = await fetch(`/api/admin/plans/${planToDelete.id}`, {
+        method: "DELETE",
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete plan")
+      }
+      
+      const result = await response.json()
       const deletedPlanName = planToDelete.name
-      setPlans(plans.filter((p) => p.id !== planToDelete.id))
       setDeleteConfirmOpen(false)
       setPlanToDelete(null)
-      showSuccess(`Plan "${deletedPlanName}" has been deleted successfully`)
+      showSuccess(result.message || `Plan "${deletedPlanName}" has been deleted successfully`)
+      // Refresh data after delete
+      await fetchPlans()
     } catch (err) {
       console.error("Error deleting plan:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to delete plan. Please try again."
@@ -208,17 +500,55 @@ export default function AdminPlansPage() {
     }
   }
 
-  const handleToggleActive = async (plan: SubscriptionPlan) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setPlans(plans.map((p) => (p.id === plan.id ? { ...p, active: !p.active } : p)))
-  }
+  const handleToggleActive = useCallback(async (plan: SubscriptionPlan) => {
+    setActionLoading(`toggle-active-${plan.id}`)
+    try {
+      const response = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !plan.active }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update plan")
+      }
+      
+      // Refresh data after update
+      await fetchPlans()
+    } catch (err) {
+      console.error("Error toggling plan active status:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to update plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }, [fetchPlans, showError])
 
-  const handleTogglePublic = async (plan: SubscriptionPlan) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setPlans(plans.map((p) => (p.id === plan.id ? { ...p, isPublic: !p.isPublic } : p)))
-  }
+  const handleTogglePublic = useCallback(async (plan: SubscriptionPlan) => {
+    setActionLoading(`toggle-public-${plan.id}`)
+    try {
+      const response = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: !plan.isPublic }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update plan")
+      }
+      
+      // Refresh data after update
+      await fetchPlans()
+    } catch (err) {
+      console.error("Error toggling plan public status:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to update plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }, [fetchPlans, showError])
 
   const columns = useMemo(
     () =>
@@ -230,7 +560,7 @@ export default function AdminPlansPage() {
         onTogglePublic: handleTogglePublic,
         onNameClick: handleNameClick,
       }),
-    [handleViewDetails, handleNameClick]
+    [handleViewDetails, handleEdit, handleDelete, handleToggleActive, handleTogglePublic, handleNameClick, fetchPlans, showError]
   )
 
   const handlePaginationChange = useCallback((p: number, s: number) => {
@@ -255,16 +585,125 @@ export default function AdminPlansPage() {
           onClick: async () => {
             setActionLoading("delete")
             try {
-              await new Promise((resolve) => setTimeout(resolve, 500))
-              const selectedIds = selectedPlans.map((p) => p.id)
-              const deletedCount = selectedPlans.length
-              setPlans(plans.filter((p) => !selectedIds.includes(p.id)))
+              // Delete plans sequentially to handle soft deletes properly
+              let successCount = 0
+              let failedCount = 0
+              
+              for (const plan of selectedPlans) {
+                try {
+                  const response = await fetch(`/api/admin/plans/${plan.id}`, { method: "DELETE" })
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || `Failed to delete ${plan.name}`)
+                  }
+                  successCount++
+                } catch (err) {
+                  failedCount++
+                  console.error(`Error deleting plan ${plan.name}:`, err)
+                }
+              }
+              
+              if (failedCount > 0) {
+                showError(`${failedCount} plan(s) failed to delete. ${successCount} plan(s) deleted successfully.`)
+              } else {
+                showSuccess(`${successCount} plan(s) deleted successfully`)
+              }
+              
               setSelectedPlans([])
-              showSuccess(`${deletedCount} plan(s) deleted successfully`)
+              // Refresh data after delete
+              await fetchPlans()
             } catch (err) {
               console.error("Error deleting plans:", err)
               const errorMessage = err instanceof Error ? err.message : "Failed to delete plans. Please try again."
               showError(errorMessage)
+            } finally {
+              setActionLoading(null)
+            }
+          },
+          variant: "outline" as const,
+        },
+        {
+          label: actionLoading === "activate" ? "Activating..." : "Activate Selected",
+          icon: actionLoading === "activate" ? <Loader size="sm" className="mr-2" /> : <Check className="h-4 w-4" />,
+          onClick: async () => {
+            setActionLoading("activate")
+            try {
+              let successCount = 0
+              let failedCount = 0
+              
+              for (const plan of selectedPlans) {
+                try {
+                  const response = await fetch(`/api/admin/plans/${plan.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ active: true }),
+                  })
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || `Failed to activate ${plan.name}`)
+                  }
+                  successCount++
+                } catch (err) {
+                  failedCount++
+                  console.error(`Error activating plan ${plan.name}:`, err)
+                }
+              }
+              
+              if (failedCount > 0) {
+                showError(`${failedCount} plan(s) failed to activate. ${successCount} plan(s) activated successfully.`)
+              } else {
+                showSuccess(`${successCount} plan(s) activated successfully`)
+              }
+              
+              setSelectedPlans([])
+              await fetchPlans()
+            } catch (err) {
+              console.error("Error activating plans:", err)
+              showError("Failed to activate plans. Please try again.")
+            } finally {
+              setActionLoading(null)
+            }
+          },
+          variant: "outline" as const,
+        },
+        {
+          label: actionLoading === "deactivate" ? "Deactivating..." : "Deactivate Selected",
+          icon: actionLoading === "deactivate" ? <Loader size="sm" className="mr-2" /> : <X className="h-4 w-4" />,
+          onClick: async () => {
+            setActionLoading("deactivate")
+            try {
+              let successCount = 0
+              let failedCount = 0
+              
+              for (const plan of selectedPlans) {
+                try {
+                  const response = await fetch(`/api/admin/plans/${plan.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ active: false }),
+                  })
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || `Failed to deactivate ${plan.name}`)
+                  }
+                  successCount++
+                } catch (err) {
+                  failedCount++
+                  console.error(`Error deactivating plan ${plan.name}:`, err)
+                }
+              }
+              
+              if (failedCount > 0) {
+                showError(`${failedCount} plan(s) failed to deactivate. ${successCount} plan(s) deactivated successfully.`)
+              } else {
+                showSuccess(`${successCount} plan(s) deactivated successfully`)
+              }
+              
+              setSelectedPlans([])
+              await fetchPlans()
+            } catch (err) {
+              console.error("Error deactivating plans:", err)
+              showError("Failed to deactivate plans. Please try again.")
             } finally {
               setActionLoading(null)
             }
@@ -278,9 +717,19 @@ export default function AdminPlansPage() {
         },
       ]
     } else {
-      return []
+      return [
+        {
+          label: "Refresh",
+          icon: <RefreshCw className="h-4 w-4" />,
+          onClick: async () => {
+            await fetchPlans()
+            showSuccess("Plans refreshed")
+          },
+          variant: "outline" as const,
+        },
+      ]
     }
-  }, [selectedPlans, actionLoading, plans, showSuccess, showError])
+  }, [selectedPlans, actionLoading, fetchPlans, showSuccess, showError])
 
   const filterConfig = [
     {
@@ -305,6 +754,28 @@ export default function AdminPlansPage() {
   useEffect(() => {
     setInitialLoading(false)
   }, [])
+
+  // Initialize form when opening for create
+  useEffect(() => {
+    if (formOpen && !editingPlan) {
+      setFormData({
+        name: "",
+        slug: "",
+        description: "",
+        priceMonthly: 0,
+        priceAnnual: undefined,
+        priceYearly: undefined,
+        features: [],
+        popular: false,
+        active: true,
+        isPublic: true,
+        displayOrder: 0,
+        keyPointers: "",
+        trialDays: 0,
+      })
+      setFormErrors({})
+    }
+  }, [formOpen, editingPlan])
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
@@ -461,24 +932,379 @@ export default function AdminPlansPage() {
                 : "Create a new subscription plan with pricing and features."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              Plan form implementation would go here (name, slug, description, pricing, features, status, visibility fields).
-            </p>
-          </div>
+          <form id="plan-form" onSubmit={(e) => { e.preventDefault(); handleFormSubmit(e); }} className="space-y-4 py-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="plan-name">Name *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Enter the plan name as it should appear to users</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="plan-name"
+                value={formData.name}
+                onChange={(e) => {
+                  const newName = e.target.value
+                  setFormData({ 
+                    ...formData, 
+                    name: newName,
+                    slug: formData.slug || generateSlugFromName(newName)
+                  })
+                  if (formErrors.name) setFormErrors({ ...formErrors, name: "" })
+                }}
+                placeholder="Enter plan name"
+                className={formErrors.name ? "border-destructive" : ""}
+              />
+              {formErrors.name && <p className="text-xs text-destructive">{formErrors.name}</p>}
+            </div>
+
+            {/* Slug */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="plan-slug">Slug *</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>URL-friendly identifier (lowercase, alphanumeric, hyphens/underscores only)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="plan-slug"
+                value={formData.slug}
+                onChange={(e) => {
+                  const newSlug = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')
+                  setFormData({ ...formData, slug: newSlug })
+                  if (formErrors.slug) setFormErrors({ ...formErrors, slug: "" })
+                }}
+                placeholder="plan-slug"
+                className={formErrors.slug ? "border-destructive" : ""}
+              />
+              {formErrors.slug && <p className="text-xs text-destructive">{formErrors.slug}</p>}
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="plan-description">Description</Label>
+              <Textarea
+                id="plan-description"
+                value={formData.description || ""}
+                onChange={(e) => {
+                  setFormData({ ...formData, description: e.target.value })
+                  if (formErrors.description) setFormErrors({ ...formErrors, description: "" })
+                }}
+                placeholder="Enter plan description"
+                rows={3}
+                className={formErrors.description ? "border-destructive" : ""}
+              />
+              {formErrors.description && <p className="text-xs text-destructive">{formErrors.description}</p>}
+            </div>
+
+            {/* Pricing Section */}
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="text-sm font-semibold">Pricing</h3>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {/* Monthly Price */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Label htmlFor="price-monthly">Monthly Price *</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Monthly subscription price in INR</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <Input
+                    id="price-monthly"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.priceMonthly}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value) || 0
+                      setFormData({ ...formData, priceMonthly: value })
+                      if (formErrors.priceMonthly) setFormErrors({ ...formErrors, priceMonthly: "" })
+                    }}
+                    onBlur={(e) => {
+                      const value = parseFloat(e.target.value) || 0
+                      if (value < 0) {
+                        setFormErrors({ ...formErrors, priceMonthly: "Monthly price must be 0 or greater" })
+                      }
+                    }}
+                    placeholder="0.00"
+                    className={formErrors.priceMonthly ? "border-destructive" : ""}
+                  />
+                  {formErrors.priceMonthly && <p className="text-xs text-destructive">{formErrors.priceMonthly}</p>}
+                </div>
+
+                {/* Annual Price */}
+                <div className="space-y-2">
+                  <Label htmlFor="price-annual">Annual Price</Label>
+                  <Input
+                    id="price-annual"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.priceAnnual || ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined
+                      setFormData({ 
+                        ...formData, 
+                        priceAnnual: value
+                      })
+                      if (formErrors.priceAnnual) setFormErrors({ ...formErrors, priceAnnual: "" })
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined
+                      if (value !== undefined && value < 0) {
+                        setFormErrors({ ...formErrors, priceAnnual: "Annual price must be 0 or greater" })
+                      }
+                    }}
+                    placeholder="Optional"
+                  />
+                  {formErrors.priceAnnual && <p className="text-xs text-destructive">{formErrors.priceAnnual}</p>}
+                </div>
+
+                {/* Yearly Price */}
+                <div className="space-y-2">
+                  <Label htmlFor="price-yearly">Yearly Price</Label>
+                  <Input
+                    id="price-yearly"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.priceYearly || ""}
+                    onChange={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined
+                      setFormData({ 
+                        ...formData, 
+                        priceYearly: value
+                      })
+                      if (formErrors.priceYearly) setFormErrors({ ...formErrors, priceYearly: "" })
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value ? parseFloat(e.target.value) : undefined
+                      if (value !== undefined && value < 0) {
+                        setFormErrors({ ...formErrors, priceYearly: "Yearly price must be 0 or greater" })
+                      }
+                    }}
+                    placeholder="Optional"
+                  />
+                  {formErrors.priceYearly && <p className="text-xs text-destructive">{formErrors.priceYearly}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <h3 className="text-sm font-semibold">Features *</h3>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add at least one feature for this plan</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFormData({ ...formData, features: [...(formData.features || []), ""] })
+                    if (formErrors.features) setFormErrors({ ...formErrors, features: "" })
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Feature
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={feature}
+                      onChange={(e) => {
+                        const newFeatures = [...formData.features]
+                        newFeatures[index] = e.target.value
+                        setFormData({ ...formData, features: newFeatures })
+                        // Clear error when user starts typing
+                        if (formErrors.features) {
+                          const validFeatures = newFeatures.filter(f => f && typeof f === 'string' && f.trim().length > 0)
+                          if (validFeatures.length > 0) {
+                            setFormErrors({ ...formErrors, features: "" })
+                          }
+                        }
+                      }}
+                      placeholder={`Feature ${index + 1}`}
+                      className={formErrors.features ? "border-destructive" : ""}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newFeatures = formData.features.filter((_, i) => i !== index)
+                        setFormData({ ...formData, features: newFeatures })
+                        // Clear error if there are still valid features
+                        if (formErrors.features) {
+                          const validFeatures = newFeatures.filter(f => f && typeof f === 'string' && f.trim().length > 0)
+                          if (validFeatures.length > 0) {
+                            setFormErrors({ ...formErrors, features: "" })
+                          }
+                        }
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {formData.features.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No features added. Click &quot;Add Feature&quot; to add one.</p>
+                )}
+                {formErrors.features && (
+                  <p className="text-xs text-destructive mt-1">{formErrors.features}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Settings Section */}
+            <div className="space-y-4 border-t pt-4">
+              <h3 className="text-sm font-semibold">Settings</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Display Order */}
+                <div className="space-y-2">
+                  <Label htmlFor="display-order">Display Order</Label>
+                  <Input
+                    id="display-order"
+                    type="number"
+                    min="0"
+                    value={formData.displayOrder}
+                    onChange={(e) => {
+                      setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 })
+                    }}
+                    placeholder="0"
+                  />
+                </div>
+
+                {/* Trial Days */}
+                <div className="space-y-2">
+                  <Label htmlFor="trial-days">Trial Days</Label>
+                  <Input
+                    id="trial-days"
+                    type="number"
+                    min="0"
+                    value={formData.trialDays}
+                    onChange={(e) => {
+                      setFormData({ ...formData, trialDays: parseInt(e.target.value) || 0 })
+                    }}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Key Pointers */}
+              <div className="space-y-2">
+                <Label htmlFor="key-pointers">Key Pointers</Label>
+                <Textarea
+                  id="key-pointers"
+                  value={formData.keyPointers || ""}
+                  onChange={(e) => {
+                    setFormData({ ...formData, keyPointers: e.target.value })
+                  }}
+                  placeholder="Enter key selling points (optional)"
+                  rows={2}
+                />
+              </div>
+
+              {/* Toggles */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="popular"
+                    checked={formData.popular}
+                    onCheckedChange={(checked) => {
+                      setFormData({ ...formData, popular: checked === true })
+                    }}
+                  />
+                  <Label htmlFor="popular" className="cursor-pointer">
+                    Mark as Popular
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="active"
+                    checked={formData.active}
+                    onCheckedChange={(checked) => {
+                      setFormData({ ...formData, active: checked === true })
+                    }}
+                  />
+                  <Label htmlFor="active" className="cursor-pointer">
+                    Active
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="is-public"
+                    checked={formData.isPublic}
+                    onCheckedChange={(checked) => {
+                      setFormData({ ...formData, isPublic: checked === true })
+                    }}
+                  />
+                  <Label htmlFor="is-public" className="cursor-pointer">
+                    Public (visible to users)
+                  </Label>
+                </div>
+              </div>
+            </div>
+          </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setFormOpen(false)
-              setEditingPlan(null)
-            }}>
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => {
+                setFormOpen(false)
+                setEditingPlan(null)
+                setFormErrors({})
+              }}
+              disabled={formLoading}
+            >
               Cancel
             </Button>
-            <Button onClick={() => {
-              // TODO: Handle form submission
-              setFormOpen(false)
-              setEditingPlan(null)
-            }}>
-              {editingPlan ? "Update" : "Create"}
+            <Button 
+              type="submit"
+              form="plan-form"
+              disabled={formLoading}
+            >
+              {formLoading ? (
+                <>
+                  <Loader size="sm" className="mr-2" />
+                  {editingPlan ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                editingPlan ? "Update" : "Create"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

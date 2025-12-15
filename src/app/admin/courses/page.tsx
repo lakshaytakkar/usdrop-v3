@@ -30,7 +30,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Filter, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Course, sampleCourses } from "./data/courses"
+import { Course } from "./data/courses"
+import { Course as APICourse } from "@/types/courses"
+import { transformAPICourseToAdmin } from "./utils/transform"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { useToast } from "@/hooks/use-toast"
@@ -53,7 +55,7 @@ export default function AdminCoursesPage() {
   const { hasPermission: canDelete } = useHasPermission("usdrop-academy.delete")
   const { hasPermission: canPublish } = useHasPermission("usdrop-academy.edit") // Using edit permission for publish
   
-  const [courses, setCourses] = useState<Course[]>(sampleCourses)
+  const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourses, setSelectedCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -274,9 +276,22 @@ export default function AdminCoursesPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setCourses(sampleCourses)
+      
+      const params = new URLSearchParams()
+      params.append("pageSize", "1000") // Get all courses for admin
+      
+      const response = await fetch(`/api/admin/courses?${params.toString()}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch courses')
+      }
+      
+      const data = await response.json()
+      const transformedCourses = data.courses.map((apiCourse: APICourse) => 
+        transformAPICourseToAdmin(apiCourse)
+      )
+      setCourses(transformedCourses)
     } catch (err) {
       console.error("Error fetching courses:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load courses. Please try again."
@@ -328,7 +343,15 @@ export default function AdminCoursesPage() {
     if (!courseToDelete) return
     setBulkActionLoading("delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`/api/admin/courses/${courseToDelete.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete course')
+      }
+      
       setCourses((prev) => prev.filter((c) => c.id !== courseToDelete.id))
       setSelectedCourses((prev) => prev.filter((c) => c.id !== courseToDelete.id))
       setDeleteConfirmOpen(false)
@@ -337,7 +360,8 @@ export default function AdminCoursesPage() {
       showSuccess(`Course "${deletedCourseName}" deleted successfully`)
       await fetchCourses()
     } catch (err) {
-      showError("Failed to delete course")
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete course"
+      showError(errorMessage)
     } finally {
       setBulkActionLoading(null)
     }
@@ -351,14 +375,26 @@ export default function AdminCoursesPage() {
     }
     setBulkActionLoading("bulk-delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const promises = selectedCourses.map(course =>
+        fetch(`/api/admin/courses/${course.id}`, {
+          method: 'DELETE',
+        })
+      )
+      
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (failed > 0) {
+        throw new Error(`${failed} course(s) failed to delete`)
+      }
+      
       const deletedCount = selectedCourses.length
-      setCourses((prev) => prev.filter((c) => !selectedCourses.some((sc) => sc.id === c.id)))
       setSelectedCourses([])
       showSuccess(`${deletedCount} course(s) deleted successfully`)
       await fetchCourses()
     } catch (err) {
-      showError("Failed to delete courses")
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete courses"
+      showError(errorMessage)
     } finally {
       setBulkActionLoading(null)
     }
@@ -372,19 +408,31 @@ export default function AdminCoursesPage() {
     }
     setBulkActionLoading("bulk-publish")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setCourses((prev) =>
-        prev.map((c) =>
-          selectedCourses.some((sc) => sc.id === c.id)
-            ? { ...c, published: true, published_at: new Date().toISOString() }
-            : c
-        )
+      const promises = selectedCourses.map(course =>
+        fetch(`/api/admin/courses/${course.id}/publish`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            published: true,
+          }),
+        })
       )
+      
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (failed > 0) {
+        throw new Error(`${failed} course(s) failed to publish`)
+      }
+      
       setSelectedCourses([])
       showSuccess(`${selectedCourses.length} course(s) published successfully`)
       await fetchCourses()
     } catch (err) {
-      showError("Failed to publish courses")
+      const errorMessage = err instanceof Error ? err.message : "Failed to publish courses"
+      showError(errorMessage)
     } finally {
       setBulkActionLoading(null)
     }
@@ -398,19 +446,31 @@ export default function AdminCoursesPage() {
     }
     setBulkActionLoading("bulk-unpublish")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setCourses((prev) =>
-        prev.map((c) =>
-          selectedCourses.some((sc) => sc.id === c.id)
-            ? { ...c, published: false, published_at: null }
-            : c
-        )
+      const promises = selectedCourses.map(course =>
+        fetch(`/api/admin/courses/${course.id}/publish`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            published: false,
+          }),
+        })
       )
+      
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (failed > 0) {
+        throw new Error(`${failed} course(s) failed to unpublish`)
+      }
+      
       setSelectedCourses([])
       showSuccess(`${selectedCourses.length} course(s) unpublished successfully`)
       await fetchCourses()
     } catch (err) {
-      showError("Failed to unpublish courses")
+      const errorMessage = err instanceof Error ? err.message : "Failed to unpublish courses"
+      showError(errorMessage)
     } finally {
       setBulkActionLoading(null)
     }
@@ -422,22 +482,26 @@ export default function AdminCoursesPage() {
       return
     }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.id === course.id
-            ? { 
-                ...c, 
-                published: !c.published,
-                published_at: !c.published ? new Date().toISOString() : null
-              }
-            : c
-        )
-      )
+      const response = await fetch(`/api/admin/courses/${course.id}/publish`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          published: !course.published,
+        }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update course publish status')
+      }
+      
       showSuccess(`Course ${!course.published ? "published" : "unpublished"} successfully`)
       await fetchCourses()
     } catch (err) {
-      showError("Failed to update course")
+      const errorMessage = err instanceof Error ? err.message : "Failed to update course"
+      showError(errorMessage)
     }
   }, [canPublish, showSuccess, showError, fetchCourses])
 

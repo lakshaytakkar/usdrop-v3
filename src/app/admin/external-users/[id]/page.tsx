@@ -36,7 +36,7 @@ import {
   ArrowUp
 } from "lucide-react"
 import { ExternalUser } from "@/types/admin/users"
-import { sampleExternalUsers } from "../data/users"
+import Loader from "@/components/kokonutui/loader"
 
 export default function ExternalUserDetailPage() {
   const router = useRouter()
@@ -44,13 +44,70 @@ export default function ExternalUserDetailPage() {
   const userId = params?.id as string
 
   const [user, setUser] = useState<ExternalUser | null>(null)
-  const [allUsers, setAllUsers] = useState<ExternalUser[]>(sampleExternalUsers)
+  const [allUsers, setAllUsers] = useState<ExternalUser[]>([])
+  const [loading, setLoading] = useState(true)
 
+  // Fetch current user from API
   useEffect(() => {
-    // Find current user
-    const currentUser = allUsers.find((u) => u.id === userId)
-    setUser(currentUser || null)
-  }, [userId, allUsers])
+    const fetchUser = async () => {
+      if (!userId) return
+      
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/admin/external-users/${userId}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setUser(null)
+            return
+          }
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to fetch user')
+        }
+        
+        const userData = await response.json()
+        setUser({
+          ...userData,
+          subscriptionDate: new Date(userData.subscriptionDate),
+          expiryDate: new Date(userData.expiryDate),
+          createdAt: new Date(userData.createdAt),
+          updatedAt: new Date(userData.updatedAt),
+          trialEndsAt: userData.trialEndsAt ? new Date(userData.trialEndsAt) : null,
+        })
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [userId])
+
+  // Fetch all users for navigation
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const response = await fetch('/api/admin/external-users')
+        if (response.ok) {
+          const data = await response.json()
+          const users: ExternalUser[] = data.map((u: any) => ({
+            ...u,
+            subscriptionDate: new Date(u.subscriptionDate),
+            expiryDate: new Date(u.expiryDate),
+            createdAt: new Date(u.createdAt),
+            updatedAt: new Date(u.updatedAt),
+            trialEndsAt: u.trialEndsAt ? new Date(u.trialEndsAt) : null,
+          }))
+          setAllUsers(users)
+        }
+      } catch (err) {
+        console.error('Error fetching all users:', err)
+      }
+    }
+
+    fetchAllUsers()
+  }, [])
 
   // Find previous and next users
   const { prevUser, nextUser } = useMemo(() => {
@@ -62,6 +119,20 @@ export default function ExternalUserDetailPage() {
     
     return { prevUser: prev, nextUser: next }
   }, [user, allUsers])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <Loader 
+            title="Loading user details..." 
+            subtitle="Fetching user information and subscription data"
+            size="md"
+          />
+        </div>
+      </div>
+    )
+  }
 
   if (!user) {
     return (

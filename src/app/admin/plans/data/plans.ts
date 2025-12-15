@@ -1,5 +1,12 @@
 import { SubscriptionPlan } from "@/types/admin/plans"
 
+/**
+ * @deprecated This file is deprecated - use the API endpoint /api/admin/plans instead
+ * Keeping this temporarily for backward compatibility
+ * TODO: Remove all references to this file
+ * 
+ * To seed subscription plans, use: npx tsx scripts/seed-subscription-plans.ts
+ */
 export const samplePlans: SubscriptionPlan[] = [
   {
     id: "plan_001",

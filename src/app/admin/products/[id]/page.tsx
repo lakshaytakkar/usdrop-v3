@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, Suspense } from "react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -30,16 +30,71 @@ import {
   Star,
 } from "lucide-react"
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
-import { sampleHandPickedProducts, sampleProductPicks } from "../data/products"
+import { Product, ProductMetadata } from "@/types/products"
 import Image from "next/image"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
+import { Loader2 } from "lucide-react"
 
 type ProductType = "hand-picked" | "product-picks"
 type ProductUnion = HandPickedProduct | ProductPick
 
-export default function ProductDetailPage() {
+// Transform API Product to HandPickedProduct
+const transformToHandPicked = (product: Product): HandPickedProduct => {
+  const metadata: Partial<ProductMetadata> = product.metadata || {}
+  return {
+    id: product.id,
+    image: product.image,
+    title: product.title,
+    profit_margin: metadata.profit_margin || 0,
+    pot_revenue: metadata.pot_revenue || 0,
+    category: product.category?.slug || product.category?.name || 'other',
+    is_locked: metadata.is_locked || false,
+    found_date: metadata.found_date || product.created_at,
+    filters: metadata.filters || [],
+    description: product.description,
+    supplier_info: product.supplier ? {
+      name: product.supplier.name,
+      company_name: product.supplier.company_name || undefined,
+      min_order: 0,
+    } : null,
+    unlock_price: metadata.unlock_price || null,
+    detailed_analysis: metadata.detailed_analysis || null,
+    created_at: product.created_at,
+    updated_at: product.updated_at,
+  }
+}
+
+// Transform API Product to ProductPick
+const transformToProductPick = (product: Product): ProductPick => {
+  return {
+    id: product.id,
+    image: product.image,
+    title: product.title,
+    buy_price: product.buy_price,
+    sell_price: product.sell_price,
+    profit_per_order: product.profit_per_order,
+    trend_data: product.trend_data || [],
+    category: product.category?.slug || product.category?.name || 'other',
+    rating: product.rating,
+    reviews_count: product.reviews_count || 0,
+    description: product.description,
+    supplier_id: product.supplier_id,
+    supplier: product.supplier ? {
+      id: product.supplier.id,
+      name: product.supplier.name,
+      company_name: product.supplier.company_name || null,
+      logo: product.supplier.logo || null,
+    } : undefined,
+    additional_images: product.additional_images || [],
+    specifications: product.specifications,
+    created_at: product.created_at,
+    updated_at: product.updated_at,
+  }
+}
+
+function ProductDetailContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -53,15 +108,68 @@ export default function ProductDetailPage() {
   const { hasPermission: canLockUnlock } = useHasPermission("products.lock_unlock")
 
   const [product, setProduct] = useState<ProductUnion | null>(null)
-  const [allHandPicked, setAllHandPicked] = useState<HandPickedProduct[]>(sampleHandPickedProducts)
-  const [allProductPicks, setAllProductPicks] = useState<ProductPick[]>(sampleProductPicks)
+  const [allHandPicked, setAllHandPicked] = useState<HandPickedProduct[]>([])
+  const [allProductPicks, setAllProductPicks] = useState<ProductPick[]>([])
+  const [loading, setLoading] = useState(true)
 
+  // Fetch product and all products for navigation
   useEffect(() => {
-    // Find current product
-    const products = productType === "hand-picked" ? allHandPicked : allProductPicks
-    const currentProduct = products.find((p) => p.id === productId)
-    setProduct(currentProduct || null)
-  }, [productId, productType, allHandPicked, allProductPicks])
+    const fetchProduct = async () => {
+      try {
+        setLoading(true)
+        
+        // Validate productId before making request
+        if (!productId || productId === 'undefined') {
+          showError('Invalid product ID')
+          setLoading(false)
+          return
+        }
+        
+        // Fetch the specific product
+        const productResponse = await fetch(`/api/products/${productId}`)
+        if (!productResponse.ok) {
+          throw new Error('Failed to fetch product')
+        }
+        const productData = await productResponse.json()
+        const apiProduct: Product = productData.product
+        
+        // Determine product type from source
+        const sourceType = apiProduct.source?.source_type || 'hand_picked'
+        const isHandPicked = sourceType === 'hand_picked'
+        
+        // Transform to appropriate type
+        if (isHandPicked) {
+          setProduct(transformToHandPicked(apiProduct))
+        } else {
+          setProduct(transformToProductPick(apiProduct))
+        }
+        
+        // Fetch all products for navigation
+        const allProductsResponse = await fetch(
+          `/api/products?source_type=${isHandPicked ? 'hand_picked' : 'scraped'}&pageSize=1000`
+        )
+        if (allProductsResponse.ok) {
+          const allProductsData = await allProductsResponse.json()
+          const allProducts: Product[] = allProductsData.products || []
+          
+          if (isHandPicked) {
+            setAllHandPicked(allProducts.map(transformToHandPicked))
+          } else {
+            setAllProductPicks(allProducts.map(transformToProductPick))
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching product:', err)
+        showError('Failed to load product')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId, showError])
 
   // Find previous and next products
   const { prevProduct, nextProduct } = useMemo(() => {
@@ -74,6 +182,19 @@ export default function ProductDetailPage() {
     
     return { prevProduct: prev, nextProduct: next }
   }, [product, productType, allHandPicked, allProductPicks])
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex items-center justify-center p-8">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading product...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!product) {
     return (
@@ -94,13 +215,30 @@ export default function ProductDetailPage() {
     showError("Edit functionality will be implemented")
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!canDelete) {
       showError("You don't have permission to delete products")
       return
     }
-    // TODO: Implement delete with confirmation
-    showError("Delete functionality will be implemented")
+    
+    if (!confirm(`Are you sure you want to delete "${product.title}"? This action cannot be undone.`)) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete product')
+      }
+      
+      showSuccess('Product deleted successfully')
+      router.push('/admin/products')
+    } catch (err) {
+      showError("Failed to delete product")
+    }
   }
 
   const handleToggleLock = async () => {
@@ -110,8 +248,19 @@ export default function ProductDetailPage() {
       return
     }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
       const hp = product as HandPickedProduct
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          metadata: { is_locked: !hp.is_locked }
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update product')
+      }
+      
       setProduct({ ...hp, is_locked: !hp.is_locked, updated_at: new Date().toISOString() } as ProductUnion)
       showSuccess(`Product ${!hp.is_locked ? "locked" : "unlocked"} successfully`)
     } catch (err) {
@@ -633,3 +782,19 @@ export default function ProductDetailPage() {
   )
 }
 
+export default function ProductDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex items-center justify-center p-8">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading product...</span>
+          </div>
+        </div>
+      </div>
+    }>
+      <ProductDetailContent />
+    </Suspense>
+  )
+}

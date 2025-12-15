@@ -30,7 +30,6 @@ import {
   UserCog
 } from "lucide-react"
 import { InternalUser } from "@/types/admin/users"
-import { sampleInternalUsers } from "../data/users"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Loader } from "@/components/ui/loader"
@@ -42,16 +41,67 @@ export default function InternalUserDetailPage() {
   const { showSuccess, showError, showInfo } = useToast()
 
   const [user, setUser] = useState<InternalUser | null>(null)
-  const [allUsers, setAllUsers] = useState<InternalUser[]>(sampleInternalUsers)
+  const [allUsers, setAllUsers] = useState<InternalUser[]>([])
+  const [loading, setLoading] = useState(true)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [suspendConfirmOpen, setSuspendConfirmOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  // Fetch current user from API
   useEffect(() => {
-    // Find current user
-    const currentUser = allUsers.find((u) => u.id === userId)
-    setUser(currentUser || null)
-  }, [userId, allUsers])
+    const fetchUser = async () => {
+      if (!userId) return
+      
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/admin/internal-users/${userId}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setUser(null)
+            return
+          }
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to fetch user')
+        }
+        
+        const userData = await response.json()
+        setUser({
+          ...userData,
+          createdAt: new Date(userData.createdAt),
+          updatedAt: new Date(userData.updatedAt),
+        })
+      } catch (err) {
+        console.error('Error fetching user:', err)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUser()
+  }, [userId])
+
+  // Fetch all users for navigation
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const response = await fetch('/api/admin/internal-users')
+        if (response.ok) {
+          const data = await response.json()
+          const usersWithDates = data.map((u: InternalUser & { createdAt: string; updatedAt: string }) => ({
+            ...u,
+            createdAt: new Date(u.createdAt),
+            updatedAt: new Date(u.updatedAt),
+          }))
+          setAllUsers(usersWithDates)
+        }
+      } catch (err) {
+        console.error('Error fetching all users:', err)
+      }
+    }
+
+    fetchAllUsers()
+  }, [])
 
   // Find previous and next users
   const { prevUser, nextUser } = useMemo(() => {
@@ -63,6 +113,16 @@ export default function InternalUserDetailPage() {
     
     return { prevUser: prev, nextUser: next }
   }, [user, allUsers])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
+        <div className="flex items-center justify-center p-8">
+          <Loader />
+        </div>
+      </div>
+    )
+  }
 
   if (!user) {
     return (

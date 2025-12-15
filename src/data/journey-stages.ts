@@ -117,14 +117,14 @@ export const journeyStages: JourneyStage[] = [
         id: "selection-1",
         title: "Add 5 products to My Products",
         description: "Build your initial product selection",
-        link: "/picklist",
+        link: "/my-products",
         completed: false,
       },
       {
         id: "selection-2",
         title: "Create product collections",
         description: "Organize products into collections",
-        link: "/picklist",
+        link: "/my-products",
         completed: false,
       },
       {

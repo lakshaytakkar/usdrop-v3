@@ -4,7 +4,6 @@ import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { 
   TrendingUp, 
   DollarSign,
@@ -15,7 +14,21 @@ import {
   ExternalLink,
   BarChart3
 } from "lucide-react"
-import { CompetitorStore } from "../data/stores"
+// Using local interface matching the UI format
+interface CompetitorStore {
+  id: number | string
+  name: string
+  url: string
+  logo?: string
+  category: string
+  monthlyRevenue: number
+  monthlyTraffic: number
+  growth: number
+  country: string
+  products: number
+  rating: number
+  verified: boolean
+}
 
 interface StoreCardProps {
   store: CompetitorStore
@@ -42,12 +55,14 @@ export function StoreCard({ store }: StoreCardProps) {
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 p-5">
       {/* Header */}
       <div className="flex items-start gap-3 mb-4">
-        <Avatar className="h-12 w-12 border-2 border-border">
-          <AvatarImage src={store.logo} alt={store.name} />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-            {store.name.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <div className="relative h-12 w-12 flex-shrink-0 border-2 border-border rounded-full overflow-hidden bg-background">
+          <Image
+            src="/shopify_glyph.svg"
+            alt="Shopify"
+            fill
+            className="object-contain p-2"
+          />
+        </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">

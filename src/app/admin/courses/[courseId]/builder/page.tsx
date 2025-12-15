@@ -8,12 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, Save, Eye, Plus, X } from "lucide-react"
 import { Course, Module, Chapter, ChapterContentType } from "../../data/courses"
-import { sampleCourses } from "../../data/courses"
 import { useToast } from "@/hooks/use-toast"
 import { Loader } from "@/components/ui/loader"
+import {
+  fetchCourseFromAPI,
+  saveCourseToAPI,
+  saveModuleToAPI,
+  deleteModuleFromAPI,
+  saveChapterToAPI,
+  deleteChapterFromAPI,
+} from "../../utils/api-helpers"
 import { CourseStructureTree } from "../../components/course-structure-tree"
 import { CourseContentEditor } from "../../components/course-content-editor"
 import { CourseSettingsPanel } from "../../components/course-settings-panel"
+import { VideoUploader } from "@/components/courses/video-uploader"
 
 export default function CourseBuilderPage() {
   const params = useParams()
@@ -35,53 +43,68 @@ export default function CourseBuilderPage() {
   const [moduleForChapter, setModuleForChapter] = useState<Module | null>(null)
 
   useEffect(() => {
-    if (courseId && courseId !== "new") {
-      const foundCourse = sampleCourses.find(c => c.id === courseId)
-      if (foundCourse) {
-        setCourse({ ...foundCourse, modules: foundCourse.modules || [] })
+    const loadCourse = async () => {
+      try {
+        setLoading(true)
+        if (courseId && courseId !== "new") {
+          const fetchedCourse = await fetchCourseFromAPI(courseId)
+          setCourse(fetchedCourse)
+        } else if (courseId === "new") {
+          const newCourse: Course = {
+            id: `course_${Date.now()}`,
+            title: "Untitled Course",
+            slug: `untitled-course-${Date.now()}`,
+            description: "",
+            instructor_id: null,
+            instructor_name: "",
+            instructor_avatar: null,
+            thumbnail: null,
+            duration: null,
+            lessons_count: 0,
+            students_count: 0,
+            rating: null,
+            price: 0,
+            category: null,
+            level: null,
+            featured: false,
+            published: false,
+            published_at: null,
+            modules: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }
+          setCourse(newCourse)
+        }
+      } catch (err) {
+        console.error("Error loading course:", err)
+        showError(err instanceof Error ? err.message : "Failed to load course")
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
-    } else if (courseId === "new") {
-      const newCourse: Course = {
-        id: `course_${Date.now()}`,
-        title: "Untitled Course",
-        slug: `untitled-course-${Date.now()}`,
-        description: "",
-        instructor_id: null,
-        instructor_name: "",
-        instructor_avatar: null,
-        thumbnail: null,
-        duration: null,
-        lessons_count: 0,
-        students_count: 0,
-        rating: null,
-        price: 0,
-        category: null,
-        level: null,
-        featured: false,
-        published: false,
-        published_at: null,
-        modules: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-      setCourse(newCourse)
-      setLoading(false)
     }
-  }, [courseId])
+    
+    loadCourse()
+  }, [courseId, showError])
 
   const handleSaveCourse = useCallback(async () => {
-    if (!course) return
+    if (!course || !courseId) return
     setSaving(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const savedCourse = await saveCourseToAPI(courseId, course)
+      setCourse(savedCourse)
       showSuccess("Course saved successfully")
+      
+      // If it was a new course, update the URL with the new ID
+      if (courseId === "new" && savedCourse.id) {
+        router.replace(`/admin/courses/${savedCourse.id}/builder`)
+      }
     } catch (err) {
-      showError("Failed to save course")
+      const errorMessage = err instanceof Error ? err.message : "Failed to save course"
+      showError(errorMessage)
     } finally {
       setSaving(false)
     }
-  }, [course, showSuccess, showError])
+  }, [course, courseId, showSuccess, showError, router])
 
   const handleModuleSelect = useCallback((module: Module) => {
     setSelectedModuleId(module.id)
@@ -107,17 +130,27 @@ export default function CourseBuilderPage() {
     setModuleFormOpen(true)
   }, [])
 
-  const handleDeleteModule = useCallback((module: Module) => {
-    if (!course) return
-    setCourse({
-      ...course,
-      modules: course.modules?.filter(m => m.id !== module.id) || [],
-    })
-    if (selectedModuleId === module.id) {
-      setSelectedModuleId(null)
-      setSelectedModule(null)
+  const handleDeleteModule = useCallback(async (module: Module) => {
+    if (!course || !courseId || courseId === "new") {
+      showError("Please save the course before deleting modules")
+      return
     }
-  }, [course, selectedModuleId])
+    
+    try {
+      await deleteModuleFromAPI(courseId, module.id)
+      const updatedCourse = await fetchCourseFromAPI(courseId)
+      setCourse(updatedCourse)
+      
+      if (selectedModuleId === module.id) {
+        setSelectedModuleId(null)
+        setSelectedModule(null)
+      }
+      showSuccess("Module deleted successfully")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete module"
+      showError(errorMessage)
+    }
+  }, [course, courseId, selectedModuleId, showSuccess, showError])
 
   const handleAddChapter = useCallback((moduleId: string) => {
     if (!course) return
@@ -134,98 +167,119 @@ export default function CourseBuilderPage() {
     setChapterFormOpen(true)
   }, [])
 
-  const handleDeleteChapter = useCallback((chapter: Chapter, module: Module) => {
-    if (!course) return
-    setCourse({
-      ...course,
-      modules: course.modules?.map(m =>
-        m.id === module.id
-          ? { ...m, chapters: m.chapters?.filter(ch => ch.id !== chapter.id) || [] }
-          : m
-      ) || [],
-    })
-    if (selectedChapterId === chapter.id) {
-      setSelectedChapterId(null)
-      setSelectedChapter(null)
+  const handleDeleteChapter = useCallback(async (chapter: Chapter, module: Module) => {
+    if (!course || !courseId || courseId === "new") {
+      showError("Please save the course before deleting chapters")
+      return
     }
-  }, [course, selectedChapterId])
+    
+    try {
+      await deleteChapterFromAPI(courseId, module.id, chapter.id)
+      const updatedCourse = await fetchCourseFromAPI(courseId)
+      setCourse(updatedCourse)
+      
+      if (selectedChapterId === chapter.id) {
+        setSelectedChapterId(null)
+        setSelectedChapter(null)
+      }
+      showSuccess("Chapter deleted successfully")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete chapter"
+      showError(errorMessage)
+    }
+  }, [course, courseId, selectedChapterId, showSuccess, showError])
 
-  const handleSaveModule = useCallback((moduleData: Module) => {
-    if (!course) return
-    if (editingModule) {
-      // Update existing module
-      setCourse({
-        ...course,
-        modules: course.modules?.map(m =>
-          m.id === editingModule.id ? { ...moduleData, course_id: course.id } : m
-        ) || [],
-      })
-    } else {
-      // Add new module
-      const newModule: Module = {
+  const handleSaveModule = useCallback(async (moduleData: Module) => {
+    if (!course || !courseId) return
+    
+    // For new courses, save the course first
+    if (courseId === "new") {
+      try {
+        const savedCourse = await saveCourseToAPI(courseId, course)
+        setCourse(savedCourse)
+        router.replace(`/admin/courses/${savedCourse.id}/builder`)
+        // Continue with module save after course is saved
+        setTimeout(() => {
+          handleSaveModule(moduleData)
+        }, 100)
+        return
+      } catch (err) {
+        showError("Please save the course before adding modules")
+        return
+      }
+    }
+    
+    try {
+      const isNew = !editingModule
+      const moduleToSave: Module = {
         ...moduleData,
-        id: `module_${Date.now()}`,
         course_id: course.id,
-        order_index: (course.modules?.length || 0),
-        chapters: [],
-        created_at: new Date().toISOString(),
+        order_index: editingModule?.order_index ?? (course.modules?.length || 0),
+        chapters: editingModule?.chapters || [],
+        created_at: editingModule?.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-      setCourse({
-        ...course,
-        modules: [...(course.modules || []), newModule],
-      })
+      
+      const savedModule = await saveModuleToAPI(courseId, moduleToSave, isNew)
+      
+      // Refetch course to get updated structure
+      const updatedCourse = await fetchCourseFromAPI(courseId)
+      setCourse(updatedCourse)
+      
+      setModuleFormOpen(false)
+      setEditingModule(null)
+      showSuccess(isNew ? "Module created successfully" : "Module updated successfully")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to save module"
+      showError(errorMessage)
     }
-    setModuleFormOpen(false)
-    setEditingModule(null)
-  }, [course, editingModule])
+  }, [course, courseId, editingModule, showSuccess, showError, router])
 
-  const handleSaveChapter = useCallback((chapterData: Chapter) => {
-    if (!course || !moduleForChapter) return
-    if (editingChapter) {
-      // Update existing chapter
-      setCourse({
-        ...course,
-        modules: course.modules?.map(m =>
-          m.id === moduleForChapter.id
-            ? {
-                ...m,
-                chapters: m.chapters?.map(ch =>
-                  ch.id === editingChapter.id
-                    ? { ...chapterData, module_id: m.id }
-                    : ch
-                ) || [],
-              }
-            : m
-        ) || [],
-      })
-    } else {
-      // Add new chapter
-      const newChapter: Chapter = {
+  const handleSaveChapter = useCallback(async (chapterData: Chapter) => {
+    if (!course || !moduleForChapter || !courseId) return
+    
+    // For new courses, save the course first
+    if (courseId === "new") {
+      try {
+        const savedCourse = await saveCourseToAPI(courseId, course)
+        setCourse(savedCourse)
+        router.replace(`/admin/courses/${savedCourse.id}/builder`)
+        // Continue with chapter save after course is saved
+        setTimeout(() => {
+          handleSaveChapter(chapterData)
+        }, 100)
+        return
+      } catch (err) {
+        showError("Please save the course before adding chapters")
+        return
+      }
+    }
+    
+    try {
+      const isNew = !editingChapter
+      const chapterToSave: Chapter = {
         ...chapterData,
-        id: `chapter_${Date.now()}`,
         module_id: moduleForChapter.id,
-        order_index: (moduleForChapter.chapters?.length || 0),
-        content: {
-          video_url: chapterData.content.video_url || undefined,
-          text_content: chapterData.content.text_content || undefined,
-        },
-        created_at: new Date().toISOString(),
+        order_index: editingChapter?.order_index ?? (moduleForChapter.chapters?.length || 0),
+        created_at: editingChapter?.created_at || new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-      setCourse({
-        ...course,
-        modules: course.modules?.map(m =>
-          m.id === moduleForChapter.id
-            ? { ...m, chapters: [...(m.chapters || []), newChapter] }
-            : m
-        ) || [],
-      })
+      
+      const savedChapter = await saveChapterToAPI(courseId, moduleForChapter.id, chapterToSave, isNew)
+      
+      // Refetch course to get updated structure
+      const updatedCourse = await fetchCourseFromAPI(courseId)
+      setCourse(updatedCourse)
+      
+      setChapterFormOpen(false)
+      setEditingChapter(null)
+      setModuleForChapter(null)
+      showSuccess(isNew ? "Chapter created successfully" : "Chapter updated successfully")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to save chapter"
+      showError(errorMessage)
     }
-    setChapterFormOpen(false)
-    setEditingChapter(null)
-    setModuleForChapter(null)
-  }, [course, moduleForChapter, editingChapter])
+  }, [course, courseId, moduleForChapter, editingChapter, showSuccess, showError, router])
 
   if (loading) {
     return (
@@ -368,6 +422,8 @@ export default function CourseBuilderPage() {
           </DialogHeader>
           <ChapterForm
             chapter={editingChapter}
+            courseId={courseId}
+            moduleId={moduleForChapter?.id || editingChapter?.module_id || ""}
             onSave={handleSaveChapter}
             onCancel={() => {
               setChapterFormOpen(false)
@@ -471,10 +527,14 @@ function ModuleForm({
 // Chapter Form Component
 function ChapterForm({
   chapter,
+  courseId,
+  moduleId,
   onSave,
   onCancel,
 }: {
   chapter: Chapter | null
+  courseId: string
+  moduleId: string
   onSave: (chapter: Chapter) => void
   onCancel: () => void
 }) {
@@ -482,22 +542,35 @@ function ChapterForm({
   const [description, setDescription] = useState(chapter?.description || "")
   const [contentType, setContentType] = useState<ChapterContentType>(chapter?.content_type || "video")
   const [videoUrl, setVideoUrl] = useState(chapter?.content.video_url || "")
+  const [videoStoragePath, setVideoStoragePath] = useState(chapter?.content.video_storage_path || "")
   const [textContent, setTextContent] = useState(chapter?.content.text_content || "")
   const [duration, setDuration] = useState(chapter?.duration || "")
   const [isPreview, setIsPreview] = useState(chapter?.is_preview || false)
 
   const handleSubmit = () => {
     if (!title.trim()) return
+    
+    // Build content object with video info (including storage path for temp uploads)
+    const content: any = {}
+    if (contentType === "video") {
+      if (videoUrl) {
+        content.video_url = videoUrl
+      }
+      // Include storage path if it exists (for temp uploads)
+      if (videoStoragePath) {
+        content.video_storage_path = videoStoragePath
+      }
+    } else if (contentType === "text") {
+      content.text_content = textContent
+    }
+    
     onSave({
       id: chapter?.id || "",
       module_id: chapter?.module_id || "",
       title,
       description: description || undefined,
       content_type: contentType,
-      content: {
-        video_url: contentType === "video" ? videoUrl : undefined,
-        text_content: contentType === "text" ? textContent : undefined,
-      },
+      content,
       order_index: chapter?.order_index || 0,
       duration: duration || undefined,
       is_preview: isPreview,
@@ -546,12 +619,28 @@ function ChapterForm({
         {contentType === "video" && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="chapter-video-url">Video URL</Label>
+              <Label>Upload Video</Label>
+              <VideoUploader
+                courseId={courseId}
+                moduleId={moduleId}
+                chapterId={chapter?.id || "new"}
+                existingVideoUrl={videoUrl || undefined}
+                onUploadComplete={(url, path) => {
+                  setVideoUrl(url)
+                  setVideoStoragePath(path) // Store the storage path for temp uploads
+                }}
+                onUploadError={(error) => {
+                  console.error("Video upload error:", error)
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chapter-video-url">Or Enter Video URL (Alternative)</Label>
               <Input
                 id="chapter-video-url"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="https://example.com/video.mp4"
+                placeholder="https://example.com/video.mp4 or leave empty to use uploaded video"
               />
             </div>
             <div className="space-y-2">

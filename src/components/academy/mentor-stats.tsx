@@ -1,8 +1,8 @@
 "use client"
 
 import { Users, Star } from "lucide-react"
-import { sampleCourses } from "@/app/academy/data/courses"
 import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react"
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -10,8 +10,31 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 })
 
 export function MentorStats({ className }: { className?: string }) {
-  const totalStudents = sampleCourses.reduce((acc, c) => acc + c.students, 0)
-  const averageRating = sampleCourses.reduce((acc, c) => acc + c.rating, 0) / sampleCourses.length
+  const [totalStudents, setTotalStudents] = useState(0)
+  const [averageRating, setAverageRating] = useState(0)
+
+  useEffect(() => {
+    // Fetch stats from API
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/courses?published=true')
+        if (response.ok) {
+          const data = await response.json()
+          const courses = data.courses || []
+          const students = courses.reduce((acc: number, c: any) => acc + (c.students_count || 0), 0)
+          const ratings = courses.filter((c: any) => c.rating).map((c: any) => c.rating)
+          const avgRating = ratings.length > 0 
+            ? ratings.reduce((acc: number, r: number) => acc + r, 0) / ratings.length 
+            : 0
+          setTotalStudents(students)
+          setAverageRating(avgRating)
+        }
+      } catch (error) {
+        console.error("Failed to fetch course stats:", error)
+      }
+    }
+    fetchStats()
+  }, [])
 
   return (
     <div className={cn("flex items-center gap-4", className)}>
@@ -41,4 +64,6 @@ export function MentorStats({ className }: { className?: string }) {
     </div>
   )
 }
+
+
 

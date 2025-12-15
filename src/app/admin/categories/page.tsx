@@ -35,7 +35,7 @@ import { Loader } from "@/components/ui/loader"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { ProductCategory } from "@/types/admin/categories"
-import { sampleCategories } from "./data/categories"
+import { Category } from "@/types/categories"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
@@ -61,7 +61,7 @@ export default function AdminCategoriesPage() {
   const { hasPermission: canCreate } = useHasPermission("categories.create")
   const { hasPermission: canDelete } = useHasPermission("categories.delete")
   
-  const [categories, setCategories] = useState<ProductCategory[]>(sampleCategories)
+  const [categories, setCategories] = useState<ProductCategory[]>([])
   const [selectedCategories, setSelectedCategories] = useState<ProductCategory[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -219,9 +219,13 @@ export default function AdminCategoriesPage() {
         if (!matchesSearch) return false
       }
 
-      const parentFilter = columnFilters.find((f) => f.id === "parent_category_id")
+      const parentFilter = columnFilters.find((f) => f.id === "parent_category")
       if (parentFilter && parentFilter.value && Array.isArray(parentFilter.value) && parentFilter.value.length > 0) {
-        if (!parentFilter.value.includes(category.parent_category_id || "")) return false
+        // Filter by parent category ID (filter values are category IDs)
+        const parentId = category.parent_category_id || ""
+        // Handle "None" case - empty string means no parent
+        const filterValues = parentFilter.value.map((v: string) => v === "" ? null : v)
+        if (!filterValues.includes(parentId)) return false
       }
 
       const trendingFilter = columnFilters.find((f) => f.id === "trending")
@@ -260,13 +264,42 @@ export default function AdminCategoriesPage() {
     setInitialLoading(false)
   }, [filteredCategories.length, pageSize])
 
+  // Transform API Category to ProductCategory
+  const transformToProductCategory = (category: Category): ProductCategory => {
+    return {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description || '',
+      image: category.image,
+      parent_category_id: category.parent_category_id,
+      parent_category: category.parent_category ? {
+        id: category.parent_category.id,
+        name: category.parent_category.name,
+        slug: category.parent_category.slug,
+      } : undefined,
+      trending: category.trending || false,
+      product_count: category.product_count || 0,
+      avg_profit_margin: category.avg_profit_margin || null,
+      growth_percentage: category.growth_percentage || null,
+      created_at: category.created_at,
+      updated_at: category.updated_at,
+    }
+  }
+
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setCategories(sampleCategories)
+      
+      const response = await fetch('/api/categories?include_subcategories=true')
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories')
+      }
+      
+      const data = await response.json()
+      const transformed = (data.categories || []).map(transformToProductCategory)
+      setCategories(transformed)
     } catch (err) {
       console.error("Error fetching categories:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load categories. Please try again."
@@ -303,7 +336,15 @@ export default function AdminCategoriesPage() {
   const confirmDelete = async () => {
     if (!categoryToDelete) return
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`/api/categories/${categoryToDelete.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete category')
+      }
+      
       setCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id))
       setSelectedCategories((prev) => prev.filter((c) => c.id !== categoryToDelete.id))
       setDeleteConfirmOpen(false)
@@ -311,7 +352,7 @@ export default function AdminCategoriesPage() {
       showSuccess(`Category "${categoryToDelete.name}" deleted successfully`)
       await fetchCategories()
     } catch (err) {
-      showError("Failed to delete category")
+      showError(err instanceof Error ? err.message : "Failed to delete category")
     }
   }
 
@@ -323,11 +364,23 @@ export default function AdminCategoriesPage() {
     }
     setBulkActionLoading("delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const deletedCount = selectedCategories.length
+      // Delete all selected categories
+      const deletePromises = selectedCategories.map(category =>
+        fetch(`/api/categories/${category.id}`, { method: 'DELETE' })
+      )
+      const results = await Promise.allSettled(deletePromises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (failed > 0) {
+        showError(`Failed to delete ${failed} category(ies)`)
+      }
+      
+      const deletedCount = selectedCategories.length - failed
       setCategories((prev) => prev.filter((c) => !selectedCategories.some((sc) => sc.id === c.id)))
       setSelectedCategories([])
-      showSuccess(`${deletedCount} category(ies) deleted successfully`)
+      if (deletedCount > 0) {
+        showSuccess(`${deletedCount} category(ies) deleted successfully`)
+      }
       await fetchCategories()
     } catch (err) {
       showError("Failed to delete categories")
@@ -409,13 +462,13 @@ export default function AdminCategoriesPage() {
   const handleViewSubcategories = useCallback((category: ProductCategory) => {
     // Filter to show only subcategories of this category
     setColumnFilters((prev) => {
-      const existing = prev.find((f) => f.id === "parent_category_id")
+      const existing = prev.find((f) => f.id === "parent_category")
       if (existing) {
         return prev.map((f) =>
-          f.id === "parent_category_id" ? { ...f, value: [category.id] } : f
+          f.id === "parent_category" ? { ...f, value: [category.id] } : f
         )
       }
-      return [...prev, { id: "parent_category_id", value: [category.id] }]
+      return [...prev, { id: "parent_category", value: [category.id] }]
     })
   }, [])
 
@@ -690,7 +743,7 @@ export default function AdminCategoriesPage() {
               initialLoading={initialLoading}
               filterConfig={[
                 {
-                  columnId: "parent_category_id",
+                  columnId: "parent_category",
                   title: "Parent Category",
                   options: [{ label: "None", value: "" }, ...parentOptions],
                 },

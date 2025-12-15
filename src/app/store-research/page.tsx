@@ -12,6 +12,7 @@ import { RevenueEstimates } from "./components/revenue-estimates"
 import { TrafficSourcesChart } from "./components/traffic-sources-chart"
 import { ProductsGrid } from "./components/products-grid"
 import { getStoreResearchData, StoreResearchData } from "./data/store-research-data"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function StoreResearchPage() {
   const [storeData, setStoreData] = useState<StoreResearchData | null>(null)
@@ -43,7 +44,7 @@ export default function StoreResearchPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <SearchIcon className="h-8 w-8 text-primary" />
@@ -90,6 +91,9 @@ export default function StoreResearchPage() {
               {storeData.products.length > 0 && <ProductsGrid products={storeData.products} />}
             </>
           )}
+
+          {/* Onboarding Progress Overlay */}
+          <OnboardingProgressOverlay pageName="Store Research" />
         </div>
       </SidebarInset>
     </SidebarProvider>

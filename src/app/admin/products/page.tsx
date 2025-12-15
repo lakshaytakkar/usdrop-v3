@@ -23,6 +23,7 @@ import {
 import { Plus, Lock, LockOpen, Trash2, MoreVertical, Eye, Star, DollarSign, TrendingUp, Package, Building, Copy, Edit, Download, RefreshCw, Calendar, ArrowUpRight, UserPlus, X, Search, Upload } from "lucide-react"
 import Image from "next/image"
 import { AdminProductCard } from "./components/admin-product-card"
+import { ProductDetailDrawer } from "./components/product-detail-drawer"
 import { Input } from "@/components/ui/input"
 import { createHandPickedColumns } from "./components/hand-picked-columns"
 import { createProductPicksColumns } from "./components/product-picks-columns"
@@ -36,7 +37,7 @@ import {
 import { Filter, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
-import { sampleHandPickedProducts, sampleProductPicks } from "./data/products"
+import { Product, ProductMetadata } from "@/types/products"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
@@ -63,8 +64,8 @@ export default function AdminProductsPage() {
   const { hasPermission: canDelete } = useHasPermission("products.delete")
   const { hasPermission: canLockUnlock } = useHasPermission("products.lock_unlock")
   
-  const [handPickedProducts, setHandPickedProducts] = useState<HandPickedProduct[]>(sampleHandPickedProducts)
-  const [productPicks, setProductPicks] = useState<ProductPick[]>(sampleProductPicks)
+  const [handPickedProducts, setHandPickedProducts] = useState<HandPickedProduct[]>([])
+  const [productPicks, setProductPicks] = useState<ProductPick[]>([])
   const [activeTab, setActiveTab] = useState<ProductType>("hand-picked")
   const [selectedProducts, setSelectedProducts] = useState<ProductUnion[]>([])
   const [searchQuery, setSearchQuery] = useState("")
@@ -83,6 +84,8 @@ export default function AdminProductsPage() {
   const [quickViewOpen, setQuickViewOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductUnion | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
+  const [drawerProduct, setDrawerProduct] = useState<ProductUnion | null>(null)
   const [productToDelete, setProductToDelete] = useState<ProductUnion | null>(null)
   const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
   const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
@@ -308,14 +311,80 @@ export default function AdminProductsPage() {
     setInitialLoading(false)
   }, [filteredProducts.length, pageSize])
 
+  // Transform API Product to HandPickedProduct
+  const transformToHandPicked = (product: Product): HandPickedProduct => {
+    const metadata: Partial<ProductMetadata> = product.metadata || {}
+    return {
+      id: product.id,
+      image: product.image,
+      title: product.title,
+      profit_margin: metadata.profit_margin || 0,
+      pot_revenue: metadata.pot_revenue || 0,
+      category: product.category?.slug || product.category?.name || 'other',
+      is_locked: metadata.is_locked || false,
+      found_date: metadata.found_date || product.created_at,
+      filters: metadata.filters || [],
+      description: product.description,
+      supplier_info: product.supplier ? {
+        name: product.supplier.name,
+        company_name: product.supplier.company_name || undefined,
+        min_order: 0,
+      } : null,
+      unlock_price: metadata.unlock_price || null,
+      detailed_analysis: metadata.detailed_analysis || null,
+      created_at: product.created_at,
+      updated_at: product.updated_at,
+    }
+  }
+
+  // Transform API Product to ProductPick
+  const transformToProductPick = (product: Product): ProductPick => {
+    return {
+      id: product.id,
+      image: product.image,
+      title: product.title,
+      buy_price: product.buy_price,
+      sell_price: product.sell_price,
+      profit_per_order: product.profit_per_order,
+      trend_data: product.trend_data || [],
+      category: product.category?.slug || product.category?.name || 'other',
+      rating: product.rating,
+      reviews_count: product.reviews_count || 0,
+      description: product.description,
+      supplier_id: product.supplier_id,
+      supplier: product.supplier ? {
+        id: product.supplier.id,
+        name: product.supplier.name,
+        company_name: product.supplier.company_name || null,
+        logo: product.supplier.logo || null,
+      } : undefined,
+      additional_images: product.additional_images || [],
+      specifications: product.specifications,
+      created_at: product.created_at,
+      updated_at: product.updated_at,
+    }
+  }
+
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setHandPickedProducts(sampleHandPickedProducts)
-      setProductPicks(sampleProductPicks)
+      
+      // Fetch hand-picked products
+      const handPickedResponse = await fetch('/api/products?source_type=hand_picked&pageSize=1000')
+      if (!handPickedResponse.ok) throw new Error('Failed to fetch hand-picked products')
+      const handPickedData = await handPickedResponse.json()
+      const handPicked = (handPickedData.products || []).map(transformToHandPicked)
+      setHandPickedProducts(handPicked)
+      
+      // Fetch scraped products (product picks)
+      const picksResponse = await fetch('/api/products?source_type=scraped&pageSize=1000')
+      if (!picksResponse.ok) throw new Error('Failed to fetch product picks')
+      const picksData = await picksResponse.json()
+      const picks = (picksData.products || []).map(transformToProductPick)
+      setProductPicks(picks)
+      
+      setInitialLoading(false)
     } catch (err) {
       console.error("Error fetching products:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load products. Please try again."
@@ -340,6 +409,16 @@ export default function AdminProductsPage() {
     setQuickViewOpen(true)
   }, [])
 
+  const handleOpenDrawer = useCallback((product: ProductUnion) => {
+    setDrawerProduct(product)
+    setDetailDrawerOpen(true)
+  }, [])
+
+  const handleImportToShopify = useCallback((product: ProductUnion) => {
+    // TODO: Implement import to Shopify
+    showInfo(`Import to Shopify functionality will be implemented. Product: ${product.title}`)
+  }, [showInfo])
+
   const handleDelete = useCallback((product: ProductUnion) => {
     if (!canDelete) {
       showError("You don't have permission to delete products")
@@ -352,7 +431,14 @@ export default function AdminProductsPage() {
   const confirmDelete = async () => {
     if (!productToDelete) return
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`/api/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete product')
+      }
+      
       if (activeTab === "hand-picked") {
         setHandPickedProducts((prev) => prev.filter((p) => p.id !== productToDelete.id))
       } else {
@@ -376,15 +462,27 @@ export default function AdminProductsPage() {
     }
     setBulkActionLoading("delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      const deletedCount = selectedProducts.length
+      // Delete all selected products
+      const deletePromises = selectedProducts.map(product =>
+        fetch(`/api/products/${product.id}`, { method: 'DELETE' })
+      )
+      const results = await Promise.allSettled(deletePromises)
+      const failed = results.filter(r => r.status === 'rejected').length
+      
+      if (failed > 0) {
+        showError(`Failed to delete ${failed} product(s)`)
+      }
+      
+      const deletedCount = selectedProducts.length - failed
       if (activeTab === "hand-picked") {
         setHandPickedProducts((prev) => prev.filter((p) => !selectedProducts.some((sp) => sp.id === p.id)))
       } else {
         setProductPicks((prev) => prev.filter((p) => !selectedProducts.some((sp) => sp.id === p.id)))
       }
       setSelectedProducts([])
-      showSuccess(`${deletedCount} product(s) deleted successfully`)
+      if (deletedCount > 0) {
+        showSuccess(`${deletedCount} product(s) deleted successfully`)
+      }
       await fetchProducts()
     } catch (err) {
       showError("Failed to delete products")
@@ -401,7 +499,18 @@ export default function AdminProductsPage() {
     }
     setBulkActionLoading("lock")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Update all selected products
+      const updatePromises = selectedProducts.map(product =>
+        fetch(`/api/products/${product.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            metadata: { is_locked: true }
+          })
+        })
+      )
+      await Promise.all(updatePromises)
+      
       setHandPickedProducts((prev) =>
         prev.map((p) =>
           selectedProducts.some((sp) => sp.id === p.id)
@@ -427,7 +536,18 @@ export default function AdminProductsPage() {
     }
     setBulkActionLoading("unlock")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Update all selected products
+      const updatePromises = selectedProducts.map(product =>
+        fetch(`/api/products/${product.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            metadata: { is_locked: false }
+          })
+        })
+      )
+      await Promise.all(updatePromises)
+      
       setHandPickedProducts((prev) =>
         prev.map((p) =>
           selectedProducts.some((sp) => sp.id === p.id)
@@ -618,6 +738,7 @@ export default function AdminProductsPage() {
       createHandPickedColumns({
         onViewDetails: handleViewDetails,
         onQuickView: handleQuickView,
+        onOpenDrawer: handleOpenDrawer,
         onEdit: handleEdit,
         onDelete: handleDelete,
         onCopyProductId: handleCopyProductId,
@@ -633,6 +754,7 @@ export default function AdminProductsPage() {
     [
       handleViewDetails,
       handleQuickView,
+      handleOpenDrawer,
       handleEdit,
       handleDelete,
       handleCopyProductId,
@@ -652,6 +774,7 @@ export default function AdminProductsPage() {
       createProductPicksColumns({
         onViewDetails: handleViewDetails,
         onQuickView: handleQuickView,
+        onOpenDrawer: handleOpenDrawer,
         onEdit: handleEdit,
         onDelete: handleDelete,
         onCopyProductId: handleCopyProductId,
@@ -666,6 +789,7 @@ export default function AdminProductsPage() {
     [
       handleViewDetails,
       handleQuickView,
+      handleOpenDrawer,
       handleEdit,
       handleDelete,
       handleCopyProductId,
@@ -969,6 +1093,7 @@ export default function AdminProductsPage() {
                     onDuplicate={handleDuplicate}
                     onViewCategory={handleViewCategory}
                     onViewSupplier={handleViewSupplier}
+                    onOpenDrawer={handleOpenDrawer}
                     canEdit={canEdit}
                     canDelete={canDelete}
                     canLockUnlock={canLockUnlock}
@@ -1184,6 +1309,21 @@ export default function AdminProductsPage() {
         assignedOwner={assignedOwner}
         assignedMembers={assignedMembers}
         onSave={handleSaveAssignees}
+      />
+
+      {/* Product Detail Drawer */}
+      <ProductDetailDrawer
+        open={detailDrawerOpen}
+        onOpenChange={(open) => {
+          setDetailDrawerOpen(open)
+          if (!open) {
+            setDrawerProduct(null)
+          }
+        }}
+        product={drawerProduct}
+        productType={activeTab}
+        onImportToShopify={handleImportToShopify}
+        onEdit={handleEdit}
       />
     </div>
   )

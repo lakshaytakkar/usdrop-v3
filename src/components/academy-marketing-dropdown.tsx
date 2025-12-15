@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useEffect } from "react"
 import { 
   GraduationCap, 
   Star, 
@@ -17,8 +18,8 @@ import {
   TrendingUp,
   CheckCircle2
 } from "lucide-react"
-import { sampleCourses } from "@/app/academy/data/courses"
 import { Course } from "@/app/academy/data/courses"
+import { Course as APICourse } from "@/types/courses"
 import { cn } from "@/lib/utils"
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -26,8 +27,46 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 })
 
-// Get featured courses for preview (first 3 courses)
-const featuredCourses = sampleCourses.slice(0, 3)
+// Transform API Course to legacy Course format
+function transformCourse(apiCourse: APICourse): Course {
+  const formatDuration = (minutes: number | null): string => {
+    if (!minutes) return "0 hours"
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours === 0) return `${mins} min`
+    if (mins === 0) return `${hours} hour${hours > 1 ? 's' : ''}`
+    return `${hours}h ${mins}m`
+  }
+
+  return {
+    id: apiCourse.id,
+    title: apiCourse.title,
+    description: apiCourse.description || "",
+    instructor: apiCourse.instructor_name || "Instructor",
+    instructorAvatar: apiCourse.instructor_avatar || "/images/default-avatar.png",
+    thumbnail: apiCourse.thumbnail || "/images/default-course.png",
+    duration: formatDuration(apiCourse.duration_minutes),
+    lessons: apiCourse.lessons_count,
+    students: apiCourse.students_count,
+    rating: apiCourse.rating || 0,
+    price: apiCourse.price,
+    category: apiCourse.category || "",
+    level: apiCourse.level || "Beginner",
+    featured: apiCourse.featured,
+    tags: apiCourse.tags || [],
+    modules: apiCourse.modules?.map((module) => ({
+      id: module.id,
+      title: module.title,
+      duration: module.duration_minutes
+        ? `${Math.floor(module.duration_minutes / 60)}h ${module.duration_minutes % 60}m`
+        : "0 min",
+      lessons: module.chapters?.length || 0,
+      completed: false,
+      description: module.description || undefined,
+      thumbnail: module.thumbnail || undefined,
+    })) || [],
+  }
+}
 
 interface CoursePreviewCardProps {
   course: Course
@@ -89,6 +128,36 @@ function CoursePreviewCard({ course }: CoursePreviewCardProps) {
 }
 
 export function AcademyMarketingDropdown() {
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const [totalStudents, setTotalStudents] = useState(0)
+  const [totalCourses, setTotalCourses] = useState(0)
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch('/api/courses?published=true&pageSize=3')
+        if (response.ok) {
+          const data = await response.json()
+          const courses = (data.courses || []).slice(0, 3).map(transformCourse)
+          setFeaturedCourses(courses)
+        }
+        
+        // Fetch total stats
+        const responseAll = await fetch('/api/courses?published=true')
+        if (responseAll.ok) {
+          const allData = await responseAll.json()
+          const allCourses = allData.courses || []
+          const total = allCourses.reduce((acc: number, c: APICourse) => acc + (c.students_count || 0), 0)
+          setTotalStudents(total)
+          setTotalCourses(allCourses.length)
+        }
+      } catch (error) {
+        console.error("Failed to fetch courses:", error)
+      }
+    }
+    fetchCourses()
+  }, [])
+
   return (
     <div className="w-[900px] max-w-[calc(100vw-2rem)] p-6">
       {/* About the Mentor Section */}
@@ -153,13 +222,13 @@ export function AcademyMarketingDropdown() {
               <div className="flex items-center gap-2 rounded-lg bg-primary/10 dark:bg-primary/20 px-3 py-1.5 border border-primary/20">
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold text-foreground">
-                  {numberFormatter.format(sampleCourses.reduce((acc, c) => acc + c.students, 0))} Students
+                  {numberFormatter.format(totalStudents)} Students
                 </span>
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-primary/10 dark:bg-primary/20 px-3 py-1.5 border border-primary/20">
                 <Star className="h-4 w-4 fill-primary text-primary" />
                 <span className="text-sm font-semibold text-foreground">
-                  {sampleCourses.length} Comprehensive Courses
+                  {totalCourses} Comprehensive Courses
                 </span>
               </div>
             </div>
@@ -190,9 +259,13 @@ export function AcademyMarketingDropdown() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {featuredCourses.map((course) => (
-            <CoursePreviewCard key={course.id} course={course} />
-          ))}
+          {featuredCourses.length > 0 ? (
+            featuredCourses.map((course) => (
+              <CoursePreviewCard key={course.id} course={course} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-4 text-muted-foreground text-sm">Loading courses...</div>
+          )}
         </div>
 
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 dark:from-primary/10 dark:via-primary/15 dark:to-primary/10 p-4 shadow-sm">
@@ -202,7 +275,7 @@ export function AcademyMarketingDropdown() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Join {numberFormatter.format(sampleCourses.reduce((acc, c) => acc + c.students, 0))} students
+                Join {numberFormatter.format(totalStudents)} students
               </p>
               <p className="text-xs text-muted-foreground">Already learning with USDrop Academy</p>
             </div>

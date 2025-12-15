@@ -7,64 +7,91 @@ import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProBadge } from "@/components/ui/pro-badge"
 import { Button } from "@/components/ui/button"
-import { Image as ImageIcon, Badge, Calculator, Presentation, Sparkles, User, Play, Truck } from "lucide-react"
+import { Image as ImageIcon, Badge, Calculator, Sparkles, User, Play, Truck, PenTool, Share2, Mail, Shield, Receipt } from "lucide-react"
 import Link from "next/link"
 
-const tools = [
+const studioTools = [
   {
     id: "image-studio",
     icon: ImageIcon,
     title: "Image Studio",
-    description: "Generate professional product listing images",
+    description: "Background removal, enhancement, product photo editing",
     url: "/ai-toolkit/image-studio",
-    isPro: true,
-  },
-  {
-    id: "logo-studio",
-    icon: Badge,
-    title: "Whitelabelling",
-    description: "Create and design your brand logo",
-    url: "/ai-toolkit/logo-studio",
-    isPro: true,
-  },
-  {
-    id: "profit-calculator",
-    icon: Calculator,
-    title: "Profit Calculator",
-    description: "Calculate dropshipping profits and margins",
-    url: "/ai-toolkit/profit-calculator",
-    isPro: true,
-  },
-  {
-    id: "shipping-calculator",
-    icon: Truck,
-    title: "Shipping Calculator",
-    description: "Calculate shipping costs and delivery times",
-    url: "/ai-toolkit/shipping-calculator",
-    isPro: true,
-  },
-  {
-    id: "campaign-studio",
-    icon: Presentation,
-    title: "Campaign Studio",
-    description: "Plan and manage Meta advertising campaigns",
-    url: "/ai-toolkit/campaign-studio",
-    isPro: true,
-  },
-  {
-    id: "ad-studio",
-    icon: Sparkles,
-    title: "Ad Studio",
-    description: "Generate compelling ad creatives",
-    url: "/ai-toolkit/ad-studio",
     isPro: true,
   },
   {
     id: "model-studio",
     icon: User,
     title: "Model Studio",
-    description: "Create model ads for apparel products",
+    description: "AI product-on-model lifestyle shots",
     url: "/ai-toolkit/model-studio",
+    isPro: true,
+  },
+  {
+    id: "logo-studio",
+    icon: Badge,
+    title: "Whitelabelling",
+    description: "Logo placement, branded packaging mockups",
+    url: "/ai-toolkit/logo-studio",
+    isPro: true,
+  },
+  {
+    id: "ad-studio",
+    icon: Sparkles,
+    title: "Ad Creative Studio",
+    description: "Visual ad banners, video thumbnails",
+    url: "/ai-toolkit/ad-studio",
+    isPro: true,
+  },
+]
+
+const toolkitTools = [
+  {
+    id: "description-generator",
+    icon: PenTool,
+    title: "Description Generator",
+    description: "Product listing copy",
+    url: "/ai-toolkit/description-generator",
+    isPro: true,
+  },
+  {
+    id: "social-media-studio",
+    icon: Share2,
+    title: "Social Media Studio",
+    description: "Captions, hashtags, post text",
+    url: "/ai-toolkit/social-media-studio",
+    isPro: true,
+  },
+  {
+    id: "email-templates",
+    icon: Mail,
+    title: "Email Templates",
+    description: "Customer emails",
+    url: "/ai-toolkit/email-templates",
+    isPro: true,
+  },
+  {
+    id: "policy-generator",
+    icon: Shield,
+    title: "Policy Generator",
+    description: "Store policies",
+    url: "/ai-toolkit/policy-generator",
+    isPro: true,
+  },
+  {
+    id: "invoice-generator",
+    icon: Receipt,
+    title: "Invoice Generator",
+    description: "Business invoices",
+    url: "/ai-toolkit/invoice-generator",
+    isPro: true,
+  },
+  {
+    id: "profit-calculator",
+    icon: Calculator,
+    title: "Profit Calculator",
+    description: "Margin analysis",
+    url: "/ai-toolkit/profit-calculator",
     isPro: true,
   },
 ]
@@ -77,7 +104,7 @@ export default function AIToolkitPage() {
         <Topbar />
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary/90 to-purple-600 p-4 md:p-5 text-white h-[140px]">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary/90 to-purple-600 p-4 md:p-5 text-white h-[280px]">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -114,23 +141,21 @@ export default function AIToolkitPage() {
 
             {/* Content */}
             <div className="relative z-10 flex items-center gap-4 h-full">
-              {/* Mascot before text */}
-              <div className="relative w-[120px] h-[110px] md:w-[140px] md:h-[130px] flex-shrink-0">
-                <Image
-                  src="/ai-studio-mascot.png"
-                  alt="3D mascot with magic wand"
-                  fill
-                  className="object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                  priority
-                />
+              {/* 3D Thumbnail */}
+              <div className="relative w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/ai-toolkit.png"
+                    alt="AI Toolkit"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold mb-1.5 leading-tight">USDrop AI Studio</h2>
-                <p className="text-white/85 text-xs md:text-sm leading-relaxed">
+                <h2 className="text-3xl md:text-4xl font-bold mb-3 leading-tight">USDrop AI Studio</h2>
+                <p className="text-white/90 text-base md:text-lg leading-relaxed">
                   Professional AI-powered tools for your dropshipping business. From image generation to campaign planning, everything you need in one place.
                 </p>
               </div>
@@ -148,23 +173,56 @@ export default function AIToolkitPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {tools.map((tool) => (
-              <Link key={tool.id} href={tool.url}>
-                <Card className="h-full transition-transform hover:scale-[1.02] cursor-pointer">
-                  <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                    <div className="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
-                      <tool.icon className="h-8 w-8 text-primary" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">{tool.title}</h3>
-                      {tool.isPro && <ProBadge size="sm" />}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{tool.description}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          {/* USDrop AI Studio Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-1">USDrop AI Studio</h3>
+              <p className="text-sm text-muted-foreground">Visual and media tools for your dropshipping business</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {studioTools.map((tool) => (
+                <Link key={tool.id} href={tool.url}>
+                  <Card className="h-full transition-transform hover:scale-[1.02] cursor-pointer">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                      <div className="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
+                        <tool.icon className="h-8 w-8 text-primary" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold">{tool.title}</h3>
+                        {tool.isPro && <ProBadge size="sm" />}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{tool.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* USDrop AI Toolkit Section */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-1">USDrop AI Toolkit</h3>
+              <p className="text-sm text-muted-foreground">Text and utility tools for your business operations</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {toolkitTools.map((tool) => (
+                <Link key={tool.id} href={tool.url}>
+                  <Card className="h-full transition-transform hover:scale-[1.02] cursor-pointer">
+                    <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+                      <div className="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
+                        <tool.icon className="h-8 w-8 text-primary" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold">{tool.title}</h3>
+                        {tool.isPro && <ProBadge size="sm" />}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{tool.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </SidebarInset>

@@ -182,3 +182,12 @@ export function CategoriesTable({
 
 
 
+
+
+
+
+
+
+
+
+

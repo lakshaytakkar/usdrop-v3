@@ -12,8 +12,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { MODELS_LIBRARY } from '../../../AI Studio Tools/constants/apparel';
-import type { AIModel } from '../../../AI Studio Tools/types';
+import { MODELS_LIBRARY } from '@/data/models-library';
+import type { AIModel } from '@/types/ai-models';
+import AILoadingState from '@/components/kokonutui/ai-loading';
 
 const ASPECT_RATIOS = [
     { id: '4:5', label: 'Portrait', icon: Smartphone },
@@ -446,19 +447,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
     if (viewState === 'generating') {
         return (
             <div className="w-full max-w-7xl mx-auto flex items-center justify-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-                <div className="text-center space-y-6 p-8 max-w-md w-full">
-                    <Loader2 className="h-16 w-16 text-foreground animate-spin mx-auto" />
-                    <div className="space-y-3">
-                        <p className="text-xl font-semibold text-foreground">{loadingStep}</p>
-                        <div className="w-full max-w-xs mx-auto h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-foreground transition-all duration-300 ease-in-out"
-                                style={{ width: `${loadingProgress}%` }}
-                            />
-                        </div>
-                        <p className="text-sm text-muted-foreground">{Math.round(loadingProgress)}%</p>
-                    </div>
-                </div>
+                <AILoadingState />
             </div>
         );
     }

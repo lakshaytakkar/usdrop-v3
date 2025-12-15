@@ -105,6 +105,14 @@ export function createCategoriesColumns({
           {row.original.parent_category?.name || "—"}
         </span>
       ),
+      filterFn: (row, id, value) => {
+        if (!value || value.length === 0) return true
+        // Filter values are category IDs, check against parent_category_id
+        const parentId = row.original.parent_category_id || null
+        // Handle "None" case - empty string means no parent
+        const filterValues = value.map((v: string) => v === "" ? null : v)
+        return filterValues.includes(parentId)
+      },
     },
     {
       id: "product_count",

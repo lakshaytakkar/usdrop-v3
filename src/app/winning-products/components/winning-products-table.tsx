@@ -5,7 +5,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Lock, Eye } from "lucide-react"
-import { WinningProduct } from "../data/products"
+// Local WinningProduct type (matches the transformed type from the page)
+export interface WinningProduct {
+  id: number;
+  image: string;
+  title: string;
+  profitMargin: number;
+  potRevenue: number;
+  category: string;
+  isLocked: boolean;
+  foundDate: string;
+  revenueGrowthRate: number;
+  itemsSold: number;
+  avgUnitPrice: number;
+  revenueTrend: number[];
+  price: number;
+}
 import { RevenueTrendChart } from "./revenue-trend-chart"
 import { cn } from "@/lib/utils"
 
@@ -66,7 +81,7 @@ export function WinningProductsTable({
 
               return (
                 <TableRow
-                  key={product.id}
+                  key={`${product.id}-${index}`}
                   className={cn(
                     "h-24 hover:bg-muted/50 transition-colors",
                     isLocked && "opacity-60"

@@ -1,0 +1,337 @@
+# USDrop V3 - Comprehensive Feature Development PRD
+
+## Project Overview
+USDrop V3 is a dropshipping platform with AI tools, course management, and user administration. This PRD covers pending features including landing page completion, MyDashboard with onboarding system, page access controls, and admin lead management panels.
+
+## Current State Summary
+- Landing Page: Only Hero section complete, rest pending
+- Dashboard: Basic home page exists at /home
+- Academy: Full course system with video player, modules, progress tracking
+- Onboarding: Modal-based 3-step form (phone, experience, niche) - NOT video-based
+- Admin External Users: Full CRUD with permissions
+- Auth: Supabase-based with OTP, Google OAuth, magic links
+
+---
+
+## FEATURE GROUP 1: Landing Page Completion
+
+### 1.1 Features Section
+Complete the features section below hero using existing Features11.tsx and Features2.tsx components. Display key platform features with icons, titles, and descriptions in a responsive grid.
+
+### 1.2 Brands/Trust Marquee
+Implement scrolling brand logos using BrandsMarquee.tsx to show partner/customer logos.
+
+### 1.3 Content Sections
+Add content sections explaining the platform value proposition using ContentSection.tsx.
+
+### 1.4 Integrations Display
+Show platform integrations (Shopify, payment gateways, etc.) using Integrations.tsx component.
+
+### 1.5 Reviews/Testimonials
+Add customer testimonials section using Reviews.tsx with star ratings and customer photos.
+
+### 1.6 Projects/Showcase
+Display success stories or featured products using Projects.tsx component.
+
+### 1.7 Newsletter Signup
+Add email newsletter subscription form at bottom using Newsletter.tsx.
+
+### 1.8 Complete Footer
+Finalize footer with navigation links, social links, legal links using Footer.tsx.
+
+### 1.9 Landing Page Assembly
+Assemble all landing page components in correct order on main page with smooth scroll navigation.
+
+---
+
+## FEATURE GROUP 2: MyDashboard Page (New User Entry Point)
+
+### 2.1 Create MyDashboard Page Structure
+Create new page at /my-dashboard (or /dashboard) as the primary authenticated user entry point. This replaces /home as the default redirect after login.
+
+### 2.2 Update Auth Redirect Flow
+Modify middleware.ts and login success handlers to redirect authenticated users to /my-dashboard instead of /home.
+
+### 2.3 Dashboard Layout Structure
+Create MyDashboard with sidebar, topbar, and main content area following existing patterns from /home/page.tsx.
+
+---
+
+## FEATURE GROUP 3: Onboarding Course Widget
+
+### 3.1 Create Onboarding Course Data Structure
+Define onboarding course structure with 5-6 video modules. Reference existing CourseModule and CourseChapter types from src/types/courses.ts. Store in database or create dedicated API endpoint.
+
+### 3.2 Accordion/Expandable Onboarding Component
+Create OnboardingCourseWidget component with:
+- Accordion-style or expandable list UI (use Radix Accordion or custom)
+- Module/chapter tree structure
+- Video thumbnail previews
+- Lesson titles and durations
+- Completion checkmarks per lesson
+- Reference Academy page patterns for video/course functionality
+
+### 3.3 Video Player Integration
+Integrate video player for onboarding videos:
+- Use existing CourseVideoPlayer component patterns
+- Play videos inline within accordion expansion
+- Or open in modal/drawer
+- Track watch progress
+
+### 3.4 Progress Tracking System
+Implement onboarding progress tracking:
+- Store completion status per video/module in database
+- Calculate overall percentage complete
+- API endpoints: GET /api/onboarding/progress, POST /api/onboarding/progress/complete
+- Show progress bar/percentage in widget header
+
+### 3.5 Onboarding Course Progress Display
+Show prominent progress indicator:
+- Circular or linear progress bar
+- "X of Y lessons complete" text
+- Estimated time remaining
+- Celebratory animation on 100% completion
+
+### 3.6 Onboarding Completion Status in User Profile
+Track onboarding_completed boolean and onboarding_progress percentage in user profile/database. Add fields to ExternalUser type.
+
+---
+
+## FEATURE GROUP 4: Page Access Overlays for Free Users
+
+### 4.1 Create Learning Required Overlay Component
+Create LearningRequiredOverlay component:
+- Full-page overlay like ComingSoonOverlay in meta-ads
+- Message: "Please complete your learning before visiting this page"
+- Progress indicator showing current onboarding progress
+- "Continue Learning" button linking back to MyDashboard/onboarding
+- Semi-transparent backdrop with blur effect
+
+### 4.2 Create useOnboardingStatus Hook
+Create custom hook to check user's onboarding completion status:
+- Fetch from API or context
+- Return: isComplete, progress percentage, isLoading
+- Cache result to avoid repeated API calls
+
+### 4.3 Apply Overlay to Protected Pages
+Apply LearningRequiredOverlay to pages that require onboarding completion:
+- Meta Ads page (/meta-ads)
+- Product Hunt page (/product-hunt)
+- Winning Products page (/winning-products)
+- AI Toolkit pages (/ai-toolkit/*)
+- Store Research page (/store-research)
+- Competitor Stores page (/competitor-stores)
+- Other premium feature pages
+
+### 4.4 Conditional Rendering Logic
+Implement logic: If user is free tier AND onboarding not complete, show overlay. Allow access if onboarding complete OR user is on paid plan.
+
+---
+
+## FEATURE GROUP 5: Admin - Login As User Feature
+
+### 5.1 Create Login As User API Endpoint
+Create POST /api/admin/users/[id]/impersonate endpoint:
+- Verify admin permissions (superadmin/admin role required)
+- Create impersonation session
+- Store original admin session for return
+- Return redirect URL or session token
+- Log impersonation action for audit
+
+### 5.2 Add Login As User Button to User Details
+In /admin/external-users/[id] page, add "Login as User" button:
+- Only visible to admins with impersonation permission
+- Confirmation dialog before impersonation
+- Opens user's dashboard in new tab or redirects
+
+### 5.3 Impersonation Session Management
+Create impersonation context/state:
+- Banner showing "Viewing as [User Name]"
+- "Return to Admin" button
+- Restrict admin-only actions while impersonating
+- Auto-expire impersonation after timeout
+
+### 5.4 Impersonation Audit Logging
+Log all impersonation sessions:
+- Admin who impersonated
+- User being viewed
+- Start/end timestamps
+- Actions taken during impersonation
+
+---
+
+## FEATURE GROUP 6: Admin - Junior Leads Panel
+
+### 6.1 Create Junior Leads Page
+Create /admin/junior-leads page:
+- Table of users who signed up but NOT completed onboarding
+- Filter: onboarding_completed = false
+- Columns: Name, Email, Signup Date, Onboarding Progress %, Days Since Signup, Last Active
+
+### 6.2 Junior Leads API Endpoint
+Create GET /api/admin/leads/junior endpoint:
+- Query users where onboarding_completed = false
+- Support pagination, sorting, filtering
+- Include onboarding progress percentage
+
+### 6.3 Junior Leads Actions
+Add actions for junior leads:
+- Send reminder email to complete onboarding
+- Send WhatsApp nudge
+- View user details
+- Assign to team member for follow-up
+- Add notes/tags
+
+### 6.4 Junior Leads Dashboard Stats
+Show summary stats at top:
+- Total junior leads count
+- New this week/month
+- Average days to convert (or drop off)
+- Conversion rate to senior leads
+
+---
+
+## FEATURE GROUP 7: Admin - Senior Leads Panel
+
+### 7.1 Create Senior Leads Page
+Create /admin/senior-leads page:
+- Table of users who HAVE completed onboarding
+- Filter: onboarding_completed = true
+- Columns: Name, Email, Onboarding Completed Date, Plan, Status, CRM Stage, Last Activity
+
+### 7.2 Senior Leads API Endpoint
+Create GET /api/admin/leads/senior endpoint:
+- Query users where onboarding_completed = true
+- Support pagination, sorting, filtering
+- Include CRM conversion status
+
+### 7.3 Senior Leads CRM Integration
+Add CRM conversion tracking:
+- Lead stages: New Lead, Contacted, Qualified, Proposal, Negotiation, Won, Lost
+- Stage change actions with timestamps
+- Notes per lead
+- Scheduled follow-ups
+
+### 7.4 Senior Leads Actions
+Add actions for senior leads:
+- Update CRM stage
+- Schedule call/meeting
+- Send upsell email
+- Convert to paid plan
+- Add deal value/pipeline tracking
+- Assign to sales team member
+
+### 7.5 Senior Leads Dashboard Stats
+Show summary stats:
+- Total senior leads
+- By CRM stage breakdown
+- Conversion rate to paid
+- Pipeline value
+- This month's conversions
+
+---
+
+## FEATURE GROUP 8: Database Schema Updates
+
+### 8.1 User Table Schema Updates
+Add fields to external_users table:
+- onboarding_completed: boolean (default false)
+- onboarding_completed_at: timestamp
+- onboarding_progress: integer (0-100)
+- crm_stage: enum
+- crm_notes: text
+- assigned_to: uuid (internal user reference)
+
+### 8.2 Onboarding Progress Table
+Create onboarding_progress table:
+- user_id: uuid
+- video_id: string
+- completed: boolean
+- completed_at: timestamp
+- watch_duration: integer (seconds)
+
+### 8.3 Impersonation Logs Table
+Create admin_impersonation_logs table:
+- id: uuid
+- admin_id: uuid
+- target_user_id: uuid
+- started_at: timestamp
+- ended_at: timestamp
+- actions_log: jsonb
+
+---
+
+## FEATURE GROUP 9: Navigation & Sidebar Updates
+
+### 9.1 Update App Sidebar
+Add new navigation items to AppSidebar:
+- MyDashboard as home/default
+- Organize menu items logically
+
+### 9.2 Admin Sidebar Updates
+Add to admin sidebar:
+- Junior Leads under Leads section
+- Senior Leads under Leads section
+- Or create new "Leads" collapsible section with both
+
+### 9.3 Breadcrumb Navigation
+Ensure breadcrumbs work correctly for new pages.
+
+---
+
+## Technical Specifications
+
+### Tech Stack Reference
+- Frontend: React 19, Next.js 16, TypeScript, Tailwind CSS
+- UI Components: Radix UI, Lucide Icons
+- Tables: TanStack React Table v8
+- Auth: Supabase
+- Patterns: Follow existing code patterns in src/app/admin/external-users/ for admin pages
+
+### File Structure for New Features
+```
+src/app/
+  my-dashboard/
+    page.tsx
+    components/
+      onboarding-course-widget.tsx
+      progress-display.tsx
+  admin/
+    junior-leads/
+      page.tsx
+      components/
+    senior-leads/
+      page.tsx
+      components/
+src/components/
+  onboarding/
+    learning-required-overlay.tsx
+    video-accordion.tsx
+src/hooks/
+  use-onboarding-status.ts
+src/api/
+  onboarding/
+    progress/
+  admin/
+    leads/
+      junior/
+      senior/
+    users/
+      [id]/
+        impersonate/
+```
+
+### Priority Order
+1. MyDashboard + Onboarding Widget (Critical - new user experience)
+2. Page Access Overlays (Critical - freemium gating)
+3. Landing Page Completion (High - marketing)
+4. Junior Leads Panel (High - lead management)
+5. Senior Leads Panel (High - CRM)
+6. Login As User (Medium - admin utility)
+
+### Success Metrics
+- Onboarding completion rate > 70%
+- Time to complete onboarding < 30 minutes
+- Junior to Senior lead conversion > 50%
+- Admin can impersonate users without issues
+- Landing page load time < 2 seconds

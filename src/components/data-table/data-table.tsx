@@ -11,6 +11,14 @@ import {
   ColumnFiltersState,
   RowSelectionState,
 } from '@tanstack/react-table'
+
+// Extend ColumnMeta to include sticky and hidden properties
+declare module '@tanstack/react-table' {
+  interface ColumnMeta<TData, TValue> {
+    sticky?: boolean
+    hidden?: boolean
+  }
+}
 import {
   Table,
   TableBody,
@@ -255,10 +263,14 @@ export function DataTable<TData, TValue>({
                   </TableHead>
                 )}
                 {headerGroup.headers.map((header) => {
+                  const isSticky = header.column.columnDef.meta?.sticky
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="py-2 px-2 sm:px-3"
+                      className={cn(
+                        "py-2 px-2 sm:px-3",
+                        isSticky && "sticky right-0 bg-background z-20"
+                      )}
                     >
                       {header.isPlaceholder
                         ? null
@@ -283,7 +295,7 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={cn("text-sm h-16", onRowClick && "cursor-pointer hover:bg-muted/50")}
+                  className={cn("text-sm h-16 group", onRowClick && "cursor-pointer hover:bg-muted/50")}
                   onClick={() => onRowClick?.(row.original)}
                 >
                   {enableRowSelection && (
@@ -299,10 +311,14 @@ export function DataTable<TData, TValue>({
                     </TableCell>
                   )}
                   {row.getVisibleCells().map((cell) => {
+                    const isSticky = cell.column.columnDef.meta?.sticky
                     return (
                       <TableCell 
                         key={cell.id} 
-                        className="py-2 px-2 sm:px-3 max-w-0"
+                        className={cn(
+                          "py-2 px-2 sm:px-3 max-w-0",
+                          isSticky && "sticky right-0 bg-background z-10"
+                        )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

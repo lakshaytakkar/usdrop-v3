@@ -13,6 +13,9 @@ export interface InternalUser {
   status: UserStatus
   createdAt: Date
   updatedAt: Date
+  phoneNumber?: string
+  username?: string
+  avatarUrl?: string
 }
 
 export interface ExternalUser {
@@ -30,6 +33,8 @@ export interface ExternalUser {
   subscriptionStatus?: string
   credits?: number
   phoneNumber?: string
+  username?: string
+  avatarUrl?: string
 }
 
 export interface Activity {

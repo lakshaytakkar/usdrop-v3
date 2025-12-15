@@ -3,9 +3,10 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
-import { Store } from "lucide-react"
+import Image from "next/image"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function SellingChannelsPage() {
   return (
@@ -13,9 +14,9 @@ export default function SellingChannelsPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-blue-950 to-blue-800 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-blue-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -51,12 +52,22 @@ export default function SellingChannelsPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              <Store className="h-8 w-8 flex-shrink-0" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))' }} />
-              
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/selling-channels.png"
+                    alt="Selling Channels"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">Selling Channels</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Selling Channels</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Connect with top marketplaces to expand your sales reach. Premium marketplaces require an upgraded plan.
                 </p>
               </div>
@@ -69,6 +80,7 @@ export default function SellingChannelsPage() {
               <MarketplaceCard key={marketplace.id} marketplace={marketplace} />
             ))}
           </div>
+          <OnboardingProgressOverlay pageName="Selling Channels" />
         </div>
       </SidebarInset>
     </SidebarProvider>

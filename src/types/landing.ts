@@ -10,14 +10,16 @@ export interface Product {
   revenue: string;
   growth: string;
   itemsSold: string;
-  prompt: string;
+  prompt?: string;
+  image?: string;
 }
 
 export interface Feature {
   title: string;
   description: string;
-  prompt: string;
+  prompt?: string;
   cta: string;
+  image?: string;
 }
 
 export interface FaqItem {

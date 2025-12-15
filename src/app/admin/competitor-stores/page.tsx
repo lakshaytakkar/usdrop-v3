@@ -19,7 +19,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Globe, ExternalLink, TrendingUp, DollarSign, ArrowUpRight, AlertCircle, Package, Check } from "lucide-react"
-import { AdminCompetitorStoreCard } from "./components/admin-competitor-store-card"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -31,7 +30,28 @@ import {
 import { Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Loader } from "@/components/ui/loader"
-import { CompetitorStore, sampleCompetitorStores } from "./data/stores"
+import { CompetitorStore as CompetitorStoreType } from "@/types/competitor-stores"
+import { Category } from "@/types/categories"
+import { DataTable } from "@/components/data-table/data-table"
+import { createCompetitorStoresColumns } from "./components/competitor-stores-columns"
+
+// Transform API CompetitorStore to match UI CompetitorStore interface
+interface CompetitorStore {
+  id: string
+  name: string
+  url: string
+  logo?: string
+  category: string
+  country?: string
+  monthly_traffic: number
+  monthly_revenue: number | null
+  growth: number
+  products_count?: number
+  rating?: number
+  verified: boolean
+  created_at: string
+  updated_at: string
+}
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { useToast } from "@/hooks/use-toast"
@@ -68,7 +88,8 @@ export default function AdminCompetitorStoresPage() {
   const { hasPermission: canDelete } = useHasPermission("competitor_stores.delete")
   const { hasPermission: canVerify } = useHasPermission("competitor_stores.verify")
   
-  const [stores, setStores] = useState<CompetitorStore[]>(sampleCompetitorStores)
+  const [stores, setStores] = useState<CompetitorStore[]>([])
+  const [availableCategories, setAvailableCategories] = useState<Category[]>([])
   const [selectedStores, setSelectedStores] = useState<CompetitorStore[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -114,10 +135,28 @@ export default function AdminCompetitorStoresPage() {
 
   const internalUsers = sampleInternalUsers
 
+  // Fetch categories for dropdown
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch("/api/categories", {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error("Failed to fetch categories")
+      const data = await response.json()
+      setAvailableCategories(data.categories || [])
+    } catch (err) {
+      console.error("Error fetching categories:", err)
+    }
+  }, [])
+
   const categories = useMemo(() => {
+    // Use available categories from API, fallback to store categories
+    if (availableCategories.length > 0) {
+      return availableCategories.map(c => c.name)
+    }
     const categorySet = new Set(stores.map((s) => s.category))
     return Array.from(categorySet)
-  }, [stores])
+  }, [stores, availableCategories])
 
   const countries = useMemo(() => {
     const countrySet = new Set(stores.map((s) => s.country).filter(Boolean))
@@ -183,13 +222,13 @@ export default function AdminCompetitorStoresPage() {
     }
   }, [stores])
 
-  // Quick filters
-  const quickFilters = [
-    { id: "high_traffic", label: "High Traffic", count: 0 },
-    { id: "high_revenue", label: "High Revenue", count: 0 },
-    { id: "high_growth", label: "High Growth", count: 0 },
-    { id: "verified", label: "Verified", count: 0 },
-  ]
+  // Quick filters with counts
+  const quickFilters = useMemo(() => [
+    { id: "high_traffic", label: "High Traffic", count: stores.filter(s => s.monthly_traffic >= 100000).length },
+    { id: "high_revenue", label: "High Revenue", count: stores.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000).length },
+    { id: "high_growth", label: "High Growth", count: stores.filter(s => s.growth >= 15).length },
+    { id: "verified", label: "Verified", count: stores.filter(s => s.verified).length },
+  ], [stores])
 
   // Filter stores based on search, filters, status tab, date range, and quick filters
   const filteredStores = useMemo(() => {
@@ -354,9 +393,40 @@ export default function AdminCompetitorStoresPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setStores(sampleCompetitorStores)
+      
+      const params = new URLSearchParams()
+      params.append("pageSize", "1000") // Get all stores for admin
+      
+      const response = await fetch(`/api/admin/competitor-stores?${params.toString()}`, {
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch stores")
+      }
+
+      const data = await response.json()
+      
+      // Transform API response to match UI format
+      const transformedStores: CompetitorStore[] = (data.stores || []).map((store: CompetitorStoreType) => ({
+        id: store.id,
+        name: store.name,
+        url: store.url,
+        logo: store.logo || undefined,
+        category: store.category?.name || "Uncategorized",
+        country: store.country || undefined,
+        monthly_traffic: store.monthly_traffic,
+        monthly_revenue: store.monthly_revenue,
+        growth: store.growth,
+        products_count: store.products_count || undefined,
+        rating: store.rating || undefined,
+        verified: store.verified,
+        created_at: store.created_at,
+        updated_at: store.updated_at,
+      }))
+
+      setStores(transformedStores)
     } catch (err) {
       console.error("Error fetching stores:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load stores. Please try again."
@@ -367,6 +437,10 @@ export default function AdminCompetitorStoresPage() {
       setInitialLoading(false)
     }
   }, [showError])
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
 
   useEffect(() => {
     fetchStores()
@@ -394,7 +468,16 @@ export default function AdminCompetitorStoresPage() {
     if (!storeToDelete) return
     setBulkActionLoading("delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(`/api/admin/competitor-stores/${storeToDelete.id}`, {
+        method: "DELETE",
+        credentials: 'include'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete store")
+      }
+
       setStores((prev) => prev.filter((s) => s.id !== storeToDelete.id))
       setSelectedStores((prev) => prev.filter((s) => s.id !== storeToDelete.id))
       setDeleteConfirmOpen(false)
@@ -402,8 +485,8 @@ export default function AdminCompetitorStoresPage() {
       setStoreToDelete(null)
       showSuccess(`Store "${deletedStoreName}" deleted successfully`)
       await fetchStores()
-    } catch (err) {
-      showError("Failed to delete store")
+    } catch (err: any) {
+      showError(err.message || "Failed to delete store")
     } finally {
       setBulkActionLoading(null)
     }
@@ -417,14 +500,26 @@ export default function AdminCompetitorStoresPage() {
     }
     setBulkActionLoading("bulk-delete")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const deletePromises = selectedStores.map(store =>
+        fetch(`/api/admin/competitor-stores/${store.id}`, {
+          method: "DELETE",
+          credentials: 'include'
+        })
+      )
+
+      const results = await Promise.allSettled(deletePromises)
+      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to delete ${failed.length} store(s)`)
+      }
+
       const deletedCount = selectedStores.length
-      setStores((prev) => prev.filter((s) => !selectedStores.some((ss) => ss.id === s.id)))
       setSelectedStores([])
       showSuccess(`${deletedCount} store(s) deleted successfully`)
       await fetchStores()
-    } catch (err) {
-      showError("Failed to delete stores")
+    } catch (err: any) {
+      showError(err.message || "Failed to delete stores")
     } finally {
       setBulkActionLoading(null)
     }
@@ -438,19 +533,28 @@ export default function AdminCompetitorStoresPage() {
     }
     setBulkActionLoading("bulk-verify")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setStores((prev) =>
-        prev.map((s) =>
-          selectedStores.some((ss) => ss.id === s.id)
-            ? { ...s, verified: true }
-            : s
-        )
+      const verifyPromises = selectedStores.map(store =>
+        fetch(`/api/admin/competitor-stores/${store.id}/verify`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          body: JSON.stringify({ verified: true })
+        })
       )
+
+      const results = await Promise.allSettled(verifyPromises)
+      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to verify ${failed.length} store(s)`)
+      }
+
+      const verifiedCount = selectedStores.length
       setSelectedStores([])
-      showSuccess(`${selectedStores.length} store(s) verified successfully`)
+      showSuccess(`${verifiedCount} store(s) verified successfully`)
       await fetchStores()
-    } catch (err) {
-      showError("Failed to verify stores")
+    } catch (err: any) {
+      showError(err.message || "Failed to verify stores")
     } finally {
       setBulkActionLoading(null)
     }
@@ -464,19 +568,28 @@ export default function AdminCompetitorStoresPage() {
     }
     setBulkActionLoading("bulk-unverify")
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setStores((prev) =>
-        prev.map((s) =>
-          selectedStores.some((ss) => ss.id === s.id)
-            ? { ...s, verified: false }
-            : s
-        )
+      const unverifyPromises = selectedStores.map(store =>
+        fetch(`/api/admin/competitor-stores/${store.id}/verify`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          body: JSON.stringify({ verified: false })
+        })
       )
+
+      const results = await Promise.allSettled(unverifyPromises)
+      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
+      
+      if (failed.length > 0) {
+        throw new Error(`Failed to unverify ${failed.length} store(s)`)
+      }
+
+      const unverifiedCount = selectedStores.length
       setSelectedStores([])
-      showSuccess(`${selectedStores.length} store(s) unverified successfully`)
+      showSuccess(`${unverifiedCount} store(s) unverified successfully`)
       await fetchStores()
-    } catch (err) {
-      showError("Failed to unverify stores")
+    } catch (err: any) {
+      showError(err.message || "Failed to unverify stores")
     } finally {
       setBulkActionLoading(null)
     }
@@ -506,18 +619,22 @@ export default function AdminCompetitorStoresPage() {
       return
     }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setStores((prev) =>
-        prev.map((s) =>
-          s.id === store.id
-            ? { ...s, verified: !s.verified }
-            : s
-        )
-      )
+      const response = await fetch(`/api/admin/competitor-stores/${store.id}/verify`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify({ verified: !store.verified })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update verification status")
+      }
+
       showSuccess(`Store ${!store.verified ? "verified" : "unverified"} successfully`)
       await fetchStores()
-    } catch (err) {
-      showError("Failed to update store")
+    } catch (err: any) {
+      showError(err.message || "Failed to update store")
     }
   }, [canVerify, showSuccess, showError, fetchStores])
 
@@ -617,48 +734,39 @@ export default function AdminCompetitorStoresPage() {
 
     setFormLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      // Find category_id from category name
+      const category = availableCategories.find(c => c.name === formData.category)
+      const category_id = category?.id || null
 
-      if (editingStore) {
-        setStores((prev) =>
-          prev.map((s) =>
-            s.id === editingStore.id
-              ? {
-                  ...s,
-                  name: formData.name,
-                  url: formData.url,
-                  category: formData.category,
-                  country: formData.country || undefined,
-                  monthly_traffic: formData.monthly_traffic,
-                  monthly_revenue: formData.monthly_revenue,
-                  growth: formData.growth,
-                  products_count: formData.products_count,
-                  rating: formData.rating,
-                  verified: formData.verified,
-                  logo: formData.logo || undefined,
-                  updated_at: new Date().toISOString(),
-                }
-              : s
-          )
-        )
-      } else {
-        const newStore: CompetitorStore = {
-          id: `cs_${Date.now()}`,
-          name: formData.name,
-          url: formData.url,
-          category: formData.category,
-          country: formData.country || undefined,
-          monthly_traffic: formData.monthly_traffic,
-          monthly_revenue: formData.monthly_revenue,
-          growth: formData.growth,
-          products_count: formData.products_count,
-          rating: formData.rating,
-          verified: formData.verified,
-          logo: formData.logo || undefined,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-        setStores((prev) => [...prev, newStore])
+      const payload = {
+        name: formData.name.trim(),
+        url: formData.url.trim(),
+        logo: formData.logo || null,
+        category_id: category_id,
+        country: formData.country || null,
+        monthly_traffic: formData.monthly_traffic,
+        monthly_revenue: formData.monthly_revenue,
+        growth: formData.growth,
+        products_count: formData.products_count || null,
+        rating: formData.rating || null,
+        verified: formData.verified,
+      }
+
+      const url = editingStore
+        ? `/api/admin/competitor-stores/${editingStore.id}`
+        : `/api/admin/competitor-stores`
+      const method = editingStore ? "PATCH" : "POST"
+
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save store")
       }
 
       setFormOpen(false)
@@ -718,6 +826,36 @@ export default function AdminCompetitorStoresPage() {
     setSelectedStore(store)
     setQuickViewOpen(true)
   }, [])
+
+  const columns = useMemo(() => {
+    return createCompetitorStoresColumns({
+      onViewDetails: handleViewDetails,
+      onQuickView: handleQuickView,
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+      onCopyStoreId: handleCopyStoreId,
+      onCopyUrl: handleCopyUrl,
+      onToggleVerify: handleToggleVerify,
+      onVisitStore: handleVisitStore,
+      onViewProducts: handleViewProducts,
+      canEdit,
+      canDelete,
+      canVerify,
+    })
+  }, [
+    handleViewDetails,
+    handleQuickView,
+    handleEdit,
+    handleDelete,
+    handleCopyStoreId,
+    handleCopyUrl,
+    handleToggleVerify,
+    handleVisitStore,
+    handleViewProducts,
+    canEdit,
+    canDelete,
+    canVerify,
+  ])
 
 
   const categoryOptions = categories
@@ -797,7 +935,7 @@ export default function AdminCompetitorStoresPage() {
     } else {
       return [
         {
-          label: "Create Store",
+          label: "Add Store",
           icon: <Plus className="h-4 w-4" />,
           onClick: handleCreate,
           variant: "default" as const,
@@ -854,7 +992,7 @@ export default function AdminCompetitorStoresPage() {
                 variant="outline" 
                 size="sm"
                 onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
               >
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Assignee
@@ -865,7 +1003,7 @@ export default function AdminCompetitorStoresPage() {
               variant="outline" 
               size="sm"
               onClick={handleOpenAssigneeModal}
-              className="whitespace-nowrap cursor-pointer"
+              className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Assignee
@@ -928,139 +1066,35 @@ export default function AdminCompetitorStoresPage() {
             </Tabs>
           </div>
 
-          {/* Toolbar */}
-          <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Input
-                placeholder="Search stores..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
-              />
-              {quickFilters.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={quickFilter ? "default" : "outline"}
-                      size="sm"
-                      className="h-8 px-2"
-                    >
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {quickFilters.map((filter) => (
-                      <DropdownMenuItem
-                        key={filter.id}
-                        onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
-                        className={cn(
-                          "cursor-pointer",
-                          quickFilter === filter.id && "bg-accent"
-                        )}
-                      >
-                        <span>{filter.label}</span>
-                        {quickFilter === filter.id && (
-                          <Check className="h-4 w-4 ml-auto" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                    {quickFilter && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setQuickFilter(null)}
-                          className="cursor-pointer"
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Clear Filter
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {secondaryButtons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant={button.variant || "outline"}
-                  size="sm"
-                  onClick={button.onClick}
-                  disabled={button.disabled}
-                  className="h-8"
-                >
-                  {button.icon}
-                  {button.label}
-                </Button>
-              ))}
-            </div>
+          {/* DataTable */}
+          <div className="flex-1 overflow-hidden min-h-0">
+            <DataTable
+              columns={columns}
+              data={paginatedStores}
+              pageCount={pageCount}
+              onPaginationChange={(p, s) => {
+                setPage(p)
+                setPageSize(s)
+              }}
+              onSortingChange={setSorting}
+              onFilterChange={setColumnFilters}
+              onSearchChange={setSearchQuery}
+              loading={loading}
+              initialLoading={initialLoading}
+              filterConfig={filterConfig}
+              searchPlaceholder="Search stores..."
+              page={page}
+              pageSize={pageSize}
+              enableRowSelection={true}
+              onRowSelectionChange={setSelectedStores}
+              onRowClick={handleRowClick}
+              onDateRangeChange={setDateRange}
+              quickFilters={quickFilters}
+              selectedQuickFilter={quickFilter}
+              onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
+              secondaryButtons={secondaryButtons}
+            />
           </div>
-
-          {/* Grid View */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {initialLoading ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader size="sm" />
-                  <span>Loading stores...</span>
-                </div>
-              </div>
-            ) : paginatedStores.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-                <p className="text-sm text-muted-foreground">No stores found</p>
-                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {paginatedStores.map((store) => (
-                  <AdminCompetitorStoreCard
-                    key={store.id}
-                    store={store}
-                    onEdit={handleEdit}
-                    onViewDetails={handleViewDetails}
-                    onDelete={handleDelete}
-                    onVerify={handleToggleVerify}
-                    onDuplicate={handleDuplicate}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    canVerify={canVerify}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Pagination */}
-          {!initialLoading && paginatedStores.length > 0 && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredStores.length)} of {filteredStores.length} stores
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <div className="text-sm text-muted-foreground">
-                  Page {page} of {pageCount}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(pageCount, p + 1))}
-                  disabled={page === pageCount}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -1454,7 +1488,7 @@ export default function AdminCompetitorStoresPage() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
-            <DialogTitle>{editingStore ? "Edit Store" : "Create Store"}</DialogTitle>
+            <DialogTitle>{editingStore ? "Edit Store" : "Add Store"}</DialogTitle>
             <DialogDescription>
               {editingStore
                 ? "Update competitor store information and details."
@@ -1498,16 +1532,24 @@ export default function AdminCompetitorStoresPage() {
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="store-category">Category *</Label>
-                <Input
-                  id="store-category"
+                <Select
                   value={formData.category}
-                  onChange={(e) => {
-                    setFormData({ ...formData, category: e.target.value })
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, category: value })
                     if (formErrors.category) setFormErrors({ ...formErrors, category: "" })
                   }}
-                  placeholder="Enter category"
-                  className={formErrors.category ? "border-destructive" : ""}
-                />
+                >
+                  <SelectTrigger className={formErrors.category ? "border-destructive" : ""}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {formErrors.category && <p className="text-xs text-destructive">{formErrors.category}</p>}
               </div>
 

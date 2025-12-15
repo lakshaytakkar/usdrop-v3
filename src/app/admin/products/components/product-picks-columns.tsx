@@ -20,6 +20,7 @@ import { Star } from "lucide-react"
 interface CreateProductPicksColumnsProps {
   onViewDetails: (product: ProductPick) => void
   onQuickView: (product: ProductPick) => void
+  onOpenDrawer?: (product: ProductPick) => void
   onEdit?: (product: ProductPick) => void
   onDelete: (product: ProductPick) => void
   onCopyProductId?: (product: ProductPick) => void
@@ -35,6 +36,7 @@ interface CreateProductPicksColumnsProps {
 export function createProductPicksColumns({
   onViewDetails,
   onQuickView,
+  onOpenDrawer,
   onEdit,
   onDelete,
   onCopyProductId,
@@ -248,7 +250,17 @@ export function createProductPicksColumns({
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end" side="left" className="w-48">
-                <DropdownMenuItem onClick={() => onViewDetails(product)} className="cursor-pointer">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (onOpenDrawer) {
+                      onOpenDrawer(product)
+                    } else {
+                      onViewDetails(product)
+                    }
+                  }} 
+                  className="cursor-pointer"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>

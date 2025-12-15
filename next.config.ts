@@ -102,6 +102,16 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'reverb.com',
       },
+      // Amazon product images
+      {
+        protocol: 'https',
+        hostname: 'm.media-amazon.com',
+      },
+      // Tradelle CDN (CloudFront)
+      {
+        protocol: 'https',
+        hostname: 'd3r56lgpj005wx.cloudfront.net',
+      },
     ],
   },
 };

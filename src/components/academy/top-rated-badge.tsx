@@ -21,3 +21,12 @@ export function TopRatedBadge({ className }: { className?: string }) {
   )
 }
 
+
+
+
+
+
+
+
+
+

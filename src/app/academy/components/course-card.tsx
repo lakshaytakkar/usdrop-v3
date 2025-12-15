@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,8 +26,13 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
 })
 
 export function CourseCard({ course }: CourseCardProps) {
+  const router = useRouter()
   const completedModules = course.modules.filter((m) => m.completed).length
   const progress = course.modules.length > 0 ? (completedModules / course.modules.length) * 100 : 0
+
+  const handleStartCourse = () => {
+    router.push(`/academy/${course.id}`)
+  }
 
   return (
     <Card className="flex h-full flex-col">
@@ -111,7 +117,10 @@ export function CourseCard({ course }: CourseCardProps) {
           </span>
         </div>
 
-        <Button className="w-full mt-2 bg-black text-white hover:bg-black/90 cursor-pointer">
+        <Button 
+          className="w-full mt-2 bg-black text-white hover:bg-black/90 cursor-pointer"
+          onClick={handleStartCourse}
+        >
           {progress > 0 ? (
             <>
               <PlayCircle className="h-4 w-4" />

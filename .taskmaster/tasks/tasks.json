@@ -1,0 +1,450 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Create Sample Landing Page Component",
+      "description": "Build a landing page component with hero section, features grid, and call-to-action button for testing Task Master integration.",
+      "status": "in-progress",
+      "priority": "high",
+      "dependencies": [],
+      "details": "This is a sample task to verify Task Master AI is working correctly.\n\nRequirements:\n- Hero section with headline and subheadline\n- Features grid displaying 3 key features\n- Call-to-action button with hover effects",
+      "testStrategy": "Verify component renders correctly and all sections are visible",
+      "subtasks": [],
+      "updatedAt": "2025-12-12T11:25:39.624Z"
+    },
+    {
+      "id": "2",
+      "title": "Test Task Master Integration",
+      "description": "Verify that Task Master CLI commands work correctly in this project.",
+      "status": "pending",
+      "priority": "medium",
+      "dependencies": [
+        "1"
+      ],
+      "details": "Run through basic Task Master commands to ensure proper setup.",
+      "testStrategy": "All CLI commands execute without errors",
+      "subtasks": []
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastModified": "2025-12-12T11:25:39.625Z",
+    "taskCount": 2,
+    "completedCount": 0,
+    "tags": [
+      "master"
+    ]
+  },
+  "master": {
+    "tasks": [
+      {
+        "id": "11",
+        "title": "Create MyDashboard Page Structure",
+        "description": "Create new page at /my-dashboard as the primary authenticated user entry point, replacing /home as the default redirect after login",
+        "details": "Create src/app/my-dashboard/page.tsx with sidebar, topbar, and main content area following existing patterns from /home/page.tsx. Use AppSidebar component and implement responsive layout with Tailwind CSS. Include proper TypeScript types and Next.js 16 app router structure.",
+        "testStrategy": "Test page renders correctly, responsive design works on mobile/desktop, navigation elements are properly positioned, and authenticated users can access the page",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T13:56:31.960Z"
+      },
+      {
+        "id": "12",
+        "title": "Update Auth Redirect Flow",
+        "description": "Modify middleware.ts and login success handlers to redirect authenticated users to /my-dashboard instead of /home",
+        "details": "Update middleware.ts to redirect authenticated users to /my-dashboard. Modify Supabase auth callbacks and login success handlers in auth components. Update any hardcoded /home redirects throughout the application. Ensure OTP, Google OAuth, and magic link flows all redirect correctly.",
+        "testStrategy": "Test all login methods (OTP, Google OAuth, magic links) redirect to /my-dashboard. Verify middleware correctly handles authenticated/unauthenticated states. Test logout and re-login flow.",
+        "priority": "high",
+        "dependencies": [
+          "11"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "13",
+        "title": "Database Schema Updates for Onboarding",
+        "description": "Add onboarding-related fields to external_users table and create onboarding_progress table",
+        "details": "Add to external_users table: onboarding_completed (boolean, default false), onboarding_completed_at (timestamp), onboarding_progress (integer 0-100), crm_stage (enum), crm_notes (text), assigned_to (uuid). Create onboarding_progress table with user_id, video_id, completed, completed_at, watch_duration fields. Write Supabase migration scripts.",
+        "testStrategy": "Verify migration runs successfully, new columns exist with correct types and defaults, foreign key constraints work properly, and existing data is preserved",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:14:54.147Z"
+      },
+      {
+        "id": "14",
+        "title": "Create Onboarding Course Data Structure",
+        "description": "Define onboarding course structure with 5-6 video modules using existing CourseModule and CourseChapter types",
+        "details": "Reference src/types/courses.ts for CourseModule and CourseChapter types. Create onboarding course data with 5-6 modules covering platform basics, dropshipping fundamentals, AI tools usage, etc. Store in database or create dedicated API endpoint at /api/onboarding/course. Include video URLs, thumbnails, durations, and descriptions.",
+        "testStrategy": "Verify course data structure matches existing types, API endpoint returns correct data format, video URLs are accessible, and course content is logically ordered",
+        "priority": "high",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:24:16.772Z"
+      },
+      {
+        "id": "15",
+        "title": "Create useOnboardingStatus Hook",
+        "description": "Create custom hook to check user's onboarding completion status with caching",
+        "details": "Create src/hooks/use-onboarding-status.ts hook that fetches user's onboarding status from API. Return isComplete, progress percentage, isLoading states. Implement caching with React Query or SWR to avoid repeated API calls. Handle error states and loading states properly.",
+        "testStrategy": "Test hook returns correct status for different users, caching works to prevent unnecessary API calls, loading states are handled properly, and error handling works for network failures",
+        "priority": "high",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:16:51.637Z"
+      },
+      {
+        "id": "16",
+        "title": "Create Onboarding Progress API Endpoints",
+        "description": "Implement API endpoints for fetching and updating onboarding progress",
+        "details": "Create GET /api/onboarding/progress and POST /api/onboarding/progress/complete endpoints. GET returns user's current progress and completed videos. POST updates completion status for specific videos. Include proper authentication, validation, and error handling. Use Supabase client for database operations.",
+        "testStrategy": "Test endpoints with authenticated users, verify progress is correctly calculated and stored, test error cases for invalid data, and ensure proper authentication is required",
+        "priority": "high",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:16:25.166Z"
+      },
+      {
+        "id": "17",
+        "title": "Create Accordion Onboarding Course Widget",
+        "description": "Create OnboardingCourseWidget component with accordion-style UI for video modules",
+        "details": "Create src/app/my-dashboard/components/onboarding-course-widget.tsx using Radix Accordion. Display module/chapter tree structure with video thumbnails, lesson titles, durations, and completion checkmarks. Reference Academy page patterns for consistent UI. Use Lucide icons for expand/collapse and checkmarks.",
+        "testStrategy": "Test accordion expands/collapses correctly, completion status displays accurately, responsive design works on all screen sizes, and component integrates properly with dashboard layout",
+        "priority": "high",
+        "dependencies": [
+          "14",
+          "15",
+          "16"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:33:34.104Z"
+      },
+      {
+        "id": "18",
+        "title": "Integrate Video Player for Onboarding",
+        "description": "Integrate video player for onboarding videos using existing CourseVideoPlayer patterns",
+        "details": "Use existing CourseVideoPlayer component patterns to play videos inline within accordion expansion or in modal/drawer. Track watch progress and update completion status via API. Implement video controls, progress bar, and quality selection. Handle video loading states and errors.",
+        "testStrategy": "Test videos play correctly in different browsers, progress tracking works accurately, completion status updates properly, and video controls function as expected",
+        "priority": "high",
+        "dependencies": [
+          "17"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "19",
+        "title": "Create Onboarding Progress Display",
+        "description": "Show prominent progress indicator with circular/linear progress bar and completion statistics",
+        "details": "Create src/app/my-dashboard/components/progress-display.tsx with circular or linear progress bar showing completion percentage. Display 'X of Y lessons complete' text and estimated time remaining. Add celebratory animation on 100% completion using CSS animations or Framer Motion.",
+        "testStrategy": "Test progress bar updates correctly as lessons are completed, animations work smoothly, estimated time calculations are accurate, and celebration animation triggers at 100%",
+        "priority": "medium",
+        "dependencies": [
+          "15",
+          "16"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:33:31.556Z"
+      },
+      {
+        "id": "20",
+        "title": "Create Learning Required Overlay Component",
+        "description": "Create LearningRequiredOverlay component for blocking access to premium pages for incomplete users",
+        "details": "Create src/components/onboarding/learning-required-overlay.tsx as full-page overlay similar to ComingSoonOverlay in meta-ads. Include message about completing learning, progress indicator, 'Continue Learning' button linking to MyDashboard, and semi-transparent backdrop with blur effect using Tailwind CSS.",
+        "testStrategy": "Test overlay covers entire page properly, blur effect works correctly, progress indicator shows current status, continue learning button navigates correctly, and overlay is accessible",
+        "priority": "high",
+        "dependencies": [
+          "15"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:17:34.156Z"
+      },
+      {
+        "id": "21",
+        "title": "Apply Learning Overlay to Protected Pages",
+        "description": "Apply LearningRequiredOverlay to premium pages that require onboarding completion",
+        "details": "Apply overlay to Meta Ads (/meta-ads), Product Hunt (/product-hunt), Winning Products (/winning-products), AI Toolkit (/ai-toolkit/*), Store Research (/store-research), and Competitor Stores (/competitor-stores) pages. Implement conditional rendering: show overlay if user is free tier AND onboarding not complete.",
+        "testStrategy": "Test overlay appears for incomplete free users, paid users can access pages regardless of onboarding status, completed free users can access pages, and overlay doesn't appear on unrestricted pages",
+        "priority": "high",
+        "dependencies": [
+          "20"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-12-15T14:22:51.143Z"
+      },
+      {
+        "id": "22",
+        "title": "Complete Landing Page Features Section",
+        "description": "Complete the features section using existing Features11.tsx and Features2.tsx components",
+        "details": "Integrate Features11.tsx and Features2.tsx components below hero section on landing page. Display key platform features with icons, titles, and descriptions in responsive grid layout. Use Lucide icons and ensure consistent styling with existing design system. Include features like AI tools, course management, dropshipping automation.",
+        "testStrategy": "Test features display correctly in grid layout, responsive design works on all devices, icons load properly, and content is readable and well-formatted",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "23",
+        "title": "Implement Brands/Trust Marquee",
+        "description": "Add scrolling brand logos using BrandsMarquee.tsx component",
+        "details": "Implement BrandsMarquee.tsx component to show partner/customer logos in continuous scrolling animation. Include logos for Shopify, payment gateways, and other integrations. Use CSS animations or Framer Motion for smooth scrolling effect. Ensure logos are optimized and load quickly.",
+        "testStrategy": "Test marquee scrolls smoothly without stuttering, logos are properly sized and aligned, animation works on all browsers, and component is performant",
+        "priority": "medium",
+        "dependencies": [
+          "22"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "24",
+        "title": "Add Content Sections and Integrations",
+        "description": "Add content sections explaining platform value proposition and integrations display",
+        "details": "Use ContentSection.tsx to explain platform value proposition with compelling copy and visuals. Implement Integrations.tsx to show platform integrations (Shopify, payment gateways, etc.) with logos and descriptions. Ensure sections flow logically and maintain consistent spacing.",
+        "testStrategy": "Test content sections are readable and engaging, integration logos display correctly, sections are properly spaced, and responsive design works across devices",
+        "priority": "medium",
+        "dependencies": [
+          "23"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "25",
+        "title": "Add Reviews and Projects Showcase",
+        "description": "Add customer testimonials and success stories using Reviews.tsx and Projects.tsx",
+        "details": "Implement Reviews.tsx with customer testimonials, star ratings, and customer photos. Add Projects.tsx to display success stories or featured products. Include compelling testimonials and case studies that build trust and credibility. Use proper image optimization for customer photos.",
+        "testStrategy": "Test testimonials display correctly with proper formatting, star ratings render accurately, customer photos load optimally, and success stories are compelling and well-presented",
+        "priority": "medium",
+        "dependencies": [
+          "24"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "26",
+        "title": "Complete Newsletter and Footer",
+        "description": "Add email newsletter subscription form and complete footer with navigation links",
+        "details": "Implement Newsletter.tsx with email subscription form at bottom of landing page. Complete Footer.tsx with navigation links, social links, legal links (privacy policy, terms of service). Ensure footer is comprehensive and includes all necessary links and information.",
+        "testStrategy": "Test newsletter signup form works correctly, email validation functions properly, footer links navigate to correct pages, and footer is responsive across devices",
+        "priority": "medium",
+        "dependencies": [
+          "25"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "27",
+        "title": "Assemble Complete Landing Page",
+        "description": "Assemble all landing page components in correct order with smooth scroll navigation",
+        "details": "Integrate all landing page components (hero, features, marquee, content, integrations, reviews, projects, newsletter, footer) in logical order on main page. Implement smooth scroll navigation between sections. Optimize page performance and ensure fast loading times.",
+        "testStrategy": "Test complete landing page loads quickly, smooth scroll navigation works between sections, all components render correctly in sequence, and page performance meets standards",
+        "priority": "medium",
+        "dependencies": [
+          "26"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "28",
+        "title": "Create Junior Leads Admin Panel",
+        "description": "Create admin panel for managing users who haven't completed onboarding",
+        "details": "Create src/app/admin/junior-leads/page.tsx with table showing users where onboarding_completed = false. Include columns: Name, Email, Signup Date, Onboarding Progress %, Days Since Signup, Last Active. Use TanStack React Table v8 for sorting, filtering, and pagination. Follow existing admin page patterns.",
+        "testStrategy": "Test table displays correct data, sorting and filtering work properly, pagination functions correctly, and page follows existing admin design patterns",
+        "priority": "medium",
+        "dependencies": [
+          "13"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "29",
+        "title": "Create Junior Leads API and Actions",
+        "description": "Create API endpoint for junior leads and implement management actions",
+        "details": "Create GET /api/admin/leads/junior endpoint with pagination, sorting, filtering support. Add actions: send reminder email, send WhatsApp nudge, view user details, assign to team member, add notes/tags. Include summary stats: total count, new this week/month, conversion rates.",
+        "testStrategy": "Test API returns correct filtered data, actions execute successfully, email/WhatsApp integrations work, user assignment functions properly, and stats calculations are accurate",
+        "priority": "medium",
+        "dependencies": [
+          "28"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "30",
+        "title": "Create Senior Leads Admin Panel",
+        "description": "Create admin panel for managing users who have completed onboarding",
+        "details": "Create src/app/admin/senior-leads/page.tsx with table showing users where onboarding_completed = true. Include columns: Name, Email, Onboarding Completed Date, Plan, Status, CRM Stage, Last Activity. Add CRM integration with lead stages: New Lead, Contacted, Qualified, Proposal, Negotiation, Won, Lost.",
+        "testStrategy": "Test senior leads display correctly, CRM stage updates work properly, lead progression tracking functions, and pipeline value calculations are accurate",
+        "priority": "medium",
+        "dependencies": [
+          "13"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "31",
+        "title": "Create Senior Leads API and CRM Features",
+        "description": "Create API endpoint for senior leads with CRM integration and tracking",
+        "details": "Create GET /api/admin/leads/senior endpoint. Implement CRM features: update stage, schedule calls, send upsell emails, convert to paid plan, add deal value, assign to sales team. Include dashboard stats: total leads, stage breakdown, conversion rates, pipeline value.",
+        "testStrategy": "Test API returns correct senior leads data, CRM stage updates persist correctly, scheduling features work, email integration functions, and dashboard stats are accurate",
+        "priority": "medium",
+        "dependencies": [
+          "30"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "32",
+        "title": "Create Login As User Feature",
+        "description": "Implement admin impersonation feature to login as any user",
+        "details": "Create POST /api/admin/users/[id]/impersonate endpoint with admin permission verification. Add 'Login as User' button to user details page with confirmation dialog. Implement impersonation session management with banner showing 'Viewing as [User Name]' and 'Return to Admin' button.",
+        "testStrategy": "Test impersonation works correctly, admin permissions are properly verified, impersonation banner displays, return to admin function works, and audit logging captures all actions",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "33",
+        "title": "Create Impersonation Audit System",
+        "description": "Create audit logging system for admin impersonation sessions",
+        "details": "Create admin_impersonation_logs table with fields: id, admin_id, target_user_id, started_at, ended_at, actions_log (jsonb). Log all impersonation sessions with timestamps and actions taken. Implement auto-expire after timeout and comprehensive audit trail.",
+        "testStrategy": "Test all impersonation sessions are logged correctly, timestamps are accurate, actions during impersonation are captured, auto-expire works properly, and audit logs are queryable",
+        "priority": "medium",
+        "dependencies": [
+          "32"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "34",
+        "title": "Update Navigation and Sidebar",
+        "description": "Update app sidebar and admin navigation with new pages and menu items",
+        "details": "Update AppSidebar to include MyDashboard as home/default. Add Junior Leads and Senior Leads to admin sidebar under new 'Leads' collapsible section. Ensure breadcrumb navigation works correctly for all new pages. Organize menu items logically with proper icons.",
+        "testStrategy": "Test navigation items appear correctly, sidebar organization is logical, breadcrumbs work for new pages, and menu items link to correct destinations",
+        "priority": "low",
+        "dependencies": [
+          "11",
+          "28",
+          "30"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "35",
+        "title": "Implement Onboarding Completion Tracking",
+        "description": "Track onboarding completion status in user profile and update throughout system",
+        "details": "Update ExternalUser type to include onboarding_completed and onboarding_progress fields. Implement logic to automatically mark onboarding as complete when all videos are watched. Update user profile display and ensure completion status is used throughout the application for access control.",
+        "testStrategy": "Test onboarding completion is automatically detected, user profile updates correctly, completion status is consistent across the application, and access controls work based on completion status",
+        "priority": "medium",
+        "dependencies": [
+          "18",
+          "19"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "36",
+        "title": "Performance Optimization and Testing",
+        "description": "Optimize performance across all new features and conduct comprehensive testing",
+        "details": "Optimize landing page load time to <2 seconds, implement proper image optimization, add loading states for all async operations, optimize database queries for admin panels, implement proper error boundaries, and conduct cross-browser testing. Use Next.js 16 optimization features.",
+        "testStrategy": "Test page load times meet targets, all features work across browsers, error handling is comprehensive, loading states provide good UX, and database queries are optimized for performance",
+        "priority": "medium",
+        "dependencies": [
+          "27",
+          "35"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "37",
+        "title": "Final Integration and Quality Assurance",
+        "description": "Conduct final integration testing and quality assurance across all features",
+        "details": "Test complete user journey from landing page through onboarding to dashboard access. Verify admin panels work correctly with real data. Test all access controls and overlays. Ensure responsive design works across devices. Validate all API endpoints and error handling. Conduct security review.",
+        "testStrategy": "Test complete user flows work end-to-end, admin features function with production-like data, security measures are effective, responsive design is consistent, and all success metrics can be achieved",
+        "priority": "high",
+        "dependencies": [
+          "36"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "38",
+        "title": "Documentation and Deployment Preparation",
+        "description": "Create documentation and prepare for deployment of all new features",
+        "details": "Create technical documentation for new features, update API documentation, create admin user guides for lead management, document onboarding course management, prepare deployment scripts and database migrations, and create rollback procedures.",
+        "testStrategy": "Verify documentation is complete and accurate, deployment scripts work correctly, database migrations run successfully, rollback procedures are tested, and admin guides are clear and comprehensive",
+        "priority": "medium",
+        "dependencies": [
+          "37"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "39",
+        "title": "Analytics and Monitoring Setup",
+        "description": "Set up analytics tracking and monitoring for new features",
+        "details": "Implement analytics tracking for onboarding completion rates, landing page conversion metrics, admin panel usage, lead progression tracking, and user engagement metrics. Set up monitoring alerts for system performance and error rates. Create dashboards for key metrics.",
+        "testStrategy": "Test analytics events fire correctly, metrics are captured accurately, monitoring alerts work properly, dashboards display correct data, and tracking doesn't impact performance",
+        "priority": "low",
+        "dependencies": [
+          "37"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "40",
+        "title": "Launch Preparation and Success Metrics Validation",
+        "description": "Final launch preparation and validation of success metrics tracking",
+        "details": "Validate all success metrics can be measured: onboarding completion rate >70%, time to complete <30 minutes, junior to senior conversion >50%, admin impersonation functionality, landing page load time <2 seconds. Prepare launch communication and training materials.",
+        "testStrategy": "Test all success metrics are trackable and measurable, baseline measurements are established, launch procedures are documented, training materials are effective, and system is ready for production load",
+        "priority": "high",
+        "dependencies": [
+          "38",
+          "39"
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-12-15T14:33:34.106Z",
+      "taskCount": 30,
+      "completedCount": 9,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}

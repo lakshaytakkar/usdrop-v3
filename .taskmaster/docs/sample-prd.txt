@@ -1,0 +1,19 @@
+# Sample Project PRD
+
+## Project Overview
+Create a sample task to test Task Master AI integration.
+
+## Goals
+- Verify Task Master is working correctly
+- Test task generation from PRD
+
+## Features
+
+### Feature 1: Sample Landing Page Component
+Create a landing page component with:
+- Hero section with headline and subheadline
+- Features grid displaying 3 key features
+- Call-to-action button
+
+### Feature 2: Test Task
+A simple test task to verify the system works.

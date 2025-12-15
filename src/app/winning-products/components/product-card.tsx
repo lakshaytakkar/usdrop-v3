@@ -11,7 +11,22 @@ import {
   Lock,
   Eye
 } from "lucide-react"
-import { WinningProduct } from "../data/products"
+// Local WinningProduct type (matches the transformed type from the page)
+export interface WinningProduct {
+  id: number;
+  image: string;
+  title: string;
+  profitMargin: number;
+  potRevenue: number;
+  category: string;
+  isLocked: boolean;
+  foundDate: string;
+  revenueGrowthRate: number;
+  itemsSold: number;
+  avgUnitPrice: number;
+  revenueTrend: number[];
+  price: number;
+}
 
 interface ProductCardProps {
   product: WinningProduct

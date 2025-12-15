@@ -30,21 +30,89 @@ import {
   ArrowUp,
 } from "lucide-react"
 import { SubscriptionPlan } from "@/types/admin/plans"
-import { samplePlans } from "../data/plans"
-
+import Loader from "@/components/kokonutui/loader"
+import { useToast } from "@/hooks/use-toast"
 export default function PlanDetailPage() {
   const router = useRouter()
   const params = useParams()
   const planId = params?.id as string
 
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null)
-  const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>(samplePlans)
+  const [allPlans, setAllPlans] = useState<SubscriptionPlan[]>([])
+  const [loading, setLoading] = useState(true)
 
+  // Fetch current plan from API
   useEffect(() => {
-    // Find current plan
-    const currentPlan = allPlans.find((p) => p.id === planId)
-    setPlan(currentPlan || null)
-  }, [planId, allPlans])
+    const fetchPlan = async () => {
+      if (!planId) return
+      
+      try {
+        setLoading(true)
+        const response = await fetch(`/api/admin/plans/${planId}`)
+        if (!response.ok) {
+          if (response.status === 404) {
+            setPlan(null)
+            return
+          }
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to fetch plan')
+        }
+        
+        const planData = await response.json()
+        setPlan({
+          ...planData,
+          createdAt: planData.createdAt ? new Date(planData.createdAt) : null,
+          updatedAt: planData.updatedAt ? new Date(planData.updatedAt) : null,
+        })
+      } catch (err) {
+        console.error('Error fetching plan:', err)
+        setPlan(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPlan()
+  }, [planId])
+
+  // Fetch all plans for navigation
+  useEffect(() => {
+    const fetchAllPlans = async () => {
+      try {
+        const response = await fetch('/api/admin/plans')
+        if (response.ok) {
+          const data = await response.json()
+          const plansData: SubscriptionPlan[] = data.map((p: {
+            id: string
+            name: string
+            slug: string
+            description: string | null
+            priceMonthly: number
+            priceAnnual: number | null
+            priceYearly: number | null
+            features: string[]
+            popular: boolean
+            active: boolean
+            isPublic: boolean
+            displayOrder: number
+            keyPointers: string | null
+            trialDays: number
+            createdAt: string | null
+            updatedAt: string | null
+          }) => ({
+            ...p,
+            createdAt: p.createdAt ? new Date(p.createdAt) : null,
+            updatedAt: p.updatedAt ? new Date(p.updatedAt) : null,
+          }))
+          setAllPlans(plansData)
+        }
+      } catch (err) {
+        console.error('Error fetching all plans:', err)
+      }
+    }
+
+    fetchAllPlans()
+  }, [])
 
   // Find previous and next plans
   const { prevPlan, nextPlan } = useMemo(() => {
@@ -56,6 +124,20 @@ export default function PlanDetailPage() {
     
     return { prevPlan: prev, nextPlan: next }
   }, [plan, allPlans])
+
+  if (loading) {
+    return (
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
+        <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          <Loader 
+            title="Loading plan details..." 
+            subtitle="Fetching subscription plan information"
+            size="md"
+          />
+        </div>
+      </div>
+    )
+  }
 
   if (!plan) {
     return (
@@ -75,25 +157,105 @@ export default function PlanDetailPage() {
     return isPublic ? "outline" as const : "secondary" as const
   }
 
-  // Handler functions (placeholder - should be connected to actual handlers)
+  const { showSuccess, showError } = useToast()
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+
+  // Handler functions
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    console.log("Edit plan:", plan.id)
+    router.push(`/admin/plans?edit=${plan.id}`)
   }
 
   const handleDelete = () => {
-    // TODO: Implement delete
-    console.log("Delete plan:", plan.id)
+    setDeleteConfirmOpen(true)
   }
 
-  const handleToggleActive = () => {
-    // TODO: Implement toggle active
-    console.log("Toggle active for plan:", plan.id)
+  const confirmDelete = async () => {
+    if (!plan) return
+    setActionLoading("delete")
+    try {
+      const response = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "DELETE",
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete plan")
+      }
+      
+      const result = await response.json()
+      showSuccess(result.message || `Plan "${plan.name}" has been deleted successfully`)
+      router.push("/admin/plans")
+    } catch (err) {
+      console.error("Error deleting plan:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+      setDeleteConfirmOpen(false)
+    }
   }
 
-  const handleTogglePublic = () => {
-    // TODO: Implement toggle public
-    console.log("Toggle public for plan:", plan.id)
+  const handleToggleActive = async () => {
+    if (!plan) return
+    setActionLoading("toggle-active")
+    try {
+      const response = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !plan.active }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update plan")
+      }
+      
+      const updatedPlan = await response.json()
+      setPlan({
+        ...updatedPlan,
+        createdAt: updatedPlan.createdAt ? new Date(updatedPlan.createdAt) : null,
+        updatedAt: updatedPlan.updatedAt ? new Date(updatedPlan.updatedAt) : null,
+      })
+      showSuccess(`Plan ${updatedPlan.active ? "activated" : "deactivated"} successfully`)
+    } catch (err) {
+      console.error("Error toggling plan active status:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to update plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleTogglePublic = async () => {
+    if (!plan) return
+    setActionLoading("toggle-public")
+    try {
+      const response = await fetch(`/api/admin/plans/${plan.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: !plan.isPublic }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update plan")
+      }
+      
+      const updatedPlan = await response.json()
+      setPlan({
+        ...updatedPlan,
+        createdAt: updatedPlan.createdAt ? new Date(updatedPlan.createdAt) : null,
+        updatedAt: updatedPlan.updatedAt ? new Date(updatedPlan.updatedAt) : null,
+      })
+      showSuccess(`Plan ${updatedPlan.isPublic ? "made public" : "made private"} successfully`)
+    } catch (err) {
+      console.error("Error toggling plan public status:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to update plan. Please try again."
+      showError(errorMessage)
+    } finally {
+      setActionLoading(null)
+    }
   }
 
   return (

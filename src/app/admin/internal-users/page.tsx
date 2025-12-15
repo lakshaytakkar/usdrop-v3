@@ -16,7 +16,6 @@ import { DataTable } from "@/components/data-table/data-table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createInternalUsersColumns } from "./components/internal-users-columns"
 import { InternalUser, InternalUserRole, UserStatus } from "@/types/admin/users"
-import { sampleInternalUsers } from "./data/users"
 import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import {
   Select,
@@ -45,6 +44,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 export default function AdminInternalUsersPage() {
   const router = useRouter()
@@ -84,8 +84,13 @@ export default function AdminInternalUsersPage() {
     email: "",
     password: "",
     role: "executive" as InternalUserRole,
+    status: "active" as UserStatus,
+    phoneNumber: "",
+    username: "",
+    avatarUrl: "",
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [formLoading, setFormLoading] = useState(false)
@@ -99,7 +104,7 @@ export default function AdminInternalUsersPage() {
 
   const roles = useMemo(() => ["superadmin", "admin", "manager", "executive"], [])
   
-  const internalUsersForAssignee = sampleInternalUsers
+  const internalUsersForAssignee = users
   
   // Filter members based on search
   const filteredMembers = useMemo(() => {
@@ -261,10 +266,21 @@ export default function AdminInternalUsersPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      // For now, simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(sampleInternalUsers)
+      
+      const response = await fetch('/api/admin/internal-users')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch users')
+      }
+      
+      const data = await response.json()
+      // Transform dates from strings to Date objects
+      const usersWithDates = data.map((user: InternalUser & { createdAt: string; updatedAt: string }) => ({
+        ...user,
+        createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt),
+      }))
+      setUsers(usersWithDates)
     } catch (err) {
       console.error("Error fetching users:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load users. Please try again."
@@ -307,8 +323,13 @@ export default function AdminInternalUsersPage() {
       email: user.email,
       password: "",
       role: user.role,
+      status: user.status || "active",
+      phoneNumber: (user as any).phoneNumber || "",
+      username: (user as any).username || "",
+      avatarUrl: (user as any).avatarUrl || "",
     })
     setFormErrors({})
+    setShowAdvancedOptions(false)
     setFormOpen(true)
   }, [])
 
@@ -338,9 +359,15 @@ export default function AdminInternalUsersPage() {
     if (!userToDelete) return
     setActionLoading("delete")
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(users.filter((u) => u.id !== userToDelete.id))
+      const response = await fetch(`/api/admin/internal-users/${userToDelete.id}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete user')
+      }
+      
       setDeleteConfirmOpen(false)
       const deletedUserName = userToDelete.name
       setUserToDelete(null)
@@ -370,13 +397,17 @@ export default function AdminInternalUsersPage() {
     if (!userToSuspend) return
     setActionLoading("suspend")
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers(
-        users.map((u) =>
-          u.id === userToSuspend.id ? { ...u, status: "suspended" as const, updatedAt: new Date() } : u
-        )
-      )
+      const response = await fetch(`/api/admin/internal-users/${userToSuspend.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'suspended' }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to suspend user')
+      }
+      
       setSuspendConfirmOpen(false)
       const suspendedUserName = userToSuspend.name
       setUserToSuspend(null)
@@ -400,13 +431,17 @@ export default function AdminInternalUsersPage() {
     }
     setActionLoading(`activate-${user.id}`)
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
-          u.id === user.id ? { ...u, status: "active" as const, updatedAt: new Date() } : u
-        )
-      )
+      const response = await fetch(`/api/admin/internal-users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' }),
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to activate user')
+      }
+      
       showSuccess(`User "${user.name}" has been activated`)
       // Refresh data after activate
       await fetchUsers()
@@ -562,6 +597,26 @@ export default function AdminInternalUsersPage() {
     }
     if (!editingUser && !formData.password) errors.password = "Password is required"
     if (formData.password && formData.password.length < 8) errors.password = "Password must be at least 8 characters"
+    
+    // Validate phone number format if provided
+    if (formData.phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+      errors.phoneNumber = "Invalid phone number format. Use international format (e.g., +1234567890)"
+    }
+    
+    // Validate username uniqueness if provided
+    if (formData.username) {
+      const duplicateUsername = users.find(
+        (u) => (u as any).username?.toLowerCase() === formData.username.toLowerCase() && u.id !== editingUser?.id
+      )
+      if (duplicateUsername) {
+        errors.username = "This username is already in use"
+      }
+    }
+    
+    // Validate avatar URL format if provided
+    if (formData.avatarUrl && !/^https?:\/\/.+\..+/.test(formData.avatarUrl)) {
+      errors.avatarUrl = "Invalid URL format. Must start with http:// or https://"
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors)
@@ -570,34 +625,47 @@ export default function AdminInternalUsersPage() {
 
     setFormLoading(true)
     try {
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
+      let response: Response
+      
       if (editingUser) {
-        setUsers(
-          users.map((u) =>
-            u.id === editingUser.id
-              ? {
-                  ...u,
-                  name: formData.name,
-                  email: formData.email,
-                  role: formData.role,
-                  updatedAt: new Date(),
-                }
-              : u
-          )
-        )
-      } else {
-        const newUser: InternalUser = {
-          id: `int_${Date.now()}`,
+        const updateData: any = {
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          status: "active",
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          status: formData.status,
         }
-        setUsers([...users, newUser])
+        
+        // Only include optional fields if they have values
+        if (formData.phoneNumber) updateData.phoneNumber = formData.phoneNumber
+        if (formData.username) updateData.username = formData.username
+        if (formData.avatarUrl) updateData.avatarUrl = formData.avatarUrl
+        if (formData.password) updateData.password = formData.password // Password reset
+        
+        response = await fetch(`/api/admin/internal-users/${editingUser.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updateData),
+        })
+      } else {
+        response = await fetch('/api/admin/internal-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role,
+            status: formData.status,
+            phoneNumber: formData.phoneNumber || undefined,
+            username: formData.username || undefined,
+            avatarUrl: formData.avatarUrl || undefined,
+          }),
+        })
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save user')
       }
 
       setFormOpen(false)
@@ -607,9 +675,14 @@ export default function AdminInternalUsersPage() {
         email: "",
         password: "",
         role: "executive",
+        status: "active",
+        phoneNumber: "",
+        username: "",
+        avatarUrl: "",
       })
       setFormErrors({})
       setShowPassword(false)
+      setShowAdvancedOptions(false)
       const userName = formData.name
       showSuccess(editingUser 
         ? `User "${userName}" has been updated successfully`
@@ -633,9 +706,14 @@ export default function AdminInternalUsersPage() {
         email: "",
         password: "",
         role: "executive",
+        status: "active",
+        phoneNumber: "",
+        username: "",
+        avatarUrl: "",
       })
       setFormErrors({})
       setShowPassword(false)
+      setShowAdvancedOptions(false)
     }
   }, [formOpen, editingUser])
 
@@ -671,10 +749,16 @@ export default function AdminInternalUsersPage() {
             }
             setBulkActionLoading("delete")
             try {
-              // TODO: Replace with real API call
-              await new Promise((resolve) => setTimeout(resolve, 500))
-              const selectedIds = selectedUsers.map((u) => u.id)
-              setUsers(users.filter((u) => !selectedIds.includes(u.id)))
+              // Delete users one by one
+              for (const user of selectedUsers) {
+                const response = await fetch(`/api/admin/internal-users/${user.id}`, {
+                  method: 'DELETE',
+                })
+                if (!response.ok) {
+                  const errorData = await response.json()
+                  throw new Error(errorData.error || `Failed to delete user ${user.name}`)
+                }
+              }
               const deletedCount = selectedUsers.length
               setSelectedUsers([])
               showSuccess(`${deletedCount} user(s) deleted successfully`)
@@ -707,16 +791,18 @@ export default function AdminInternalUsersPage() {
             }
             setBulkActionLoading("suspend")
             try {
-              // TODO: Replace with real API call
-              await new Promise((resolve) => setTimeout(resolve, 500))
-              const selectedIds = selectedUsers.map((u) => u.id)
-              setUsers(
-                users.map((u) =>
-                  selectedIds.includes(u.id)
-                    ? { ...u, status: "suspended" as const, updatedAt: new Date() }
-                    : u
-                )
-              )
+              // Suspend users one by one
+              for (const user of selectedUsers) {
+                const response = await fetch(`/api/admin/internal-users/${user.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: 'suspended' }),
+                })
+                if (!response.ok) {
+                  const errorData = await response.json()
+                  throw new Error(errorData.error || `Failed to suspend user ${user.name}`)
+                }
+              }
               const suspendedCount = selectedUsers.length
               setSelectedUsers([])
               showSuccess(`${suspendedCount} user(s) suspended successfully`)
@@ -749,16 +835,18 @@ export default function AdminInternalUsersPage() {
             }
             setBulkActionLoading("activate")
             try {
-              // TODO: Replace with real API call
-              await new Promise((resolve) => setTimeout(resolve, 500))
-              const selectedIds = selectedUsers.map((u) => u.id)
-              setUsers(
-                users.map((u) =>
-                  selectedIds.includes(u.id)
-                    ? { ...u, status: "active" as const, updatedAt: new Date() }
-                    : u
-                )
-              )
+              // Activate users one by one
+              for (const user of selectedUsers) {
+                const response = await fetch(`/api/admin/internal-users/${user.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ status: 'active' }),
+                })
+                if (!response.ok) {
+                  const errorData = await response.json()
+                  throw new Error(errorData.error || `Failed to activate user ${user.name}`)
+                }
+              }
               const activatedCount = selectedUsers.length
               setSelectedUsers([])
               showSuccess(`${activatedCount} user(s) activated successfully`)
@@ -1206,6 +1294,257 @@ export default function AdminInternalUsersPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="status">Status</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>User account status. Active users can access the system, suspended users cannot.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value as UserStatus })}>
+                <SelectTrigger id="status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* More Options - Expandable Section */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="more-options" className="border-none">
+                <AccordionTrigger className="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                  <div className="flex items-center gap-2">
+                    <span>More Options</span>
+                    {(() => {
+                      const filledCount = [
+                        formData.phoneNumber,
+                        formData.username,
+                        formData.avatarUrl,
+                        editingUser && formData.password ? formData.password : null,
+                      ].filter(Boolean).length
+                      return filledCount > 0 ? (
+                        <Badge variant="secondary" className="text-xs">
+                          {filledCount} filled
+                        </Badge>
+                      ) : null
+                    })()}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="space-y-4 pt-2">
+                  {/* Phone Number */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Optional phone number for contact and notifications</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={formData.phoneNumber}
+                      onChange={(e) => {
+                        setFormData({ ...formData, phoneNumber: e.target.value })
+                        if (formErrors.phoneNumber) setFormErrors({ ...formErrors, phoneNumber: "" })
+                      }}
+                      onBlur={() => {
+                        if (formData.phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(formData.phoneNumber.replace(/\s/g, ""))) {
+                          setFormErrors({ ...formErrors, phoneNumber: "Invalid phone number format" })
+                        }
+                      }}
+                      placeholder="+1234567890"
+                      className={formErrors.phoneNumber ? "border-destructive" : ""}
+                    />
+                    {formErrors.phoneNumber && <p className="text-xs text-destructive">{formErrors.phoneNumber}</p>}
+                  </div>
+
+                  {/* Username */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="username">Username</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Optional unique username. If not provided, email will be used.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="username"
+                      value={formData.username}
+                      onChange={(e) => {
+                        setFormData({ ...formData, username: e.target.value })
+                        if (formErrors.username) setFormErrors({ ...formErrors, username: "" })
+                      }}
+                      onBlur={() => {
+                        if (formData.username) {
+                          const duplicateUsername = users.find(
+                            (u) => (u as any).username?.toLowerCase() === formData.username.toLowerCase() && u.id !== editingUser?.id
+                          )
+                          if (duplicateUsername) {
+                            setFormErrors({ ...formErrors, username: "This username is already in use" })
+                          }
+                        }
+                      }}
+                      placeholder="username"
+                      className={formErrors.username ? "border-destructive" : ""}
+                    />
+                    {formErrors.username && <p className="text-xs text-destructive">{formErrors.username}</p>}
+                  </div>
+
+                  {/* Avatar URL */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="avatarUrl">Avatar URL</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Optional URL to user's avatar image</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="avatarUrl"
+                      type="url"
+                      value={formData.avatarUrl}
+                      onChange={(e) => {
+                        setFormData({ ...formData, avatarUrl: e.target.value })
+                        if (formErrors.avatarUrl) setFormErrors({ ...formErrors, avatarUrl: "" })
+                      }}
+                      onBlur={() => {
+                        if (formData.avatarUrl && !/^https?:\/\/.+\..+/.test(formData.avatarUrl)) {
+                          setFormErrors({ ...formErrors, avatarUrl: "Invalid URL format" })
+                        }
+                      }}
+                      placeholder="https://example.com/avatar.jpg"
+                      className={formErrors.avatarUrl ? "border-destructive" : ""}
+                    />
+                    {formErrors.avatarUrl && <p className="text-xs text-destructive">{formErrors.avatarUrl}</p>}
+                  </div>
+
+                  {/* Password Reset - Edit Mode Only */}
+                  {editingUser && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <Label htmlFor="passwordReset">Change Password</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <AlertCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Leave blank to keep current password. Enter new password to change it.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            id="passwordReset"
+                            type={showPassword ? "text" : "password"}
+                            value={formData.password}
+                            onChange={(e) => {
+                              setFormData({ ...formData, password: e.target.value })
+                              if (formErrors.password) setFormErrors({ ...formErrors, password: "" })
+                            }}
+                            placeholder="Leave blank to keep current password"
+                            className={formErrors.password ? "border-destructive pr-20" : "pr-20"}
+                          />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 cursor-pointer"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{showPassword ? "Hide password" : "Show password"}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            {formData.password && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 cursor-pointer"
+                                    onClick={handleCopyPassword}
+                                  >
+                                    <Copy className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Copy password to clipboard</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleGeneratePassword}
+                              className="flex-shrink-0 cursor-pointer"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Generate
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Generate a secure random password</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      {formData.password && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">Password strength:</span>
+                            <span className={`font-medium ${getPasswordStrengthColor(formData.password)}`}>
+                              {getPasswordStrengthLabel(formData.password)}
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all ${getPasswordStrengthBarColor(formData.password)}`}
+                              style={{ width: `${getPasswordStrengthProgress(formData.password)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {formErrors.password && <p className="text-xs text-destructive">{formErrors.password}</p>}
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
           <DialogFooter className="pt-4 border-t">
             <Button

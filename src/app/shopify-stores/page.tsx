@@ -6,7 +6,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Store, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
+import Image from "next/image"
 import { ConnectStoreModal } from "./components/connect-store-modal"
 import { StoreList } from "./components/store-list"
 import { ShopifyStore, sampleStores } from "./data/stores"
@@ -36,7 +37,7 @@ export default function ShopifyStoresPage() {
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-800 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -72,20 +73,22 @@ export default function ShopifyStoresPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Icon/Mascot */}
-              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
-                <Store 
-                  className="h-12 w-12 text-white"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/shopify-stores.png"
+                    alt="Shopify Stores"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Shopify Stores</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Shopify Stores</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Connect and manage your Shopify stores to track performance and sync products.
                 </p>
               </div>
@@ -112,8 +115,13 @@ export default function ShopifyStoresPage() {
           ) : stores.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mb-6">
-                  <Store className="h-10 w-10 text-primary" />
+                <div className="relative w-24 h-24 mb-6">
+                  <Image
+                    src="/images/logos/shopify.svg"
+                    alt="Shopify logo"
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <h2 className="text-2xl font-semibold mb-2">No Stores Connected</h2>
                 <p className="text-muted-foreground mb-8 max-w-md">

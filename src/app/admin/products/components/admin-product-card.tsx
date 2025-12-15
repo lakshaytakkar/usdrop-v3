@@ -26,6 +26,7 @@ interface AdminProductCardProps {
   onDuplicate?: (product: ProductUnion) => void
   onViewCategory?: (product: ProductUnion) => void
   onViewSupplier?: (product: ProductUnion) => void
+  onOpenDrawer?: (product: ProductUnion) => void
   canEdit?: boolean
   canDelete?: boolean
   canLockUnlock?: boolean
@@ -53,6 +54,7 @@ export function AdminProductCard({
   onDuplicate,
   onViewCategory,
   onViewSupplier,
+  onOpenDrawer,
   canEdit = true,
   canDelete = true,
   canLockUnlock = true,
@@ -61,8 +63,30 @@ export function AdminProductCard({
   const handPicked = product as HandPickedProduct
   const productPick = product as ProductPick
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger if clicking on buttons, dropdown, or interactive elements
+    const target = e.target as HTMLElement
+    if (
+      target.closest('button') ||
+      target.closest('[role="menuitem"]') ||
+      target.closest('[role="button"]') ||
+      target.closest('[data-dropdown]') ||
+      target.closest('a')
+    ) {
+      return
+    }
+    if (onOpenDrawer) {
+      onOpenDrawer(product)
+    } else if (onViewDetails) {
+      onViewDetails(product)
+    }
+  }
+
   return (
-    <Card className="flex h-full flex-col">
+    <Card 
+      className="flex h-full flex-col cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <div className="relative w-full aspect-square overflow-hidden rounded-t-xl">
         {product.image ? (
           <Image
@@ -251,5 +275,14 @@ export function AdminProductCard({
     </Card>
   )
 }
+
+
+
+
+
+
+
+
+
 
 

@@ -1,5 +1,12 @@
 import { ExternalUser } from "@/types/admin/users"
 
+/**
+ * @deprecated This file is deprecated - use the API endpoint /api/admin/external-users instead
+ * Keeping this temporarily for backward compatibility
+ * TODO: Remove all references to this file
+ * 
+ * To seed external users, use: npx tsx scripts/seed-external-users.ts
+ */
 export const sampleExternalUsers: ExternalUser[] = [
   {
     id: "ext_001",

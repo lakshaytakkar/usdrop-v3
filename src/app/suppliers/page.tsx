@@ -15,9 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Package, Search, Users, HelpCircle } from "lucide-react"
+import { Search, Users, HelpCircle } from "lucide-react"
+import Image from "next/image"
 import { SupplierCard } from "./components/supplier-card"
 import { Supplier, sampleSuppliers } from "./data/suppliers"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function SuppliersPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -60,9 +62,9 @@ export default function SuppliersPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -98,20 +100,22 @@ export default function SuppliersPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Icon/Mascot */}
-              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent flex items-center justify-center">
-                <Package 
-                  className="h-12 w-12 text-white"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/suppliers.png"
+                    alt="Suppliers"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Suppliers</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Suppliers</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Connect with verified suppliers offering exclusive products, competitive pricing, and reliable fulfillment.
                 </p>
               </div>
@@ -185,6 +189,7 @@ export default function SuppliersPage() {
               ))}
             </div>
           )}
+          <OnboardingProgressOverlay pageName="Private Suppliers" />
         </div>
       </SidebarInset>
     </SidebarProvider>

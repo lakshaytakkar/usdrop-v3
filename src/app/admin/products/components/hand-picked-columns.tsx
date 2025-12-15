@@ -20,6 +20,7 @@ import { format } from "date-fns"
 interface CreateHandPickedColumnsProps {
   onViewDetails: (product: HandPickedProduct) => void
   onQuickView: (product: HandPickedProduct) => void
+  onOpenDrawer?: (product: HandPickedProduct) => void
   onEdit?: (product: HandPickedProduct) => void
   onDelete: (product: HandPickedProduct) => void
   onCopyProductId?: (product: HandPickedProduct) => void
@@ -36,6 +37,7 @@ interface CreateHandPickedColumnsProps {
 export function createHandPickedColumns({
   onViewDetails,
   onQuickView,
+  onOpenDrawer,
   onEdit,
   onDelete,
   onCopyProductId,
@@ -241,7 +243,17 @@ export function createHandPickedColumns({
                 </TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end" side="left" className="w-48">
-                <DropdownMenuItem onClick={() => onViewDetails(product)} className="cursor-pointer">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (onOpenDrawer) {
+                      onOpenDrawer(product)
+                    } else {
+                      onViewDetails(product)
+                    }
+                  }} 
+                  className="cursor-pointer"
+                >
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>

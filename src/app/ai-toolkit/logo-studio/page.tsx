@@ -7,6 +7,7 @@ import { Topbar } from "@/components/topbar"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { LogoStudio } from "@/components/ai-tools/logo-studio"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function LogoStudioPage() {
   return (
@@ -14,9 +15,9 @@ export default function LogoStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-900 via-cyan-950 to-teal-800 p-3 text-white h-[77px] flex-shrink-0">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-900 via-cyan-950 to-teal-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
             <div 
               className="absolute inset-0 z-0"
@@ -52,25 +53,22 @@ export default function LogoStudioPage() {
             ></div>
 
             {/* Content */}
-            <div className="relative z-10 flex items-center gap-3 h-full">
-              {/* Mascot before text */}
-              <div className="relative w-[60px] h-[60px] flex-shrink-0 bg-transparent">
-                <Image
-                  src="/logo-studio-mascot.png"
-                  alt="3D mascot with logo design tool"
-                  fill
-                  className="object-contain"
-                  style={{
-                    filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.3))',
-                  }}
-                  priority
-                  unoptimized
-                />
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Image
+                    src="/images/banner-thumbnails/logo-studio.png"
+                    alt="Logo Studio"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-lg md:text-xl font-bold leading-tight">USDrop Whitelabelling</h2>
-                <p className="text-white/85 text-xs leading-tight mt-0.5">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Whitelabelling</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Apply your logo to multiple images in bulk. Customize placement, size, and opacity.
                 </p>
               </div>
@@ -90,6 +88,9 @@ export default function LogoStudioPage() {
           </div>
 
           <LogoStudio />
+          
+          {/* Onboarding Progress Overlay */}
+          <OnboardingProgressOverlay pageName="Whitelabelling" />
         </div>
       </SidebarInset>
     </SidebarProvider>

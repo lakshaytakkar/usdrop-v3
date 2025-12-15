@@ -1,70 +1,51 @@
-# USDrop V3 Development Guidelines
+# Cursor Rules for USDrop Project
 
-## Component Development Standards
+## Project Context
+- **Tech Stack:** Next.js 16, TypeScript, React, Tailwind CSS, Supabase
+- **Domain:** E-commerce / Dropshipping Platform
+- **Purpose:** AI-powered dropshipping platform with content generation tools
 
-### Brand Tokens & Theming
-- **Always use brand tokens** from `globals.css` CSS variables instead of hardcoded colors
-- Use semantic color tokens: `primary`, `secondary`, `accent`, `muted`, `foreground`, `background`, etc.
-- For purple/orange brand colors, use `primary` and `accent` tokens which are already configured
-- Use `text-foreground`, `bg-background`, `border-border`, etc. for consistent theming
-- Support dark mode by using theme-aware classes (dark mode is handled automatically via CSS variables)
+## Prompt Improvement Agent
 
-### Shadcn UI Components
-- **Always use shadcn components** from `@/components/ui` when available
-- When creating new components, check if a shadcn equivalent exists first
-- Install new shadcn components using: `npx shadcn@latest add [component-name] --yes`
-- Follow shadcn patterns and composition for consistency
-- Use shadcn variants and props instead of custom styling when possible
+When asked to improve a prompt, follow these rules:
 
-### Component Structure
-- Place all components in `src/components/` directory
-- UI primitives go in `src/components/ui/` (shadcn components)
-- Feature-specific components go in `src/components/` root
-- Use TypeScript for all components
-- Use "use client" directive for client-side interactivity
+1. **Apply the 10 Essential Prompting Rules:**
+   - Use collaborative tone (respectful, direct, specific)
+   - Be explicit (action verbs, quantities, target audience)
+   - Define boundaries (length, style, constraints, banned words)
+   - Request structured output (tables, lists, specific formats)
+   - Explain the "why" (brand, audience, goals)
+   - Control brevity vs verbosity (expert/beginner/ELI5)
+   - Provide scaffolds (templates, headings, structure)
+   - Use power phrases ("think step by step", "critique your response")
+   - Add personas ("Act as [expert role]")
+   - Divide complex tasks into sections
 
-### Styling Guidelines
-- Use Tailwind CSS utility classes
-- Prefer composition over customization
-- Use `cn()` utility from `@/lib/utils` for conditional classes
-- Follow the existing design system patterns
-- Maintain consistent spacing using Tailwind's spacing scale
-- Use semantic HTML elements with appropriate ARIA attributes
+2. **Incorporate Project Context:**
+   - Reference actual files, components, or patterns in the codebase
+   - Use project-specific terminology and structure
+   - Consider the tech stack when suggesting implementations
+   - Align with the e-commerce/dropshipping domain
 
-### File Organization
-- Keep components focused and single-purpose
-- Export components from index files when appropriate
-- Use descriptive, PascalCase names for components
-- Match file names to component names
+3. **World-Building:**
+   - Add rich context, examples, and references
+   - Include constraints to avoid generic output
+   - Provide specific, actionable details
 
-### Best Practices
-- Always adapt new components to use brand tokens automatically
-- Ensure components work in both light and dark modes
-- Test responsive behavior (mobile-first approach)
-- Use shadcn's built-in accessibility features
-- Follow Next.js 16+ patterns (App Router, Server/Client Components)
+4. **Output Format:**
+   - Return ONLY the improved prompt
+   - No explanations unless explicitly requested
+   - The prompt should be ready to use immediately
 
-### Example Component Pattern
-```tsx
-"use client" // if needed
+## Code Style
+- Use TypeScript with strict typing
+- Follow Next.js 16 App Router patterns
+- Use Tailwind CSS for styling
+- Prefer functional components with hooks
+- Use shadcn/ui components when available
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-
-export function MyComponent({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <Card className={cn("p-6", className)} {...props}>
-      <Button variant="default">Action</Button>
-    </Card>
-  )
-}
-```
-
-## Project-Specific Notes
-- Project location: `usdrop-v3/`
-- Theme: Purple/Orange gradient brand colors
-- Framework: Next.js 16+ with App Router
-- UI Library: Shadcn UI (New York style)
-- Styling: Tailwind CSS v4 with CSS variables
-
+## File Structure
+- Components: `src/components/`
+- Pages: `src/app/`
+- Utilities: `src/lib/`
+- Types: `src/types/`

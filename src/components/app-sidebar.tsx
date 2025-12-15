@@ -15,8 +15,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { Logo } from "@/components/logo"
-import { ProBadge, LimitedBadge } from "@/components/ui/pro-badge"
+import { SidebarOnboardingBadge } from "@/components/sidebar-onboarding-badge"
 import { SidebarCreditsFooter } from "@/components/sidebar-credits-footer"
+import { SidebarPicklistBadge } from "@/components/sidebar-picklist-badge"
 import {
   TrendingUp,
   Trophy,
@@ -54,6 +55,11 @@ import {
   Zap,
   Droplets,
   FileSearch,
+  LayoutDashboard,
+  Share2,
+  Receipt,
+  PenTool,
+  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -82,6 +88,11 @@ const aiResearchItems = [
     url: "/categories",
   },
   {
+    title: "Seasonal Collections",
+    icon: Calendar,
+    url: "/seasonal-collections",
+  },
+  {
     title: "Meta Ads",
     icon: BarChart3,
     url: "/meta-ads",
@@ -90,11 +101,6 @@ const aiResearchItems = [
 
 // USDrop AI Learn items
 const aiLearnItems = [
-  {
-    title: "Academy",
-    icon: GraduationCap,
-    url: "/academy",
-  },
   {
     title: "Intelligence",
     icon: Newspaper,
@@ -142,13 +148,7 @@ const aiStudioItems = [
     isPro: true,
   },
   {
-    title: "Campaign Studio",
-    icon: Presentation,
-    url: "/ai-toolkit/campaign-studio",
-    isPro: true,
-  },
-  {
-    title: "Ad Studio",
+    title: "Ad Creative Studio",
     icon: Sparkles,
     url: "/ai-toolkit/ad-studio",
     isPro: true,
@@ -159,6 +159,40 @@ const aiStudioItems = [
     url: "/ai-toolkit/model-studio",
     isPro: true,
   },
+]
+
+// USDrop AI Toolkit items
+const aiToolkitItems = [
+  {
+    title: "Description Generator",
+    icon: PenTool,
+    url: "/ai-toolkit/description-generator",
+    isPro: true,
+  },
+  {
+    title: "Social Media Studio",
+    icon: Share2,
+    url: "/ai-toolkit/social-media-studio",
+    isPro: true,
+  },
+  {
+    title: "Email Templates",
+    icon: Mail,
+    url: "/ai-toolkit/email-templates",
+    isPro: true,
+  },
+  {
+    title: "Policy Generator",
+    icon: Shield,
+    url: "/ai-toolkit/policy-generator",
+    isPro: true,
+  },
+  {
+    title: "Invoice Generator",
+    icon: Receipt,
+    url: "/ai-toolkit/invoice-generator",
+    isPro: true,
+  },
   {
     title: "Profit Calculator",
     icon: Calculator,
@@ -167,27 +201,39 @@ const aiStudioItems = [
   },
 ]
 
+// Pinned item (Dashboard)
+const pinnedItem = {
+  title: "My Dashboard",
+  icon: LayoutDashboard,
+  url: "/my-dashboard",
+}
+
 // USDrop AI Workspace items
 const aiWorkspaceItems = [
   {
     title: "Home",
     icon: Home,
-    url: "/",
+    url: "/home",
   },
   {
-    title: "My Journey",
+    title: "My Mentor",
+    icon: GraduationCap,
+    url: "/academy",
+  },
+  {
+    title: "My Roadmap",
     icon: Map,
     url: "/my-journey",
   },
   {
     title: "My Products",
     icon: Bookmark,
-    url: "/picklist",
+    url: "/my-products",
   },
   {
     title: "My Shopify Store",
     icon: ShoppingBag,
-    url: "/shopify-stores",
+    url: "/my-shopify-stores",
   },
 ]
 
@@ -364,17 +410,34 @@ export function AppSidebar() {
       <SidebarContent ref={sidebarContentRef}>
         {!isAdminRoute && (
           <>
-            {/* USDrop AI Workspace Section */}
+            {/* Pinned Dashboard Item */}
+            <SidebarGroup className="pb-0">
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild tooltip={pinnedItem.title} isActive={isActive(pinnedItem.url)}>
+                      <Link href={pinnedItem.url} className="flex items-center gap-2">
+                        <pinnedItem.icon className="h-4 w-4" />
+                        <span className="font-medium">{pinnedItem.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* MY WORKSPACE Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>USDrop AI Workspace</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">MY WORKSPACE</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {aiWorkspaceItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
+                        <Link href={item.url} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {item.title === "My Products" && <SidebarPicklistBadge />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -383,9 +446,9 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* USDrop AI Research Section */}
+            {/* RESEARCH Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>USDrop AI Research</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">RESEARCH</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {aiResearchItems.map((item) => (
@@ -394,7 +457,7 @@ export function AppSidebar() {
                         <Link href={item.url} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          {item.isLimited && <LimitedBadge size="sm" />}
+                          <SidebarOnboardingBadge />
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -403,9 +466,9 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* USDrop AI Learn Section */}
+            {/* LEARN Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>USDrop AI Learn</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">LEARN</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {aiLearnItems.map((item) => (
@@ -422,10 +485,10 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* USDrop AI Fulfilment Section */}
+            {/* FULFILMENT Section */}
             {aiFulfilmentItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel>USDrop AI Fulfilment</SidebarGroupLabel>
+                <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">FULFILMENT</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {aiFulfilmentItems.map((item) => (
@@ -434,8 +497,7 @@ export function AppSidebar() {
                           <Link href={item.url} className="flex items-center gap-2">
                             <item.icon className="h-4 w-4" />
                             <span className="flex-1">{item.title}</span>
-                            {item.isPro && <ProBadge size="sm" />}
-                            {item.isLimited && <LimitedBadge size="sm" />}
+                            <SidebarOnboardingBadge />
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -445,9 +507,9 @@ export function AppSidebar() {
               </SidebarGroup>
             )}
 
-            {/* USDrop AI Studio Section */}
+            {/* STUDIO Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>USDrop AI Studio</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">STUDIO</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {aiStudioItems.map((item) => (
@@ -456,7 +518,27 @@ export function AppSidebar() {
                         <Link href={item.url} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          {item.isPro && <ProBadge size="sm" />}
+                          <SidebarOnboardingBadge />
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* TOOLKIT Section */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">TOOLKIT</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {aiToolkitItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
+                        <Link href={item.url} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          <span className="flex-1">{item.title}</span>
+                          <SidebarOnboardingBadge />
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -472,7 +554,7 @@ export function AppSidebar() {
           <>
             {/* User Management Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>User Management</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">USER MANAGEMENT</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminUserManagementItems.map((item) => (
@@ -491,7 +573,7 @@ export function AppSidebar() {
 
             {/* Orders & Transactions Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Orders & Transactions</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">ORDERS & TRANSACTIONS</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminOrdersItems.map((item) => (
@@ -510,7 +592,7 @@ export function AppSidebar() {
 
             {/* Content Management Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Content Management</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">CONTENT MANAGEMENT</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminContentItems.map((item) => (
@@ -529,7 +611,7 @@ export function AppSidebar() {
 
             {/* Research & Stores Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Research & Stores</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">RESEARCH & STORES</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminResearchItems.map((item) => (
@@ -548,7 +630,7 @@ export function AppSidebar() {
 
             {/* Email Automation Section */}
             <SidebarGroup>
-              <SidebarGroupLabel>Email Automation</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">EMAIL AUTOMATION</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminEmailAutomationItems.map((item) => (

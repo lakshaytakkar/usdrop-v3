@@ -10,63 +10,54 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { RainbowButton } from "@/components/ui/rainbow-button"
-import { AIChatbotDialog } from "@/components/ai-chatbot-dialog"
+import { HotProductsModal } from "@/components/hot-products-modal"
+import GradientButton from "@/components/kokonutui/gradient-button"
 import { cn } from "@/lib/utils"
 import { 
   Gift, 
-  Moon, 
-  Sun, 
   GraduationCap, 
-  Bell,
   Settings,
   Gem,
   LogOut,
-  Sparkles,
   HelpCircle,
+  Flame,
 } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useAuth } from "@/contexts/auth-context"
 
 export function Topbar() {
-  const [theme, setTheme] = useState<"light" | "dark">("light")
   const [mounted, setMounted] = useState(false)
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false)
-  const aiButtonRef = useRef<HTMLButtonElement>(null)
+  const [isHotProductsOpen, setIsHotProductsOpen] = useState(false)
+  const { signOut } = useAuth()
 
   useEffect(() => {
     setMounted(true)
-    // Check if dark mode is already set
-    const isDark = document.documentElement.classList.contains("dark")
-    setTheme(isDark ? "dark" : "light")
   }, [])
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light"
-    setTheme(newTheme)
-    document.documentElement.classList.toggle("dark")
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Error logging out:', error)
+    }
   }
 
   return (
-    <header className={cn(
-      "sticky top-0 z-40 w-full border-b border-border",
-      isAIChatOpen 
-        ? "bg-background backdrop-blur-none" 
-        : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-    )}>
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-end px-2">
         {/* Action Buttons and Profile Menu */}
         <div className="flex items-center gap-2">
-          {/* Ask USDrop AI Button */}
-          <RainbowButton
-            ref={aiButtonRef}
-            size="lg"
-            className="hidden sm:flex items-center gap-2 h-[36.8px] rounded-lg font-sans px-[14.72px]"
-            onClick={() => setIsAIChatOpen(!isAIChatOpen)}
+          {/* Hot Products This Week Button */}
+          <GradientButton
+            variant="golden"
+            className="hidden sm:inline-flex h-9 px-3 text-sm font-mono items-center gap-2 group"
+            onClick={() => setIsHotProductsOpen(true)}
           >
-            <Sparkles className="h-4 w-4 flex-shrink-0" />
-            <span className="text-sm font-normal whitespace-nowrap">Ask USDrop AI</span>
-          </RainbowButton>
+            <Flame className="h-4 w-4 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
+            <span className="hidden lg:inline uppercase">HOT PRODUCTS THIS WEEK</span>
+            <span className="sm:inline lg:hidden uppercase">HOT PRODUCTS</span>
+          </GradientButton>
 
           <Button
             variant="ghost"
@@ -79,53 +70,26 @@ export function Topbar() {
 
           <Button
             variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="cursor-pointer"
-            title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-            suppressHydrationWarning
-          >
-            {mounted && theme === "light" ? (
-              <Moon className="h-4 w-4" />
-            ) : mounted ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer"
-            title="Help"
+            size="sm"
+            className="flex items-center gap-2 cursor-pointer"
             asChild
           >
             <Link href="/help">
               <HelpCircle className="h-4 w-4" />
+              <span className="hidden lg:inline">Help</span>
               <span className="sr-only">Help</span>
             </Link>
           </Button>
 
           <Button
             variant="ghost"
-            size="icon"
-            className="cursor-pointer"
-            title="Tutorial"
+            size="sm"
+            className="flex items-center gap-2 cursor-pointer"
+            title="Academy"
           >
             <GraduationCap className="h-4 w-4" />
-            <span className="sr-only">Tutorial</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="cursor-pointer"
-            title="Notifications"
-          >
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Notifications</span>
+            <span className="hidden lg:inline">Academy</span>
+            <span className="sr-only">Academy</span>
           </Button>
 
           {/* User Profile Dropdown */}
@@ -174,7 +138,11 @@ export function Topbar() {
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem variant="destructive" className="cursor-pointer">
+              <DropdownMenuItem 
+                variant="destructive" 
+                className="cursor-pointer"
+                onClick={handleLogout}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>
@@ -184,11 +152,10 @@ export function Topbar() {
         </div>
       </div>
 
-      {/* AI Chatbot Dialog */}
-      <AIChatbotDialog 
-        isOpen={isAIChatOpen} 
-        onClose={() => setIsAIChatOpen(false)}
-        buttonRef={aiButtonRef}
+      {/* Hot Products Modal */}
+      <HotProductsModal 
+        open={isHotProductsOpen} 
+        onOpenChange={setIsHotProductsOpen}
       />
     </header>
   )

@@ -4,15 +4,13 @@ import Image from "next/image"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BookOpen, Users, Star, Edit, MoreVertical } from "lucide-react"
+import { BookOpen, Edit, Users, Eye, EyeOff, Trash2 } from "lucide-react"
 import { Course } from "../data/courses"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface AdminCourseCardProps {
   course: Course
@@ -27,26 +25,17 @@ interface AdminCourseCardProps {
   canPublish?: boolean
 }
 
-const numberFormatter = new Intl.NumberFormat("en-US", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-})
-
 export function AdminCourseCard({
   course,
   onEdit,
   onBuild,
   onViewDetails,
   onDelete,
-  onDuplicate,
   onTogglePublish,
   canEdit = true,
   canDelete = true,
   canPublish = true,
 }: AdminCourseCardProps) {
-  const moduleCount = course.modules?.length || 0
-  const chapterCount = course.modules?.reduce((sum, m) => sum + (m.chapters?.length || 0), 0) || 0
-
   return (
     <Card className="flex h-full flex-col">
       <div className="relative w-full aspect-video overflow-hidden rounded-t-xl">
@@ -56,133 +45,122 @@ export function AdminCourseCard({
             alt={course.title}
             fill
             className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
-            <BookOpen className="h-12 w-12 text-muted-foreground" />
+            <BookOpen className="h-8 w-8 text-muted-foreground" />
           </div>
         )}
-        <div className="absolute top-2 right-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 bg-background/80 hover:bg-background focus:outline-none focus-visible:outline-none focus-visible:ring-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {onViewDetails && (
-                <DropdownMenuItem onClick={() => onViewDetails(course)}>
-                  View Details
-                </DropdownMenuItem>
-              )}
-              {onBuild && (
-                <DropdownMenuItem onClick={() => onBuild(course)}>
-                  Build Course
-                </DropdownMenuItem>
-              )}
-              {canEdit && onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(course)}>
-                  Edit
-                </DropdownMenuItem>
-              )}
-              {canPublish && onTogglePublish && (
-                <DropdownMenuItem onClick={() => onTogglePublish(course)}>
-                  {course.published ? "Unpublish" : "Publish"}
-                </DropdownMenuItem>
-              )}
-              {onDuplicate && (
-                <DropdownMenuItem onClick={() => onDuplicate(course)}>
-                  Duplicate
-                </DropdownMenuItem>
-              )}
-              {canDelete && onDelete && (
-                <DropdownMenuItem onClick={() => onDelete(course)} className="text-destructive">
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
         {course.featured && (
-          <div className="absolute top-2 left-2">
-            <Badge>Featured</Badge>
+          <div className="absolute top-1.5 left-1.5">
+            <Badge className="text-xs px-1.5 py-0">Featured</Badge>
           </div>
         )}
-        {!course.published && (
-          <div className="absolute bottom-2 left-2">
-            <Badge variant="secondary">Draft</Badge>
-          </div>
-        )}
+        <div className="absolute top-1.5 right-1.5">
+          <Badge variant={course.published ? "default" : "secondary"} className="text-xs px-1.5 py-0">
+            {course.published ? "Published" : "Draft"}
+          </Badge>
+        </div>
       </div>
-      <CardContent className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <h3 className="text-base font-semibold mb-1 line-clamp-2">{course.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+      <CardContent className="flex flex-1 flex-col gap-1.5 p-3">
+        <h3 className="text-sm font-semibold line-clamp-2 leading-tight">{course.title}</h3>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1.5 border-t">
+          <Users className="h-3.5 w-3.5" />
+          <span>{course.students_count} Enrolled</span>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={course.instructor_avatar || undefined} alt={course.instructor_name} />
-            <AvatarFallback>{course.instructor_name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <p className="text-sm text-muted-foreground">{course.instructor_name}</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {course.category && (
-            <Badge variant="outline">{course.category}</Badge>
-          )}
-          {course.level && (
-            <Badge variant="secondary">{course.level}</Badge>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between text-xs pt-2 border-t">
-          <div className="flex items-center gap-1">
-            <BookOpen className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{moduleCount} Modules</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <BookOpen className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{chapterCount} Chapters</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{numberFormatter.format(course.students_count)}</span>
-          </div>
-        </div>
-
-        {course.rating && (
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold">{course.rating.toFixed(1)}</span>
-          </div>
-        )}
       </CardContent>
-      <CardFooter className="flex gap-2 p-4 pt-0">
-        {onBuild && (
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => onBuild(course)}
-          >
-            <BookOpen className="h-4 w-4 mr-2" />
-            Build
-          </Button>
+      <CardFooter className="flex gap-1 p-2 pt-0 border-t">
+        {canPublish && onTogglePublish && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onTogglePublish(course)}
+                className="h-8 w-8"
+              >
+                {course.published ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{course.published ? "Unpublish Course" : "Publish Course"}</p>
+            </TooltipContent>
+          </Tooltip>
         )}
         {canEdit && onEdit && (
-          <Button
-            variant="default"
-            className="flex-1"
-            onClick={() => onEdit(course)}
-          >
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onEdit(course)}
+                className="h-8 w-8"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Edit Content</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {onViewDetails && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onViewDetails(course)}
+                className="h-8 w-8"
+              >
+                <Users className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View Enrolled Students</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {onBuild && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onBuild(course)}
+                className="h-8 w-8"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Build Course</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {canDelete && onDelete && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onDelete(course)}
+                className="h-8 w-8 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Delete Course</p>
+            </TooltipContent>
+          </Tooltip>
         )}
       </CardFooter>
     </Card>
   )
 }
-
