@@ -49,9 +49,12 @@ next-env.d.ts
 *.blend
 *.blend1
 
-# Large image files (add these later if needed)
-# Ignore entire public folder for now
-/public
+# Large files in public folder
+/public/videos
+/public/3d-ecom-icons-blue
+/public/christmas-icons
+/public/3d-icons
+/public/landing
 
 .vercel
 .env*.local
