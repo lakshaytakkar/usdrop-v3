@@ -314,10 +314,13 @@ function OnboardingSection() {
                     // Get thumbnail from module data or use placeholder
                     const moduleThumbnail = module.thumbnail || MODULE_THUMBNAILS[index % MODULE_THUMBNAILS.length]
 
+                    // Get the video ID from the module (each module now contains 1 video)
+                    const videoId = moduleVideos[0]?.id || module.id
+                    
                     return (
                       <Link
                         key={module.id}
-                        href={`/my-dashboard/onboarding/${module.id}`}
+                        href={`/onboarding/${module.id}?video=${videoId}`}
                         className="block"
                       >
                         <div className={cn(
@@ -357,11 +360,22 @@ function OnboardingSection() {
                               )}
                             </div>
                             <div className="flex items-center gap-4 text-xs text-gray-500">
-                              <span>{completedCount}/{totalCount} videos</span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {formatDuration(totalDuration)}
-                              </span>
+                              {totalCount > 1 ? (
+                                <span>{completedCount}/{totalCount} videos</span>
+                              ) : (
+                                moduleVideos[0]?.video_duration && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" />
+                                    {formatDuration(moduleVideos[0].video_duration)}
+                                  </span>
+                                )
+                              )}
+                              {totalCount > 1 && (
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {formatDuration(totalDuration)}
+                                </span>
+                              )}
                             </div>
                           </div>
 

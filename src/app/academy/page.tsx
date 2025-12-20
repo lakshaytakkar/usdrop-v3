@@ -75,7 +75,7 @@ export default function AcademyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
-  const { isFree } = useOnboarding()
+  const { isFree, isPro } = useOnboarding()
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -212,8 +212,9 @@ export default function AcademyPage() {
             {!loading && !error && courses.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {courses.map((course) => {
+                  // For pro users: all courses are unlocked (no locked overlay)
                   // For free users: lock all courses
-                  const isLocked = isFree
+                  const isLocked = isPro ? false : isFree
                   return (
                     <CourseCard 
                       key={course.id} 
@@ -246,7 +247,7 @@ export default function AcademyPage() {
                 <Button
                   onClick={() => {
                     setShowOnboardingDialog(false)
-                    router.push("/my-dashboard")
+                    router.push("/onboarding")
                   }}
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                 >

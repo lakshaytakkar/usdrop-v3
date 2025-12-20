@@ -52,25 +52,23 @@
       "Bash(SUPABASE_ACCESS_TOKEN=sbp_54d16974a6c54bb0e2df52abb1add809e20b45d2 npx supabase:*)",
       "Bash(gh auth status:*)",
       "Bash(git add:*)",
-      "Bash(del \"C:\\Development\\usdrop-v3\\disk_cleanup_check.ps1\")",
-      "Bash(git -C \"C:/Development/usdrop-v3\" status)",
-      "Bash(tasklist:*)",
-      "Bash(netstat:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMajor codebase cleanup and refactoring\n\n- Remove unused directories: AI Studio Tools, archive-unused-files, usdrop (1), mcp-servers\n- Remove deprecated landing page components (src/components/landing/)\n- Remove unused pages: camera-demo, picklist, kit, landing-old, download-landing-images\n- Remove unused data files and product picks\n- Remove old model images from public/models\n- Update admin pages and components\n- Update various app pages with improvements\n- Add .taskmaster configuration\n- Update package dependencies\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(del:*)",
+      "Bash(cmd /c \"del .env.prod.temp\")",
       "Bash(taskkill:*)",
-      "Bash(mkdir:*)",
-      "Bash(npm show:*)",
-      "Bash(cmd /c \"taskkill /PID 14800 /F\")",
-      "Bash(git config:*)",
-      "Bash(git credential-manager:*)",
-      "Bash(start https://github.com/login/device)",
-      "Bash(git commit:*)"
+      "Bash(cmd /c \"taskkill /F /PID 10200\")",
+      "Bash(cmd /c \"del /F /Q C:\\\\Development\\\\usdrop-v3\\\\.next\\\\dev\\\\lock 2>nul\")",
+      "Bash(timeout /t 10 /nobreak)",
+      "Bash(cmd /c \"netstat -ano | findstr :3000\")",
+      "Bash(cmd /c \"rmdir /S /Q C:\\\\Development\\\\usdrop-v3\\\\.next\")",
+      "Bash(cmd /c \"dir /s /b /ad src\\\\app\")"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "task-master-ai",
-    "linear"
+    "task-master-ai"
   ]
 }

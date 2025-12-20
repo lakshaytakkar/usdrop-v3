@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const redirectTo = searchParams.get('redirectTo') || '/home'
+    const redirectTo = searchParams.get('redirectTo') || '/onboarding'
     const signupIntent = searchParams.get('signup') === 'true'
     const source = searchParams.get('source') || 'google'
 

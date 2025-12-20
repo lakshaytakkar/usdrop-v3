@@ -17,7 +17,9 @@ export interface OnboardingVideo {
   module_id: string
   title: string
   description: string | null
-  video_url: string
+  video_url: string | null
+  video_storage_path: string | null
+  video_source?: 'upload' | 'embed' // 'upload' for Supabase Storage, 'embed' for external URLs like YouTube
   video_duration: number | null // Duration in seconds
   thumbnail: string | null
   order_index: number

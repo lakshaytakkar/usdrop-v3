@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { 
-  ShoppingCart, 
   Truck, 
   Package, 
   Calculator,
@@ -16,7 +15,6 @@ import {
   ExternalLink,
   MapPin
 } from "lucide-react"
-import GradientButton from "@/components/kokonutui/gradient-button"
 import { cn } from "@/lib/utils"
 
 interface FulfillmentSectionProps {
@@ -80,14 +78,6 @@ export function FulfillmentSection({ product, onImportToShopify }: FulfillmentSe
               We handle sourcing, quality control, and shipping directly to your customers.
             </p>
           </div>
-          <GradientButton
-            variant="purple"
-            onClick={onImportToShopify}
-            className="shrink-0"
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Import to Shopify
-          </GradientButton>
         </div>
 
         {/* Cost Breakdown */}

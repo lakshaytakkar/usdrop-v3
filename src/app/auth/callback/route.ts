@@ -72,10 +72,10 @@ export async function GET(request: Request) {
       if (type === 'reauthentication') {
         // Reauthentication successful, redirect back to the page that requested it
         const redirectUrl = isLocalEnv
-          ? `${origin}${next || '/my-dashboard'}?reauth_success=true`
+          ? `${origin}${next || '/onboarding'}?reauth_success=true`
           : forwardedHost
-            ? `https://${forwardedHost}${next || '/my-dashboard'}?reauth_success=true`
-            : `${origin}${next || '/my-dashboard'}?reauth_success=true`
+            ? `https://${forwardedHost}${next || '/onboarding'}?reauth_success=true`
+            : `${origin}${next || '/onboarding'}?reauth_success=true`
         return NextResponse.redirect(redirectUrl)
       }
       
@@ -138,8 +138,8 @@ export async function GET(request: Request) {
       if (isInternal) {
         finalRedirect = '/admin/internal-users'
       } else if (next === '/' || !next || next === '/home') {
-        // Default external users to /my-dashboard
-        finalRedirect = '/my-dashboard'
+        // Default external users to /onboarding
+        finalRedirect = '/onboarding'
       }
       
       // Handle other callbacks (email verification, OAuth, magic link, etc.)

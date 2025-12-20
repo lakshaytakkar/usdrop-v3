@@ -7,15 +7,11 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
-  TrendingUp, 
   Star, 
-  Bookmark,
   Eye,
   Flame,
   Lock
 } from "lucide-react"
-import { SlideTextButton } from "@/components/ui/slide-text-button"
-import { useToast } from "@/hooks/use-toast"
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   ChartConfig,
@@ -44,10 +40,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, isLocked = false, onLockedClick }: ProductCardProps) {
   const router = useRouter()
-  const { showSuccess, showError } = useToast()
   const [imageError, setImageError] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
   const [currentTagIndex, setCurrentTagIndex] = useState(0)
 
   const profitMargin = product.sellPrice > 0 
@@ -313,65 +306,17 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
 
         {/* Action Button */}
         <div className="pt-1">
-          <SlideTextButton
-            defaultText="Save Product"
-            hoverText="Add to My Products"
-            icon={
-              <Image
-                src="/images/ui/save-icon.png"
-                alt="Save icon"
-                width={20}
-                height={20}
-                className="object-contain"
-              />
-            }
-            onClick={async (e) => {
+          <Button
+            variant="default"
+            className="w-full cursor-pointer"
+            onClick={(e) => {
               e.stopPropagation()
-              
-              if (isSaving) return
-              
-              try {
-                setIsSaving(true)
-                
-                const response = await fetch('/api/picklist', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    productId: product.id,
-                    source: 'product-hunt',
-                  }),
-                })
-
-                const data = await response.json()
-
-                if (!response.ok) {
-                  if (response.status === 409 && data.alreadyExists) {
-                    showError("This product is already in your list.")
-                    setIsSaved(true)
-                    return
-                  }
-                  throw new Error(data.error || 'Failed to save product')
-                }
-
-                setIsSaved(true)
-                showSuccess("Product added to your list!")
-
-                // Dispatch event to update sidebar badge
-                window.dispatchEvent(new CustomEvent("picklist-updated"))
-
-                // Navigate to my-products page
-                router.push('/my-products')
-              } catch (error) {
-                console.error('Error saving product:', error)
-                showError(error instanceof Error ? error.message : "Failed to save product. Please try again.")
-              } finally {
-                setIsSaving(false)
-              }
+              router.push(`/product-hunt/${product.id}`)
             }}
-            disabled={isSaving || isSaved}
-          />
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View
+          </Button>
         </div>
 
         {/* Skeleton Overlay for Locked State */}

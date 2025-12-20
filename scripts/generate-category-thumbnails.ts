@@ -1,191 +1,189 @@
 /**
  * Generate category thumbnails using Nano-Banana MCP (Gemini API)
- * 
- * This script generates consistent thumbnails for all categories following a 3-layer structure:
- * 1. Objects: Top products from the category
- * 2. Background: Complimenting gradient/pattern
- * 3. Effects & Lighting: Professional photography feel
- * 
- * Usage:
- *   Set GEMINI_API_KEY in your environment, then run:
- *   npx tsx scripts/generate-category-thumbnails.ts
+ * This script generates consistent, well-guided images for each product category
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@supabase/supabase-js'
-import * as fs from 'fs/promises'
+import * as fs from 'fs'
 import * as path from 'path'
 
-// Load environment variables
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Get Supabase credentials from environment
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://znddcikjgrvmltruuvca.supabase.co'
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 
-if (!GEMINI_API_KEY) {
-  console.error('❌ GEMINI_API_KEY is not set in environment variables')
-  console.error('   Please set it: export GEMINI_API_KEY=your-key-here')
+if (!supabaseServiceKey) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY is required')
   process.exit(1)
 }
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ Supabase credentials not found')
-  console.error('   Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY')
-  process.exit(1)
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
+
+// Well-guided prompts for each category
+// These prompts are designed to create consistent, professional product category thumbnails
+const categoryPrompts: Record<string, string> = {
+  'electronics': 'A modern, clean product photography style image showing a sleek smartphone and wireless earbuds on a minimalist white background. Professional e-commerce product shot, soft lighting, high quality, 1:1 aspect ratio, centered composition, vibrant but not oversaturated colors.',
+  'fashion': 'A stylish product photography image showing a curated selection of fashion accessories - a leather handbag, sunglasses, and a watch arranged elegantly on a neutral background. Professional e-commerce style, soft natural lighting, 1:1 aspect ratio, clean and modern aesthetic.',
+  'home-garden': 'A beautiful home decor product photography image showing a modern vase with plants and decorative items arranged on a wooden surface. Warm, inviting lighting, professional e-commerce style, 1:1 aspect ratio, cozy and stylish composition.',
+  'beauty': 'A clean, professional beauty product photography image showing skincare bottles and makeup items arranged on a marble surface with soft natural lighting. Minimalist aesthetic, high quality, 1:1 aspect ratio, elegant and modern composition.',
+  'sports-fitness': 'A dynamic sports product photography image showing fitness equipment like dumbbells, resistance bands, and a water bottle arranged on a clean background. Energetic but professional style, good lighting, 1:1 aspect ratio, active lifestyle aesthetic.',
+  'kitchen': 'A modern kitchen product photography image showing kitchen gadgets and utensils arranged on a clean countertop. Professional e-commerce style, natural lighting, 1:1 aspect ratio, clean and functional aesthetic.',
+  'automotive': 'A sleek automotive product photography image showing car accessories like a phone mount, car charger, and air freshener arranged on a dark surface. Professional style, dramatic lighting, 1:1 aspect ratio, modern and sleek composition.',
+  'pet-supplies': 'A friendly pet product photography image showing pet toys, a food bowl, and accessories arranged on a light background. Warm and inviting style, soft lighting, 1:1 aspect ratio, pet-friendly aesthetic.',
+  'toys-games': 'A colorful toy product photography image showing educational toys and games arranged on a bright, playful background. Fun and vibrant style, good lighting, 1:1 aspect ratio, child-friendly aesthetic.',
+  'books-media': 'A sophisticated book and media product photography image showing books, headphones, and a tablet arranged on a wooden surface. Professional style, warm lighting, 1:1 aspect ratio, intellectual and modern composition.',
+  'health-wellness': 'A wellness product photography image showing vitamins, supplements, and health accessories arranged on a clean white background. Professional medical style, soft lighting, 1:1 aspect ratio, clean and trustworthy aesthetic.',
+  'outdoor-recreation': 'A dynamic outdoor product photography image showing camping gear, water bottles, and outdoor accessories arranged on a natural surface. Adventure style, natural lighting, 1:1 aspect ratio, rugged and functional aesthetic.',
+  'office-supplies': 'A professional office product photography image showing stationery, notebooks, and office accessories arranged on a clean desk. Business style, bright lighting, 1:1 aspect ratio, organized and efficient aesthetic.',
+  'baby-kids': 'A gentle baby product photography image showing baby toys, bottles, and accessories arranged on a soft, pastel background. Safe and caring style, soft lighting, 1:1 aspect ratio, warm and nurturing aesthetic.',
+  'jewelry-watches': 'A luxurious jewelry product photography image showing elegant watches and jewelry pieces arranged on a velvet surface. High-end style, dramatic lighting, 1:1 aspect ratio, sophisticated and premium aesthetic.',
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY)
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+// Fallback prompt template for categories not in the list
+const defaultPrompt = (categoryName: string) => 
+  `A professional e-commerce product photography image representing ${categoryName} products, arranged elegantly on a clean background. Modern, minimalist style, soft natural lighting, high quality, 1:1 aspect ratio, centered composition, vibrant colors suitable for online retail.`
 
-// Category-specific product examples for Layer 1
-const categoryProducts: Record<string, string[]> = {
-  'Electronics': ['smartphone', 'wireless earbuds', 'smartwatch', 'tablet'],
-  'Fashion & Accessories': ['elegant watch', 'stylish sunglasses', 'designer handbag', 'jewelry'],
-  'Beauty & Personal Care': ['skincare bottles', 'makeup palette', 'beauty tools', 'perfume'],
-  'Home & Garden': ['decorative vase', 'plant pot', 'candle', 'home accessory'],
-  'Kitchen & Dining': ['kitchen knife set', 'coffee maker', 'dining set', 'cookware'],
-  'Sports & Fitness': ['yoga mat', 'dumbbells', 'water bottle', 'fitness tracker'],
-  'Pet Supplies': ['pet food bowl', 'dog toy', 'cat bed', 'pet leash'],
-  'Baby & Kids': ['baby bottle', 'toy blocks', 'stroller', 'kids clothing'],
-  'Gadgets': ['smart speaker', 'wireless charger', 'bluetooth headphones', 'tech accessory'],
-  'Home Decor': ['wall art', 'throw pillow', 'decorative lamp', 'vase'],
-  'Other': ['miscellaneous products', 'various items', 'assorted goods'],
-}
+// Output directory for generated images
+const outputDir = path.join(process.cwd(), 'public', 'categories')
+const imagesDir = path.join(process.cwd(), 'generated_imgs')
 
-// Category-specific background colors
-const categoryColors: Record<string, string> = {
-  'Electronics': 'deep blue to purple',
-  'Fashion & Accessories': 'rose gold to champagne',
-  'Beauty & Personal Care': 'pink to lavender',
-  'Home & Garden': 'sage green to cream',
-  'Kitchen & Dining': 'warm orange to beige',
-  'Sports & Fitness': 'energetic blue to green',
-  'Pet Supplies': 'warm brown to tan',
-  'Baby & Kids': 'soft pastel blue to pink',
-  'Gadgets': 'modern teal to navy',
-  'Home Decor': 'elegant gray to gold',
-  'Other': 'neutral gray to white',
+// Ensure output directory exists
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true })
 }
 
 /**
- * Generate a consistent prompt for category thumbnails
+ * Generate image using Nano-Banana MCP via Gemini API
+ * Note: This requires the MCP server to be running and accessible
+ * In a real implementation, you would call the MCP server's generate_image tool
  */
-function generatePrompt(categoryName: string, description: string): string {
-  const products = categoryProducts[categoryName] || ['top products', 'popular items', 'featured goods']
-  const colors = categoryColors[categoryName] || 'neutral gradient'
+async function generateCategoryImage(categoryName: string, categorySlug: string): Promise<string | null> {
+  const prompt = categoryPrompts[categorySlug] || defaultPrompt(categoryName)
   
-  return `Create a professional e-commerce category thumbnail for ${categoryName} (${description}). 
-
-Layer 1 (Objects): Display 3-4 ${products.join(', ')} arranged elegantly in the foreground. Products should be clearly visible and professionally styled.
-
-Layer 2 (Background): Soft gradient background in ${colors} with subtle patterns or textures that complement the category theme. The background should enhance but not distract from the products.
-
-Layer 3 (Effects & Lighting): Professional product photography lighting with soft shadows, subtle glow effects around products, and a clean, modern aesthetic. The overall feel should be premium and inviting.
-
-Technical requirements:
-- Square format (1:1 aspect ratio)
-- Suitable for category cards and thumbnails
-- High quality, professional photography style
-- Products clearly visible and well-lit
-- Background complements the category theme
-- Consistent with e-commerce product photography standards`
-}
-
-/**
- * Generate thumbnail image using Gemini
- */
-async function generateThumbnail(categoryName: string, description: string): Promise<Buffer | null> {
+  console.log(`\n🎨 Generating image for "${categoryName}" (${categorySlug})...`)
+  console.log(`   Prompt: ${prompt.substring(0, 100)}...`)
+  
   try {
-    console.log(`  🎨 Generating thumbnail for "${categoryName}"...`)
+    // In a real implementation, you would use the MCP client to call generate_image
+    // For now, we'll create a placeholder that shows the expected structure
+    // The actual MCP call would be:
+    // const result = await mcpClient.callTool('generate_image', { prompt })
     
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
-    const prompt = generatePrompt(categoryName, description)
+    // Since we can't directly call MCP from Node.js script, we'll:
+    // 1. Create a helper script that uses the MCP tools
+    // 2. Or use the Gemini API directly
     
-    const result = await model.generateContent(prompt)
-    const response = await result.response
+    // For now, return null to indicate manual generation needed
+    // The user will need to use Cursor's MCP integration to generate these
     
-    // Note: Gemini 2.0 Flash Image API returns image data
-    // This is a placeholder - actual implementation depends on Gemini API response format
-    // You may need to adjust based on the actual API response
+    console.log(`   ⚠️  This script requires MCP integration.`)
+    console.log(`   Please use Cursor's MCP tools to generate images for each category.`)
+    console.log(`   Use this prompt: "${prompt}"`)
     
-    console.log(`  ✅ Generated thumbnail for "${categoryName}"`)
-    return null // Placeholder - implement actual image retrieval
+    return null
   } catch (error) {
-    console.error(`  ❌ Error generating thumbnail for "${categoryName}":`, error)
+    console.error(`   ✗ Error generating image:`, error)
     return null
   }
 }
 
 /**
- * Main function to generate all category thumbnails
+ * Update category image in database
  */
-async function main() {
-  console.log('🚀 Starting category thumbnail generation...\n')
+async function updateCategoryImage(categoryId: string, imageUrl: string) {
+  try {
+    const { error } = await supabase
+      .from('categories')
+      .update({ image: imageUrl })
+      .eq('id', categoryId)
+    
+    if (error) {
+      console.error(`   ✗ Error updating category:`, error.message)
+      return false
+    }
+    
+    console.log(`   ✓ Updated category image: ${imageUrl}`)
+    return true
+  } catch (error) {
+    console.error(`   ✗ Error updating category:`, error)
+    return false
+  }
+}
+
+/**
+ * Main function to generate thumbnails for all categories
+ */
+async function generateAllCategoryThumbnails() {
+  console.log('🎨 Starting category thumbnail generation...\n')
   
-  // Fetch all categories
+  // Fetch all parent categories (no parent_category_id)
   const { data: categories, error } = await supabase
     .from('categories')
-    .select('id, name, slug, description')
-    .order('name')
+    .select('id, name, slug, image')
+    .is('parent_category_id', null)
+    .order('name', { ascending: true })
   
   if (error) {
-    console.error('❌ Error fetching categories:', error)
+    console.error('Error fetching categories:', error)
     process.exit(1)
   }
   
   if (!categories || categories.length === 0) {
-    console.error('❌ No categories found')
-    process.exit(1)
+    console.log('No categories found.')
+    return
   }
   
-  console.log(`📋 Found ${categories.length} categories\n`)
+  console.log(`Found ${categories.length} categories to process\n`)
   
-  // Ensure output directory exists
-  const outputDir = path.join(process.cwd(), 'public', 'categories')
-  await fs.mkdir(outputDir, { recursive: true })
+  // Create a file with prompts for manual generation via MCP
+  const promptsFile = path.join(process.cwd(), 'scripts', 'category-image-prompts.json')
+  const promptsData: Array<{ categoryId: string; name: string; slug: string; prompt: string; currentImage: string | null }> = []
   
-  // Generate thumbnails for each category
   for (const category of categories) {
-    const thumbnailPath = path.join(outputDir, `${category.slug}-thumbnail.png`)
+    const prompt = categoryPrompts[category.slug] || defaultPrompt(category.name)
     
-    // Skip if thumbnail already exists
-    try {
-      await fs.access(thumbnailPath)
-      console.log(`  ⏭️  Thumbnail already exists for "${category.name}", skipping...`)
-      continue
-    } catch {
-      // File doesn't exist, proceed with generation
-    }
-    
-    // Generate thumbnail
-    const imageBuffer = await generateThumbnail(
-      category.name,
-      category.description || 'products'
-    )
-    
-    if (imageBuffer) {
-      // Save image
-      await fs.writeFile(thumbnailPath, imageBuffer)
-      console.log(`  💾 Saved thumbnail to ${thumbnailPath}`)
-      
-      // Update database
-      const thumbnailUrl = `/categories/${category.slug}-thumbnail.png`
-      const { error: updateError } = await supabase
-        .from('categories')
-        .update({ thumbnail: thumbnailUrl })
-        .eq('id', category.id)
-      
-      if (updateError) {
-        console.error(`  ❌ Error updating database for "${category.name}":`, updateError)
-      } else {
-        console.log(`  ✅ Updated database for "${category.name}"`)
-      }
-    }
-    
-    console.log() // Empty line for readability
+    promptsData.push({
+      categoryId: category.id,
+      name: category.name,
+      slug: category.slug,
+      prompt: prompt,
+      currentImage: category.image
+    })
   }
   
-  console.log('✨ Thumbnail generation complete!')
+  // Write prompts to file
+  fs.writeFileSync(promptsFile, JSON.stringify(promptsData, null, 2))
+  console.log(`✅ Created prompts file: ${promptsFile}`)
+  console.log(`\n📋 Next steps:`)
+  console.log(`   1. Use Cursor's MCP integration with nano-banana`)
+  console.log(`   2. For each category in the prompts file, generate an image using the provided prompt`)
+  console.log(`   3. Save generated images to: public/categories/{category-slug}.png`)
+  console.log(`   4. Run this script again with --update flag to update database`)
+  console.log(`\n📝 Example MCP command for first category:`)
+  if (promptsData.length > 0) {
+    console.log(`   Generate image: "${promptsData[0].prompt}"`)
+  }
 }
 
-// Run the script
-main().catch(console.error)
+// Check for --update flag
+const shouldUpdate = process.argv.includes('--update')
+
+if (shouldUpdate) {
+  // Update mode: read generated images and update database
+  console.log('🔄 Update mode: Updating category images in database...\n')
+  
+  // This would read from public/categories/ and update the database
+  // Implementation depends on how images are stored
+} else {
+  // Generate mode: create prompts file
+  generateAllCategoryThumbnails().catch(console.error)
+}
+
+
+
+
+

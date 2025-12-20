@@ -224,7 +224,7 @@ const aiToolkitItems: SidebarItem[] = [
 const pinnedItem: SidebarItem = {
   title: "Onboarding",
   icon: LayoutDashboard,
-  url: "/my-dashboard",
+  url: "/onboarding",
   isPro: false,
 }
 

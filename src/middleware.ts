@@ -60,9 +60,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages to my-dashboard
+  // Redirect authenticated users away from auth pages to onboarding
   if (user && (pathname === '/login' || pathname === '/signup')) {
-    const redirectTo = request.nextUrl.searchParams.get('redirectedFrom') || '/my-dashboard'
+    const redirectTo = request.nextUrl.searchParams.get('redirectedFrom') || '/onboarding'
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 

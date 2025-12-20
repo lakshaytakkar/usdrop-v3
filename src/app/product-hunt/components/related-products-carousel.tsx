@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, ChevronLeft, ChevronRight, Package } from "lucide-react"
+import { Eye, ChevronLeft, ChevronRight, Package } from "lucide-react"
 import { useState, useRef } from "react"
 import { Product } from "@/types/products"
 
@@ -118,23 +118,23 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
                     />
                   )}
                 </div>
-                <div className="p-3 space-y-2">
-                  <h4 className="font-semibold text-sm line-clamp-2">{product.title}</h4>
-                  <div className="flex justify-between items-center">
+                <div className="p-3 flex flex-col h-[120px]">
+                  <h4 className="font-semibold text-sm line-clamp-2 mb-auto min-h-[2.5rem]">{product.title}</h4>
+                  <div className="flex justify-between items-center mt-auto pt-2">
                     <span className="text-sm font-medium">
                       ${(product.buy_price || 0).toFixed(2)}
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="h-7 text-xs shrink-0"
                       onClick={(e) => {
                         e.stopPropagation()
-                        // Handle AliExpress link
+                        router.push(`/product-hunt/${product.id}`)
                       }}
                     >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      AliExpress
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
                     </Button>
                   </div>
                 </div>

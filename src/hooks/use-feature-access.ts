@@ -37,7 +37,7 @@ export function useFeatureAccess(): UseFeatureAccessReturn {
  * All other paths (except admin) require Pro
  */
 export const FREE_ACCESS_PATHS = [
-  "/my-dashboard",
+  "/onboarding",
   "/home",
   "/settings",
   "/profile",

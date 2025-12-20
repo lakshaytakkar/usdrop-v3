@@ -133,3 +133,7 @@ async function organizeImages() {
 // Run the script
 organizeImages().catch(console.error)
 
+
+
+
+

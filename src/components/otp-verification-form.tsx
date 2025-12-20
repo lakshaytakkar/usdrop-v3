@@ -88,7 +88,7 @@ export function OTPVerificationForm({
         if (data.isInternal) {
           redirectUrl = "/admin/internal-users"
         } else {
-          redirectUrl = getRedirectUrl(searchParams, "/home")
+          redirectUrl = getRedirectUrl(searchParams, "/onboarding")
         }
         router.push(redirectUrl)
         router.refresh()

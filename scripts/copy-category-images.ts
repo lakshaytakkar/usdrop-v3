@@ -73,3 +73,7 @@ function copyImages() {
 // Run the script
 copyImages()
 
+
+
+
+

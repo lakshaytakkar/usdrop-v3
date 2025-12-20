@@ -13,7 +13,6 @@ import {
   ArrowLeft, 
   ExternalLink,
   MessageCircle,
-  ShoppingCart,
   TrendingUp,
   Star,
   Bookmark,
@@ -31,7 +30,6 @@ import { SeasonalInterestChart } from "../components/seasonal-interest-chart"
 import { SaturationGauge } from "../components/saturation-gauge"
 import { TargetingSection } from "../components/targeting-section"
 import { CompetitionSection } from "../components/competition-section"
-import { InstagramInfluencers } from "../components/instagram-influencers"
 import { Product } from "@/types/products"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
@@ -348,17 +346,6 @@ export default function ProductDetailPage() {
                   <Sparkles className="h-4 w-4 sm:mr-2" />
                   <span className="hidden md:inline">AI Studio</span>
                 </Button>
-                <Button
-                  onClick={handleImportToShopify}
-                  variant="default"
-                  size="sm"
-                  className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
-                  title="Import to Shopify"
-                >
-                  <ShoppingCart className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden lg:inline">Import to Shopify</span>
-                  <span className="hidden sm:inline lg:hidden">Import</span>
-                </Button>
               </div>
             </div>
           </div>
@@ -575,12 +562,6 @@ export default function ProductDetailPage() {
             <div className="space-y-6 min-w-0 max-w-full">
               <h2 className="text-2xl font-bold">Product Reviews</h2>
               <ReviewsSection reviews={[]} />
-            </div>
-
-            {/* Instagram Influencers */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Instagram Influencers</h2>
-              <InstagramInfluencers />
             </div>
 
             {/* More Products */}

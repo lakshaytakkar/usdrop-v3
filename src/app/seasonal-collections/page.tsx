@@ -82,3 +82,7 @@ export default function SeasonalCollectionsPage() {
   )
 }
 
+
+
+
+

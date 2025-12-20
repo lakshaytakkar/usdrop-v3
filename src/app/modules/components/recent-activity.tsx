@@ -37,7 +37,7 @@ function generateSampleActivities(): ActivityItem[] {
       title: "Completed: Getting Started with Dropshipping",
       description: "Onboarding Module 1",
       timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-      href: "/my-dashboard"
+      href: "/onboarding"
     },
     {
       id: "2",

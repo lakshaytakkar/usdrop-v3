@@ -29,7 +29,9 @@ interface OnboardingVideo {
   module_id: string
   title: string
   description: string | null
-  video_url: string
+  video_url: string | null
+  video_storage_path?: string | null
+  video_source?: 'upload' | 'embed'
   video_duration: number | null
   thumbnail: string | null
   order_index: number
@@ -41,7 +43,8 @@ interface OnboardingModule {
   description: string | null
   order_index: number
   thumbnail: string | null
-  onboarding_videos: OnboardingVideo[]
+  onboarding_videos?: OnboardingVideo[]
+  videos?: OnboardingVideo[]
 }
 
 interface ProgressItem {
@@ -92,10 +95,12 @@ function OnboardingModuleContent() {
       setModule(foundModule)
 
       // Set initial video
+      // Check both onboarding_videos (old) and videos (new) properties
+      const moduleVideos = foundModule.onboarding_videos || foundModule.videos || []
       if (videoIdFromUrl) {
         setSelectedVideoId(videoIdFromUrl)
-      } else if (foundModule.onboarding_videos?.length > 0) {
-        setSelectedVideoId(foundModule.onboarding_videos[0].id)
+      } else if (moduleVideos.length > 0) {
+        setSelectedVideoId(moduleVideos[0].id)
       }
 
       // Fetch progress
@@ -127,8 +132,9 @@ function OnboardingModuleContent() {
     }
   }, [moduleId, fetchData])
 
-  // Get current video
-  const currentVideo = module?.onboarding_videos?.find(
+  // Get current video - check both onboarding_videos (old) and videos (new) properties
+  const moduleVideos = module?.onboarding_videos || module?.videos || []
+  const currentVideo = moduleVideos.find(
     (v) => v.id === selectedVideoId
   )
 
@@ -136,7 +142,7 @@ function OnboardingModuleContent() {
   const handleVideoSelect = useCallback(
     (videoId: string) => {
       setSelectedVideoId(videoId)
-      router.push(`/my-dashboard/onboarding/${moduleId}?video=${videoId}`, {
+      router.push(`/onboarding/${moduleId}?video=${videoId}`, {
         scroll: false,
       })
     },
@@ -162,7 +168,7 @@ function OnboardingModuleContent() {
         setCompletedVideoIds((prev) => new Set([...prev, currentVideo.id]))
 
         // Auto-advance to next video
-        const videos = module?.onboarding_videos || []
+        const videos = module?.onboarding_videos || module?.videos || []
         const currentIndex = videos.findIndex((v) => v.id === currentVideo.id)
         if (currentIndex < videos.length - 1) {
           handleVideoSelect(videos[currentIndex + 1].id)
@@ -178,9 +184,8 @@ function OnboardingModuleContent() {
   // Navigate to next/prev video
   const navigateVideo = useCallback(
     (direction: "next" | "prev") => {
-      if (!module?.onboarding_videos || !selectedVideoId) return
-
-      const videos = module.onboarding_videos
+      const videos = module?.onboarding_videos || module?.videos || []
+      if (!videos.length || !selectedVideoId) return
       const currentIndex = videos.findIndex((v) => v.id === selectedVideoId)
 
       if (direction === "next" && currentIndex < videos.length - 1) {
@@ -201,10 +206,11 @@ function OnboardingModuleContent() {
   }
 
   // Calculate progress
-  const totalVideos = module?.onboarding_videos?.length || 0
-  const completedCount = module?.onboarding_videos?.filter((v) =>
+  const moduleVideosForProgress = module?.onboarding_videos || module?.videos || []
+  const totalVideos = moduleVideosForProgress.length
+  const completedCount = moduleVideosForProgress.filter((v) =>
     completedVideoIds.has(v.id)
-  ).length || 0
+  ).length
   const progressPercentage = totalVideos > 0 ? (completedCount / totalVideos) * 100 : 0
 
   if (loading) {
@@ -230,7 +236,7 @@ function OnboardingModuleContent() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{error || "Module not found"}</AlertDescription>
         </Alert>
-        <Link href="/my-dashboard" className="mt-4">
+        <Link href="/onboarding" className="mt-4">
           <Button variant="outline">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
@@ -245,7 +251,7 @@ function OnboardingModuleContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/my-dashboard">
+          <Link href="/onboarding">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
@@ -271,15 +277,41 @@ function OnboardingModuleContent() {
         {/* Video Player */}
         <div className="space-y-4">
           <Card className="overflow-hidden">
-            {currentVideo?.video_url ? (
-              <div className="aspect-video bg-black">
-                <iframe
-                  src={currentVideo.video_url}
-                  className="w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
+            {currentVideo ? (
+              // Check if video_source is 'embed' (YouTube) or if video_url exists (legacy embed)
+              currentVideo.video_source === 'embed' || 
+              (currentVideo.video_url && !currentVideo.video_storage_path) ? (
+                // YouTube embed or external embed URL
+                <div className="aspect-video bg-black">
+                  <iframe
+                    src={currentVideo.video_url || ''}
+                    className="w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                    allowFullScreen
+                    title={currentVideo.title}
+                  />
+                </div>
+              ) : currentVideo.video_storage_path || currentVideo.video_url ? (
+                // Uploaded video from Supabase Storage
+                <div className="aspect-video bg-black">
+                  <video
+                    src={currentVideo.video_url || ''}
+                    className="w-full h-full"
+                    controls
+                    controlsList="nodownload"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              ) : (
+                // No video available
+                <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <Play className="h-16 w-16 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No video available</p>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="aspect-video bg-gray-100 flex items-center justify-center">
                 <Play className="h-16 w-16 text-gray-400" />
@@ -337,8 +369,8 @@ function OnboardingModuleContent() {
               size="sm"
               onClick={() => navigateVideo("prev")}
               disabled={
-                !module.onboarding_videos ||
-                module.onboarding_videos[0]?.id === selectedVideoId
+                !moduleVideos.length ||
+                moduleVideos[0]?.id === selectedVideoId
               }
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -349,9 +381,8 @@ function OnboardingModuleContent() {
               size="sm"
               onClick={() => navigateVideo("next")}
               disabled={
-                !module.onboarding_videos ||
-                module.onboarding_videos[module.onboarding_videos.length - 1]?.id ===
-                  selectedVideoId
+                !moduleVideos.length ||
+                moduleVideos[moduleVideos.length - 1]?.id === selectedVideoId
               }
             >
               Next
@@ -364,7 +395,7 @@ function OnboardingModuleContent() {
         <Card className="p-4 h-fit">
           <h3 className="font-semibold text-gray-900 mb-3">Videos</h3>
           <div className="space-y-2">
-            {module.onboarding_videos?.map((video, index) => {
+            {moduleVideos.map((video, index) => {
               const isSelected = video.id === selectedVideoId
               const isCompleted = completedVideoIds.has(video.id)
 
@@ -461,3 +492,5 @@ export default function OnboardingModulePage() {
     </OnboardingProvider>
   )
 }
+
+

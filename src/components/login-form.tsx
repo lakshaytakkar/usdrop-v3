@@ -78,7 +78,7 @@ export function LoginForm({
       if (data.isInternal) {
         redirectUrl = "/admin/internal-users"
       } else {
-        redirectUrl = getRedirectUrl(searchParams, "/my-dashboard")
+        redirectUrl = getRedirectUrl(searchParams, "/onboarding")
       }
       router.push(redirectUrl)
       router.refresh()
@@ -118,9 +118,9 @@ export function LoginForm({
                   onClick={async () => {
                     setGoogleLoading(true)
                     try {
-                      // For Google signin, we'll redirect to /my-dashboard by default
+                      // For Google signin, we'll redirect to /onboarding by default
                       // The callback will check if user is internal and redirect accordingly
-                      const redirectTo = getRedirectUrl(searchParams, "/my-dashboard")
+                      const redirectTo = getRedirectUrl(searchParams, "/onboarding")
                       window.location.href = `/api/auth/google?redirectTo=${encodeURIComponent(redirectTo)}`
                     } catch (error) {
                       setGoogleLoading(false)

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ConditionalChatbotBubble } from "@/components/conditional-chatbot-bubble";
 import { AuthProvider } from "@/contexts/auth-context";
+import { UserPlanProvider } from "@/contexts/user-plan-context";
 import { OnboardingProvider } from "@/contexts/onboarding-context";
 import { Toaster } from "@/components/ui/toast";
 
@@ -44,11 +45,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <OnboardingProvider>
-            {children}
-            <ConditionalChatbotBubble />
-            <Toaster />
-          </OnboardingProvider>
+          <UserPlanProvider>
+            <OnboardingProvider>
+              {children}
+              <ConditionalChatbotBubble />
+              <Toaster />
+            </OnboardingProvider>
+          </UserPlanProvider>
         </AuthProvider>
       </body>
     </html>

@@ -97,7 +97,7 @@ export function OnboardingCourseWidget({ onVideoClick }: OnboardingCourseWidgetP
       onVideoClick(moduleId, videoId)
     } else {
       // Default: navigate to video player page
-      window.location.href = `/my-dashboard/onboarding/${moduleId}?video=${videoId}`
+      window.location.href = `/onboarding/${moduleId}?video=${videoId}`
     }
   }
 

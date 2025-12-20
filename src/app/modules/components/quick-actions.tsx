@@ -46,7 +46,7 @@ export function QuickActions() {
         ? "Complete your onboarding course"
         : "Discover new courses",
       icon: GraduationCap,
-      href: hasIncompleteVideos ? "/my-dashboard" : "/academy",
+      href: hasIncompleteVideos ? "/onboarding" : "/academy",
       color: "text-purple-600 bg-purple-50 dark:bg-purple-900/20"
     },
     {
