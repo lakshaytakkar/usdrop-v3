@@ -42,13 +42,7 @@ function WelcomeMessage() {
   return (
     <div className="text-center py-6">
       <div className="flex items-center justify-center gap-3">
-        <Image
-          src="/wave.png"
-          alt="Wave"
-          width={48}
-          height={48}
-          className="object-contain"
-        />
+        <span className="text-4xl md:text-5xl">👋</span>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
           Welcome, Please complete your onboarding
         </h1>
