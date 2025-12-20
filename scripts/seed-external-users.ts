@@ -6,7 +6,7 @@
  * 
  * Prerequisites:
  * - Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
- * - Ensure subscription_plans table has at least: free, pro, premium, enterprise plans
+ * - Ensure subscription_plans table has: free and pro plans
  */
 
 import { createClient } from '@supabase/supabase-js'
@@ -71,7 +71,7 @@ const seedUsers: SeedUser[] = [
     name: 'Priya Sharma',
     email: 'priya.sharma@example.com',
     password: 'SecurePass123!',
-    planSlug: 'premium',
+    planSlug: 'pro',
     status: 'active',
     credits: 1500,
     phoneNumber: '+919876543210',
@@ -98,7 +98,7 @@ const seedUsers: SeedUser[] = [
     name: 'Ananya Reddy',
     email: 'ananya.reddy@example.com',
     password: 'SecurePass123!',
-    planSlug: 'enterprise',
+    planSlug: 'pro',
     status: 'active',
     credits: 5000,
     phoneNumber: '+919876543212',
@@ -135,7 +135,7 @@ const seedUsers: SeedUser[] = [
     name: 'Vikram Kumar',
     email: 'vikram.kumar@example.com',
     password: 'SecurePass123!',
-    planSlug: 'premium',
+    planSlug: 'pro',
     status: 'suspended',
     credits: 800,
     phoneNumber: '+919876543214',
@@ -148,20 +148,19 @@ const seedUsers: SeedUser[] = [
     name: 'Meera Iyer',
     email: 'meera.iyer@example.com',
     password: 'SecurePass123!',
-    planSlug: 'trial',
+    planSlug: 'free',
     status: 'active',
     credits: 300,
     phoneNumber: '+919876543215',
-    isTrial: true,
+    isTrial: false,
     subscriptionStartDate: new Date('2024-01-18T16:00:00Z'),
     subscriptionEndDate: new Date('2025-01-18T16:00:00Z'),
-    trialEndsAt: new Date('2024-02-01T16:00:00Z'),
   },
   {
     name: 'Aditya Desai',
     email: 'aditya.desai@example.com',
     password: 'SecurePass123!',
-    planSlug: 'enterprise',
+    planSlug: 'pro',
     status: 'active',
     credits: 10000,
     phoneNumber: '+919876543216',

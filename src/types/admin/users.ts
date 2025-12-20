@@ -1,9 +1,10 @@
 // Admin User Types
 
 export type InternalUserRole = "superadmin" | "admin" | "manager" | "executive"
-export type ExternalUserPlan = "free" | "trial" | "basic" | "pro" | "enterprise" | "premium" | string
+// Only Free and Pro plans - simplified subscription tiers
+export type ExternalUserPlan = "free" | "pro" | string
 export type UserStatus = "active" | "inactive" | "suspended"
-export type PermissionLevel = "trial" | "hidden" | "locked" | "limited_access" | "full_access"
+export type PermissionLevel = "hidden" | "locked" | "limited_access" | "full_access"
 
 export interface InternalUser {
   id: string

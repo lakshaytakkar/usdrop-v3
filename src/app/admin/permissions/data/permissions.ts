@@ -369,11 +369,9 @@ export const externalUserPermissionDefinitions: ExternalUserModulePermissionGrou
 ]
 
 // Mock plan permissions using new structure
+// Only Free and Pro plans - Free has dashboard access only, Pro has full access
 export const mockPlanPermissions: Record<string, Record<string, any>> = {
   free: {},
-  trial: {},
   pro: {},
-  premium: {},
-  enterprise: {},
 }
 

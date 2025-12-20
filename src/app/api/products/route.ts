@@ -156,6 +156,7 @@ export async function GET(request: NextRequest) {
         slug: product.category.slug,
         description: product.category.description,
         image: product.category.image,
+        thumbnail: product.category.thumbnail || null,
         parent_category_id: product.category.parent_category_id,
         trending: product.category.trending,
         product_count: product.category.product_count,

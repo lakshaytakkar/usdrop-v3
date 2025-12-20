@@ -5,14 +5,14 @@ import Link from "next/link"
 import { useState } from "react"
 import { VideoPlayerModal } from "@/components/ui/video-player-modal"
 
-// Image assets from Figma
-const imgImage = "https://www.figma.com/api/mcp/asset/cd5b8e7d-d2ae-483f-91d8-fb1df3fd5d9a"
-const imgEllipse11806 = "https://www.figma.com/api/mcp/asset/2c94f4c6-731b-4f90-9f85-95c763499f05"
-const imgEllipse11807 = "https://www.figma.com/api/mcp/asset/88532349-f293-47a5-9078-771b038c50fd"
-const imgEllipse11809 = "https://www.figma.com/api/mcp/asset/d4c71382-4b72-42c7-aa25-0ac5ba333922"
-const imgDiscount = "https://www.figma.com/api/mcp/asset/877e3016-1025-40ed-bd27-e010b7adafff"
-const imgGroup1707483725 = "https://www.figma.com/api/mcp/asset/855643cd-0726-4cf6-8c4f-3c3f7bdb7115"
-const imgBrowserMockup = "https://www.figma.com/api/mcp/asset/3734e70e-7502-49d9-ab45-cb0cf5beb738"
+// Local hero assets
+const imgImage = "/images/hero/image-overlay.png"
+const imgEllipse11806 = "/images/hero/ellipse-11806.svg"
+const imgEllipse11807 = "/images/hero/ellipse-11807.svg"
+const imgEllipse11809 = "/images/hero/ellipse-11809.svg"
+const imgDiscount = "/images/hero/discount.svg"
+const imgGroup1707483725 = "/images/hero/arrow-icon.svg"
+const imgBrowserMockup = "/images/hero/browser-mockup.svg"
 
 export function Hero() {
   const [isVideoOpen, setIsVideoOpen] = useState(false)

@@ -44,6 +44,7 @@ export async function GET(
       slug: data.slug,
       description: data.description,
       image: data.image,
+      thumbnail: data.thumbnail,
       parent_category_id: data.parent_category_id,
       parent_category: data.parent_category ? {
         id: data.parent_category.id,
@@ -62,6 +63,7 @@ export async function GET(
         slug: sub.slug,
         description: sub.description,
         image: sub.image,
+        thumbnail: sub.thumbnail,
         parent_category_id: sub.parent_category_id,
         trending: sub.trending || false,
         product_count: sub.product_count || 0,
@@ -95,6 +97,7 @@ export async function PATCH(
       slug,
       description,
       image,
+      thumbnail,
       parent_category_id,
       trending,
       growth_percentage,
@@ -123,6 +126,7 @@ export async function PATCH(
     if (slug !== undefined) updateData.slug = slug
     if (description !== undefined) updateData.description = description
     if (image !== undefined) updateData.image = image
+    if (thumbnail !== undefined) updateData.thumbnail = thumbnail
     if (parent_category_id !== undefined) {
       updateData.parent_category_id = parent_category_id || null
     }

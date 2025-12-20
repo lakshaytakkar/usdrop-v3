@@ -82,9 +82,9 @@ export function CategoriesTable({
                 </TableCell>
                 <TableCell>
                   <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                    {category.image ? (
+                    {(category.thumbnail || category.image) ? (
                       <Image
-                        src={category.image}
+                        src={category.thumbnail || category.image || '/placeholder-category.png'}
                         alt={category.name}
                         fill
                         className="object-cover"

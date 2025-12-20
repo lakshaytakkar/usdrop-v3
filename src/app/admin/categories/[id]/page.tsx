@@ -56,6 +56,7 @@ export default function CategoryDetailPage() {
       slug: cat.slug,
       description: cat.description || '',
       image: cat.image,
+      thumbnail: cat.thumbnail || null,
       parent_category_id: cat.parent_category_id,
       parent_category: cat.parent_category ? {
         id: cat.parent_category.id,

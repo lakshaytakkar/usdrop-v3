@@ -53,16 +53,11 @@ export function createExternalUsersColumns({
   canActivate = true,
   canUpsell = true,
 }: CreateExternalUsersColumnsProps): ColumnDef<ExternalUser>[] {
+  // Only Free and Pro plans
   const getPlanBadgeClassName = (plan: string) => {
     switch (plan) {
-      case "premium":
-        return "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
-      case "enterprise":
-        return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
       case "pro":
         return "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800"
-      case "trial":
-        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800"
       case "free":
         return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-300 dark:border-slate-700"
       default:

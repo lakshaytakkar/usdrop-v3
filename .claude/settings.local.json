@@ -51,13 +51,26 @@
       "Bash(xargs ls:*)",
       "Bash(SUPABASE_ACCESS_TOKEN=sbp_54d16974a6c54bb0e2df52abb1add809e20b45d2 npx supabase:*)",
       "Bash(gh auth status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(del \"C:\\Development\\usdrop-v3\\disk_cleanup_check.ps1\")",
+      "Bash(git -C \"C:/Development/usdrop-v3\" status)",
+      "Bash(tasklist:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm show:*)",
+      "Bash(cmd /c \"taskkill /PID 14800 /F\")",
+      "Bash(git config:*)",
+      "Bash(git credential-manager:*)",
+      "Bash(start https://github.com/login/device)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "task-master-ai"
+    "task-master-ai",
+    "linear"
   ]
 }

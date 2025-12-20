@@ -12,7 +12,8 @@ import { Category } from "@/types/categories"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card } from "@/components/ui/card"
 import Image from "next/image"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 type ProductCardData = {
   id: string
@@ -40,7 +41,9 @@ export default function ProductHuntPage() {
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [showFade, setShowFade] = useState(false)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { isFree } = useOnboarding()
   
   // Fetch products from API
   useEffect(() => {
@@ -221,10 +224,10 @@ export default function ProductHuntPage() {
                       }`}
                     >
                       {/* Category Thumbnail */}
-                      {category.image ? (
+                      {(category.thumbnail || category.image) ? (
                         <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
                           <Image
-                            src={category.image}
+                            src={category.thumbnail || category.image || '/placeholder-category.png'}
                             alt={category.name}
                             fill
                             className="object-cover"
@@ -281,37 +284,20 @@ export default function ProductHuntPage() {
                 {productCardData.length > 0 ? (
                   <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {productCardData.map((product, index) => {
-                      // Apply progressive fade to bottom 4 products (products 9-12, indices 8-11)
-                      // Only apply when showing first page with exactly 12 products
-                      const isFirstPage = page === 1
-                      const shouldFade = isFirstPage && productCardData.length === 12 && index >= 8 && index < 12
-                      
-                      // Calculate progressive opacity for the 4 bottom products
-                      // Product 9 (index 8): 90%, Product 10 (index 9): 70%
-                      // Product 11 (index 10): 50%, Product 12 (index 11): 30%
-                      const opacity = shouldFade 
-                        ? [0.9, 0.7, 0.5, 0.3][index - 8] // Progressive fade: 0.9, 0.7, 0.5, 0.3
-                        : 1
+                      // For free users: lock products starting from the 7th (index 6)
+                      // First 6 products (indices 0-5) are visible, rest are locked
+                      const isLocked = isFree && index >= 6
                       
                       return (
-                        <div
-                          key={product.id}
-                          className={shouldFade ? `transition-all duration-300` : ''}
-                          style={shouldFade ? {
-                            opacity: opacity,
-                          } : {}}
-                        >
-                          <ProductCard product={product} />
+                        <div key={product.id}>
+                          <ProductCard 
+                            product={product} 
+                            isLocked={isLocked}
+                            onLockedClick={() => setIsUpsellOpen(true)}
+                          />
                         </div>
                       )
                     })}
-                    
-                    {/* Progressive fade gradient overlay for bottom 4 products */}
-                    {page === 1 && productCardData.length === 12 && (
-                      <div 
-                        className="absolute bottom-0 left-0 right-0 h-[calc(33.333%+1rem)] pointer-events-none bg-gradient-to-b from-transparent via-background/50 to-background"
-                      />
-                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
@@ -356,8 +342,8 @@ export default function ProductHuntPage() {
             </div>
           )}
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Product Hunt" />
+          {/* Upsell Dialog */}
+          <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
         </div>
       </SidebarInset>
     </SidebarProvider>

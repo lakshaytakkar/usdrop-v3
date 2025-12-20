@@ -139,16 +139,13 @@ function ShopifyStoresContent() {
             {/* Content */}
             <div className="relative z-10 flex items-center gap-4 h-full">
               {/* 3D Thumbnail */}
-              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-                <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
-                  <Image
-                    src="/images/banner-thumbnails/my-shopify-stores.png"
-                    alt="My Shopify Stores"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
+              <img
+                src="/3d-characters-ecom/manage-online-store.png"
+                alt="My Shopify Stores"
+                width={110}
+                height={110}
+                className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
+              />
 
               <div className="flex-1 min-w-0">
                 <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">My Shopify Stores</h2>

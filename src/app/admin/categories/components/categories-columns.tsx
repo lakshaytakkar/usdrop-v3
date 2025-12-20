@@ -61,9 +61,9 @@ export function createCategoriesColumns({
         return (
           <div className="flex items-center gap-2 min-w-0 cursor-pointer hover:[&>div>span]:text-primary transition-colors" onClick={handleClick}>
             <div className="relative w-10 h-10 rounded overflow-hidden bg-muted shrink-0">
-              {category.image ? (
+              {(category.thumbnail || category.image) ? (
                 <Image
-                  src={category.image}
+                  src={category.thumbnail || category.image || '/placeholder-category.png'}
                   alt={category.name}
                   fill
                   className="object-cover"

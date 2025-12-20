@@ -140,7 +140,7 @@ export interface PlanPermission {
   id: string
   planId: string
   moduleId: string
-  permissionLevel: "trial" | "hidden" | "locked" | "limited_access" | "full_access"
+  permissionLevel: "hidden" | "locked" | "limited_access" | "full_access"
   createdAt: Date
   updatedAt: Date
 }

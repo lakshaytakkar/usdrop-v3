@@ -73,24 +73,15 @@ export function LoginForm({
 
       showSuccess("Signed in successfully")
 
-      // Check if onboarding is needed
-      if (data.requiresOnboarding) {
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("pendingOnboarding", "true")
-          sessionStorage.setItem("onboardingEmail", email)
-        }
-        router.push("/home?onboarding=true")
+      // Determine redirect based on user type
+      let redirectUrl: string
+      if (data.isInternal) {
+        redirectUrl = "/admin/internal-users"
       } else {
-        // Determine redirect based on user type
-        let redirectUrl: string
-        if (data.isInternal) {
-          redirectUrl = "/admin/internal-users"
-        } else {
-          redirectUrl = getRedirectUrl(searchParams, "/home")
-        }
-        router.push(redirectUrl)
-        router.refresh()
+        redirectUrl = getRedirectUrl(searchParams, "/my-dashboard")
       }
+      router.push(redirectUrl)
+      router.refresh()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to sign in. Please try again."
       setErrors({ general: errorMessage })
@@ -127,9 +118,9 @@ export function LoginForm({
                   onClick={async () => {
                     setGoogleLoading(true)
                     try {
-                      // For Google signin, we'll redirect to /home by default
+                      // For Google signin, we'll redirect to /my-dashboard by default
                       // The callback will check if user is internal and redirect accordingly
-                      const redirectTo = getRedirectUrl(searchParams, "/home")
+                      const redirectTo = getRedirectUrl(searchParams, "/my-dashboard")
                       window.location.href = `/api/auth/google?redirectTo=${encodeURIComponent(redirectTo)}`
                     } catch (error) {
                       setGoogleLoading(false)

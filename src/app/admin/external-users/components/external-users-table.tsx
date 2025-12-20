@@ -51,16 +51,11 @@ export function ExternalUsersTable({
 }: ExternalUsersTableProps) {
   const allSelected = users.length > 0 && selectedUsers.length === users.length
 
+  // Only Free and Pro plans
   const getPlanBadgeVariant = (plan: string) => {
     switch (plan) {
-      case "premium":
-        return "default"
-      case "enterprise":
-        return "default"
       case "pro":
-        return "secondary"
-      case "trial":
-        return "outline"
+        return "default"
       case "free":
         return "outline"
       default:

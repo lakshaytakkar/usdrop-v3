@@ -71,11 +71,11 @@ export async function GET(request: Request) {
       // Handle reauthentication
       if (type === 'reauthentication') {
         // Reauthentication successful, redirect back to the page that requested it
-        const redirectUrl = isLocalEnv 
-          ? `${origin}${next || '/home'}?reauth_success=true`
-          : forwardedHost 
-            ? `https://${forwardedHost}${next || '/home'}?reauth_success=true`
-            : `${origin}${next || '/home'}?reauth_success=true`
+        const redirectUrl = isLocalEnv
+          ? `${origin}${next || '/my-dashboard'}?reauth_success=true`
+          : forwardedHost
+            ? `https://${forwardedHost}${next || '/my-dashboard'}?reauth_success=true`
+            : `${origin}${next || '/my-dashboard'}?reauth_success=true`
         return NextResponse.redirect(redirectUrl)
       }
       
@@ -133,19 +133,13 @@ export async function GET(request: Request) {
       // Check if user is internal (has internal_role in profiles table)
       let finalRedirect = next
       const isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined
-      
-      // Check if onboarding is needed (for new users or users who haven't completed onboarding)
-      const needsOnboarding = !profile?.onboarding_completed && !isInternal
-      
+
       // Override redirect for internal users
       if (isInternal) {
         finalRedirect = '/admin/internal-users'
-      } else if (needsOnboarding) {
-        // New users or users who haven't completed onboarding go to /home with onboarding flag
-        finalRedirect = '/home?onboarding=true'
       } else if (next === '/' || !next || next === '/home') {
-        // Default external users to /home
-        finalRedirect = '/home'
+        // Default external users to /my-dashboard
+        finalRedirect = '/my-dashboard'
       }
       
       // Handle other callbacks (email verification, OAuth, magic link, etc.)

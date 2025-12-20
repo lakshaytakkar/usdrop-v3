@@ -6,30 +6,24 @@ export async function GET() {
   try {
     const supabase = await createClient()
 
-    // Get all modules with their videos, ordered by order_index
+    // Get the onboarding course modules (chapters) directly from course_modules
+    // The onboarding course has ID '00000000-0000-0000-0000-000000000001'
     const { data: modules, error: modulesError } = await supabase
-      .from('onboarding_modules')
+      .from('course_modules')
       .select(`
         id,
         title,
         description,
         order_index,
         thumbnail,
+        content_type,
+        content,
+        video_url,
+        video_duration,
         created_at,
-        updated_at,
-        onboarding_videos (
-          id,
-          module_id,
-          title,
-          description,
-          video_url,
-          video_duration,
-          thumbnail,
-          order_index,
-          created_at,
-          updated_at
-        )
+        updated_at
       `)
+      .eq('course_id', '00000000-0000-0000-0000-000000000001')
       .order('order_index', { ascending: true })
 
     if (modulesError) {
@@ -48,24 +42,23 @@ export async function GET() {
       )
     }
 
-    // Sort videos within each module by order_index
-    const modulesWithSortedVideos = (modules || []).map(module => ({
-      ...module,
-      onboarding_videos: (module.onboarding_videos || []).sort((a, b) => 
-        a.order_index - b.order_index
-      ),
+    // Transform course_modules to OnboardingModule format
+    // Since we have 6 chapters with no sub-modules or videos, we map them directly
+    const transformedModules: OnboardingModule[] = (modules || []).map(module => ({
+      id: module.id,
+      title: module.title,
+      description: module.description,
+      order_index: module.order_index,
+      thumbnail: module.thumbnail,
+      created_at: module.created_at,
+      updated_at: module.updated_at,
+      onboarding_videos: [], // No videos - just 6 chapters
     }))
 
-    // Calculate total videos
-    const totalVideos = modulesWithSortedVideos.reduce(
-      (sum, module) => sum + (module.onboarding_videos?.length || 0),
-      0
-    )
-
     const response: OnboardingCourseResponse = {
-      modules: modulesWithSortedVideos as OnboardingModule[],
-      total_videos: totalVideos,
-      total_modules: modulesWithSortedVideos.length,
+      modules: transformedModules,
+      total_videos: 0, // No videos in the new structure
+      total_modules: transformedModules.length,
     }
 
     return NextResponse.json(response)

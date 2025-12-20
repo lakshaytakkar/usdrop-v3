@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Clock, Book, Users, Star, Play, PlayCircle } from "lucide-react"
+import { Clock, Book, Users, Star, Play, PlayCircle, Lock } from "lucide-react"
 import { Course } from "../data/courses"
+import { cn } from "@/lib/utils"
 
 interface CourseCardProps {
   course: Course
+  isLocked?: boolean
+  onLockedClick?: () => void
 }
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -25,12 +27,16 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 })
 
-export function CourseCard({ course }: CourseCardProps) {
+export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCardProps) {
   const router = useRouter()
   const completedModules = course.modules.filter((m) => m.completed).length
   const progress = course.modules.length > 0 ? (completedModules / course.modules.length) * 100 : 0
 
   const handleStartCourse = () => {
+    if (isLocked) {
+      onLockedClick?.()
+      return
+    }
     router.push(`/academy/${course.id}`)
   }
 
@@ -54,20 +60,6 @@ export function CourseCard({ course }: CourseCardProps) {
         <div>
           <h3 className="text-base font-semibold mb-1 line-clamp-2">{course.title}</h3>
           <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={course.instructorAvatar} alt={course.instructor} />
-            <AvatarFallback>{course.instructor.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <p className="text-sm text-muted-foreground">{course.instructor}</p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {course.tags.map((tag, index) => (
-            <Badge key={index} variant="outline">{tag}</Badge>
-          ))}
         </div>
 
         <div className="flex items-center justify-between text-xs pt-2 border-t">
@@ -117,22 +109,38 @@ export function CourseCard({ course }: CourseCardProps) {
           </span>
         </div>
 
-        <Button 
-          className="w-full mt-2 bg-black text-white hover:bg-black/90 cursor-pointer"
-          onClick={handleStartCourse}
-        >
-          {progress > 0 ? (
-            <>
-              <PlayCircle className="h-4 w-4" />
-              Continue Learning
-            </>
-          ) : (
-            <>
-              <Play className="h-4 w-4" />
-              Start Course
-            </>
+        <div className="relative">
+          <Button 
+            className={cn(
+              "w-full mt-2 font-mono uppercase cursor-pointer relative",
+              isLocked && "opacity-60"
+            )}
+            onClick={handleStartCourse}
+            disabled={isLocked}
+          >
+            {progress > 0 ? (
+              <>
+                <PlayCircle className="h-4 w-4" />
+                Continue Session
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                Start Session
+              </>
+            )}
+          </Button>
+          {isLocked && (
+            <div 
+              className="absolute inset-0 z-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer font-mono uppercase text-sm font-medium"
+              style={{ fontFamily: 'var(--font-geist-mono), monospace' }}
+              onClick={handleStartCourse}
+            >
+              <Lock className="h-4 w-4" />
+              Locked
+            </div>
           )}
-        </Button>
+        </div>
       </CardContent>
     </Card>
   )

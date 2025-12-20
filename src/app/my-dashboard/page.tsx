@@ -7,23 +7,18 @@ import { Topbar } from "@/components/topbar"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { OnboardingModule } from "@/types/onboarding"
 import {
-  LayoutDashboard,
-  Package,
-  Store,
-  GraduationCap,
-  Flame,
   ChevronRight,
-  Target,
-  Play,
   CheckCircle2,
-  Award,
-  Clock,
-  Lock
+  Clock
 } from "lucide-react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 import { Skeleton } from "@/components/ui/skeleton"
 import Loader from "@/components/kokonutui/loader"
 import Link from "next/link"
@@ -43,58 +38,20 @@ const MODULE_THUMBNAILS = [
 ]
 
 
-function WelcomeBanner() {
-  const { progressPercentage, completedVideos, totalVideos, isLoading } = useOnboarding()
-
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return "Good morning"
-    if (hour < 17) return "Good afternoon"
-    return "Good evening"
-  }
-
+function WelcomeMessage() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white">
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          opacity: 0.3,
-          mixBlendMode: 'overlay'
-        }}
-      />
-      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-amber-500/10 to-transparent" />
-
-      <div className="relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg">
-                <LayoutDashboard className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <p className="text-white/60 text-sm">{getGreeting()}</p>
-                <h1 className="text-2xl font-bold">Welcome to your Dashboard</h1>
-              </div>
-            </div>
-            <p className="text-white/70 text-sm max-w-md">
-              Track your progress, manage your products, and continue your dropshipping journey.
-            </p>
-          </div>
-
-          {!isLoading && totalVideos > 0 && (
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-              <div className="flex-1 min-w-[200px]">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-white/70">Onboarding Progress</span>
-                  <span className="text-lg font-bold text-amber-400">{Math.round(progressPercentage)}%</span>
-                </div>
-                <Progress value={progressPercentage} className="h-2 bg-white/20" />
-                <p className="text-xs text-white/50 mt-1">{completedVideos} of {totalVideos} videos completed</p>
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="text-center py-6">
+      <div className="flex items-center justify-center gap-3">
+        <Image
+          src="/wave.png"
+          alt="Wave"
+          width={48}
+          height={48}
+          className="object-contain"
+        />
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          Welcome, Please complete your onboarding
+        </h1>
       </div>
     </div>
   )
@@ -106,39 +63,28 @@ function QuickStatsGrid() {
 
   const statItems = [
     {
+      title: "Learning Progress",
+      value: `${Math.round(progressPercentage || 0)}%`,
+      iconSrc: "/magic-icons/Item 04.png",
+      link: "/academy",
+      highlighted: true
+    },
+    {
       title: "Products Saved",
       value: stats?.products?.inPicklist || 0,
-      icon: Package,
-      color: "from-blue-500 to-blue-600",
-      bgColor: "bg-blue-50",
-      iconColor: "text-blue-600",
+      iconSrc: "/magic-icons/Item 02.png",
       link: "/my-products"
     },
     {
       title: "Connected Stores",
       value: stats?.stores?.connected || 0,
-      icon: Store,
-      color: "from-emerald-500 to-emerald-600",
-      bgColor: "bg-emerald-50",
-      iconColor: "text-emerald-600",
+      iconSrc: "/magic-icons/Item 03.png",
       link: "/my-shopify-stores"
-    },
-    {
-      title: "Learning Progress",
-      value: `${Math.round(progressPercentage || 0)}%`,
-      icon: GraduationCap,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-50",
-      iconColor: "text-purple-600",
-      link: "/academy"
     },
     {
       title: "Day Streak",
       value: stats?.activity?.streakDays || 0,
-      icon: Flame,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-50",
-      iconColor: "text-orange-600",
+      iconSrc: "/magic-icons/Item 05.png",
       suffix: stats?.activity?.streakDays === 1 ? " day" : " days"
     }
   ]
@@ -164,13 +110,18 @@ function QuickStatsGrid() {
           key={index}
           className={cn(
             "p-4 hover:shadow-md transition-all duration-200 cursor-pointer group",
-            item.link && "hover:border-gray-300"
+            item.link && "hover:border-gray-300",
+            item.highlighted && "border-2 border-purple-500 bg-purple-50/50 shadow-md"
           )}
           onClick={() => item.link && (window.location.href = item.link)}
         >
-          <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center mb-3", item.bgColor)}>
-            <item.icon className={cn("h-5 w-5", item.iconColor)} />
-          </div>
+          <Image
+            src={item.iconSrc}
+            alt={item.title}
+            width={40}
+            height={40}
+            className="object-contain mb-3"
+          />
           <p className="text-xs text-gray-500 mb-1">{item.title}</p>
           <div className="flex items-center justify-between">
             <p className="text-2xl font-bold text-gray-900">
@@ -213,23 +164,36 @@ function OnboardingSection() {
           setModules([])
           return
         }
+        
+        // Check if response is JSON before parsing
+        const contentType = courseResponse.headers.get("content-type")
+        if (!contentType || !contentType.includes("application/json")) {
+          setModules([])
+          return
+        }
+        
         const courseData = await courseResponse.json()
         setModules(courseData.modules || [])
 
         try {
           const progressResponse = await fetch("/api/onboarding/progress")
           if (progressResponse.ok) {
-            const progressData = await progressResponse.json()
-            const progressItems = (progressData.progress || []) as ProgressItem[]
-            const completed = new Set<string>(
-              progressItems.filter((p) => p.completed).map((p) => p.video_id)
-            )
-            setCompletedVideoIds(completed)
+            // Check if response is JSON before parsing
+            const progressContentType = progressResponse.headers.get("content-type")
+            if (progressContentType && progressContentType.includes("application/json")) {
+              const progressData = await progressResponse.json()
+              const progressItems = (progressData.progress || []) as ProgressItem[]
+              const completed = new Set<string>(
+                progressItems.filter((p) => p.completed).map((p) => p.video_id)
+              )
+              setCompletedVideoIds(completed)
+            }
           }
         } catch {
           console.warn("Could not fetch progress data")
         }
-      } catch {
+      } catch (error) {
+        console.warn("Error fetching onboarding data:", error)
         setModules([])
       } finally {
         setIsLoading(false)
@@ -258,171 +222,178 @@ function OnboardingSection() {
     return null
   }
 
-  return (
-    <Card className="p-6 overflow-hidden relative">
-      {isComplete && (
+  // If complete, only show "Onboarding Complete!" message
+  if (isComplete) {
+    return (
+      <Card className="p-6 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50" />
-      )}
-
-      <div className="relative z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="relative z-10">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center",
-              isComplete ? "bg-green-100" : "bg-amber-100"
-            )}>
-              {isComplete ? (
-                <Award className="h-6 w-6 text-green-600" />
-              ) : (
-                <Target className="h-6 w-6 text-amber-600" />
-              )}
-            </div>
+            <Image
+              src="/magic-icons/crown.png"
+              alt="Onboarding Complete"
+              width={48}
+              height={48}
+              className="object-contain"
+            />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {isComplete ? "Onboarding Complete!" : "Complete Your Onboarding"}
+                Onboarding Complete!
               </h3>
               <p className="text-sm text-gray-500">
-                {isComplete
-                  ? "You've unlocked all features"
-                  : "Watch all videos to unlock premium features"}
+                You've unlocked all features
               </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className={cn(
-              "text-3xl font-bold",
-              isComplete ? "text-green-600" : "text-amber-600"
-            )}>
-              {Math.round(progressPercentage)}%
-            </p>
-            <p className="text-xs text-gray-500">{completedVideos}/{totalVideos} videos</p>
-          </div>
         </div>
+      </Card>
+    )
+  }
 
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500",
-                isComplete
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                  : "bg-gradient-to-r from-amber-400 to-amber-500"
-              )}
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-        </div>
+  return (
+    <Card className="p-6 overflow-hidden relative">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="onboarding" className="border-none">
+          <AccordionTrigger className="hover:no-underline [&>svg]:ml-auto">
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-3">
+                <Image
+                  src="/magic-icons/Item 06.png"
+                  alt="Onboarding"
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                />
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Complete Your Onboarding
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Watch all videos to unlock premium features
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-amber-600">
+                  {Math.round(progressPercentage)}%
+                </p>
+                <p className="text-xs text-gray-500">{completedVideos}/{totalVideos} videos</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="pt-6 space-y-4">
+              {/* Progress Bar */}
+              <div>
+                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-amber-400 to-amber-500"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
 
-        {/* Completion Message */}
-        {isComplete && (
-          <div className="flex items-center justify-center gap-2 p-4 bg-green-100 rounded-xl mb-6">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium text-green-700">
-              Congratulations! All features are now unlocked.
-            </span>
-          </div>
-        )}
+              {/* Module List */}
+              {modules.length > 0 && (
+                <div className="space-y-3">
+                  {modules.map((module, index) => {
+                    type VideoType = { id: string; title: string; video_duration?: number | null }
+                    const moduleVideos = ((module as { onboarding_videos?: VideoType[] }).onboarding_videos ||
+                      (module as { videos?: VideoType[] }).videos || []) as VideoType[]
+                    const completedCount = moduleVideos.filter((v) => completedVideoIds.has(v.id)).length
+                    const totalCount = moduleVideos.length
+                    const moduleProgress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
+                    const isModuleComplete = moduleProgress === 100
 
-        {/* Module List */}
-        {modules.length > 0 && (
-          <div className="space-y-3">
-            {modules.map((module, index) => {
-              type VideoType = { id: string; title: string; video_duration?: number | null }
-              const moduleVideos = ((module as { onboarding_videos?: VideoType[] }).onboarding_videos ||
-                (module as { videos?: VideoType[] }).videos || []) as VideoType[]
-              const completedCount = moduleVideos.filter((v) => completedVideoIds.has(v.id)).length
-              const totalCount = moduleVideos.length
-              const moduleProgress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
-              const isModuleComplete = moduleProgress === 100
+                    const totalDuration = moduleVideos.reduce((sum, v) => sum + (v.video_duration || 0), 0)
+                    const formatDuration = (seconds: number) => {
+                      const mins = Math.floor(seconds / 60)
+                      return `${mins} min`
+                    }
 
-              const totalDuration = moduleVideos.reduce((sum, v) => sum + (v.video_duration || 0), 0)
-              const formatDuration = (seconds: number) => {
-                const mins = Math.floor(seconds / 60)
-                return `${mins} min`
-              }
+                    // Get thumbnail from module data or use placeholder
+                    const moduleThumbnail = module.thumbnail || MODULE_THUMBNAILS[index % MODULE_THUMBNAILS.length]
 
-              // Get thumbnail from module data or use placeholder
-              const moduleThumbnail = module.thumbnail || MODULE_THUMBNAILS[index % MODULE_THUMBNAILS.length]
+                    return (
+                      <Link
+                        key={module.id}
+                        href={`/my-dashboard/onboarding/${module.id}`}
+                        className="block"
+                      >
+                        <div className={cn(
+                          "flex items-center gap-4 p-3 rounded-lg border bg-white hover:bg-gray-50 transition-colors",
+                          isModuleComplete ? "border-green-200 bg-green-50/30" : "border-gray-200"
+                        )}>
+                          {/* Module Thumbnail */}
+                          <div className="relative w-28 aspect-video rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                            <Image
+                              src={moduleThumbnail}
+                              alt={module.title}
+                              fill
+                              className="object-cover"
+                            />
+                            {isModuleComplete && (
+                              <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
+                                <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                                  <CheckCircle2 className="h-4 w-4 text-white" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
-              return (
-                <Link
-                  key={module.id}
-                  href={`/my-dashboard/onboarding/${module.id}`}
-                  className="block"
-                >
-                  <div className={cn(
-                    "flex items-center gap-4 p-3 rounded-lg border bg-white hover:bg-gray-50 transition-colors",
-                    isModuleComplete ? "border-green-200 bg-green-50/30" : "border-gray-200"
-                  )}>
-                    {/* Module Thumbnail */}
-                    <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-                      <Image
-                        src={moduleThumbnail}
-                        alt={module.title}
-                        fill
-                        className="object-cover"
-                      />
-                      {isModuleComplete && (
-                        <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center">
-                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                            <CheckCircle2 className="h-4 w-4 text-white" />
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className={cn(
+                                "font-medium text-sm",
+                                isModuleComplete ? "text-green-700" : "text-gray-900"
+                              )}>
+                                {module.title}
+                              </h4>
+                              {isModuleComplete && (
+                                <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                                  Completed
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>{completedCount}/{totalCount} videos</span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {formatDuration(totalDuration)}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress */}
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="w-20 hidden sm:block">
+                              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                <span>{Math.round(moduleProgress)}%</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                  className={cn(
+                                    "h-full rounded-full transition-all",
+                                    isModuleComplete ? "bg-green-500" : "bg-amber-500"
+                                  )}
+                                  style={{ width: `${moduleProgress}%` }}
+                                />
+                              </div>
+                            </div>
+
+                            <ChevronRight className="h-5 w-5 text-gray-400" />
                           </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className={cn(
-                          "font-medium text-sm",
-                          isModuleComplete ? "text-green-700" : "text-gray-900"
-                        )}>
-                          {module.title}
-                        </h4>
-                        {isModuleComplete && (
-                          <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded">
-                            Completed
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{completedCount}/{totalCount} videos</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(totalDuration)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress */}
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="w-20 hidden sm:block">
-                        <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-                          <span>{Math.round(moduleProgress)}%</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-all",
-                              isModuleComplete ? "bg-green-500" : "bg-amber-500"
-                            )}
-                            style={{ width: `${moduleProgress}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   )
 }
@@ -444,7 +415,7 @@ function DashboardContent() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0">
-      <WelcomeBanner />
+      <WelcomeMessage />
       <QuickStatsGrid />
       <OnboardingSection />
     </div>

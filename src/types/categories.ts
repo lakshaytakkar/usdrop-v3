@@ -6,6 +6,7 @@ export interface Category {
   slug: string
   description: string | null
   image: string | null
+  thumbnail: string | null
   parent_category_id: string | null
   parent_category?: Category
   trending: boolean

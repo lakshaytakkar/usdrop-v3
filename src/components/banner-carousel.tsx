@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
@@ -111,41 +110,38 @@ export function ChristmasBanner() {
       {/* Right side image container */}
       <div className="absolute right-0 top-0 bottom-0 w-[50%] flex items-center justify-center">
         <div className="relative w-full h-full flex items-center justify-end pr-4">
-          {/* Christmas 3D icons */}
+          {/* Christmas icons */}
           <div className="flex items-center gap-2">
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
-              <Image
-                src="/christmas-icons/Object 25.png"
-                alt="Christmas icon 1"
-                fill
-                className="object-contain"
-                style={{
-                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-                }}
-              />
-            </div>
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
-              <Image
-                src="/christmas-icons/Object 26.png"
-                alt="Christmas icon 2"
-                fill
-                className="object-contain"
-                style={{
-                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-                }}
-              />
-            </div>
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
-              <Image
-                src="/christmas-icons/Object 27.png"
-                alt="Christmas icon 3"
-                fill
-                className="object-contain"
-                style={{
-                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-                }}
-              />
-            </div>
+            <img
+              src="/christmas-icons/Object 01.png"
+              alt="Christmas icon 1"
+              width={96}
+              height={96}
+              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
+              style={{
+                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+              }}
+            />
+            <img
+              src="/christmas-icons/Object 02.png"
+              alt="Christmas icon 2"
+              width={96}
+              height={96}
+              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
+              style={{
+                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+              }}
+            />
+            <img
+              src="/christmas-icons/Object 03.png"
+              alt="Christmas icon 3"
+              width={96}
+              height={96}
+              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
+              style={{
+                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+              }}
+            />
           </div>
         </div>
       </div>

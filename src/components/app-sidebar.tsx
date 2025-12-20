@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +18,8 @@ import { Logo } from "@/components/logo"
 import { SidebarOnboardingBadge } from "@/components/sidebar-onboarding-badge"
 import { SidebarCreditsFooter } from "@/components/sidebar-credits-footer"
 import { SidebarPicklistBadge } from "@/components/sidebar-picklist-badge"
+import { UnlockBadge } from "@/components/ui/unlock-badge"
+import { useUserPlan } from "@/hooks/use-user-plan"
 import {
   TrendingUp,
   Trophy,
@@ -63,67 +65,84 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-// USDrop AI Research items
-const aiResearchItems = [
+// Type for sidebar items
+interface SidebarItem {
+  title: string
+  icon: LucideIcon
+  url: string
+  isPro?: boolean
+  isLimited?: boolean
+}
+
+// USDrop AI Research items - All Pro features except dashboard
+const aiResearchItems: SidebarItem[] = [
   {
     title: "Product Hunt",
     icon: TrendingUp,
     url: "/product-hunt",
-    isLimited: true,
+    isPro: true,
   },
   {
     title: "Winning Products",
     icon: Trophy,
     url: "/winning-products",
-    isLimited: true,
+    isPro: true,
   },
   {
     title: "Competitor Stores",
     icon: Store,
     url: "/competitor-stores",
+    isPro: true,
   },
   {
     title: "Categories",
     icon: Grid3x3,
     url: "/categories",
+    isPro: true,
   },
   {
     title: "Seasonal Collections",
     icon: Calendar,
     url: "/seasonal-collections",
+    isPro: true,
   },
   {
     title: "Meta Ads",
     icon: BarChart3,
     url: "/meta-ads",
+    isPro: true,
   },
 ]
 
-// USDrop AI Learn items
-const aiLearnItems = [
+// USDrop AI Learn items - All Pro features
+const aiLearnItems: SidebarItem[] = [
   {
     title: "Intelligence",
     icon: Newspaper,
     url: "/intelligence",
+    isPro: true,
   },
   {
     title: "Webinars",
     icon: Video,
     url: "/webinars",
+    isPro: true,
   },
 ]
 
-// USDrop AI Fulfilment items
-const aiFulfilmentItems: Array<{ title: string; icon: LucideIcon; url: string; isPro?: boolean; isLimited?: boolean }> = [
+// USDrop AI Fulfilment items - All Pro features
+const aiFulfilmentItems: SidebarItem[] = [
   {
     title: "Private Supplier",
     icon: Package,
     url: "/suppliers",
+    isPro: true,
   },
   {
     title: "Selling Channels",
     icon: ExternalLink,
     url: "/selling-channels",
+    isPro: true,
   },
   {
     title: "Shipping Calculator",
@@ -133,8 +152,8 @@ const aiFulfilmentItems: Array<{ title: string; icon: LucideIcon; url: string; i
   },
 ]
 
-// USDrop AI Studio items
-const aiStudioItems = [
+// USDrop AI Studio items - All Pro features
+const aiStudioItems: SidebarItem[] = [
   {
     title: "Image Studio",
     icon: Image,
@@ -161,8 +180,8 @@ const aiStudioItems = [
   },
 ]
 
-// USDrop AI Toolkit items
-const aiToolkitItems = [
+// USDrop AI Toolkit items - All Pro features
+const aiToolkitItems: SidebarItem[] = [
   {
     title: "Description Generator",
     icon: PenTool,
@@ -201,39 +220,45 @@ const aiToolkitItems = [
   },
 ]
 
-// Pinned item (Dashboard)
-const pinnedItem = {
-  title: "My Dashboard",
+// Pinned item (Dashboard) - Free access
+const pinnedItem: SidebarItem = {
+  title: "Onboarding",
   icon: LayoutDashboard,
   url: "/my-dashboard",
+  isPro: false,
 }
 
-// USDrop AI Workspace items
-const aiWorkspaceItems = [
+// USDrop AI Workspace items - All Pro features except home
+const aiWorkspaceItems: SidebarItem[] = [
   {
     title: "Home",
     icon: Home,
     url: "/home",
+    isPro: false, // Free access
   },
   {
     title: "My Mentor",
     icon: GraduationCap,
     url: "/academy",
+    isPro: true,
   },
   {
     title: "My Roadmap",
     icon: Map,
     url: "/my-journey",
+    isPro: true,
   },
   {
     title: "My Products",
     icon: Bookmark,
     url: "/my-products",
+    isPro: true,
   },
   {
     title: "My Shopify Store",
     icon: ShoppingBag,
     url: "/my-shopify-stores",
+    isPro: true,
   },
 ]
 
@@ -337,11 +362,21 @@ const adminEmailAutomationItems = [
   },
 ]
 
-
 export function AppSidebar() {
   const pathname = usePathname()
   const isAdminRoute = pathname?.startsWith("/admin") ?? false
   const sidebarContentRef = useRef<HTMLDivElement>(null)
+  const { isFree, isLoading: isPlanLoading } = useUserPlan()
+
+  // Helper to check if item is locked for current user
+  const isItemLocked = (item: SidebarItem) => {
+    return isFree && item.isPro
+  }
+
+  // Handle click on locked item
+  const handleLockedItemClick = (_e: React.MouseEvent, _item: SidebarItem) => {
+    // Allow navigation; locked pages will show their own overlay
+  }
 
   // Preserve sidebar scroll position
   useEffect(() => {
@@ -410,7 +445,7 @@ export function AppSidebar() {
       <SidebarContent ref={sidebarContentRef}>
         {!isAdminRoute && (
           <>
-            {/* Pinned Dashboard Item */}
+            {/* Pinned Dashboard Item - Always accessible */}
             <SidebarGroup className="pb-0">
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -426,18 +461,28 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* MY WORKSPACE Section */}
+            {/* MY DS FRAMEWORK Section */}
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">MY WORKSPACE</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono text-xs">MY DS FRAMEWORK</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {aiWorkspaceItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url} className="flex items-center gap-2">
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                        isActive={isActive(item.url)}
+                        className={isItemLocked(item) ? "opacity-60" : ""}
+                      >
+                        <Link 
+                          href={item.url} 
+                          className="flex items-center gap-2"
+                          onClick={(e) => handleLockedItemClick(e, item)}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          {item.title === "My Products" && <SidebarPicklistBadge />}
+                          {item.title === "My Products" && !isItemLocked(item) && <SidebarPicklistBadge />}
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -453,11 +498,21 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {aiResearchItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url} className="flex items-center gap-2">
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                        isActive={isActive(item.url)}
+                        className={isItemLocked(item) ? "opacity-60" : ""}
+                      >
+                        <Link 
+                          href={item.url} 
+                          className="flex items-center gap-2"
+                          onClick={(e) => handleLockedItemClick(e, item)}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          <SidebarOnboardingBadge />
+                          {!isItemLocked(item) && <SidebarOnboardingBadge />}
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -473,10 +528,20 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {aiLearnItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                        isActive={isActive(item.url)}
+                        className={isItemLocked(item) ? "opacity-60" : ""}
+                      >
+                        <Link 
+                          href={item.url}
+                          className="flex items-center gap-2"
+                          onClick={(e) => handleLockedItemClick(e, item)}
+                        >
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -493,11 +558,21 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {aiFulfilmentItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                          <Link href={item.url} className="flex items-center gap-2">
+                        <SidebarMenuButton 
+                          asChild 
+                          tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                          isActive={isActive(item.url)}
+                          className={isItemLocked(item) ? "opacity-60" : ""}
+                        >
+                        <Link 
+                          href={item.url} 
+                            className="flex items-center gap-2"
+                            onClick={(e) => handleLockedItemClick(e, item)}
+                          >
                             <item.icon className="h-4 w-4" />
                             <span className="flex-1">{item.title}</span>
-                            <SidebarOnboardingBadge />
+                            {!isItemLocked(item) && <SidebarOnboardingBadge />}
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -514,11 +589,21 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {aiStudioItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url} className="flex items-center gap-2">
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                        isActive={isActive(item.url)}
+                        className={isItemLocked(item) ? "opacity-60" : ""}
+                      >
+                        <Link 
+                          href={item.url} 
+                          className="flex items-center gap-2"
+                          onClick={(e) => handleLockedItemClick(e, item)}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          <SidebarOnboardingBadge />
+                          {!isItemLocked(item) && <SidebarOnboardingBadge />}
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -534,11 +619,21 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {aiToolkitItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url} className="flex items-center gap-2">
+                      <SidebarMenuButton 
+                        asChild 
+                        tooltip={isItemLocked(item) ? `${item.title} (Pro)` : item.title} 
+                        isActive={isActive(item.url)}
+                        className={isItemLocked(item) ? "opacity-60" : ""}
+                      >
+                        <Link 
+                          href={item.url} 
+                          className="flex items-center gap-2"
+                          onClick={(e) => handleLockedItemClick(e, item)}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span className="flex-1">{item.title}</span>
-                          <SidebarOnboardingBadge />
+                          {!isItemLocked(item) && <SidebarOnboardingBadge />}
+                          {isItemLocked(item) && <UnlockBadge variant="text-only" />}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

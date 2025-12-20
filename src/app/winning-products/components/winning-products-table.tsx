@@ -83,7 +83,7 @@ export function WinningProductsTable({
                 <TableRow
                   key={`${product.id}-${index}`}
                   className={cn(
-                    "h-24 hover:bg-muted/50 transition-colors",
+                    "h-24 hover:bg-muted/50 transition-colors relative",
                     isLocked && "opacity-60"
                   )}
                 >
@@ -100,11 +100,6 @@ export function WinningProductsTable({
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
-                        {isLocked ? (
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                            <Lock className="h-5 w-5 text-white" />
-                          </div>
-                        ) : null}
                         <Image
                           src={product.image}
                           alt={product.title}
@@ -132,7 +127,10 @@ export function WinningProductsTable({
 
                   {/* Revenue */}
                   <TableCell>
-                    <span className="font-semibold text-sm">
+                    <span className={cn(
+                      "font-semibold text-sm",
+                      isLocked && "text-muted-foreground blur-[1px]"
+                    )}>
                       {formatCurrency(product.potRevenue)}
                     </span>
                   </TableCell>
@@ -140,12 +138,14 @@ export function WinningProductsTable({
                   {/* Revenue Trend */}
                   <TableCell>
                     <div className="flex items-center justify-center">
-                      <RevenueTrendChart 
-                        data={product.revenueTrend} 
-                        width={120} 
-                        height={40}
-                        className="text-blue-600"
-                      />
+                      <div className={cn(isLocked && "blur-sm opacity-70")}>
+                        <RevenueTrendChart 
+                          data={product.revenueTrend} 
+                          width={120} 
+                          height={40}
+                          className="text-blue-600"
+                        />
+                      </div>
                     </div>
                   </TableCell>
 
@@ -155,7 +155,8 @@ export function WinningProductsTable({
                       variant={product.revenueGrowthRate > 100 ? "default" : "secondary"}
                       className={cn(
                         "text-xs font-semibold",
-                        product.revenueGrowthRate > 999.9 && "bg-emerald-500 text-white"
+                        product.revenueGrowthRate > 999.9 && "bg-emerald-500 text-white",
+                        isLocked && "blur-[1px] opacity-70"
                       )}
                     >
                       {product.revenueGrowthRate > 999.9 
@@ -166,14 +167,20 @@ export function WinningProductsTable({
 
                   {/* Items Sold */}
                   <TableCell>
-                    <span className="text-sm font-medium">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isLocked && "text-muted-foreground blur-[1px]"
+                    )}>
                       {formatNumber(product.itemsSold)}
                     </span>
                   </TableCell>
 
                   {/* Avg. Unit Price */}
                   <TableCell>
-                    <span className="text-sm font-medium">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isLocked && "text-muted-foreground blur-[1px]"
+                    )}>
                       ${product.avgUnitPrice.toFixed(2)}
                     </span>
                   </TableCell>
@@ -191,7 +198,7 @@ export function WinningProductsTable({
                         className="h-8 text-xs cursor-pointer"
                       >
                         <Lock className="h-3 w-3 mr-1" />
-                        Locked
+                        Unlock
                       </Button>
                     ) : (
                       <Button

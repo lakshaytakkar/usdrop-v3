@@ -144,14 +144,12 @@ export default function ExternalUserDetailPage() {
     )
   }
 
+  // Only Free and Pro plans
   const getPlanBadgeVariant = (plan: string) => {
     switch (plan) {
-      case "premium":
-      case "enterprise":
-        return "default" as const
       case "pro":
-        return "secondary" as const
-      case "trial":
+        return "default" as const
+      case "free":
         return "outline" as const
       default:
         return "outline" as const

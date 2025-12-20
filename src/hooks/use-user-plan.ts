@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 interface UseUserPlanReturn {
   plan: string | null
   isFree: boolean
+  isPro: boolean
   isLoading: boolean
 }
 
@@ -37,10 +38,12 @@ export function useUserPlan(): UseUserPlanReturn {
   }, [])
 
   const isFree = plan === "free" || plan === null
+  const isPro = plan === "pro"
 
   return {
     plan,
     isFree,
+    isPro,
     isLoading,
   }
 }

@@ -7,12 +7,13 @@ import { ExternalUser } from "@/types/admin/users"
  * 
  * To seed external users, use: npx tsx scripts/seed-external-users.ts
  */
+// Only Free and Pro plans
 export const sampleExternalUsers: ExternalUser[] = [
   {
     id: "ext_001",
     name: "Alice Brown",
     email: "alice.brown@example.com",
-    plan: "premium",
+    plan: "pro",
     status: "active",
     subscriptionDate: new Date("2024-01-10T10:00:00Z"),
     expiryDate: new Date("2025-01-10T10:00:00Z"),
@@ -36,7 +37,7 @@ export const sampleExternalUsers: ExternalUser[] = [
     updatedAt: new Date("2024-01-18T11:20:00Z"),
     isTrial: true,
     trialEndsAt: new Date("2024-01-22T09:00:00Z"), // 3 days remaining
-    subscriptionStatus: "trial",
+    subscriptionStatus: "active",
     credits: 500,
     phoneNumber: "+1234567891",
   },
@@ -44,7 +45,7 @@ export const sampleExternalUsers: ExternalUser[] = [
     id: "ext_003",
     name: "Carol White",
     email: "carol.white@example.com",
-    plan: "enterprise",
+    plan: "pro",
     status: "active",
     subscriptionDate: new Date("2023-12-01T08:00:00Z"),
     expiryDate: new Date("2024-12-01T08:00:00Z"),
@@ -76,15 +77,15 @@ export const sampleExternalUsers: ExternalUser[] = [
     id: "ext_005",
     name: "Eva Garcia",
     email: "eva.garcia@example.com",
-    plan: "trial",
+    plan: "free",
     status: "active",
     subscriptionDate: new Date("2024-01-18T10:00:00Z"),
     expiryDate: new Date("2024-01-25T10:00:00Z"),
     createdAt: new Date("2024-01-18T10:00:00Z"),
     updatedAt: new Date("2024-01-20T09:30:00Z"),
-    isTrial: true,
-    trialEndsAt: new Date("2024-01-25T10:00:00Z"), // 5 days remaining
-    subscriptionStatus: "trial",
+    isTrial: false,
+    trialEndsAt: null,
+    subscriptionStatus: "active",
     credits: 250,
     phoneNumber: "+1234567894",
   },
@@ -108,15 +109,15 @@ export const sampleExternalUsers: ExternalUser[] = [
     id: "ext_007",
     name: "Grace Kim",
     email: "grace.kim@example.com",
-    plan: "trial",
+    plan: "free",
     status: "active",
     subscriptionDate: new Date("2024-01-19T10:00:00Z"),
     expiryDate: new Date("2024-01-21T10:00:00Z"),
     createdAt: new Date("2024-01-19T10:00:00Z"),
     updatedAt: new Date("2024-01-20T10:00:00Z"),
-    isTrial: true,
-    trialEndsAt: new Date("2024-01-21T10:00:00Z"), // 1 day remaining - ending soon
-    subscriptionStatus: "trial",
+    isTrial: false,
+    trialEndsAt: null,
+    subscriptionStatus: "active",
     credits: 150,
     phoneNumber: "+1234567896",
   },

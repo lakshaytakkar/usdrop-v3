@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TrendingUp, DollarSign, Star, SlidersHorizontal, ArrowUpDown, X, TrendingDown, Lock, Unlock } from "lucide-react"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { useOnboarding } from "@/contexts/onboarding-context"
 // Local types
 export type ProductCategory = 
   | "all"
@@ -48,7 +48,6 @@ import { Product } from "@/types/products"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import Image from "next/image"
 import { 
   Grid3x3,
   Home,
@@ -94,6 +93,7 @@ export default function WinningProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { isFree } = useOnboarding()
   
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -160,6 +160,10 @@ export default function WinningProductsPage() {
         const metadata = product.metadata!
         const categorySlug = product.category?.slug || 'other'
         
+        // For free users: lock products starting from the 7th (index 6)
+        // First 6 products (indices 0-5) are visible, rest are locked
+        const shouldBeLocked = isFree && index >= 6
+        
         return {
           id: parseInt(product.id) || index + 1,
           image: product.image,
@@ -167,7 +171,7 @@ export default function WinningProductsPage() {
           profitMargin: metadata.profit_margin || 0,
           potRevenue: metadata.pot_revenue || 0,
           category: (categorySlug as ProductCategory) || 'other',
-          isLocked: metadata.is_locked || false,
+          isLocked: shouldBeLocked || metadata.is_locked || false,
           foundDate: metadata.found_date || product.created_at,
           revenueGrowthRate: metadata.revenue_growth_rate || 0,
           itemsSold: metadata.items_sold || 0,
@@ -176,7 +180,7 @@ export default function WinningProductsPage() {
           price: product.sell_price,
         }
       })
-  }, [products])
+  }, [products, isFree])
 
   // Count active filters
   const activeFilterCount = useMemo(() => {
@@ -376,16 +380,13 @@ export default function WinningProductsPage() {
               {/* Content */}
               <div className="relative z-10 flex items-center gap-4 h-full">
                 {/* 3D Thumbnail */}
-                <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-                  <div className="relative w-full h-full rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20">
-                    <Image
-                      src="/images/banner-thumbnails/winning-products.png"
-                      alt="Winning Products"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
+                <img
+                  src="/3d-characters-ecom/promote-product.png"
+                  alt="Winning Products"
+                  width={110}
+                  height={110}
+                  className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
+                />
 
                 <div className="flex-1 min-w-0">
                   <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Winning Products</h2>
@@ -723,9 +724,6 @@ export default function WinningProductsPage() {
               />
             )}
           </div>
-
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Winning Products" />
         </SidebarInset>
       </SidebarProvider>
 

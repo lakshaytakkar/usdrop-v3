@@ -40,12 +40,10 @@ export function usePermissionsData(): UsePermissionsDataReturn {
         { value: "executive", label: "Executive" },
       ]
 
+      // Only Free and Pro plans
       const mockPlans: Plan[] = [
         { value: "free", label: "Free" },
-        { value: "trial", label: "Trial" },
         { value: "pro", label: "Pro" },
-        { value: "premium", label: "Premium" },
-        { value: "enterprise", label: "Enterprise" },
       ]
 
       // Simulate API delay

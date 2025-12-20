@@ -24,7 +24,6 @@ import {
   ChevronRight
 } from "lucide-react"
 import { ProductImageGallery } from "../components/product-image-gallery"
-import { ProfitCalculator } from "../components/profit-calculator"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
 import { ReviewsSection } from "../components/reviews-section"
 import { FulfillmentSection } from "../components/fulfillment-section"
@@ -200,7 +199,8 @@ export default function ProductDetailPage() {
             <p className="text-muted-foreground mb-4">{error || 'The product you are looking for does not exist.'}</p>
             <Button 
               onClick={() => router.push("/product-hunt")}
-              className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 cursor-pointer"
+              variant="default"
+              className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
             >
               Back to Products
             </Button>
@@ -340,7 +340,9 @@ export default function ProductDetailPage() {
                 </Button>
                 <Button
                   onClick={handleGenerateAI}
-                  className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
+                  variant="default"
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
                   title="AI Studio"
                 >
                   <Sparkles className="h-4 w-4 sm:mr-2" />
@@ -348,7 +350,9 @@ export default function ProductDetailPage() {
                 </Button>
                 <Button
                   onClick={handleImportToShopify}
-                  className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
+                  variant="default"
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
                   title="Import to Shopify"
                 >
                   <ShoppingCart className="h-4 w-4 sm:mr-2" />
@@ -360,42 +364,8 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 max-w-full overflow-x-hidden min-w-0 w-full">
-            <div className="w-full space-y-16 min-w-0 max-w-full">
-            {/* Product Header */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Added to USDrop {addedDate}</span>
-              </div>
-
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-3">{product.title}</h1>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {product.rating && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-semibold">{product.rating.toFixed(1)}</span>
-                      <span className="text-muted-foreground">({product.reviews_count || 0})</span>
-                    </div>
-                  )}
-                  <Badge variant="outline">{categoryName}</Badge>
-                  {isTrending && (
-                    <Badge className="bg-orange-500 text-white">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      Trending
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Product Description */}
-            <div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {description}
-              </p>
-            </div>
-
+          <div className="flex flex-1 flex-col gap-8 p-4 md:p-6 max-w-full overflow-x-hidden min-w-0 w-full">
+            <div className="w-full space-y-12 min-w-0 max-w-full">
             {/* Main Product Section: Images & Info */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0 w-full max-w-full">
               {/* Image Gallery */}
@@ -406,6 +376,39 @@ export default function ProductDetailPage() {
 
               {/* Product Info & Pricing */}
               <div className="space-y-4">
+                {/* Product Header - Moved to right side */}
+                <div className="space-y-3">
+                  <div className="text-sm text-muted-foreground">
+                    <span>Added to USDrop {addedDate}</span>
+                  </div>
+
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-bold mb-3">{product.title}</h1>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {product.rating && (
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold">{product.rating.toFixed(1)}</span>
+                          <span className="text-muted-foreground">({product.reviews_count || 0})</span>
+                        </div>
+                      )}
+                      <Badge variant="outline">{categoryName}</Badge>
+                      {isTrending && (
+                        <Badge className="bg-orange-500 text-white">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          Trending
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Product Description */}
+                  <div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {description}
+                    </p>
+                  </div>
+                </div>
                 {/* Pricing Card */}
                 <Card className="p-4">
                   <div className="space-y-3">
@@ -441,7 +444,7 @@ export default function ProductDetailPage() {
                         rel="noopener noreferrer"
                         className="w-full"
                       >
-                        <Button variant="outline" size="sm" className="w-full h-9">
+                        <Button variant="outline" className="w-full">
                           <div className="relative w-4 h-4 mr-2 flex-shrink-0">
                             <Image
                               src="/images/logos/aliexpress.svg"
@@ -459,7 +462,7 @@ export default function ProductDetailPage() {
                         rel="noopener noreferrer"
                         className="w-full"
                       >
-                        <Button variant="outline" size="sm" className="w-full h-9">
+                        <Button variant="outline" className="w-full">
                           <div className="relative w-4 h-4 mr-2 flex-shrink-0">
                             <Image
                               src="/images/logos/amazon.svg"
@@ -477,7 +480,7 @@ export default function ProductDetailPage() {
                         rel="noopener noreferrer"
                         className="w-full"
                       >
-                        <Button variant="outline" size="sm" className="w-full h-9">
+                        <Button variant="outline" className="w-full">
                           <div className="relative w-4 h-4 mr-2 flex-shrink-0">
                             <Image
                               src="/images/logos/meta.svg"
@@ -489,7 +492,7 @@ export default function ProductDetailPage() {
                           <span className="truncate">Facebook Ads</span>
                         </Button>
                       </Link>
-                      <Button variant="outline" size="sm" className="w-full h-9">
+                      <Button variant="outline" className="w-full">
                         <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
                         <span className="truncate">Find other supplier</span>
                       </Button>
@@ -502,7 +505,7 @@ export default function ProductDetailPage() {
                   <p className="text-sm text-muted-foreground mb-2">
                     Need help choosing products? Store review, targeting, scaling, sales advice? Ask USDrop's support team.
                   </p>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" className="w-full">
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Chat now
                   </Button>
@@ -511,10 +514,8 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Fulfillment by USDrop */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                FULFILLMENT BY USDROP
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Fulfillment by USDrop</h2>
               <FulfillmentSection 
                 product={product}
                 onImportToShopify={handleImportToShopify}
@@ -522,10 +523,8 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Product Demand & Saturation */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                PRODUCT DEMAND & SATURATION
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Product Demand & Saturation</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0 w-full max-w-full">
                 <SeasonalInterestChart 
                   data={product.trend_data?.map((value, index) => {
@@ -543,35 +542,15 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Estimated Profit Calculator */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                ESTIMATED PROFIT CALCULATOR
-              </h2>
-              <ProfitCalculator 
-                buyPrice={product.buy_price}
-                sellPrice={product.sell_price}
-                fulfillment={{
-                  productCost: product.buy_price,
-                  shippingCost: 7.99,
-                  totalPrice: product.buy_price + 7.99
-                }}
-              />
-            </div>
-
             {/* Targeting on Social Media */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                TARGETING ON SOCIAL MEDIA
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Targeting on Social Media</h2>
               <TargetingSection />
             </div>
 
             {/* Competition & Key Metrics */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                COMPETITION & KEY METRICS
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Competition & Key Metrics</h2>
               <CompetitionSection 
                 productSpecs={{
                   dimensions: product.specifications?.dimensions || product.specifications?.product_dimensions || "8.7 x 3.5 x 3.1 inches",
@@ -582,10 +561,8 @@ export default function ProductDetailPage() {
 
             {/* Product Complements & Upsales */}
             {product.metadata?.filters && product.metadata.filters.length > 0 && (
-              <div className="space-y-8 min-w-0 max-w-full">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                  PRODUCT COMPLEMENTS & UPSALES
-                </h2>
+              <div className="space-y-6 min-w-0 max-w-full">
+                <h2 className="text-2xl font-bold">Product Complements & Upsales</h2>
                 <RelatedProductsCarousel 
                   productIds={[]}
                   currentProductId={productId}
@@ -595,26 +572,20 @@ export default function ProductDetailPage() {
             )}
 
             {/* Product Reviews */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                PRODUCT REVIEWS
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Product Reviews</h2>
               <ReviewsSection reviews={[]} />
             </div>
 
             {/* Instagram Influencers */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                INSTAGRAM INFLUENCERS
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Instagram Influencers</h2>
               <InstagramInfluencers />
             </div>
 
             {/* More Products */}
-            <div className="space-y-8 min-w-0 max-w-full">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-mono uppercase text-center tracking-wider mb-8 px-2">
-                MORE PRODUCTS
-              </h2>
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">More Products</h2>
               <RelatedProductsCarousel 
                 productIds={[]}
                 currentProductId={productId}

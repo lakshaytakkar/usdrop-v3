@@ -14,6 +14,10 @@ import { Course } from "./data/courses"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BookOpen, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 // Mentor features for the banner
 const mentorFeatures = [
@@ -66,9 +70,12 @@ function transformCourse(apiCourse: APICourse): Course {
 }
 
 export default function AcademyPage() {
+  const router = useRouter()
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
+  const { isFree } = useOnboarding()
 
   const fetchCourses = useCallback(async () => {
     try {
@@ -168,7 +175,7 @@ export default function AcademyPage() {
           {/* All Courses */}
           <div>
             {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div key={index} className="rounded-xl border bg-card overflow-hidden">
                     <Skeleton className="aspect-video w-full" />
@@ -203,13 +210,59 @@ export default function AcademyPage() {
             )}
             
             {!loading && !error && courses.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {courses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                {courses.map((course) => {
+                  // For free users: lock all courses
+                  const isLocked = isFree
+                  return (
+                    <CourseCard 
+                      key={course.id} 
+                      course={course}
+                      isLocked={isLocked}
+                      onLockedClick={() => setShowOnboardingDialog(true)}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>
+
+          {/* Onboarding Dialog */}
+          <Dialog open={showOnboardingDialog} onOpenChange={setShowOnboardingDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 mx-auto mb-4">
+                  <BookOpen className="h-8 w-8 text-white" />
+                </div>
+                <DialogTitle className="text-center text-xl">
+                  Complete Your Onboarding
+                </DialogTitle>
+                <DialogDescription className="text-center">
+                  Please complete your onboarding to unlock this part.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    setShowOnboardingDialog(false)
+                    router.push("/my-dashboard")
+                  }}
+                  className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Continue Onboarding
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowOnboardingDialog(false)}
+                  className="w-full"
+                >
+                  Close
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </SidebarInset>
     </SidebarProvider>

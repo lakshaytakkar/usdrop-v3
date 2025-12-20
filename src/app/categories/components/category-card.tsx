@@ -30,6 +30,7 @@ export interface Category {
   name: string;
   description: string;
   image: string;
+  thumbnail?: string | null;
   productCount: number;
   avgProfitMargin: number;
   growth: number;
@@ -68,7 +69,7 @@ export function CategoryCard({ category }: CategoryCardProps) {
                   </div>
                 ) : (
                   <Image
-                    src={category.image}
+                    src={category.thumbnail || category.image || '/placeholder-category.png'}
                     alt={category.name}
                     fill
                     className="object-cover"

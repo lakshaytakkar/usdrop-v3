@@ -38,10 +38,7 @@ export default function AdminPermissionsPage() {
   const [planPermissions, setPlanPermissions] = useState<ExternalPlanPermissions>({})
   const [openingCredits, setOpeningCredits] = useState<Record<string, number>>({
     free: 0,
-    trial: 100,
     pro: 500,
-    premium: 2000,
-    enterprise: 10000,
   })
   const [isReadOnly, setIsReadOnly] = useState(false) // Set to true for non-superadmin users
   const [saving, setSaving] = useState(false)
@@ -56,10 +53,7 @@ export default function AdminPermissionsPage() {
 
   const plans = [
     { value: "free", label: "Free" },
-    { value: "trial", label: "Trial" },
     { value: "pro", label: "Pro" },
-    { value: "premium", label: "Premium" },
-    { value: "enterprise", label: "Enterprise" },
   ]
 
   const modules = ["users", "plans", "internal_users", "external_users", "products"]
@@ -111,46 +105,25 @@ export default function AdminPermissionsPage() {
       }
     })
     
-    // In real implementation, this would come from the database
-    // For now, set some defaults based on plan
+    // Only two plans: Free and Pro
+    // Free: Only dashboard access, everything else locked with overlay
+    // Pro: Full access to all features (except admin pages)
     if (plan === "free") {
-      // Free plan: most things locked, some hidden
+      // Free plan: Only "home" (My Dashboard) is accessible, everything else locked
       Object.keys(planPerms).forEach((moduleId) => {
-        if (["academy", "intelligence"].includes(moduleId)) {
-          planPerms[moduleId] = {
-            ...planPerms[moduleId],
-            accessLevel: "hidden",
-            view: false,
-            viewDetails: false,
-            limitedView: false,
-            limitCount: null,
-            lockPage: false,
-          }
-        } else {
-          planPerms[moduleId] = {
-            ...planPerms[moduleId],
-            accessLevel: "locked",
-            view: false,
-            viewDetails: false,
-            limitedView: false,
-            limitCount: null,
-            lockPage: true,
-          }
-        }
-      })
-    } else if (plan === "trial") {
-      // Trial: some full access, some limited
-      Object.keys(planPerms).forEach((moduleId) => {
-        if (["product-hunt", "winning-products"].includes(moduleId)) {
+        if (moduleId === "home") {
+          // Dashboard is accessible for free users
           planPerms[moduleId] = {
             ...planPerms[moduleId],
             accessLevel: "full_access",
             view: true,
             viewDetails: true,
             limitedView: false,
+            limitCount: null,
             lockPage: false,
           }
         } else {
+          // All other features show locked overlay
           planPerms[moduleId] = {
             ...planPerms[moduleId],
             accessLevel: "locked",
@@ -163,31 +136,7 @@ export default function AdminPermissionsPage() {
         }
       })
     } else if (plan === "pro") {
-      // Pro: more access
-      Object.keys(planPerms).forEach((moduleId) => {
-        if (["product-hunt", "winning-products", "competitor-stores", "meta-ads"].includes(moduleId)) {
-          planPerms[moduleId] = {
-            ...planPerms[moduleId],
-            accessLevel: "full_access",
-            view: true,
-            viewDetails: true,
-            limitedView: false,
-            lockPage: false,
-          }
-        } else {
-          planPerms[moduleId] = {
-            ...planPerms[moduleId],
-            accessLevel: "limited_access",
-            view: true,
-            viewDetails: false,
-            limitedView: true,
-            limitCount: 10,
-            lockPage: false,
-          }
-        }
-      })
-    } else {
-      // Premium/Enterprise: full access to most
+      // Pro plan: Full access to all features
       Object.keys(planPerms).forEach((moduleId) => {
         planPerms[moduleId] = {
           ...planPerms[moduleId],

@@ -82,25 +82,13 @@ export function usePlanPermissions(): UsePlanPermissionsReturn {
         }
       })
 
-      // Set defaults based on plan
+      // Set defaults based on plan - Only Free and Pro
+      // Free: Only dashboard access, everything else locked with overlay
+      // Pro: Full access to all features (except admin pages)
       if (plan === "free") {
         Object.keys(planPerms).forEach((moduleId) => {
-          if (["academy", "intelligence"].includes(moduleId)) {
-            planPerms[moduleId] = {
-              ...planPerms[moduleId],
-              accessLevel: "hidden",
-            }
-          } else {
-            planPerms[moduleId] = {
-              ...planPerms[moduleId],
-              accessLevel: "locked",
-              lockPage: true,
-            }
-          }
-        })
-      } else if (plan === "trial") {
-        Object.keys(planPerms).forEach((moduleId) => {
-          if (["product-hunt", "winning-products"].includes(moduleId)) {
+          if (moduleId === "home") {
+            // Dashboard is accessible for free users
             planPerms[moduleId] = {
               ...planPerms[moduleId],
               accessLevel: "full_access",
@@ -108,6 +96,7 @@ export function usePlanPermissions(): UsePlanPermissionsReturn {
               viewDetails: true,
             }
           } else {
+            // All other features show locked overlay
             planPerms[moduleId] = {
               ...planPerms[moduleId],
               accessLevel: "locked",
@@ -116,26 +105,7 @@ export function usePlanPermissions(): UsePlanPermissionsReturn {
           }
         })
       } else if (plan === "pro") {
-        Object.keys(planPerms).forEach((moduleId) => {
-          if (["product-hunt", "winning-products", "competitor-stores", "meta-ads"].includes(moduleId)) {
-            planPerms[moduleId] = {
-              ...planPerms[moduleId],
-              accessLevel: "full_access",
-              view: true,
-              viewDetails: true,
-            }
-          } else {
-            planPerms[moduleId] = {
-              ...planPerms[moduleId],
-              accessLevel: "limited_access",
-              view: true,
-              limitedView: true,
-              limitCount: 10,
-            }
-          }
-        })
-      } else {
-        // Premium/Enterprise: full access
+        // Pro plan: Full access to all features
         Object.keys(planPerms).forEach((moduleId) => {
           planPerms[moduleId] = {
             ...planPerms[moduleId],

@@ -7,11 +7,11 @@ import { Topbar } from "@/components/topbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { journeyStages } from "@/data/journey-stages";
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay";
 import {
-  Map,
   Check,
   ChevronRight,
   Rocket,
@@ -95,8 +95,14 @@ export default function MyJourneyPage() {
             <div className="relative z-10">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-                    <Map className="h-7 w-7 text-white" />
+                  <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20 overflow-hidden">
+                    <img
+                      src="/3d-characters-ecom/manage-online-store.png"
+                      alt="My Roadmap"
+                      width={56}
+                      height={56}
+                      className="object-contain w-full h-full"
+                    />
                   </div>
                   <div>
                     <h1 className="text-2xl md:text-3xl font-bold">My Roadmap</h1>
@@ -136,7 +142,7 @@ export default function MyJourneyPage() {
           </div>
 
           {/* Roadmap Timeline */}
-          <div className="space-y-4">
+          <Accordion type="multiple" className="space-y-4">
             {journeyStages.map((stage, index) => {
               const stageCompletedCount = stage.tasks.filter(task => completedTasks.has(task.id)).length;
               const stageProgress = stage.tasks.length > 0 ? (stageCompletedCount / stage.tasks.length) * 100 : 0;
@@ -145,142 +151,145 @@ export default function MyJourneyPage() {
               const isPastStage = currentStageIndex === -1 || index < currentStageIndex;
 
               return (
-                <Card
+                <AccordionItem
                   key={stage.id}
+                  value={stage.id}
                   className={cn(
-                    "overflow-hidden transition-all duration-300",
-                    isCurrentStage && "ring-2 ring-indigo-500 shadow-lg",
+                    "border rounded-xl overflow-hidden transition-all duration-300",
                     isStageCompleted && "bg-green-50/50 border-green-200"
                   )}
                 >
-                  {/* Stage Header */}
-                  <div className={cn(
-                    "p-4 border-b",
+                  <AccordionTrigger className={cn(
+                    "p-4 hover:no-underline [&>svg]:ml-auto",
                     isStageCompleted ? "bg-green-100/50" : isCurrentStage ? "bg-indigo-50" : "bg-gray-50"
                   )}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {/* Stage Number/Check */}
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all",
-                          isStageCompleted
-                            ? "bg-green-500 text-white"
-                            : isCurrentStage
-                            ? "bg-indigo-500 text-white"
-                            : "bg-gray-200 text-gray-500"
-                        )}>
-                          {isStageCompleted ? (
-                            <Check className="h-5 w-5" />
-                          ) : (
-                            stage.number
-                          )}
-                        </div>
-
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900">{stage.title}</h3>
-                            {isCurrentStage && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
-                                Current
-                              </span>
-                            )}
-                            {isStageCompleted && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1">
-                                <Trophy className="h-3 w-3" />
-                                Completed
-                              </span>
+                    <div className="flex flex-col w-full pr-2">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3">
+                          {/* Stage Number/Check */}
+                          <div className={cn(
+                            "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all",
+                            isStageCompleted
+                              ? "bg-green-500 text-white"
+                              : isCurrentStage
+                              ? "bg-indigo-500 text-white"
+                              : "bg-gray-200 text-gray-500"
+                          )}>
+                            {isStageCompleted ? (
+                              <Check className="h-5 w-5" />
+                            ) : (
+                              stage.number
                             )}
                           </div>
-                          <p className="text-sm text-gray-500">{stage.description}</p>
-                        </div>
-                      </div>
 
-                      {/* Stage Progress */}
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">{Math.round(stageProgress)}%</div>
-                        <div className="text-xs text-gray-500">{stageCompletedCount}/{stage.tasks.length} tasks</div>
-                      </div>
-                    </div>
-
-                    {/* Stage Progress Bar */}
-                    <div className="mt-3 w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full transition-all duration-500 ease-out rounded-full",
-                          isStageCompleted
-                            ? "bg-green-500"
-                            : "bg-indigo-500"
-                        )}
-                        style={{ width: `${stageProgress}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tasks List */}
-                  <div className="p-4">
-                    <div className="space-y-2">
-                      {stage.tasks.map((task) => {
-                        const isTaskCompleted = completedTasks.has(task.id);
-                        return (
-                          <div
-                            key={task.id}
-                            className={cn(
-                              "flex items-center justify-between gap-3 p-3 rounded-lg transition-all duration-200",
-                              isTaskCompleted
-                                ? "bg-green-50 border border-green-200"
-                                : "bg-gray-50 hover:bg-gray-100 border border-transparent"
-                            )}
-                          >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <Checkbox
-                                id={task.id}
-                                checked={isTaskCompleted}
-                                onCheckedChange={() => handleTaskToggle(task.id)}
-                                className={cn(
-                                  "h-5 w-5",
-                                  isTaskCompleted && "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                                )}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <label
-                                  htmlFor={task.id}
-                                  className={cn(
-                                    "text-sm font-medium cursor-pointer block",
-                                    isTaskCompleted ? "text-gray-500 line-through" : "text-gray-900"
-                                  )}
-                                >
-                                  {task.title}
-                                </label>
-                                {task.description && (
-                                  <p className="text-xs text-gray-500 mt-0.5">{task.description}</p>
-                                )}
-                              </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-gray-900">{stage.title}</h3>
+                              {isCurrentStage && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                                  Current
+                                </span>
+                              )}
+                              {isStageCompleted && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+                                  <Trophy className="h-3 w-3" />
+                                  Completed
+                                </span>
+                              )}
                             </div>
-
-                            {task.link && (
-                              <Link href={task.link}>
-                                <Button
-                                  size="sm"
-                                  variant={isTaskCompleted ? "outline" : "default"}
-                                  className={cn(
-                                    "h-8 text-xs",
-                                    !isTaskCompleted && "bg-indigo-600 hover:bg-indigo-700"
-                                  )}
-                                >
-                                  {isTaskCompleted ? "Revisit" : "Start"}
-                                  <ChevronRight className="h-3 w-3 ml-1" />
-                                </Button>
-                              </Link>
-                            )}
+                            <p className="text-sm text-gray-500">{stage.description}</p>
                           </div>
-                        );
-                      })}
+                        </div>
+
+                        {/* Stage Progress */}
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-gray-900">{Math.round(stageProgress)}%</div>
+                          <div className="text-xs text-gray-500">{stageCompletedCount}/{stage.tasks.length} tasks</div>
+                        </div>
+                      </div>
+
+                      {/* Stage Progress Bar */}
+                      <div className="mt-3 w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full transition-all duration-500 ease-out rounded-full",
+                            isStageCompleted
+                              ? "bg-green-500"
+                              : "bg-indigo-500"
+                          )}
+                          style={{ width: `${stageProgress}%` }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </Card>
+                  </AccordionTrigger>
+
+                  <AccordionContent>
+                    {/* Tasks List */}
+                    <div className="p-4">
+                      <div className="space-y-2">
+                        {stage.tasks.map((task) => {
+                          const isTaskCompleted = completedTasks.has(task.id);
+                          return (
+                            <div
+                              key={task.id}
+                              className={cn(
+                                "flex items-center justify-between gap-3 p-3 rounded-lg transition-all duration-200",
+                                isTaskCompleted
+                                  ? "bg-green-50 border border-green-200"
+                                  : "bg-gray-50 hover:bg-gray-100 border border-transparent"
+                              )}
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <Checkbox
+                                  id={task.id}
+                                  checked={isTaskCompleted}
+                                  onCheckedChange={() => handleTaskToggle(task.id)}
+                                  className={cn(
+                                    "h-5 w-5",
+                                    isTaskCompleted && "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
+                                  )}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <label
+                                    htmlFor={task.id}
+                                    className={cn(
+                                      "text-sm font-medium cursor-pointer block",
+                                      isTaskCompleted ? "text-gray-500 line-through" : "text-gray-900"
+                                    )}
+                                  >
+                                    {task.title}
+                                  </label>
+                                  {task.description && (
+                                    <p className="text-xs text-gray-500 mt-0.5">{task.description}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {task.link && (
+                                <Link href={task.link}>
+                                  <Button
+                                    size="sm"
+                                    variant={isTaskCompleted ? "outline" : "default"}
+                                    className={cn(
+                                      "h-8 text-xs",
+                                      !isTaskCompleted && "bg-indigo-600 hover:bg-indigo-700"
+                                    )}
+                                  >
+                                    {isTaskCompleted ? "Revisit" : "Start"}
+                                    <ChevronRight className="h-3 w-3 ml-1" />
+                                  </Button>
+                                </Link>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               );
             })}
-          </div>
+          </Accordion>
 
           {/* Completion Message */}
           {overallProgress === 100 && (

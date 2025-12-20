@@ -12,9 +12,10 @@ interface OnboardingContextType {
   completedModules: number
   totalModules: number
   
-  // User plan
+  // User plan - Only Free and Pro
   plan: string | null
   isFree: boolean
+  isPro: boolean
   
   // Loading state
   isLoading: boolean
@@ -49,8 +50,37 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       // Handle onboarding status
       if (statusResponse.ok) {
-        const statusData: OnboardingStatus = await statusResponse.json()
-        setStatus(statusData)
+        // Check if response is JSON before parsing
+        const statusContentType = statusResponse.headers.get("content-type")
+        if (statusContentType && statusContentType.includes("application/json")) {
+          try {
+            const statusData: OnboardingStatus = await statusResponse.json()
+            setStatus(statusData)
+          } catch (parseError) {
+            console.warn("Failed to parse onboarding status JSON:", parseError)
+            // Set defaults on parse error
+            setStatus({
+              onboarding_completed: false,
+              onboarding_completed_at: null,
+              onboarding_progress: 0,
+              completed_videos: 0,
+              total_videos: 6,
+              completed_modules: 0,
+              total_modules: 6,
+            })
+          }
+        } else {
+          // Not JSON, set defaults
+          setStatus({
+            onboarding_completed: false,
+            onboarding_completed_at: null,
+            onboarding_progress: 0,
+            completed_videos: 0,
+            total_videos: 6,
+            completed_modules: 0,
+            total_modules: 6,
+          })
+        }
       } else {
         // Default values if API fails
         setStatus({
@@ -66,8 +96,19 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       // Handle user plan
       if (userResponse.ok) {
-        const userData = await userResponse.json()
-        setPlan(userData.plan || "free")
+        // Check if response is JSON before parsing
+        const userContentType = userResponse.headers.get("content-type")
+        if (userContentType && userContentType.includes("application/json")) {
+          try {
+            const userData = await userResponse.json()
+            setPlan(userData.plan || "free")
+          } catch (parseError) {
+            console.warn("Failed to parse user data JSON:", parseError)
+            setPlan("free")
+          }
+        } else {
+          setPlan("free")
+        }
       } else {
         setPlan("free")
       }
@@ -94,15 +135,20 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     fetchData()
   }, [fetchData])
 
+  // Determine if user is free
+  const isFreeUser = plan === "free" || plan === null
+
   const value: OnboardingContextType = {
-    isComplete: status?.onboarding_completed || false,
+    // For free users, always set onboarding as incomplete
+    isComplete: isFreeUser ? false : (status?.onboarding_completed || false),
     progressPercentage: status?.onboarding_progress || 0,
     completedVideos: status?.completed_videos || 0,
     totalVideos: status?.total_videos || 6,
     completedModules: status?.completed_modules || 0,
     totalModules: status?.total_modules || 6,
     plan,
-    isFree: plan === "free" || plan === null,
+    isFree: isFreeUser,
+    isPro: plan === "pro",
     isLoading,
     error,
     refetch: fetchData,
@@ -128,6 +174,7 @@ export function useOnboarding(): OnboardingContextType {
       totalModules: 6,
       plan: "free",
       isFree: true,
+      isPro: false,
       isLoading: false,
       error: null,
       refetch: async () => {},

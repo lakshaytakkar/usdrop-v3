@@ -33,17 +33,36 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/signup',
+    '/api/auth',
+    '/auth',
+    '/pricing',
+    '/about',
+    '/contact',
+    '/privacy',
+    '/terms',
+  ]
+
+  // Check if current path is public
+  const isPublicRoute = publicRoutes.some(route =>
+    pathname === route || pathname.startsWith(`${route}/`)
+  )
+
   // Protected routes - redirect to login if not authenticated
-  if (!user && pathname.startsWith('/admin')) {
+  if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirectedFrom', pathname)
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages to my-dashboard
   if (user && (pathname === '/login' || pathname === '/signup')) {
-    const redirectTo = request.nextUrl.searchParams.get('redirectedFrom') || '/'
+    const redirectTo = request.nextUrl.searchParams.get('redirectedFrom') || '/my-dashboard'
     return NextResponse.redirect(new URL(redirectTo, request.url))
   }
 

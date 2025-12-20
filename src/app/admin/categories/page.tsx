@@ -272,6 +272,7 @@ export default function AdminCategoriesPage() {
       slug: category.slug,
       description: category.description || '',
       image: category.image,
+      thumbnail: category.thumbnail || null,
       parent_category_id: category.parent_category_id,
       parent_category: category.parent_category ? {
         id: category.parent_category.id,

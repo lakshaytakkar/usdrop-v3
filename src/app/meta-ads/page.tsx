@@ -18,6 +18,7 @@ import { AdCard } from "./components/ad-card"
 import { AdDetailSheet } from "./components/ad-detail-sheet"
 import { MetaAd, sampleAds } from "./data/ads"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ComingSoonOverlay } from "./components/coming-soon-overlay"
 
 export default function MetaAdsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -77,8 +78,64 @@ export default function MetaAdsPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
+          {/* Premium Banner with grainy gradient */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
+            {/* Enhanced grainy texture layers */}
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                opacity: 0.5,
+                mixBlendMode: 'overlay'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.8' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise2)'/%3E%3C/svg%3E")`,
+                opacity: 0.4,
+                mixBlendMode: 'multiply'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise3'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='6' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise3)'/%3E%3C/svg%3E")`,
+                opacity: 0.3,
+                mixBlendMode: 'screen'
+              }}
+            ></div>
+            <div 
+              className="absolute inset-0 z-0"
+              style={{
+                background: `repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,0,0,0.08) 1px, rgba(0,0,0,0.08) 2px),
+                              repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0.04) 2px)`,
+                opacity: 0.6
+              }}
+            ></div>
+
+            {/* Content */}
+            <div className="relative z-10 flex items-center gap-4 h-full">
+              {/* 3D Thumbnail */}
+              <img
+                src="/3d-characters-ecom/promote-product.png"
+                alt="Meta Ads Research"
+                width={110}
+                height={110}
+                className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
+              />
+
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Meta Ads Research</h2>
+                <p className="text-white/90 text-sm md:text-base leading-relaxed">
+                  Discover winning ads and analyze performance metrics to optimize your campaigns.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Blurred background content */}
-          <div className="blur-sm pointer-events-none select-none">
+          <div className="blur-md pointer-events-none select-none opacity-60">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="h-8 w-8 text-primary" />
@@ -194,8 +251,11 @@ export default function MetaAdsPage() {
             )}
           </div>
 
+          {/* Coming Soon Overlay */}
+          <ComingSoonOverlay />
+
           {/* Onboarding Progress Overlay */}
-                <OnboardingProgressOverlay pageName="Meta Ads Research" />
+          <OnboardingProgressOverlay pageName="Meta Ads Research" />
 
           {/* Detail Sidebar */}
           <AdDetailSheet

@@ -4,6 +4,7 @@ export interface ProductCategory {
   slug: string
   description: string | null
   image: string | null
+  thumbnail: string | null
   parent_category_id: string | null
   trending: boolean
   product_count: number
