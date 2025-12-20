@@ -56,6 +56,9 @@ import { Category } from "@/types/categories"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 
 type SortOption = "revenue" | "traffic" | "growth" | "rating"
 
@@ -91,6 +94,8 @@ export default function CompetitorStoresPage() {
   const [selectedCountries, setSelectedCountries] = useState<Set<string>>(new Set())
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
   const [countryFilterOpen, setCountryFilterOpen] = useState(false)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
   // Fetch categories for filter
   const fetchCategories = useCallback(async () => {
@@ -677,11 +682,16 @@ export default function CompetitorStoresPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredAndSortedStores.map((store) => (
+                        filteredAndSortedStores.map((store, index) => {
+                          const isLocked = isFree && index >= 6
+                          return (
                       <TableRow 
                         key={store.id} 
-                        className="hover:bg-muted/50 cursor-pointer"
-                        onClick={() => handleStoreRowClick(store.url)}
+                        className={cn(
+                          "hover:bg-muted/50 cursor-pointer relative",
+                          isLocked && "pointer-events-none"
+                        )}
+                        onClick={() => !isLocked && handleStoreRowClick(store.url)}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -745,8 +755,12 @@ export default function CompetitorStoresPage() {
                             <span className="font-semibold">{store.rating}</span>
                           </div>
                         </TableCell>
+                        {isLocked && (
+                          <LockOverlay onClick={() => setIsUpsellOpen(true)} />
+                        )}
                         </TableRow>
-                      ))
+                      )
+                      })
                       )}
                     </TableBody>
                   </Table>
@@ -759,6 +773,12 @@ export default function CompetitorStoresPage() {
           <OnboardingProgressOverlay pageName="Competitor Stores" />
         </SidebarInset>
       </SidebarProvider>
+
+      {/* Upsell Dialog */}
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </>
   )
 }

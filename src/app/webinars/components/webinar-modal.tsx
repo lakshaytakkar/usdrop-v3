@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Webinar } from "../data/webinars"
 import { cn } from "@/lib/utils"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 
 interface WebinarModalProps {
   webinar: Webinar | null
@@ -23,6 +26,8 @@ interface WebinarModalProps {
 
 export function WebinarModal({ webinar, open, onOpenChange }: WebinarModalProps) {
   const [isOpening, setIsOpening] = useState(false)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
   if (!webinar) return null
 
@@ -117,35 +122,52 @@ export function WebinarModal({ webinar, open, onOpenChange }: WebinarModalProps)
                 </span>
               </button>
             ) : (
-              <button
-                onClick={handleOpenUrl}
-                disabled={isOpening}
-                className={cn(
-                  "group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300 cursor-pointer",
-                  "flex items-center justify-center gap-2",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
-              >
-                <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
-                <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
-                <span className="relative flex items-center justify-center gap-2 z-10">
-                  {isOpening ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
-                      Opening...
-                    </>
-                  ) : (
-                    <>
-                      Watch Recording
-                      <ExternalLink className="h-4 w-4 text-white" />
-                    </>
+              <div className="relative">
+                <button
+                  onClick={handleOpenUrl}
+                  disabled={isOpening || (isFree && !webinar.isUpcoming)}
+                  className={cn(
+                    "group relative w-full h-10 rounded-md text-sm font-medium text-white transition-all duration-300",
+                    "flex items-center justify-center gap-2",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    !isFree || webinar.isUpcoming ? "cursor-pointer" : "cursor-not-allowed"
                   )}
-                </span>
-              </button>
+                >
+                  <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
+                  <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>
+                  <span className="relative flex items-center justify-center gap-2 z-10">
+                    {isOpening ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        Opening...
+                      </>
+                    ) : (
+                      <>
+                        Watch Recording
+                        <ExternalLink className="h-4 w-4 text-white" />
+                      </>
+                    )}
+                  </span>
+                </button>
+                {isFree && !webinar.isUpcoming && (
+                  <LockOverlay 
+                    onClick={() => setIsUpsellOpen(true)}
+                    variant="button"
+                    size="sm"
+                    className="rounded-md"
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
       </DialogContent>
+      
+      {/* Upsell Dialog */}
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </Dialog>
   )
 }

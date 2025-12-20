@@ -53,7 +53,7 @@ export function Hero() {
         </div>
       </div>
       <div className="absolute flex h-[485.205px] items-center justify-center left-[calc(50%-520.45px)] mix-blend-screen top-[545.4px] translate-x-[-50%] w-[1187.35px]">
-        <div className="flex-none" style={{ transform: "rotate(-5.4deg)" }}>
+        <div className="flex-none" style={{ transform: "rotate(354.6deg)" }}>
           <div className="h-[378px] relative w-[1156.91px]" data-name="Image" data-node-id="3:3899">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <img alt="" className="absolute h-full left-[-1.09%] max-w-none top-0 w-[103.05%]" src={imgImage} />
@@ -67,7 +67,7 @@ export function Hero() {
         </div>
       </div>
       <div className="absolute flex h-[570.327px] items-center justify-center left-[calc(50%+673.25px)] mix-blend-screen top-[676.73px] translate-x-[-50%] w-[1204.518px]">
-        <div className="flex-none" style={{ transform: "rotate(-9.849deg)" }}>
+        <div className="flex-none" style={{ transform: "rotate(350.151deg)" }}>
           <div className="h-[378px] relative w-[1156.91px]" data-name="Image" data-node-id="3:3901">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <img alt="" className="absolute h-full left-[-1.09%] max-w-none top-0 w-[103.05%]" src={imgImage} />
@@ -168,37 +168,25 @@ export function Hero() {
       </div>
 
       {/* Browser Mockup */}
-      <div className="absolute left-[calc(50%+16.74px)] translate-x-[-50%] top-[593.98px] w-[1021px]" data-node-id="3:3941">
-        <div 
-          className="relative border border-[rgba(255,255,255,0.6)] border-solid overflow-clip rounded-[23px]"
-          style={{
-            transform: "perspective(1200px) rotateX(8deg) rotateY(-3deg) skewX(2deg)",
-            backgroundImage: "linear-gradient(0deg, rgba(255, 47, 47, 0.2) 0%, rgba(239, 123, 22, 0.2) 35.878%, rgba(138, 67, 225, 0.2) 69.922%, rgba(213, 17, 253, 0.2) 100%)"
-          }}
-        >
-          {/* Inner Browser Content */}
-          <div className="border border-solid border-white overflow-clip rounded-[16px] m-1 bg-white">
-            {/* Browser Chrome */}
-            <div className="h-10 bg-[#f6f6f6] flex items-center px-4 gap-2 border-b border-gray-200">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
-                <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
-              </div>
-              <div className="flex-1 flex justify-center">
-                <div className="bg-white rounded-md px-4 py-1 text-xs text-gray-500 min-w-[300px] text-center border border-gray-200">
-                  aipowered.framer.website
+      <div className="absolute left-[calc(50%+16.74px)] top-[593.98px] translate-x-[-50%] w-[1193.477px] h-[513.013px]" data-name="Group" data-node-id="3:3941">
+        <div className="absolute flex h-[507.243px] items-center justify-center left-[calc(50%+16.74px)] top-[596.86px] translate-x-[-50%] w-[1189.151px]">
+          <div className="flex-none" style={{ transform: "rotate(356.834deg) scaleX(99.859%) scaleY(101.146%) skewX(16.943deg)" }}>
+            <div className="border border-[rgba(255,255,255,0.6)] border-solid h-[476.626px] overflow-clip relative rounded-[23px] w-[1021.587px]" data-node-id="3:3943">
+              <div className="absolute h-[672.167px] left-[-1px] top-[-1.01px] w-[1027px]" data-node-id="3:3944" style={{ backgroundImage: "linear-gradient(1.4210854715202004e-14deg, rgba(255, 47, 47, 0.2) 0%, rgba(239, 123, 22, 0.2) 35.878%, rgba(138, 67, 225, 0.2) 69.922%, rgba(213, 17, 253, 0.2) 100%)" }} />
+              <div className="absolute border border-solid border-white h-[638px] left-[calc(50%-0.29px)] overflow-clip rounded-[16px] top-[calc(50%+85.93px)] translate-x-[-50%] translate-y-[-50%] w-[1011px]" data-node-id="3:3945">
+                <div className="absolute h-[638.634px] left-[-2px] top-1/2 translate-y-[-50%] w-[1013.065px]" data-name="Div [framer-1bmkzq0]" data-node-id="3:3946">
+                  <div className="absolute h-[638.634px] left-0 rounded-[12.334px] top-0 w-[1013.065px]" data-name="Div" data-node-id="3:3947">
+                    <div className="absolute h-[638.634px] left-px overflow-clip top-0 w-[1011.075px]" data-name="Image" data-node-id="3:3948">
+                      {/* Browser Content - Using the Figma mockup image */}
+                      <img 
+                        alt="Dashboard mockup" 
+                        className="w-full h-full object-cover object-top" 
+                        src={imgBrowserMockup}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Browser Content - Using the Figma mockup image */}
-            <div className="h-[500px] overflow-hidden">
-              <img 
-                alt="Dashboard mockup" 
-                className="w-full h-full object-cover object-top" 
-                src={imgBrowserMockup}
-              />
             </div>
           </div>
         </div>

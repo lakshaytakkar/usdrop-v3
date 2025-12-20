@@ -4,6 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "lucide-react"
+import { LockOverlay } from "@/components/ui/lock-overlay"
+import { cn } from "@/lib/utils"
 
 interface SeasonalBannerProps {
   name: string
@@ -12,6 +14,8 @@ interface SeasonalBannerProps {
   dateRange: string
   marketingDateRange: string
   gradient: string
+  isLocked?: boolean
+  onLockedClick?: () => void
 }
 
 export function SeasonalBanner({
@@ -21,6 +25,8 @@ export function SeasonalBanner({
   dateRange,
   marketingDateRange,
   gradient,
+  isLocked = false,
+  onLockedClick,
 }: SeasonalBannerProps) {
   return (
     <div 
@@ -70,15 +76,33 @@ export function SeasonalBanner({
             </div>
 
             {/* Right Side - Browse Collection Button */}
-            <div className="flex-shrink-0">
-              <Link href={`/winning-products?category=${slug}`}>
+            <div className="flex-shrink-0 relative">
+              {isLocked ? (
                 <Button 
                   size="lg"
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm font-semibold"
+                  className="bg-white/20 text-white border border-white/30 backdrop-blur-sm font-semibold pointer-events-none"
+                  disabled
                 >
                   Browse Collection
                 </Button>
-              </Link>
+              ) : (
+                <Link href={`/winning-products?category=${slug}`}>
+                  <Button 
+                    size="lg"
+                    className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm font-semibold"
+                  >
+                    Browse Collection
+                  </Button>
+                </Link>
+              )}
+              {isLocked && (
+                <LockOverlay 
+                  onClick={onLockedClick}
+                  variant="button"
+                  size="sm"
+                  className="rounded-lg"
+                />
+              )}
             </div>
           </div>
         </div>

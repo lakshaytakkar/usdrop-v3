@@ -4,12 +4,13 @@ import { useMemo, useEffect, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
-import { OnboardingProvider } from "@/contexts/onboarding-context"
+import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { CategoryCard } from "./components/category-card"
 import { Category } from "@/types/categories"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 // Transform API category to local format
 type LocalCategory = {
@@ -25,10 +26,12 @@ type LocalCategory = {
   subcategories: string[]
 }
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
   // Fetch categories from API
   useEffect(() => {
@@ -77,7 +80,7 @@ export default function CategoriesPage() {
   }, [localCategories])
 
   return (
-    <OnboardingProvider>
+    <>
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
@@ -169,20 +172,42 @@ export default function CategoriesPage() {
                   <div>
                     <h2 className="text-xl font-semibold mb-4">All Categories</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {sortedCategories.map((category) => (
-                        <CategoryCard key={category.id} category={category} />
-                      ))}
+                      {sortedCategories.map((category, index) => {
+                        const isLocked = isFree && index >= 6
+                        return (
+                          <CategoryCard 
+                            key={category.id} 
+                            category={category}
+                            isLocked={isLocked}
+                            onLockedClick={() => setIsUpsellOpen(true)}
+                          />
+                        )
+                      })}
                     </div>
                   </div>
                 )}
               </>
             )}
 
-            {/* Onboarding Progress Overlay */}
-            <OnboardingProgressOverlay pageName="Categories" />
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+          {/* Onboarding Progress Overlay */}
+          <OnboardingProgressOverlay pageName="Categories" />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+    
+    {/* Upsell Dialog */}
+    <UpsellDialog 
+      isOpen={isUpsellOpen} 
+      onClose={() => setIsUpsellOpen(false)} 
+    />
+    </>
+  )
+}
+
+export default function CategoriesPage() {
+  return (
+    <OnboardingProvider>
+      <CategoriesPageContent />
     </OnboardingProvider>
   )
 }

@@ -23,6 +23,7 @@ import {
   ExpandableTrigger,
 } from "@/components/ui/expandable"
 import { cn } from "@/lib/utils"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 
 // Local Category type for the card component
 export interface Category {
@@ -40,9 +41,11 @@ export interface Category {
 
 interface CategoryCardProps {
   category: Category
+  isLocked?: boolean
+  onLockedClick?: () => void
 }
 
-export function CategoryCard({ category }: CategoryCardProps) {
+export function CategoryCard({ category, isLocked = false, onLockedClick }: CategoryCardProps) {
   const [imageError, setImageError] = useState(false)
 
   return (
@@ -53,7 +56,10 @@ export function CategoryCard({ category }: CategoryCardProps) {
     >
       {({ isExpanded }) => (
         <ExpandableCard
-          className="w-full relative bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden"
+          className={cn(
+            "w-full relative bg-card border rounded-xl shadow-sm flex flex-col overflow-hidden",
+            isLocked && "pointer-events-none"
+          )}
           collapsedSize={{ width: "100%", height: "auto" }}
           expandedSize={{ width: "100%", height: "auto" }}
           hoverToExpand={false}
@@ -72,7 +78,10 @@ export function CategoryCard({ category }: CategoryCardProps) {
                     src={category.thumbnail || category.image || '/placeholder-category.png'}
                     alt={category.name}
                     fill
-                    className="object-cover"
+                    className={cn(
+                      "object-cover transition-all duration-300",
+                      isLocked && "blur-sm"
+                    )}
                     onError={() => setImageError(true)}
                   />
                 )}
@@ -85,6 +94,9 @@ export function CategoryCard({ category }: CategoryCardProps) {
                       Trending
                     </Badge>
                   </div>
+                )}
+                {isLocked && (
+                  <LockOverlay onClick={onLockedClick} />
                 )}
               </div>
             </ExpandableCardHeader>

@@ -1,19 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 export default function SellingChannelsPage() {
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-blue-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
@@ -71,14 +76,33 @@ export default function SellingChannelsPage() {
           </div>
 
           {/* Marketplaces Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {marketplaces.map((marketplace) => (
-              <MarketplaceCard key={marketplace.id} marketplace={marketplace} />
-            ))}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Marketplaces</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {marketplaces.map((marketplace, index) => {
+                // Show first 3 marketplaces, lock rest for free users
+                const shouldLock = isFree && index >= 3
+                return (
+                  <MarketplaceCard 
+                    key={marketplace.id} 
+                    marketplace={{
+                      ...marketplace,
+                      isLocked: shouldLock || marketplace.isLocked
+                    }}
+                    onLockedClick={() => setIsUpsellOpen(true)}
+                  />
+                )
+              })}
+            </div>
           </div>
-          <OnboardingProgressOverlay pageName="Selling Channels" />
         </div>
       </SidebarInset>
+      
+      {/* Upsell Dialog */}
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </SidebarProvider>
   )
 }

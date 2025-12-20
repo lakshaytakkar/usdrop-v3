@@ -17,10 +17,14 @@ import {
 import { Search, Book, Play } from "lucide-react"
 import { ArticleCard } from "./components/article-card"
 import { Article, sampleArticles } from "./data/articles"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 export default function IntelligencePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
   const categories = useMemo(() => {
     return ["all", ...Array.from(new Set(sampleArticles.map((a) => a.category)))]
@@ -148,9 +152,18 @@ export default function IntelligencePage() {
                 Latest Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredArticles.map((article) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
+                {filteredArticles.map((article) => {
+                  // Lock all "Read more" buttons for free users
+                  const isLocked = isFree
+                  return (
+                    <ArticleCard 
+                      key={article.id} 
+                      article={article}
+                      isLocked={isLocked}
+                      onLockedClick={() => setIsUpsellOpen(true)}
+                    />
+                  )
+                })}
               </div>
             </div>
           )}
@@ -166,6 +179,12 @@ export default function IntelligencePage() {
           )}
         </div>
       </SidebarInset>
+      
+      {/* Upsell Dialog */}
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </SidebarProvider>
   )
 }

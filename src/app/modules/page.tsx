@@ -65,26 +65,26 @@ function QuickStatsGrid() {
     {
       title: "Learning Progress",
       value: `${Math.round(progressPercentage || 0)}%`,
-      iconSrc: "/magic-icons/Item 04.png",
+      iconSrc: "/3d-icons/Item 04.png",
       link: "/academy",
       highlighted: true
     },
     {
       title: "Products Saved",
       value: stats?.products?.inPicklist || 0,
-      iconSrc: "/magic-icons/Item 02.png",
+      iconSrc: "/3d-icons/Item 02.png",
       link: "/my-products"
     },
     {
       title: "Connected Stores",
       value: stats?.stores?.connected || 0,
-      iconSrc: "/magic-icons/Item 03.png",
+      iconSrc: "/3d-icons/Item 03.png",
       link: "/my-shopify-stores"
     },
     {
       title: "Day Streak",
       value: stats?.activity?.streakDays || 0,
-      iconSrc: "/magic-icons/Item 05.png",
+      iconSrc: "/3d-icons/Item 05.png",
       suffix: stats?.activity?.streakDays === 1 ? " day" : " days"
     }
   ]
@@ -230,7 +230,7 @@ function OnboardingSection() {
         <div className="relative z-10">
           <div className="flex items-center gap-3">
             <Image
-              src="/magic-icons/crown.png"
+              src="/3d-icons/crown.png"
               alt="Onboarding Complete"
               width={48}
               height={48}
@@ -258,7 +258,7 @@ function OnboardingSection() {
             <div className="flex items-center justify-between w-full pr-2">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/magic-icons/Item 06.png"
+                  src="/3d-icons/Item 06.png"
                   alt="Onboarding"
                   width={48}
                   height={48}

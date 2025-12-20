@@ -44,7 +44,7 @@ function HomePageContent() {
                     delay={0}
                   >
                     <img
-                      src="/magic-icons/Item 01.png"
+                      src="/3d-icons/Item 01.png"
                       alt="Image Studio"
                       width={64}
                       height={64}
@@ -65,7 +65,7 @@ function HomePageContent() {
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <img
-                        src="/magic-icons/Item 15.png"
+                        src="/3d-icons/Item 15.png"
                         alt="Ad Studio"
                         width={64}
                         height={64}
@@ -102,7 +102,7 @@ function HomePageContent() {
                     delay={0.1}
                   >
                     <img
-                      src="/magic-icons/Item 28.png"
+                      src="/3d-icons/Item 28.png"
                       alt="Model Studio"
                       width={64}
                       height={64}
@@ -123,7 +123,7 @@ function HomePageContent() {
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <img
-                        src="/magic-icons/Item 12.png"
+                        src="/3d-icons/Item 12.png"
                         alt="Whitelabelling"
                         width={64}
                         height={64}
@@ -166,7 +166,7 @@ function HomePageContent() {
                     delay={0.2}
                   >
                     <img
-                      src="/magic-icons/Item 23.png"
+                      src="/3d-icons/Item 23.png"
                       alt="Brand Studio"
                       width={64}
                       height={64}
@@ -186,7 +186,7 @@ function HomePageContent() {
                     delay={0.25}
                   >
                     <img
-                      src="/magic-icons/Item 35.png"
+                      src="/3d-icons/Item 35.png"
                       alt="Campaign Studio"
                       width={64}
                       height={64}

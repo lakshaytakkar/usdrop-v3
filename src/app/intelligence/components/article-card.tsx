@@ -6,10 +6,14 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, Eye, Heart } from "lucide-react"
 import { Article } from "../data/articles"
+import { LockOverlay } from "@/components/ui/lock-overlay"
+import { cn } from "@/lib/utils"
 
 interface ArticleCardProps {
   article: Article
   featured?: boolean
+  isLocked?: boolean
+  onLockedClick?: () => void
 }
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -17,7 +21,7 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 })
 
-export function ArticleCard({ article, featured = false }: ArticleCardProps) {
+export function ArticleCard({ article, featured = false, isLocked = false, onLockedClick }: ArticleCardProps) {
   return (
     <Card
       className={`flex h-full flex-col ${
@@ -85,12 +89,28 @@ export function ArticleCard({ article, featured = false }: ArticleCardProps) {
           ))}
         </div>
 
-        <a
-          href={`/intelligence/${article.slug || article.id}`}
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          Read more →
-        </a>
+        <div className="relative">
+          {isLocked ? (
+            <span className="text-sm font-medium text-muted-foreground cursor-not-allowed">
+              Read more →
+            </span>
+          ) : (
+            <a
+              href={`/intelligence/${article.slug || article.id}`}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Read more →
+            </a>
+          )}
+          {isLocked && (
+            <LockOverlay 
+              onClick={onLockedClick}
+              variant="button"
+              size="sm"
+              className="rounded-md"
+            />
+          )}
+        </div>
       </CardContent>
     </Card>
   )

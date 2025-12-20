@@ -5,12 +5,14 @@ import { Lock, ExternalLink, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import { Marketplace } from "../data/marketplaces"
 import { cn } from "@/lib/utils"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 
 interface MarketplaceCardProps {
   marketplace: Marketplace
+  onLockedClick?: () => void
 }
 
-export function MarketplaceCard({ marketplace }: MarketplaceCardProps) {
+export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardProps) {
   return (
     <Card className={cn(
       "relative flex h-full flex-col",
@@ -25,8 +27,8 @@ export function MarketplaceCard({ marketplace }: MarketplaceCardProps) {
               alt={`${marketplace.name} logo`}
               fill
               className={cn(
-                "object-contain",
-                marketplace.isLocked && "blur-sm opacity-50"
+                "object-contain transition-all duration-300",
+                marketplace.isLocked && "blur-sm"
               )}
               sizes="100px"
             />
@@ -89,15 +91,7 @@ export function MarketplaceCard({ marketplace }: MarketplaceCardProps) {
 
         {/* Lock Overlay */}
         {marketplace.isLocked && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-xl">
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-md"></div>
-                <Lock className="h-6 w-6 text-white relative z-10" />
-              </div>
-              <p className="text-white text-xs font-medium">Premium Feature</p>
-            </div>
-          </div>
+          <LockOverlay onClick={onLockedClick} />
         )}
       </CardContent>
     </Card>

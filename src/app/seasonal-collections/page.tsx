@@ -1,11 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Topbar } from "@/components/topbar"
-import { OnboardingProvider } from "@/contexts/onboarding-context"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalBanner } from "./components/seasonal-banner"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 // Seasonal collections data
 const seasonalCollections = [
@@ -43,24 +44,29 @@ const seasonalCollections = [
   },
 ]
 
-export default function SeasonalCollectionsPage() {
-  return (
-    <OnboardingProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
-          <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
-              <p className="text-muted-foreground mb-6">
-                Discover curated product collections for seasonal holidays and special occasions
-              </p>
-            </div>
+function SeasonalCollectionsPageContent() {
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
-            {/* Seasonal Collection Banners */}
-            <div className="flex flex-col gap-4">
-              {seasonalCollections.map((collection) => (
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Topbar />
+        <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
+            <p className="text-muted-foreground mb-6">
+              Discover curated product collections for seasonal holidays and special occasions
+            </p>
+          </div>
+
+          {/* Seasonal Collection Banners */}
+          <div className="flex flex-col gap-4">
+            {seasonalCollections.map((collection, index) => {
+              // Lock all buttons for free users
+              const isLocked = isFree
+              return (
                 <SeasonalBanner
                   key={collection.slug}
                   name={collection.name}
@@ -69,15 +75,28 @@ export default function SeasonalCollectionsPage() {
                   dateRange={collection.dateRange}
                   marketingDateRange={collection.marketingDateRange}
                   gradient={collection.gradient}
+                  isLocked={isLocked}
+                  onLockedClick={() => setIsUpsellOpen(true)}
                 />
-              ))}
-            </div>
-
-            {/* Onboarding Progress Overlay */}
-            <OnboardingProgressOverlay pageName="Seasonal Collections" />
+              )
+            })}
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+        </div>
+      </SidebarInset>
+      
+      {/* Upsell Dialog */}
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
+    </SidebarProvider>
+  )
+}
+
+export default function SeasonalCollectionsPage() {
+  return (
+    <OnboardingProvider>
+      <SeasonalCollectionsPageContent />
     </OnboardingProvider>
   )
 }
