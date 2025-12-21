@@ -34,3 +34,5 @@ WHERE course_id = '00000000-0000-0000-0000-000000000001'
 -- Note: The 6th video (order_index = 6) will have video_url = NULL and can be set later
 -- When a video is uploaded manually, video_source should be set to 'upload' and video_storage_path should be populated
 
+
+
