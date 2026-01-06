@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react"
 import { format, startOfDay, isSameDay } from "date-fns"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Play, Clock } from "lucide-react"
@@ -139,7 +139,7 @@ export default function WebinarsPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Webinars</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Webinars</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Join live webinars and watch recordings of past sessions.
                 </p>

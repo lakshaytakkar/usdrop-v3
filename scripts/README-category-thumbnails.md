@@ -88,3 +88,6 @@ The script includes a 2-second delay between API calls to respect rate limits.
 - **Images not updating**: Clear browser cache or check file permissions
 
 
+
+
+

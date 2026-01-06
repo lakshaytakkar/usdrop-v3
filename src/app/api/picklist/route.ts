@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       id: item.id,
       productId: item.product_id,
       title: item.products?.title || 'Unknown Product',
-      image: item.products?.image || '/placeholder.svg',
+      image: item.products?.image || '/demo-products/Screenshot 2024-07-24 185228.png',
       price: item.products?.sell_price || 0,
       buyPrice: item.products?.buy_price || 0,
       profitPerOrder: item.products?.profit_per_order || 0,

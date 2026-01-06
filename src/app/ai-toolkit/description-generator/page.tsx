@@ -1,8 +1,8 @@
 "use client"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { DescriptionGenerator } from "@/components/ai-tools/description-generator"
@@ -63,7 +63,7 @@ export default function DescriptionGeneratorPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Description Generator</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Description Generator</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Generate compelling product listing copy that converts. AI-powered descriptions optimized for e-commerce.
                 </p>

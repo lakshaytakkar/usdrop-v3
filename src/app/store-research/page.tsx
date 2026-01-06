@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Loader2, Search as SearchIcon } from "lucide-react"
 import { StoreSearch } from "./components/store-search"

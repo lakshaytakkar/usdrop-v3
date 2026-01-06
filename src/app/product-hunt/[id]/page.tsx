@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,29 +12,33 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { 
   ArrowLeft, 
   ExternalLink,
-  MessageCircle,
   TrendingUp,
   Star,
-  Bookmark,
   Share2,
   Sparkles,
   ArrowUp,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Package,
+  Check
 } from "lucide-react"
 import { ProductImageGallery } from "../components/product-image-gallery"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
 import { ReviewsSection } from "../components/reviews-section"
-import { FulfillmentSection } from "../components/fulfillment-section"
 import { SeasonalInterestChart } from "../components/seasonal-interest-chart"
 import { SaturationGauge } from "../components/saturation-gauge"
 import { TargetingSection } from "../components/targeting-section"
 import { CompetitionSection } from "../components/competition-section"
-import { Product } from "@/types/products"
+import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
+import { MarketTrendChart } from "../components/market-trend-chart"
+import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
+import { PerformanceMetricsDashboard } from "../components/performance-metrics-dashboard"
+import { Product, ProductResearch } from "@/types/products"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
 import Image from "next/image"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 // Utility function to create product slug for search URLs
 function createProductSlug(productName: string): string {
@@ -59,6 +63,11 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSticky, setIsSticky] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isInPicklist, setIsInPicklist] = useState(false)
+  const [isAddingToPicklist, setIsAddingToPicklist] = useState(false)
+  const [researchData, setResearchData] = useState<ProductResearch | null>(null)
+  const [isLoadingResearch, setIsLoadingResearch] = useState(false)
+  const { showSuccess, showError } = useToast()
 
   // Fetch product from API
   useEffect(() => {
@@ -120,6 +129,25 @@ export default function ProductDetailPage() {
           const allProductsData = await allProductsResponse.json()
           setAllProducts(allProductsData.products || [])
         }
+        
+        // Check if product is in user's picklist
+        const picklistResponse = await fetch('/api/picklist')
+        if (picklistResponse.ok && isMounted) {
+          const picklistData = await picklistResponse.json()
+          const isInList = picklistData.items?.some((item: any) => item.productId === data.product.id) || false
+          setIsInPicklist(isInList)
+        }
+        
+        // Fetch research data
+        setIsLoadingResearch(true)
+        const researchResponse = await fetch(`/api/products/${productId}/research`)
+        if (researchResponse.ok && isMounted) {
+          const researchResult = await researchResponse.json()
+          if (researchResult.research) {
+            setResearchData(researchResult.research)
+          }
+        }
+        setIsLoadingResearch(false)
         
         setIsLoading(false)
       } catch (err) {
@@ -223,14 +251,48 @@ export default function ProductDetailPage() {
     ? new Date(product.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'Recently'
 
-  const handleImportToShopify = () => {
-    // TODO: Implement import to Shopify
-    console.log('Import to Shopify:', productId)
-  }
+  const handleAddToMyProducts = async () => {
+    if (isInPicklist || isAddingToPicklist) return
+    
+    setIsAddingToPicklist(true)
+    try {
+      const response = await fetch('/api/picklist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId: productId,
+          source: 'product-hunt',
+        }),
+      })
 
-  const handleSaveProduct = () => {
-    // TODO: Implement save/bookmark
-    console.log('Save product:', productId)
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          // Already exists
+          setIsInPicklist(true)
+          showError('Product is already in your list')
+        } else if (response.status === 401) {
+          showError('Please sign in to add products')
+        } else {
+          showError(data.error || 'Failed to add product')
+        }
+        return
+      }
+
+      setIsInPicklist(true)
+      showSuccess('Product added to My Products')
+      
+      // Dispatch event to update sidebar badge
+      window.dispatchEvent(new CustomEvent("picklist-updated"))
+    } catch (err) {
+      console.error('Error adding to picklist:', err)
+      showError('Failed to add product to your list')
+    } finally {
+      setIsAddingToPicklist(false)
+    }
   }
 
   const handleShareProduct = () => {
@@ -321,20 +383,34 @@ export default function ProductDetailPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleSaveProduct}
-                  className="h-8 w-8 p-0"
-                  title="Save"
-                >
-                  <Bookmark className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
                   onClick={handleShareProduct}
                   className="h-8 w-8 p-0"
                   title="Share"
                 >
                   <Share2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={handleAddToMyProducts}
+                  disabled={isInPicklist || isAddingToPicklist}
+                  variant={isInPicklist ? "default" : "outline"}
+                  size="sm"
+                  className={cn(
+                    "h-8 px-2",
+                    isInPicklist && "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  )}
+                  title={isInPicklist ? "Already in My Products" : "Add to My Products"}
+                >
+                  {isInPicklist ? (
+                    <>
+                      <Check className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Added</span>
+                    </>
+                  ) : (
+                    <>
+                      <Package className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Add to My Products</span>
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={handleGenerateAI}
@@ -479,33 +555,35 @@ export default function ProductDetailPage() {
                           <span className="truncate">Facebook Ads</span>
                         </Button>
                       </Link>
-                      <Button variant="outline" className="w-full">
-                        <ExternalLink className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">Find other supplier</span>
-                      </Button>
                     </div>
                   )
                 })()}
 
-                {/* Help Section */}
-                <Card className="p-4 bg-muted/50">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Need help choosing products? Store review, targeting, scaling, sales advice? Ask USDrop's support team.
-                  </p>
-                  <Button variant="outline" className="w-full">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Chat now
-                  </Button>
-                </Card>
               </div>
             </div>
 
-            {/* Fulfillment by USDrop */}
+            {/* Competitor Analysis */}
             <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Fulfillment by USDrop</h2>
-              <FulfillmentSection 
-                product={product}
-                onImportToShopify={handleImportToShopify}
+              <h2 className="text-2xl font-bold">Competitor Analysis</h2>
+              <CompetitorPricingChart
+                productPrice={product.sell_price}
+                competitors={researchData?.competitor_pricing?.competitors}
+                priceRange={researchData?.competitor_pricing?.price_range}
+              />
+            </div>
+
+            {/* Market Trends */}
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Market Trends</h2>
+              <MarketTrendChart
+                data={product.trend_data?.map((value, index) => {
+                  const date = new Date(2022, 6 + index) // Start from July 2022
+                  return {
+                    month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                    value
+                  }
+                })}
+                seasonalDemand={researchData?.seasonal_demand || undefined}
               />
             </div>
 
@@ -527,6 +605,29 @@ export default function ProductDetailPage() {
                   competitionLevel={isTrending ? "Medium" : "Low"}
                 />
               </div>
+            </div>
+
+            {/* Target Audience */}
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Target Audience</h2>
+              <AudienceDemographicsChart
+                demographics={researchData?.audience_targeting?.demographics}
+                interests={researchData?.audience_targeting?.interests}
+                suggestions={researchData?.audience_targeting?.suggestions}
+              />
+            </div>
+
+            {/* Performance Insights */}
+            <div className="space-y-6 min-w-0 max-w-full">
+              <h2 className="text-2xl font-bold">Performance Insights</h2>
+              <PerformanceMetricsDashboard
+                profitMargin={product.metadata?.profit_margin || undefined}
+                roi={product.metadata?.revenue_growth_rate || undefined}
+                marketSaturation={isTrending ? 60 : 30}
+                socialProof={researchData?.social_proof || undefined}
+                productPrice={product.sell_price}
+                buyPrice={product.buy_price}
+              />
             </div>
 
             {/* Targeting on Social Media */}
@@ -592,3 +693,4 @@ export default function ProductDetailPage() {
     </SidebarProvider>
   )
 }
+

@@ -1,8 +1,8 @@
 "use client"
 
 import { Suspense } from "react"
-import { LoginForm } from "@/components/login-form"
-import { Logo } from "@/components/logo"
+import { LoginForm } from "@/components/auth/login-form"
+import { Logo } from "@/components/layout/logo"
 
 function LoginFormSkeleton() {
   return (

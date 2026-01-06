@@ -2,49 +2,47 @@
 
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
+import { EtherealBackground } from "./EtherealBackground"
 
 export function ProblemSolution() {
   return (
-    <section className="py-20 lg:py-32 bg-white relative overflow-hidden">
-      {/* Background gradient overlay matching Figma design */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 via-transparent to-purple-50/20"></div>
-      </div>
+    <section className="py-16 lg:py-24 bg-[rgba(255,255,255,0.4)] relative overflow-hidden">
+      <EtherealBackground />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-4xl mx-auto text-center space-y-12">
+        <div className="max-w-[886px] mx-auto text-center space-y-8">
           <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-6">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight">
               The Old Way vs. USDrop Way
             </h2>
           </MotionFadeIn>
 
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid md:grid-cols-2 gap-4 lg:gap-5">
             {/* Old Way */}
             <MotionFadeIn direction="right" distance={DISTANCE.lg} delay={0.1} duration={DURATION.slow}>
-              <div className="p-8 rounded-2xl bg-red-50 border-2 border-red-100">
-                <div className="text-red-600 font-bold text-sm uppercase tracking-wider mb-4">
+              <div className="p-6 lg:p-7 rounded-[16px] bg-red-50 border border-red-100">
+                <div className="text-red-600 font-medium text-[16px] uppercase tracking-wider mb-4">
                   ❌ The Old Way
                 </div>
-                <ul className="space-y-3 text-left text-slate-700">
+                <ul className="space-y-3 text-left text-[#555555]">
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
-                    <span>5+ different tools to manage</span>
+                    <span className="text-[16px] leading-[22px]">5+ different tools to manage</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
-                    <span>Hours of manual research</span>
+                    <span className="text-[16px] leading-[22px]">Hours of manual research</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
-                    <span>Expensive photoshoots</span>
+                    <span className="text-[16px] leading-[22px]">Expensive photoshoots</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
-                    <span>Complex fulfillment setup</span>
+                    <span className="text-[16px] leading-[22px]">Complex fulfillment setup</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-red-500 mt-1">•</span>
-                    <span>Weeks to launch</span>
+                    <span className="text-[16px] leading-[22px]">Weeks to launch</span>
                   </li>
                 </ul>
               </div>
@@ -52,30 +50,30 @@ export function ProblemSolution() {
 
             {/* USDrop Way */}
             <MotionFadeIn direction="left" distance={DISTANCE.lg} delay={0.2} duration={DURATION.slow}>
-              <div className="p-8 rounded-2xl bg-green-50 border-2 border-green-100">
-                <div className="text-green-600 font-bold text-sm uppercase tracking-wider mb-4">
+              <div className="p-6 lg:p-7 rounded-[16px] bg-green-50 border border-green-100">
+                <div className="text-green-600 font-medium text-[16px] uppercase tracking-wider mb-4">
                   ✅ USDrop Way
                 </div>
-                <ul className="space-y-3 text-left text-slate-700">
+                <ul className="space-y-3 text-left text-[#555555]">
                   <li className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">•</span>
-                    <span>One unified platform</span>
+                    <span className="text-[16px] leading-[22px]">One unified platform</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">•</span>
-                    <span>AI finds winners in seconds</span>
+                    <span className="text-[16px] leading-[22px]">AI finds winners in seconds</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">•</span>
-                    <span>AI generates visuals instantly</span>
+                    <span className="text-[16px] leading-[22px]">AI generates visuals instantly</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">•</span>
-                    <span>Automated fulfillment</span>
+                    <span className="text-[16px] leading-[22px]">Automated fulfillment</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-green-500 mt-1">•</span>
-                    <span>Launch in minutes</span>
+                    <span className="text-[16px] leading-[22px]">Launch in minutes</span>
                   </li>
                 </ul>
               </div>
@@ -83,9 +81,9 @@ export function ProblemSolution() {
           </div>
 
           <MotionFadeIn direction="up" distance={DISTANCE.md} delay={0.3} duration={DURATION.slow}>
-            <p className="text-lg text-slate-600 mt-8">
-              <span className="font-bold text-slate-900">What took 5 tools and 5 hours</span> →{" "}
-              <span className="font-bold text-primary">1 platform, 5 minutes</span>
+            <p className="text-[16px] text-[#555555] leading-[22px] mt-2">
+              <span className="font-medium text-black">What took 5 tools and 5 hours</span> →{" "}
+              <span className="font-medium bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">1 platform, 5 minutes</span>
             </p>
           </MotionFadeIn>
         </div>

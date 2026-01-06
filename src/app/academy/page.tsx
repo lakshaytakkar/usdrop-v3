@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Play, CheckCircle2, Users } from "lucide-react"

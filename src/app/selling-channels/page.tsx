@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"

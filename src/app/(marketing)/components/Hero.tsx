@@ -18,7 +18,7 @@ export function Hero() {
   const [isVideoOpen, setIsVideoOpen] = useState(false)
 
   return (
-    <div className="bg-[rgba(255,255,255,0.4)] relative w-full min-h-[1200px] overflow-hidden" data-node-id="3:3892">
+    <div className="bg-[rgba(255,255,255,0.4)] relative w-full min-h-[720px] overflow-hidden" data-node-id="3:3892">
       {/* Background Ellipses */}
       <div className="absolute bottom-[-140px] right-[-140px] size-[640px]" data-node-id="3:3893">
         <div className="absolute inset-[-65.63%]">

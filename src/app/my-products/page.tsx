@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProvider } from "@/contexts/onboarding-context"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { Card } from "@/components/ui/card"

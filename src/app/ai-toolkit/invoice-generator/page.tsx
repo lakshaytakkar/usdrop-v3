@@ -1,8 +1,8 @@
 "use client"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { InvoiceGenerator } from "@/components/ai-tools/invoice-generator"
@@ -63,7 +63,7 @@ export default function InvoiceGeneratorPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Invoice Generator</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Invoice Generator</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Create professional business invoices with automatic calculations and customizable templates.
                 </p>

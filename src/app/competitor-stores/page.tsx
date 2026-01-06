@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -59,6 +59,7 @@ import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-pr
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 type SortOption = "revenue" | "traffic" | "growth" | "rating"
 
@@ -330,7 +331,7 @@ export default function CompetitorStoresPage() {
                 />
 
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Competitor Stores</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Competitor Stores</h2>
                   <p className="text-white/90 text-sm md:text-base leading-relaxed">
                     Discover and analyze top-performing Shopify stores to understand market trends and opportunities.
                   </p>
@@ -683,7 +684,10 @@ export default function CompetitorStoresPage() {
                         </TableRow>
                       ) : (
                         filteredAndSortedStores.map((store, index) => {
-                          const isLocked = isFree && index >= 6
+                          const { isLocked } = getTeaserLockState(index, isFree, {
+                            freeVisibleCount: 6,
+                            strategy: "first-n-items"
+                          })
                           return (
                       <TableRow 
                         key={store.id} 

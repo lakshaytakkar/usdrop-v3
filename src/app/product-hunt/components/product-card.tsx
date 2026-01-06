@@ -85,7 +85,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
         {imageError ? (
           <div className="h-full w-full flex items-center justify-center bg-muted">
             <Image
-              src="/placeholder.svg"
+              src="/demo-products/product-1.png"
               alt="Placeholder"
               width={300}
               height={300}
@@ -94,7 +94,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           </div>
         ) : (
           <Image
-            src={product.image || "/placeholder.svg"}
+            src={product.image || "/demo-products/product-1.png"}
             alt={product.title}
             fill
             className={`object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}

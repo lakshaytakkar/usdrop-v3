@@ -1,10 +1,10 @@
 "use client"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Toaster } from "@/components/ui/toast"
-import { VerifyEmailBanner } from "@/components/verify-email-banner"
+import { VerifyEmailBanner } from "@/components/feedback/banners/verify-email-banner"
 
 export default function AdminLayout({
   children,

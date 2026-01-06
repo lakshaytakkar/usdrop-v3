@@ -64,14 +64,25 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user is internal and onboarding status
+    // Check if user is internal, onboarding status, and plan information
     let isInternal = false
     let requiresOnboarding = false
+    let plan = 'free'
+    let planName = 'Free'
 
     if (data.user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('internal_role, onboarding_completed')
+        .select(`
+          internal_role,
+          onboarding_completed,
+          subscription_plan_id,
+          account_type,
+          subscription_plans (
+            slug,
+            name
+          )
+        `)
         .eq('id', data.user.id)
         .single()
       
@@ -79,6 +90,17 @@ export async function POST(request: Request) {
       
       // Check if onboarding is needed (for existing users who haven't completed onboarding)
       requiresOnboarding = !profile?.onboarding_completed && !isInternal
+
+      // Determine plan: subscription_plans.slug → account_type → 'free'
+      if (profile) {
+        const subscriptionPlanData = profile.subscription_plans as unknown
+        const subscriptionPlan = Array.isArray(subscriptionPlanData)
+          ? subscriptionPlanData[0] as { slug: string; name: string } | undefined
+          : subscriptionPlanData as { slug: string; name: string } | null
+
+        plan = subscriptionPlan?.slug || profile.account_type || 'free'
+        planName = subscriptionPlan?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
+      }
     }
 
     return NextResponse.json({
@@ -87,6 +109,8 @@ export async function POST(request: Request) {
       session: data.session,
       isInternal,
       requiresOnboarding,
+      plan,
+      planName,
     })
   } catch (error) {
     console.error('Signin error:', error)

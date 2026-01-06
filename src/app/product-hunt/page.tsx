@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "./components/product-card"
-import { Loader2, AlertCircle, Play } from "lucide-react"
+import { Loader2, Play } from "lucide-react"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -14,6 +15,9 @@ import { Card } from "@/components/ui/card"
 import Image from "next/image"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { SectionError } from "@/components/ui/section-error"
+import { EmptyState } from "@/components/ui/empty-state"
 
 type ProductCardData = {
   id: string
@@ -227,7 +231,7 @@ export default function ProductHuntPage() {
                       {(category.thumbnail || category.image) ? (
                         <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
                           <Image
-                            src={category.thumbnail || category.image || '/placeholder-category.png'}
+                            src={category.thumbnail || category.image || '/categories/other-thumbnail.png'}
                             alt={category.name}
                             fill
                             className="object-cover"
@@ -247,16 +251,24 @@ export default function ProductHuntPage() {
                 })}
             </div>
           </div>
+
+          {/* Error State */}
+          {error && (
+            <SectionError
+              className="max-w-2xl mx-auto"
+              description={error}
+              onRetry={() => {
+                setError(null)
+                setPage(1)
+                setProducts([])
+                setIsLoading(true)
+                setIsLoadingMore(false)
+                setHasMore(true)
+              }}
+            />
+          )}
           
           <div className="relative">
-            {/* Error State */}
-            {error && (
-              <div className="flex items-center gap-2 p-4 mb-4 bg-destructive/10 border border-destructive/20 rounded-md text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                <p className="text-sm">{error}</p>
-              </div>
-            )}
-
             {/* Loading State */}
             {isLoading && products.length === 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -284,9 +296,11 @@ export default function ProductHuntPage() {
                 {productCardData.length > 0 ? (
                   <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {productCardData.map((product, index) => {
-                      // For free users: lock products starting from the 7th (index 6)
-                      // First 6 products (indices 0-5) are visible, rest are locked
-                      const isLocked = isFree && index >= 6
+                      // Use teaser lock helper for consistent behavior
+                      const { isLocked } = getTeaserLockState(index, isFree, { 
+                        freeVisibleCount: 6,
+                        strategy: "first-n-items"
+                      })
                       
                       return (
                         <div key={product.id}>
@@ -300,10 +314,19 @@ export default function ProductHuntPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p className="text-lg font-medium">No products found in this category</p>
-                    <p className="text-sm mt-2">Try selecting a different category</p>
-                  </div>
+                  <EmptyState
+                    title="No products found in this category"
+                    description="Try selecting a different category or refresh to load more options."
+                    action={{
+                      label: "Refresh products",
+                      onClick: () => {
+                        setPage(1)
+                        setProducts([])
+                        setError(null)
+                        setIsLoading(true)
+                      },
+                    }}
+                  />
                 )}
 
                 {/* Fade Overlay */}
@@ -316,22 +339,43 @@ export default function ProductHuntPage() {
 
           {/* Load More Button */}
           {!isLoading && hasMore && productCardData.length > 0 && (
-            <div className="flex justify-center py-8">
-              <Button
-                onClick={loadMore}
-                disabled={isLoadingMore}
-                size="lg"
-                className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
-              >
-                {isLoadingMore ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
-              </Button>
+            <div className="flex justify-center py-8 relative">
+              {isFree ? (
+                <div className="relative">
+                  <Button
+                    disabled
+                    size="lg"
+                    className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white opacity-60 cursor-not-allowed"
+                  >
+                    Load More
+                  </Button>
+                  <LockOverlay 
+                    onClick={() => setIsUpsellOpen(true)}
+                    variant="button"
+                    size="sm"
+                    className="rounded-lg"
+                  />
+                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
+                    Upgrade to Pro to load more products
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                  size="lg"
+                  className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More"
+                  )}
+                </Button>
+              )}
             </div>
           )}
 

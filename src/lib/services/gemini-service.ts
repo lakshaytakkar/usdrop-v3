@@ -37,13 +37,10 @@ const mockGenerateWithImagen = async (prompt: string, aspectRatio: string): Prom
     const seed = (prompt.length % 100);
     const imageUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
     const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = response.headers.get("content-type") || "image/png";
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
 };
 
 const mockGenerateStyledImage = async (prompt: string, images: string[], aspectRatio: string = '4:5'): Promise<string> => {
@@ -59,13 +56,10 @@ const mockGenerateStyledImage = async (prompt: string, images: string[], aspectR
     const seed = (prompt.length % 100);
     const imageUrl = `https://picsum.photos/seed/${seed}/${width}/${height}`;
     const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    return new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mimeType = response.headers.get("content-type") || "image/png";
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
 };
 
 const mockGenerateConceptSuggestions = async (imageB64: string): Promise<Array<{ id: string; name: string; description: string; prompt: string }>> => {
@@ -105,6 +99,59 @@ export const geminiService = {
           console.error("Error generating with Imagen:", error);
           throw error;
       }
+  },
+
+  /**
+   * Generate an image from a text-only prompt using Gemini image model.
+   * Returns a data URL (data:image/png;base64,...).
+   */
+  generateImageFromPrompt: async (
+    prompt: string,
+    aspectRatio: '1:1' | '4:5' | '16:9' | '9:16' = '1:1'
+  ): Promise<string> => {
+    if (!ai) {
+      // Use mock imagen generator for text-only prompts when API key is missing.
+      return mockGenerateWithImagen(prompt, aspectRatio);
+    }
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: { parts: [{ text: prompt }] },
+        config: {
+          responseModalities: [Modality.IMAGE],
+          imageConfig: {
+            aspectRatio,
+          },
+        },
+      });
+
+      if (!response.candidates || response.candidates.length === 0) {
+        throw new Error("API response contains no candidates. The request may have been rejected.");
+      }
+
+      const candidate = response.candidates[0];
+      if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+        throw new Error(`Image generation was blocked. Reason: ${candidate.finishReason}`);
+      }
+
+      const parts = candidate.content?.parts;
+      if (!parts || parts.length === 0) {
+        throw new Error("Response parts are missing or empty.");
+      }
+
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          const mimeType = part.inlineData.mimeType || 'image/png';
+          return `data:${mimeType};base64,${part.inlineData.data}`;
+        }
+      }
+
+      throw new Error("No image data found in API response parts.");
+    } catch (error) {
+      console.error("Error generating image from prompt with Gemini:", error);
+      throw error;
+    }
   },
 
   generateStyledImage: async (prompt: string, images: string[], aspectRatio: string = '4:5'): Promise<string> => {

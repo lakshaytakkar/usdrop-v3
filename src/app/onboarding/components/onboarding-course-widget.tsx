@@ -119,12 +119,23 @@ export function OnboardingCourseWidget({ onVideoClick }: OnboardingCourseWidgetP
     return null
   }
 
+  const handleViewAllClick = () => {
+    // Take the user to the dedicated onboarding page,
+    // keeping this separate from the main Academy courses.
+    window.location.href = "/onboarding"
+  }
+
   return (
     <div className="bg-white border border-[#e6e6e6] rounded-xl shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-medium text-[#1b1b1b] leading-[1.2]">My Courses</h3>
-        <button className="h-8 px-3 py-2 rounded-lg border border-[#dfe1e7] bg-white shadow-sm flex items-center gap-2 text-xs font-medium text-[#0d0d12] hover:bg-gray-50">
-          View all
+        <h3 className="text-base font-medium text-[#1b1b1b] leading-[1.2]">
+          Getting Started Course
+        </h3>
+        <button
+          className="h-8 px-3 py-2 rounded-lg border border-[#dfe1e7] bg-white shadow-sm flex items-center gap-2 text-xs font-medium text-[#0d0d12] hover:bg-gray-50"
+          onClick={handleViewAllClick}
+        >
+          Go to onboarding
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

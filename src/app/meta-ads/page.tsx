@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
@@ -126,7 +126,7 @@ export default function MetaAdsPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Meta Ads Research</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Meta Ads</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Discover winning ads and analyze performance metrics to optimize your campaigns.
                 </p>
@@ -255,7 +255,7 @@ export default function MetaAdsPage() {
           <ComingSoonOverlay />
 
           {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Meta Ads Research" />
+          <OnboardingProgressOverlay pageName="Meta Ads" />
 
           {/* Detail Sidebar */}
           <AdDetailSheet

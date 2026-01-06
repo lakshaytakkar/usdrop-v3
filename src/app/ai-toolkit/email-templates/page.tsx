@@ -1,8 +1,8 @@
 "use client"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { EmailTemplates } from "@/components/ai-tools/email-templates"
@@ -63,7 +63,7 @@ export default function EmailTemplatesPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Email Templates</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Email Templates</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Generate professional customer email templates for order confirmations, shipping updates, and more.
                 </p>

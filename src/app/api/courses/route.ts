@@ -15,11 +15,13 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '20')
 
-    // Build query - simplified without profiles join for now
-    // Since instructor_id references auth.users directly, we'll fetch profiles separately if needed
+    // Build base query - we exclude onboarding course(s) by default
+    // so they don't appear in the main Academy / mentor experiences.
+    // If we ever need to include them, we can add a dedicated query param.
     let query = supabaseAdmin
       .from('courses')
       .select('*')
+      .eq('is_onboarding', false)
 
     // Apply filters - public route only shows published courses
     if (published === 'true') {
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
     let countQuery = supabaseAdmin
       .from('courses')
       .select('*', { count: 'exact', head: true })
+      .eq('is_onboarding', false)
     
     if (published === 'true') {
       countQuery = countQuery.eq('published', true)
@@ -138,6 +141,7 @@ export async function GET(request: NextRequest) {
         prerequisites: course.prerequisites || [],
         created_at: course.created_at,
         updated_at: course.updated_at,
+        is_onboarding: course.is_onboarding ?? false,
         instructor_name: instructor?.full_name || undefined,
         instructor_avatar: instructor?.avatar_url || undefined,
       }

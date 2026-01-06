@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Button } from './ui';
 import { Menu, X, GraduationCap, ChevronDown } from 'lucide-react';
-import { Logo } from '@/components/logo';
+import { Logo } from '@/components/layout/logo';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { useScrollPosition } from '@/lib/motion/scroll';
@@ -159,7 +159,7 @@ export const Header: React.FC = () => {
               <span className="relative z-10 flex items-center gap-2">
                 <MotionIcon hoverScale={1.1}>
                   <Image 
-                    src="/3d-icons/Item 20.png" 
+                    src="/3d-icons/1_0019.png" 
                     alt="Coins" 
                     width={20} 
                     height={20}

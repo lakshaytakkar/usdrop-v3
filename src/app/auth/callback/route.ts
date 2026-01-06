@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { handleProfileCreation, ensureProfileForEmailSignup } from '@/lib/utils/profile-helpers'
+import { getUserRedirectPath } from '@/lib/utils/user-redirects'
+import type { UserMetadata } from '@/types/user-metadata'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -79,10 +81,24 @@ export async function GET(request: Request) {
         return NextResponse.redirect(redirectUrl)
       }
       
-      // Check user status and profile first
+      // Check user status and profile first (with plan info for redirect logic)
       let { data: profile } = await supabase
         .from('profiles')
-        .select('internal_role, status, onboarding_completed')
+        .select(`
+          internal_role,
+          status,
+          onboarding_completed,
+          subscription_plan_id,
+          account_type,
+          full_name,
+          username,
+          avatar_url,
+          subscription_status,
+          subscription_plans (
+            slug,
+            name
+          )
+        `)
         .eq('id', data.session.user.id)
         .single()
       
@@ -96,7 +112,21 @@ export async function GET(request: Request) {
           // Re-fetch profile after creation/update
           const { data: updatedProfile } = await supabase
             .from('profiles')
-            .select('internal_role, status, onboarding_completed')
+            .select(`
+              internal_role,
+              status,
+              onboarding_completed,
+              subscription_plan_id,
+              account_type,
+              full_name,
+              username,
+              avatar_url,
+              subscription_status,
+              subscription_plans (
+                slug,
+                name
+              )
+            `)
             .eq('id', data.session.user.id)
             .single()
           profile = updatedProfile
@@ -113,7 +143,21 @@ export async function GET(request: Request) {
           // Re-fetch profile after creation
           const { data: newProfile } = await supabase
             .from('profiles')
-            .select('internal_role, status, onboarding_completed')
+            .select(`
+              internal_role,
+              status,
+              onboarding_completed,
+              subscription_plan_id,
+              account_type,
+              full_name,
+              username,
+              avatar_url,
+              subscription_status,
+              subscription_plans (
+                slug,
+                name
+              )
+            `)
             .eq('id', data.session.user.id)
             .single()
           profile = newProfile
@@ -130,16 +174,45 @@ export async function GET(request: Request) {
         return NextResponse.redirect(suspendedUrl)
       }
       
-      // Check if user is internal (has internal_role in profiles table)
+      // Determine redirect path based on user type and plan
       let finalRedirect = next
-      const isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined
 
-      // Override redirect for internal users
-      if (isInternal) {
-        finalRedirect = '/admin/internal-users'
-      } else if (next === '/' || !next || next === '/home') {
-        // Default external users to /onboarding
-        finalRedirect = '/onboarding'
+      // If next is root or not specified, determine redirect based on user type and plan
+      if (next === '/' || !next || next === '/home') {
+        if (profile) {
+          // Determine if internal user
+          const isInternal = profile.internal_role !== null && profile.internal_role !== undefined
+
+          // Determine plan: subscription_plans.slug → account_type → 'free'
+          const subscriptionPlanData = profile.subscription_plans as unknown
+          const subscriptionPlan = Array.isArray(subscriptionPlanData)
+            ? subscriptionPlanData[0] as { slug: string; name: string } | undefined
+            : subscriptionPlanData as { slug: string; name: string } | null
+
+          const plan = subscriptionPlan?.slug || profile.account_type || 'free'
+
+          // Build metadata object for redirect logic
+          const metadata: UserMetadata = {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            fullName: profile.full_name || null,
+            username: profile.username || null,
+            avatarUrl: profile.avatar_url || null,
+            isInternal,
+            internalRole: profile.internal_role as 'superadmin' | 'admin' | 'manager' | 'executive' | null,
+            isExternal: !isInternal,
+            plan,
+            planName: subscriptionPlan?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free'),
+            status: (profile.status as 'active' | 'inactive' | 'suspended') || 'active',
+            onboardingCompleted: profile.onboarding_completed ?? false,
+            subscriptionStatus: profile.subscription_status || null,
+          }
+
+          finalRedirect = getUserRedirectPath(metadata)
+        } else {
+          // Fallback if profile doesn't exist
+          finalRedirect = '/onboarding'
+        }
       }
       
       // Handle other callbacks (email verification, OAuth, magic link, etc.)

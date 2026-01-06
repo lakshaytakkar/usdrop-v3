@@ -63,7 +63,7 @@ export function createCategoriesColumns({
             <div className="relative w-10 h-10 rounded overflow-hidden bg-muted shrink-0">
               {(category.thumbnail || category.image) ? (
                 <Image
-                  src={category.thumbnail || category.image || '/placeholder-category.png'}
+                  src={category.thumbnail || category.image || '/categories/other-thumbnail.png'}
                   alt={category.name}
                   fill
                   className="object-cover"

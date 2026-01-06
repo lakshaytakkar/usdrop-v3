@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Logo } from "@/components/logo"
+import { Logo } from "@/components/layout/logo"
 
 const footerLinks = {
   Product: [

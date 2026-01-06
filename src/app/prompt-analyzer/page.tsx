@@ -1,6 +1,6 @@
 'use client';
 
-import { PromptAnalyzerComponent } from '@/components/prompt-analyzer';
+import { PromptAnalyzerComponent } from '@/components/shared/prompt-analyzer';
 
 export default function PromptAnalyzerPage() {
   return <PromptAnalyzerComponent />;

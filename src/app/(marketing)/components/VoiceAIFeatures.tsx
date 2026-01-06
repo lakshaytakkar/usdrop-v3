@@ -80,14 +80,14 @@ export function VoiceAIFeatures() {
             </MotionFadeIn>
 
             {/* Heading Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 lg:gap-8 items-start w-full">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-[16px] items-start w-full max-w-[886px]">
               <MotionFadeIn direction="up" distance={DISTANCE.md} delay={0.1} duration={DURATION.slow}>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium text-[#1b0c25] leading-tight">
+                <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight">
                   Learn Smarter, Just by Speaking — Powered by Voice AI
                 </h2>
               </MotionFadeIn>
               <MotionFadeIn direction="left" distance={DISTANCE.md} delay={0.2} duration={DURATION.slow}>
-                <p className="text-base sm:text-lg text-[#555555] text-left lg:text-right whitespace-normal lg:whitespace-nowrap lg:ml-auto">
+                <p className="text-[16px] text-[#555555] leading-[22px] text-left lg:text-right whitespace-normal lg:whitespace-nowrap lg:ml-auto">
                   From Voice Commands to Custom Summaries — It's All Effortless
                 </p>
               </MotionFadeIn>
@@ -130,10 +130,10 @@ export function VoiceAIFeatures() {
                         <feature.icon className={`size-8 ${feature.iconColor}`} />
                       </div>
                       <div className="content-stretch flex flex-col gap-3 items-start leading-[0] relative shrink-0 w-full">
-                        <div className="flex flex-col font-medium justify-center min-w-full relative shrink-0 text-lg text-black">
+                        <div className="flex flex-col font-medium justify-center min-w-full relative shrink-0 text-xl text-black">
                           <p className="leading-normal whitespace-pre-wrap">{feature.title}</p>
                         </div>
-                        <div className="flex flex-col font-normal justify-center relative shrink-0 text-[#555555] text-sm w-full">
+                        <div className="flex flex-col font-normal justify-center relative shrink-0 text-[#555555] text-[16px] w-full">
                           <p className="leading-[22px] whitespace-pre-wrap">{feature.description}</p>
                         </div>
                       </div>

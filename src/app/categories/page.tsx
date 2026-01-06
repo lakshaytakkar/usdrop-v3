@@ -2,8 +2,8 @@
 
 import { useMemo, useEffect, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { CategoryCard } from "./components/category-card"
@@ -11,6 +11,7 @@ import { Category } from "@/types/categories"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 // Transform API category to local format
 type LocalCategory = {
@@ -64,8 +65,8 @@ function CategoriesPageContent() {
       id: cat.id,
       name: cat.name,
       description: cat.description || '',
-      image: cat.image || '/placeholder-category.png',
-      thumbnail: cat.thumbnail || cat.image || '/placeholder-category.png',
+      image: cat.image || '/categories/other-thumbnail.png',
+      thumbnail: cat.thumbnail || cat.image || '/categories/other-thumbnail.png',
       productCount: cat.product_count || 0,
       avgProfitMargin: cat.avg_profit_margin || 0,
       growth: cat.growth_percentage || 0,
@@ -134,7 +135,7 @@ function CategoriesPageContent() {
               />
 
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Product Categories</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Categories</h2>
                   <p className="text-white/90 text-sm md:text-base leading-relaxed">
                     Browse products by category to find the perfect items for your store.
                   </p>
@@ -173,7 +174,10 @@ function CategoriesPageContent() {
                     <h2 className="text-xl font-semibold mb-4">All Categories</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {sortedCategories.map((category, index) => {
-                        const isLocked = isFree && index >= 6
+                        const { isLocked } = getTeaserLockState(index, isFree, {
+                          freeVisibleCount: 6,
+                          strategy: "first-n-items"
+                        })
                         return (
                           <CategoryCard 
                             key={category.id} 

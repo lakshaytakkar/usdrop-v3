@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -110,7 +110,7 @@ export default function SuppliersPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Suppliers</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Private Supplier</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Connect with verified suppliers offering exclusive products, competitive pricing, and reliable fulfillment.
                 </p>

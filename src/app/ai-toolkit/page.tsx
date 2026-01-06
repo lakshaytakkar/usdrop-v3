@@ -2,8 +2,8 @@
 
 import Image from "next/image"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProBadge } from "@/components/ui/pro-badge"
 import { Button } from "@/components/ui/button"
@@ -11,14 +11,6 @@ import { Image as ImageIcon, Badge, Calculator, Sparkles, User, Play, Truck, Pen
 import Link from "next/link"
 
 const studioTools = [
-  {
-    id: "image-studio",
-    icon: ImageIcon,
-    title: "Image Studio",
-    description: "Background removal, enhancement, product photo editing",
-    url: "/ai-toolkit/image-studio",
-    isPro: true,
-  },
   {
     id: "model-studio",
     icon: User,
@@ -35,14 +27,6 @@ const studioTools = [
     url: "/ai-toolkit/logo-studio",
     isPro: true,
   },
-  {
-    id: "ad-studio",
-    icon: Sparkles,
-    title: "Ad Creative Studio",
-    description: "Visual ad banners, video thumbnails",
-    url: "/ai-toolkit/ad-studio",
-    isPro: true,
-  },
 ]
 
 const toolkitTools = [
@@ -52,14 +36,6 @@ const toolkitTools = [
     title: "Description Generator",
     description: "Product listing copy",
     url: "/ai-toolkit/description-generator",
-    isPro: true,
-  },
-  {
-    id: "social-media-studio",
-    icon: Share2,
-    title: "Social Media Studio",
-    description: "Captions, hashtags, post text",
-    url: "/ai-toolkit/social-media-studio",
     isPro: true,
   },
   {

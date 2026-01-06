@@ -1,8 +1,8 @@
 "use client"
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ShippingCalculator } from "@/components/ai-tools/shipping-calculator"
@@ -63,7 +63,7 @@ export default function ShippingCalculatorPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Shipping Calculator</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Shipping Calculator</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Calculate shipping costs, delivery times, and optimize your fulfillment strategy.
                 </p>

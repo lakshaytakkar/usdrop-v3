@@ -45,7 +45,7 @@ export function useDashboardStats(): UseDashboardStatsReturn {
       if (!response.ok) {
         // For any error response, return default stats instead of throwing
         // This ensures the UI always works even if the API fails
-        const defaultStats = {
+        const defaultStats: DashboardStats = {
           products: { total: 0, inPicklist: 0, winning: 0 },
           stores: { total: 0, connected: 0, active: 0 },
           learning: { progress: 0, completedVideos: 0, totalVideos: 0, enrolledCourses: 0 },
@@ -57,6 +57,8 @@ export function useDashboardStats(): UseDashboardStatsReturn {
           console.warn(`Dashboard stats API returned ${response.status}. Using default stats.`)
         }
         
+        // Surface a gentle, recoverable error for the UI while still showing defaults
+        setError("We couldn't load your latest dashboard stats. Showing safe defaults for now.")
         setStats(defaultStats)
         return
       }
@@ -67,12 +69,14 @@ export function useDashboardStats(): UseDashboardStatsReturn {
       // Network errors or JSON parsing errors
       console.warn("Error fetching dashboard stats:", err)
       // Set default stats on error so UI doesn't break
-      setStats({
+      const fallbackStats: DashboardStats = {
         products: { total: 0, inPicklist: 0, winning: 0 },
         stores: { total: 0, connected: 0, active: 0 },
         learning: { progress: 0, completedVideos: 0, totalVideos: 0, enrolledCourses: 0 },
         activity: { lastActivityDate: null, streakDays: 0 }
-      })
+      }
+      setStats(fallbackStats)
+      setError("We’re having trouble reaching the dashboard service. Some stats may be missing.")
     } finally {
       setIsLoading(false)
     }

@@ -15,10 +15,10 @@ const brands = [
 
 export function LogoMarquee() {
   return (
-    <div className="bg-[rgba(255,255,255,0.4)] backdrop-blur-sm py-12 border-b border-[rgba(0,0,0,0.05)] relative overflow-hidden">
+    <div className="bg-[rgba(255,255,255,0.4)] backdrop-blur-sm py-8 border-b border-[rgba(0,0,0,0.05)] relative overflow-hidden">
       <MotionFadeIn delay={0.1}>
-        <div className="text-center mb-8">
-          <span className="text-base md:text-lg font-semibold text-[#555555] uppercase tracking-wider">
+        <div className="text-center mb-8 max-w-[886px] mx-auto px-4">
+          <span className="text-[16px] font-medium text-[#555555] uppercase tracking-wider leading-[22px]">
             Seamlessly connect with the platforms you already use
           </span>
         </div>

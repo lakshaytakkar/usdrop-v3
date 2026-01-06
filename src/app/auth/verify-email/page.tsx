@@ -11,7 +11,7 @@ import {
   FieldGroup,
 } from "@/components/ui/field"
 import { useToast } from "@/hooks/use-toast"
-import { Logo } from "@/components/logo"
+import { Logo } from "@/components/layout/logo"
 import Link from "next/link"
 
 const RESEND_COOLDOWN_SECONDS = 60

@@ -97,6 +97,32 @@ export interface ProductsQueryParams {
   sortOrder?: 'asc' | 'desc'
 }
 
+// Product Research Types
+export interface ProductResearch {
+  id: string
+  product_id: string
+  competitor_pricing: {
+    competitors: Array<{name: string, price: number, url?: string}>
+    price_range: {min: number, max: number, avg: number}
+  } | null
+  seasonal_demand: string | null
+  audience_targeting: {
+    demographics: {age: string, gender: string}
+    interests: string[]
+    suggestions: string[]
+  } | null
+  supplier_notes: string | null
+  social_proof: {
+    likes: number
+    comments: number
+    shares: number
+    virality_score: number
+  } | null
+  research_date: string
+  created_at: string
+  updated_at: string
+}
+
 // For backward compatibility - can be used during migration
 export type ProductPick = Product
 export type WinningProduct = Product & { metadata: ProductMetadata & { is_winning: true } }

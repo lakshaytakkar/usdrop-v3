@@ -8,7 +8,7 @@ import {
   Field,
   FieldGroup,
 } from "@/components/ui/field"
-import { Logo } from "@/components/logo"
+import { Logo } from "@/components/layout/logo"
 import Link from "next/link"
 
 function AuthCodeErrorContent() {

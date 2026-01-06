@@ -1,6 +1,6 @@
 "use client"
 
-import { useUserPlan } from "./use-user-plan"
+import { useRoleAccess } from "./use-role-access"
 
 interface UseFeatureAccessReturn {
   /** Whether the user can access Pro features */
@@ -21,11 +21,11 @@ interface UseFeatureAccessReturn {
  * Pro users have full access (except admin pages)
  */
 export function useFeatureAccess(): UseFeatureAccessReturn {
-  const { plan, isFree, isPro, isLoading } = useUserPlan()
+  const { plan, isFree, isPro, loading } = useRoleAccess()
 
   return {
     canAccess: isPro,
-    isLoading,
+    isLoading: loading,
     isFree,
     isPro,
     plan,

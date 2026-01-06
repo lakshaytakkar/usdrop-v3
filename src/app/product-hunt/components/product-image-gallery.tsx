@@ -24,7 +24,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
 
   // Ensure we have at least 5 items (images + videos) for the grid
   const allMedia = [...images, ...videos]
-  const displayImages = images.length > 0 ? images : [images[0] || '/placeholder-product.jpg']
+  const displayImages = images.length > 0 ? images : [images[0] || '/demo-products/Screenshot 2024-07-24 185228.png']
   const displayVideos = videos || []
   
   // Create grid items: main image + 4 thumbnails

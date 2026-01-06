@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BarChart3, ExternalLink, TrendingUp } from "lucide-react"
+import { BarChart3, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface Competitor {
@@ -86,10 +86,6 @@ export function CompetitionSection({
                 <span className="text-sm font-medium">{productSpecs.weight}</span>
               </div>
             )}
-            <Button variant="outline" size="sm" className="w-full mt-4">
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Product Videos
-            </Button>
           </div>
         </div>
       </div>

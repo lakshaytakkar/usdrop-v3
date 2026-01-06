@@ -1,29 +1,35 @@
 "use client"
 
-import { useState, useEffect } from 'react';
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { Topbar } from "@/components/topbar";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { cn } from "@/lib/utils";
-import { journeyStages } from "@/data/journey-stages";
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { cn } from "@/lib/utils"
+import { journeyStages } from "@/data/journey-stages"
+import { useOnboarding } from "@/contexts/onboarding-context"
 import {
   Check,
   ChevronRight,
   Rocket,
-  Target,
-  Trophy
+  Trophy,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
 const STORAGE_KEY = 'usdrop-journey-completed-tasks';
 
 export default function MyJourneyPage() {
+  const router = useRouter()
+  const { isFree, isComplete, isLoading, progressPercentage, completedVideos, totalVideos } = useOnboarding()
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
+
+  const isLocked = !isLoading && isFree && !isComplete
 
   // Load completed tasks from localStorage on mount
   useEffect(() => {
@@ -110,22 +116,54 @@ export default function MyJourneyPage() {
                   </div>
                 </div>
 
-                {/* Progress Stats */}
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">{Math.round(overallProgress)}%</div>
-                    <div className="text-xs text-white/70">Complete</div>
+                {/* Progress + Onboarding Teaser */}
+                <div className="flex flex-col items-end gap-3">
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold">{Math.round(overallProgress)}%</div>
+                      <div className="text-xs text-white/70">Complete</div>
+                    </div>
+                    <div className="h-12 w-px bg-white/20" />
+                    <div className="text-center">
+                      <div className="text-3xl font-bold">{completedTasksCount}</div>
+                      <div className="text-xs text-white/70">of {totalTasks} tasks</div>
+                    </div>
+                    <div className="h-12 w-px bg-white/20" />
+                    <div className="text-center">
+                      <div className="text-3xl font-bold">
+                        {currentStageIndex === -1 ? journeyStages.length : currentStageIndex + 1}
+                      </div>
+                      <div className="text-xs text-white/70">Current Stage</div>
+                    </div>
                   </div>
-                  <div className="h-12 w-px bg-white/20" />
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">{completedTasksCount}</div>
-                    <div className="text-xs text-white/70">of {totalTasks} tasks</div>
-                  </div>
-                  <div className="h-12 w-px bg-white/20" />
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">{currentStageIndex === -1 ? journeyStages.length : currentStageIndex + 1}</div>
-                    <div className="text-xs text-white/70">Current Stage</div>
-                  </div>
+
+                  {isLocked && (
+                    <div className="mt-1 w-full md:w-auto flex flex-col md:items-end gap-2">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
+                        <Lock className="h-3 w-3" />
+                        <span>This interactive roadmap unlocks after onboarding</span>
+                      </div>
+                      <div className="flex flex-col md:flex-row md:items-center gap-2 text-xs text-white/80">
+                        <div className="flex-1 md:text-right">
+                          <p>
+                            You&apos;re {Math.round(progressPercentage)}% through onboarding
+                            — finish it to activate checklist tracking here.
+                          </p>
+                          <p className="mt-1 text-white/70">
+                            {completedVideos}/{totalVideos} chapters completed
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          className="mt-1 md:mt-0 bg-amber-400 text-amber-950 hover:bg-amber-300"
+                          onClick={() => router.push("/onboarding")}
+                        >
+                          <Sparkles className="mr-1 h-3 w-3" />
+                          Finish onboarding
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -243,7 +281,11 @@ export default function MyJourneyPage() {
                                 <Checkbox
                                   id={task.id}
                                   checked={isTaskCompleted}
-                                  onCheckedChange={() => handleTaskToggle(task.id)}
+                                disabled={isLocked}
+                                onCheckedChange={() => {
+                                  if (isLocked) return
+                                  handleTaskToggle(task.id)
+                                }}
                                   className={cn(
                                     "h-5 w-5",
                                     isTaskCompleted && "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
@@ -270,13 +312,24 @@ export default function MyJourneyPage() {
                                   <Button
                                     size="sm"
                                     variant={isTaskCompleted ? "outline" : "default"}
+                                    disabled={isLocked}
                                     className={cn(
                                       "h-8 text-xs",
-                                      !isTaskCompleted && "bg-indigo-600 hover:bg-indigo-700"
+                                      !isTaskCompleted && "bg-indigo-600 hover:bg-indigo-700",
+                                      isLocked && "opacity-70 cursor-not-allowed"
                                     )}
                                   >
-                                    {isTaskCompleted ? "Revisit" : "Start"}
-                                    <ChevronRight className="h-3 w-3 ml-1" />
+                                    {isLocked ? (
+                                      <>
+                                        <Lock className="mr-1 h-3 w-3" />
+                                        Unlock to start
+                                      </>
+                                    ) : (
+                                      <>
+                                        {isTaskCompleted ? "Revisit" : "Start"}
+                                        <ChevronRight className="h-3 w-3 ml-1" />
+                                      </>
+                                    )}
                                   </Button>
                                 </Link>
                               )}
@@ -300,8 +353,6 @@ export default function MyJourneyPage() {
             </Card>
           )}
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="My Roadmap" />
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -7,6 +7,8 @@ interface UseUserPlanReturn {
   isFree: boolean
   isPro: boolean
   isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
 }
 
 /**
@@ -14,13 +16,15 @@ interface UseUserPlanReturn {
  * Now uses shared context to avoid duplicate API calls
  */
 export function useUserPlan(): UseUserPlanReturn {
-  const { plan, isFree, isPro, isLoading } = useUserPlanContext()
+  const { plan, isFree, isPro, isLoading, error, refetch } = useUserPlanContext()
 
   return {
     plan,
     isFree,
     isPro,
     isLoading,
+    error,
+    refetch,
   }
 }
 

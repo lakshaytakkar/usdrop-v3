@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,8 @@ import { ArticleCard } from "./components/article-card"
 import { Article, sampleArticles } from "./data/articles"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { EmptyState } from "@/components/ui/empty-state"
 
 export default function IntelligencePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -95,7 +97,7 @@ export default function IntelligencePage() {
               />
 
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Intelligence</h2>
+                <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Intelligence</h2>
                 <p className="text-white/90 text-sm md:text-base leading-relaxed">
                   Stay ahead with dropshipping insights, trends, and expert strategies from industry leaders.
                 </p>
@@ -145,16 +147,18 @@ export default function IntelligencePage() {
           </Card>
 
           {/* Articles */}
-          {filteredArticles.length > 0 && (
+          {filteredArticles.length > 0 ? (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Book className="h-5 w-5" />
                 Latest Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredArticles.map((article) => {
-                  // Lock all "Read more" buttons for free users
-                  const isLocked = isFree
+                {filteredArticles.map((article, index) => {
+                  // Use details-locked strategy: show all articles but lock "Read more" buttons
+                  const { isLocked } = getTeaserLockState(index, isFree, {
+                    strategy: "details-locked"
+                  })
                   return (
                     <ArticleCard 
                       key={article.id} 
@@ -166,16 +170,11 @@ export default function IntelligencePage() {
                 })}
               </div>
             </div>
-          )}
-
-          {filteredArticles.length === 0 && (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Book className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No articles found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-              </CardContent>
-            </Card>
+          ) : (
+            <EmptyState
+              title="No articles found"
+              description="Try adjusting your search or filters."
+            />
           )}
         </div>
       </SidebarInset>

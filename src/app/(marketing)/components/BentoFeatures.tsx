@@ -47,20 +47,20 @@ const features = [
 
 export function BentoFeatures() {
   return (
-    <section className="py-20 lg:py-32 bg-slate-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 lg:py-24 bg-white relative overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+          <div className="text-center mb-16 max-w-[886px] mx-auto">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight mb-4">
               Everything You Need in One Platform
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-[16px] text-[#555555] leading-[22px] max-w-[580px] mx-auto">
               Three powerful modules working together to streamline your entire dropshipping workflow
             </p>
           </div>
         </MotionFadeIn>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid md:grid-cols-6 gap-4 max-w-[1024px] mx-auto">
           {features.map((feature, index) => (
             <MotionFadeIn
               key={feature.title}
@@ -73,18 +73,20 @@ export function BentoFeatures() {
                 hoverLift={false}
                 hoverShadow={false}
                 hoverScale={1}
-                className="h-full p-8 bg-white rounded-2xl border border-slate-200"
+                className={`h-full p-6 lg:p-7 bg-white rounded-[16px] border border-slate-200 ${
+                  index === 0 ? "md:col-span-3 lg:col-span-2" : index === 1 ? "md:col-span-3 lg:col-span-2" : "md:col-span-6 lg:col-span-2"
+                }`}
               >
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6`}>
+                <div className={`w-12 h-12 rounded-[12px] bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6`}>
                   <feature.icon className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600 mb-6">{feature.description}</p>
+                <h3 className="text-2xl font-medium text-black mb-2">{feature.title}</h3>
+                <p className="text-[16px] text-[#555555] leading-[22px] mb-6">{feature.description}</p>
                 <ul className="space-y-2 mb-8">
                   {feature.bullets.map((bullet, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                      <span className="text-primary mt-1">•</span>
-                      <span>{bullet}</span>
+                    <li key={i} className="flex items-start gap-2 text-[16px] text-[#555555]">
+                      <span className="bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent mt-1">•</span>
+                      <span className="leading-[22px]">{bullet}</span>
                     </li>
                   ))}
                 </ul>

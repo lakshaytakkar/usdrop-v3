@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { ConditionalChatbotBubble } from "@/components/conditional-chatbot-bubble";
+import { ConditionalChatbotBubble } from "@/components/chat/conditional-chatbot-bubble";
 import { AuthProvider } from "@/contexts/auth-context";
+import { UnifiedUserProvider } from "@/contexts/unified-user-context";
 import { UserPlanProvider } from "@/contexts/user-plan-context";
 import { OnboardingProvider } from "@/contexts/onboarding-context";
 import { Toaster } from "@/components/ui/toast";
+import { ReactQueryProvider } from "@/contexts/react-query-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,15 +46,18 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <UserPlanProvider>
-            <OnboardingProvider>
-              {children}
-              <ConditionalChatbotBubble />
-              <Toaster />
-            </OnboardingProvider>
-          </UserPlanProvider>
-        </AuthProvider>
+        <ReactQueryProvider>
+          <AuthProvider>
+            <UnifiedUserProvider>
+              <UserPlanProvider>
+                <OnboardingProvider>
+                  {children}
+                  <Toaster />
+                </OnboardingProvider>
+              </UserPlanProvider>
+            </UnifiedUserProvider>
+          </AuthProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

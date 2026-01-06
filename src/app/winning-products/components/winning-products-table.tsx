@@ -23,6 +23,7 @@ export interface WinningProduct {
 }
 import { RevenueTrendChart } from "./revenue-trend-chart"
 import { cn } from "@/lib/utils"
+import { useOnboarding } from "@/contexts/onboarding-context"
 
 interface WinningProductsTableProps {
   products: WinningProduct[]
@@ -52,6 +53,8 @@ export function WinningProductsTable({
   onProductClick,
   onLockedClick 
 }: WinningProductsTableProps) {
+  const { isFree } = useOnboarding()
+  
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -76,7 +79,11 @@ export function WinningProductsTable({
             </TableRow>
           ) : (
             products.map((product, index) => {
-              const isLocked = product.isLocked
+              // For free users: lock products starting from the 7th (index 6)
+              // First 6 products (indices 0-5) are visible, rest are locked
+              // Respect product.isLocked from metadata if set
+              const teaserLocked = isFree && index >= 6
+              const isLocked = product.isLocked || teaserLocked
               const rank = index + 1
 
               return (

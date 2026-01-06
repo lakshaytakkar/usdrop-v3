@@ -44,7 +44,7 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
     if (product.additional_images && product.additional_images.length > 0) {
       return product.additional_images[0]
     }
-    return "/placeholder-product.jpg"
+    return "/demo-products/Screenshot 2024-07-24 185228.png"
   }
   
   const handleImageError = (productId: string | number) => {

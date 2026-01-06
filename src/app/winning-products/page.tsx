@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TrendingUp, DollarSign, Star, SlidersHorizontal, ArrowUpDown, X, TrendingDown, Lock, Unlock } from "lucide-react"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { SectionError } from "@/components/ui/section-error"
+import { EmptyState } from "@/components/ui/empty-state"
 // Local types
 export type ProductCategory = 
   | "all"
@@ -160,10 +162,6 @@ export default function WinningProductsPage() {
         const metadata = product.metadata!
         const categorySlug = product.category?.slug || 'other'
         
-        // For free users: lock products starting from the 7th (index 6)
-        // First 6 products (indices 0-5) are visible, rest are locked
-        const shouldBeLocked = isFree && index >= 6
-        
         return {
           id: parseInt(product.id) || index + 1,
           image: product.image,
@@ -171,7 +169,7 @@ export default function WinningProductsPage() {
           profitMargin: metadata.profit_margin || 0,
           potRevenue: metadata.pot_revenue || 0,
           category: (categorySlug as ProductCategory) || 'other',
-          isLocked: shouldBeLocked || metadata.is_locked || false,
+          isLocked: metadata.is_locked || false, // Will be set by teaser lock in table
           foundDate: metadata.found_date || product.created_at,
           revenueGrowthRate: metadata.revenue_growth_rate || 0,
           itemsSold: metadata.items_sold || 0,
@@ -180,7 +178,7 @@ export default function WinningProductsPage() {
           price: product.sell_price,
         }
       })
-  }, [products, isFree])
+  }, [products])
 
   // Count active filters
   const activeFilterCount = useMemo(() => {
@@ -389,7 +387,7 @@ export default function WinningProductsPage() {
                 />
 
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">USDrop Winning Products</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Winning Products</h2>
                   <p className="text-white/90 text-sm md:text-base leading-relaxed">
                     Expert-curated products with high profit potential to boost your dropshipping success.
                   </p>
@@ -666,10 +664,15 @@ export default function WinningProductsPage() {
 
             {/* Error State */}
             {error && (
-              <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/20 rounded-md text-destructive">
-                <AlertCircle className="h-4 w-4" />
-                <p className="text-sm">{error}</p>
-              </div>
+              <SectionError
+                className="max-w-2xl"
+                description={error}
+                onRetry={() => {
+                  setError(null)
+                  setIsLoading(true)
+                  setProducts([])
+                }}
+              />
             )}
 
             {/* Loading State */}
@@ -712,10 +715,27 @@ export default function WinningProductsPage() {
                   </TableBody>
                 </Table>
               </div>
+            ) : filteredProducts.length === 0 ? (
+              <EmptyState
+                title="No winning products found"
+                description="Try adjusting filters or refresh to fetch the latest products."
+                action={{
+                  label: "Refresh products",
+                  onClick: () => {
+                    setProducts([])
+                    setError(null)
+                    setIsLoading(true)
+                  },
+                }}
+              />
             ) : (
               /* Products Table */
               <WinningProductsTable
-                products={filteredProducts}
+                products={filteredProducts.map((product, index) => ({
+                  ...product,
+                  // Apply teaser lock based on filtered position
+                  isLocked: product.isLocked || (isFree && index >= 6)
+                }))}
                 onProductClick={(product) => {
                   // Handle product click - could navigate to detail page
                   console.log("View product:", product.id)

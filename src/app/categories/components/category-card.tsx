@@ -75,7 +75,7 @@ export function CategoryCard({ category, isLocked = false, onLockedClick }: Cate
                   </div>
                 ) : (
                   <Image
-                    src={category.thumbnail || category.image || '/placeholder-category.png'}
+                    src={category.thumbnail || category.image || '/categories/other-thumbnail.png'}
                     alt={category.name}
                     fill
                     className={cn(

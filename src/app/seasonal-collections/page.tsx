@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalBanner } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 // Seasonal collections data
 const seasonalCollections = [
@@ -64,8 +65,11 @@ function SeasonalCollectionsPageContent() {
           {/* Seasonal Collection Banners */}
           <div className="flex flex-col gap-4">
             {seasonalCollections.map((collection, index) => {
-              // Lock all buttons for free users
-              const isLocked = isFree
+              // Show first collection fully, lock the rest for free users
+              const { isLocked } = getTeaserLockState(index, isFree, {
+                freeVisibleCount: 1,
+                strategy: "first-n-items"
+              })
               return (
                 <SeasonalBanner
                   key={collection.slug}

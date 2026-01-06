@@ -1,14 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Logo } from "@/components/logo"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ChevronDown } from "lucide-react"
+import { Logo } from "@/components/layout/logo"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -40,76 +33,15 @@ export function Header() {
         <Logo className="text-black text-lg" />
       </div>
 
-      {/* Navigation Links */}
-      <div className="content-stretch flex gap-[48px] items-center leading-[18px] relative shrink-0 text-[16px] text-black font-medium" data-node-id="3:3934">
-        {isMounted ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 text-[16px] text-black font-medium hover:opacity-70 transition-opacity">
-                Ecosystem
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link href="/fulfillment">US Drop AI Fulfillment</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/ai-toolkit">US Drop AI Studio</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/intelligence-hub">US Drop AI Intelligence</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/research-tools">US Drop AI Research</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <button className="flex items-center gap-1 text-[16px] text-black font-medium">
-            Ecosystem
-            <ChevronDown className="h-4 w-4" />
-          </button>
-        )}
-
-        <Link href="/what-is-dropshipping" className="relative shrink-0 hover:opacity-70 transition-opacity">
-          What is Dropshipping?
+      {/* Simplified navigation for early marketing pages */}
+      <nav className="content-stretch flex gap-[32px] items-center leading-[18px] relative shrink-0 text-[16px] text-black font-medium">
+        <Link href="/what-is-dropshipping" className="hover:opacity-70 transition-opacity">
+          What is dropshipping?
         </Link>
-
-        {isMounted ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 text-[16px] text-black font-medium hover:opacity-70 transition-opacity">
-                Resources
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link href="/academy">Academy</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/learn">Learn</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/intelligence-hub">Intelligence Hub</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/help-center">Help Center</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <button className="flex items-center gap-1 text-[16px] text-black font-medium">
-            Resources
-            <ChevronDown className="h-4 w-4" />
-          </button>
-        )}
-
-        <Link href="/contact" className="relative shrink-0 hover:opacity-70 transition-opacity" data-node-id="3:3937">
-          Contact
+        <Link href="/pricing" className="hover:opacity-70 transition-opacity">
+          Pricing
         </Link>
-      </div>
+      </nav>
 
       {/* Login and Get Started Buttons OR My Dashboard Button */}
       <div className="flex items-center gap-3 shrink-0">

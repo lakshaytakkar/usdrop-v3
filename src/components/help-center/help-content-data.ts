@@ -71,7 +71,7 @@ export const categoryCards: CategoryCard[] = [
   {
     id: "ai-studio",
     title: "AI Studio",
-    description: "Create stunning visuals with Image Studio, Logo Studio, Campaign Studio, and more AI-powered tools.",
+    description: "Create stunning visuals with Logo Studio, Model Studio, and more AI-powered tools.",
     icon: Sparkles,
     category: "AI Studio",
   },
@@ -190,7 +190,7 @@ export const faqs: FAQ[] = [
   {
     id: "faq-14",
     question: "How does the AI Studio work?",
-    answer: "AI Studio is a suite of AI-powered creative tools including Image Studio, Logo Studio, Campaign Studio, Ad Studio, and Model Studio. These tools use advanced AI to generate product images, create marketing materials, design logos, and produce ad creatives. Simply provide a prompt or upload reference images, and our AI generates professional-quality assets in seconds.",
+    answer: "AI Studio is a suite of AI-powered creative tools including Logo Studio, Model Studio, and more. These tools use advanced AI to create marketing materials, design logos, and produce professional-quality assets. Simply provide a prompt or upload reference images, and our AI generates professional-quality assets in seconds.",
     category: "Features",
     tags: ["ai studio", "creatives", "images"],
   },
@@ -239,7 +239,7 @@ export const articles: Article[] = [
     title: "Creating Stunning Product Images with AI Studio",
     description: "Master the art of AI-generated product photography and marketing visuals.",
     category: "AI Studio",
-    content: "AI Studio's Image Studio tool lets you create professional product images without expensive photoshoots...",
+    content: "AI Studio's tools let you create professional product images and marketing materials without expensive photoshoots...",
     tags: ["ai studio", "images", "creatives"],
   },
 ]

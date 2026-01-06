@@ -3,27 +3,52 @@
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
 import Image from "next/image"
+import { EtherealBackground } from "./EtherealBackground"
 
-// Placeholder images - will be replaced with NanoBanana generated images
 const showcaseImages = [
-  { id: 1, src: "/images/landing/studio-showcase-1.png", alt: "AI Generated Product Visual" },
-  { id: 2, src: "/images/landing/studio-showcase-2.png", alt: "AI Generated Product Visual" },
-  { id: 3, src: "/images/landing/studio-showcase-3.png", alt: "AI Generated Product Visual" },
-  { id: 4, src: "/images/landing/studio-showcase-4.png", alt: "AI Generated Product Visual" },
-  { id: 5, src: "/images/landing/studio-showcase-5.png", alt: "AI Generated Product Visual" },
-  { id: 6, src: "/images/landing/studio-showcase-6.png", alt: "AI Generated Product Visual" },
+  {
+    id: 1,
+    src: "/images/landing/studio-showcase-1.png",
+    alt: "Prompt: 3D product render of a modern desk lamp on clean ecommerce background with soft shadows, suitable for dropshipping ad creative",
+  },
+  {
+    id: 2,
+    src: "/images/landing/generated/studio-showcase-2.png",
+    alt: "Prompt: lifestyle scene of a customer unboxing a trending gadget in a cozy living room, social media ad style",
+  },
+  {
+    id: 3,
+    src: "/images/landing/generated/studio-showcase-3.png",
+    alt: "Prompt: flat lay of multiple ecommerce products arranged on pastel background for Shopify store hero banner",
+  },
+  {
+    id: 4,
+    src: "/images/landing/generated/studio-showcase-4.png",
+    alt: "Prompt: dramatic studio lighting on a single hero product with reflections and gradients, Apple-like advertising style",
+  },
+  {
+    id: 5,
+    src: "/images/landing/generated/studio-showcase-5.png",
+    alt: "Prompt: overhead shot of packaging and shipping materials for US-based fulfillment workflow, minimalist aesthetic",
+  },
+  {
+    id: 6,
+    src: "/images/landing/generated/studio-showcase-6.png",
+    alt: "Prompt: collage of ad creatives for a viral dropshipping product, including UGC, product closeups, and bold call-to-action text",
+  },
 ]
 
 export function StudioShowcase() {
   return (
-    <section className="py-20 lg:py-32 bg-slate-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 lg:py-24 bg-[rgba(255,255,255,0.4)] relative overflow-hidden">
+      <EtherealBackground />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 mb-4">
+          <div className="text-center mb-16 max-w-[886px] mx-auto">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight mb-4">
               Zero Photoshoots. Infinite Visuals.
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-[16px] text-[#555555] leading-[22px] max-w-[580px] mx-auto">
               See how AI transforms products into professional marketing visuals in seconds
             </p>
           </div>
@@ -39,7 +64,7 @@ export function StudioShowcase() {
               delay={index * 0.1}
               duration={DURATION.slow}
             >
-              <div className="relative break-inside-avoid mb-6 rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow">
+              <div className="relative break-inside-avoid mb-6 rounded-[16px] overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow">
                 <div className="aspect-square relative">
                   <Image
                     src={image.src}

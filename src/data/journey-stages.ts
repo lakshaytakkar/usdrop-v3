@@ -92,13 +92,14 @@ export const journeyStages: JourneyStage[] = [
         link: "/ai-toolkit/logo-studio",
         completed: false,
       },
-      {
-        id: "brand-2",
-        title: "Design store banner using Image Studio",
-        description: "Create professional store banners and graphics",
-        link: "/ai-toolkit/image-studio",
-        completed: false,
-      },
+      // Archived: Image Studio
+      // {
+      //   id: "brand-2",
+      //   title: "Design store banner using Image Studio",
+      //   description: "Create professional store banners and graphics",
+      //   link: "/ai-toolkit/image-studio",
+      //   completed: false,
+      // },
       {
         id: "brand-3",
         title: "Finalize brand name and domain",
@@ -171,13 +172,14 @@ export const journeyStages: JourneyStage[] = [
     title: "Creative Assets",
     description: "Generate professional product images and ad creatives",
     tasks: [
-      {
-        id: "creative-1",
-        title: "Generate product images with Image Studio",
-        description: "Create multiple product views and angles",
-        link: "/ai-toolkit/image-studio",
-        completed: false,
-      },
+      // Archived: Image Studio
+      // {
+      //   id: "creative-1",
+      //   title: "Generate product images with Image Studio",
+      //   description: "Create multiple product views and angles",
+      //   link: "/ai-toolkit/image-studio",
+      //   completed: false,
+      // },
       {
         id: "creative-2",
         title: "Create model ads with Model Studio",
@@ -185,13 +187,14 @@ export const journeyStages: JourneyStage[] = [
         link: "/ai-toolkit/model-studio",
         completed: false,
       },
-      {
-        id: "creative-3",
-        title: "Design ad creatives with Ad Studio",
-        description: "Create compelling ad visuals and copy",
-        link: "/ai-toolkit/ad-studio",
-        completed: false,
-      },
+      // Archived: Ad Creative Studio
+      // {
+      //   id: "creative-3",
+      //   title: "Design ad creatives with Ad Studio",
+      //   description: "Create compelling ad visuals and copy",
+      //   link: "/ai-toolkit/ad-studio",
+      //   completed: false,
+      // },
     ],
   },
   {

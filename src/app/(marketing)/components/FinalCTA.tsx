@@ -4,37 +4,39 @@ import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { EtherealBackground } from "./EtherealBackground"
 
 export function FinalCTA() {
   return (
-    <section className="py-20 lg:py-32 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-16 lg:py-24 bg-[rgba(255,255,255,0.4)] relative overflow-hidden">
+      <EtherealBackground />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-          <div className="max-w-3xl mx-auto text-center space-y-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900">
+          <div className="max-w-[886px] mx-auto text-center space-y-[12px]">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight">
               Ready to Find Your First Winner?
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-[16px] text-[#555555] leading-[22px] max-w-[580px] mx-auto">
               Join 10,000+ sellers who are launching profitable products faster with USDrop AI
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-[16px] justify-center">
               <Button
                 asChild
                 size="lg"
-                className="font-mono text-sm uppercase tracking-wider rounded-full px-8 py-6 h-auto"
+                className="h-[48px] px-8 rounded-[8px] font-medium text-[14.667px] text-white"
               >
-                <Link href="/signup">START FREE TRIAL</Link>
+                <Link href="/signup">Get Started Free</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="font-mono text-sm uppercase tracking-wider rounded-full px-8 py-6 h-auto border-slate-200 text-slate-700 hover:bg-white"
+                className="h-[48px] px-8 rounded-[8px] font-medium text-[14.667px] text-[#323140] border border-[rgba(0,0,0,0.1)] hover:border-[rgba(0,0,0,0.2)] bg-white"
               >
-                <Link href="/pricing">VIEW PRICING</Link>
+                <Link href="/pricing">Watch Video</Link>
               </Button>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-[16px] text-[#555555] leading-[22px]">
               No credit card required • 14-day free trial • Cancel anytime
             </p>
           </div>

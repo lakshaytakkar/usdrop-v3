@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Topbar } from "@/components/topbar"
+import { AppSidebar } from "@/components/layout/app-sidebar"
+import { Topbar } from "@/components/layout/topbar"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
 import { Card } from "@/components/ui/card"
@@ -24,6 +24,9 @@ import Loader from "@/components/kokonutui/loader"
 import Link from "next/link"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { EmptyState } from "@/components/ui/empty-state"
+import { SectionError } from "@/components/ui/section-error"
+import { SectionErrorBoundary } from "@/components/shared/section-error-boundary"
 
 // Placeholder thumbnails for onboarding modules
 const MODULE_THUMBNAILS = [
@@ -59,26 +62,26 @@ function QuickStatsGrid() {
     {
       title: "Learning Progress",
       value: `${Math.round(progressPercentage || 0)}%`,
-      iconSrc: "/3d-icons/Item 04.png",
+      iconSrc: "/3d-icons/1_0003.png",
       link: "/academy",
       highlighted: true
     },
     {
       title: "Products Saved",
       value: stats?.products?.inPicklist || 0,
-      iconSrc: "/3d-icons/Item 02.png",
+      iconSrc: "/3d-icons/1_0001.png",
       link: "/my-products"
     },
     {
       title: "Connected Stores",
       value: stats?.stores?.connected || 0,
-      iconSrc: "/3d-icons/Item 03.png",
+      iconSrc: "/3d-icons/1_0002.png",
       link: "/my-shopify-stores"
     },
     {
       title: "Day Streak",
       value: stats?.activity?.streakDays || 0,
-      iconSrc: "/3d-icons/Item 05.png",
+      iconSrc: "/3d-icons/1_0004.png",
       suffix: stats?.activity?.streakDays === 1 ? " day" : " days"
     }
   ]
@@ -148,53 +151,60 @@ function OnboardingSection() {
   const [modules, setModules] = useState<OnboardingModule[]>([])
   const [completedVideoIds, setCompletedVideoIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setErrorMessage(null)
+
+      const courseResponse = await fetch("/api/onboarding/course")
+      if (!courseResponse.ok) {
+        setModules([])
+        setErrorMessage("We couldn’t load your onboarding modules. You can still use the rest of your dashboard.")
+        return
+      }
+      
+      // Check if response is JSON before parsing
+      const contentType = courseResponse.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        setModules([])
+        setErrorMessage("The onboarding data looks different than expected. Please try again in a moment.")
+        return
+      }
+      
+      const courseData = await courseResponse.json()
+      setModules(courseData.modules || [])
+
+      try {
+        const progressResponse = await fetch("/api/onboarding/progress")
+        if (progressResponse.ok) {
+          // Check if response is JSON before parsing
+          const progressContentType = progressResponse.headers.get("content-type")
+          if (progressContentType && progressContentType.includes("application/json")) {
+            const progressData = await progressResponse.json()
+            const progressItems = (progressData.progress || []) as ProgressItem[]
+            const completed = new Set<string>(
+              progressItems.filter((p) => p.completed).map((p) => p.video_id)
+            )
+            setCompletedVideoIds(completed)
+          }
+        }
+      } catch {
+        console.warn("Could not fetch progress data")
+      }
+    } catch (error) {
+      console.warn("Error fetching onboarding data:", error)
+      setModules([])
+      setErrorMessage("We’re having trouble loading your onboarding journey right now. Please check your connection and try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const courseResponse = await fetch("/api/onboarding/course")
-        if (!courseResponse.ok) {
-          setModules([])
-          return
-        }
-        
-        // Check if response is JSON before parsing
-        const contentType = courseResponse.headers.get("content-type")
-        if (!contentType || !contentType.includes("application/json")) {
-          setModules([])
-          return
-        }
-        
-        const courseData = await courseResponse.json()
-        setModules(courseData.modules || [])
-
-        try {
-          const progressResponse = await fetch("/api/onboarding/progress")
-          if (progressResponse.ok) {
-            // Check if response is JSON before parsing
-            const progressContentType = progressResponse.headers.get("content-type")
-            if (progressContentType && progressContentType.includes("application/json")) {
-              const progressData = await progressResponse.json()
-              const progressItems = (progressData.progress || []) as ProgressItem[]
-              const completed = new Set<string>(
-                progressItems.filter((p) => p.completed).map((p) => p.video_id)
-              )
-              setCompletedVideoIds(completed)
-            }
-          }
-        } catch {
-          console.warn("Could not fetch progress data")
-        }
-      } catch (error) {
-        console.warn("Error fetching onboarding data:", error)
-        setModules([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
     fetchData()
-  }, [])
+  }, [fetchData])
 
   if (contextLoading || isLoading) {
     return (
@@ -213,7 +223,18 @@ function OnboardingSection() {
   }
 
   if (totalVideos === 0 && modules.length === 0) {
-    return null
+    return (
+      <Card className="p-6">
+        <EmptyState
+          title="Onboarding is not available yet"
+          description="We couldn’t find any onboarding lessons for your account. You can still explore your dashboard while we get things ready."
+          action={{
+            label: "Retry loading onboarding",
+            onClick: () => fetchData(),
+          }}
+        />
+      </Card>
+    )
   }
 
   // If complete, only show "Onboarding Complete!" message
@@ -224,7 +245,7 @@ function OnboardingSection() {
         <div className="relative z-10">
           <div className="flex items-center gap-3">
             <Image
-              src="/3d-icons/crown.png"
+              src="/3d-icons/1_0000.png"
               alt="Onboarding Complete"
               width={48}
               height={48}
@@ -246,13 +267,21 @@ function OnboardingSection() {
 
   return (
     <Card className="p-6 overflow-hidden relative">
+      {errorMessage && (
+        <div className="mb-4">
+          <SectionError
+            description={errorMessage}
+            onRetry={() => fetchData()}
+          />
+        </div>
+      )}
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="onboarding" className="border-none">
           <AccordionTrigger className="hover:no-underline [&>svg]:ml-auto">
             <div className="flex items-center justify-between w-full pr-2">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/3d-icons/Item 06.png"
+                  src="/3d-icons/1_0005.png"
                   alt="Onboarding"
                   width={48}
                   height={48}
@@ -407,25 +436,33 @@ function OnboardingSection() {
 }
 
 function DashboardContent() {
-  const { stats, isLoading: statsLoading, error } = useDashboardStats()
-
-  if (statsLoading && !stats && !error) {
-    return (
-      <div className="flex justify-center items-center h-[calc(100vh-100px)]">
-        <Loader
-          title="Loading dashboard..."
-          subtitle="Gathering your progress and stats"
-          size="md"
-        />
-      </div>
-    )
-  }
+  const { stats, isLoading: statsLoading, error, refetch } = useDashboardStats()
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0">
-      <WelcomeMessage />
-      <QuickStatsGrid />
-      <OnboardingSection />
+      {statsLoading && !stats && (
+        <div className="flex h-[calc(100vh-140px)] items-center justify-center">
+          <Loader
+            title="Loading your dashboard..."
+            subtitle="Gathering your stats and onboarding progress"
+            size="md"
+          />
+        </div>
+      )}
+
+      {!statsLoading && error && (
+        <SectionError
+          className="max-w-xl"
+          description={error}
+          onRetry={refetch}
+        />
+      )}
+
+      <SectionErrorBoundary className="space-y-6">
+        <WelcomeMessage />
+        <QuickStatsGrid />
+        <OnboardingSection />
+      </SectionErrorBoundary>
     </div>
   )
 }
