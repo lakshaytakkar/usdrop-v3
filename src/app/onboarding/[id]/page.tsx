@@ -24,7 +24,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
-// Fallback thumbnails for onboarding chapters (mirrors main onboarding page)
+// Fallback thumbnails for onboarding chapters
 const CHAPTER_THUMBNAILS = [
   "/images/thumbnail-store-setup.png",
   "/images/thumbnail-product-research.png",
@@ -97,9 +97,7 @@ function OnboardingModuleContent() {
 
       const modules: OnboardingModule[] = courseData.modules || []
 
-      // Build a flat ordered list of all onboarding videos (chapters)
-      // Ensure each video has a thumbnail, falling back to its module thumbnail
-      // or a default placeholder so the sidebar matches the main onboarding UI.
+      // Build a flat list of all onboarding videos (chapters) with thumbnails
       const flatVideos: OnboardingVideo[] = modules
         .flatMap((m: OnboardingModule, moduleIndex: number) => {
           const sourceVideos = m.onboarding_videos || m.videos || []
@@ -115,7 +113,7 @@ function OnboardingModuleContent() {
 
       setAllVideos(flatVideos)
 
-      // Find the specific module (for header context)
+      // Find the specific module for this page
       const foundModule = modules.find(
         (m: OnboardingModule) => m.id === moduleId
       )
@@ -127,11 +125,13 @@ function OnboardingModuleContent() {
 
       setModule(foundModule)
 
-      // Set initial video (chapter) for the flat onboarding course
-      if (videoIdFromUrl && flatVideos.some(v => v.id === videoIdFromUrl)) {
+      // Set initial video
+      // Check both onboarding_videos (old) and videos (new) properties
+      const moduleVideos = foundModule.onboarding_videos || foundModule.videos || []
+      if (videoIdFromUrl) {
         setSelectedVideoId(videoIdFromUrl)
-      } else if (flatVideos.length > 0) {
-        setSelectedVideoId(flatVideos[0].id)
+      } else if (moduleVideos.length > 0) {
+        setSelectedVideoId(moduleVideos[0].id)
       }
 
       // Fetch progress
@@ -163,8 +163,9 @@ function OnboardingModuleContent() {
     }
   }, [moduleId, fetchData])
 
-  // Get current video from the flat onboard course chapters list
-  const currentVideo = allVideos.find(
+  // Get current video - check both onboarding_videos (old) and videos (new) properties
+  const moduleVideos = module?.onboarding_videos || module?.videos || []
+  const currentVideo = moduleVideos.find(
     (v) => v.id === selectedVideoId
   )
 
@@ -172,9 +173,7 @@ function OnboardingModuleContent() {
   const handleVideoSelect = useCallback(
     (videoId: string) => {
       setSelectedVideoId(videoId)
-      router.push(`/onboarding/${moduleId}?video=${videoId}`, {
-        scroll: false,
-      })
+      router.push(`/onboarding/${moduleId}?video=${videoId}`)
     },
     [moduleId, router]
   )
@@ -197,10 +196,11 @@ function OnboardingModuleContent() {
       if (response.ok) {
         setCompletedVideoIds((prev) => new Set([...prev, currentVideo.id]))
 
-        // Auto-advance to next chapter in the flat course playlist
-        const currentIndex = allVideos.findIndex((v) => v.id === currentVideo.id)
-        if (currentIndex < allVideos.length - 1) {
-          handleVideoSelect(allVideos[currentIndex + 1].id)
+        // Auto-advance to next video
+        const videos = module?.onboarding_videos || module?.videos || []
+        const currentIndex = videos.findIndex((v) => v.id === currentVideo.id)
+        if (currentIndex < videos.length - 1) {
+          handleVideoSelect(videos[currentIndex + 1].id)
         }
       }
     } catch (err) {
@@ -213,16 +213,17 @@ function OnboardingModuleContent() {
   // Navigate to next/prev video
   const navigateVideo = useCallback(
     (direction: "next" | "prev") => {
-      if (!allVideos.length || !selectedVideoId) return
-      const currentIndex = allVideos.findIndex((v) => v.id === selectedVideoId)
+      const videos = module?.onboarding_videos || module?.videos || []
+      if (!videos.length || !selectedVideoId) return
+      const currentIndex = videos.findIndex((v) => v.id === selectedVideoId)
 
-      if (direction === "next" && currentIndex < allVideos.length - 1) {
-        handleVideoSelect(allVideos[currentIndex + 1].id)
+      if (direction === "next" && currentIndex < videos.length - 1) {
+        handleVideoSelect(videos[currentIndex + 1].id)
       } else if (direction === "prev" && currentIndex > 0) {
-        handleVideoSelect(allVideos[currentIndex - 1].id)
+        handleVideoSelect(videos[currentIndex - 1].id)
       }
     },
-    [allVideos, selectedVideoId, handleVideoSelect]
+    [module, selectedVideoId, handleVideoSelect]
   )
 
   // Format duration
@@ -233,9 +234,10 @@ function OnboardingModuleContent() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  // Calculate progress across the entire onboarding course (flat chapters list)
-  const totalVideos = allVideos.length
-  const completedCount = allVideos.filter((v) =>
+  // Calculate progress
+  const moduleVideosForProgress = module?.onboarding_videos || module?.videos || []
+  const totalVideos = moduleVideosForProgress.length
+  const completedCount = moduleVideosForProgress.filter((v) =>
     completedVideoIds.has(v.id)
   ).length
   const progressPercentage = totalVideos > 0 ? (completedCount / totalVideos) * 100 : 0
@@ -396,8 +398,8 @@ function OnboardingModuleContent() {
               size="sm"
               onClick={() => navigateVideo("prev")}
               disabled={
-                !allVideos.length ||
-                allVideos[0]?.id === selectedVideoId
+                !moduleVideos.length ||
+                moduleVideos[0]?.id === selectedVideoId
               }
             >
               <ChevronLeft className="h-4 w-4 mr-1" />
@@ -408,8 +410,8 @@ function OnboardingModuleContent() {
               size="sm"
               onClick={() => navigateVideo("next")}
               disabled={
-                !allVideos.length ||
-                allVideos[allVideos.length - 1]?.id === selectedVideoId
+                !moduleVideos.length ||
+                moduleVideos[moduleVideos.length - 1]?.id === selectedVideoId
               }
             >
               Next
@@ -418,11 +420,9 @@ function OnboardingModuleContent() {
           </div>
         </div>
 
-        {/* Video List (playlist of all onboarding chapters) */}
+        {/* Video List – all chapters playlist */}
         <Card className="p-4 h-fit">
-          <h3 className="font-semibold text-gray-900 mb-3">
-            Onboarding Chapters
-          </h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Videos</h3>
           <div className="space-y-2">
             {allVideos.map((video, index) => {
               const isSelected = video.id === selectedVideoId

@@ -331,3 +331,4 @@ COMMENT ON TABLE dev_task_attachments IS 'File attachments for development tasks
 COMMENT ON TABLE dev_task_comments IS 'Comments and activity logs for development tasks';
 COMMENT ON TABLE dev_task_history IS 'Change history tracking for development tasks';
 
+

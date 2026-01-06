@@ -1,11 +1,12 @@
 /**
  * Batch script to enrich first 100 products with AI research data
- * 
+ *
  * Usage:
  *   Set GEMINI_API_KEY (or NEXT_PUBLIC_GEMINI_API_KEY / API_KEY) in your environment, then run:
  *   npx tsx scripts/enrich-products-research.ts
  */
 
+import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { GoogleGenAI } from '@google/genai'
 
@@ -15,7 +16,7 @@ const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY ||
   process.env.API_KEY
 
-const genAI = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null
+const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null
 
 async function researchProduct(input: {
   title: string
@@ -24,7 +25,7 @@ async function researchProduct(input: {
   sellPrice: number
   category?: string
 }) {
-  if (!genAI) {
+  if (!ai) {
     console.warn('   ⚠️  GEMINI_API_KEY not set, using mock data')
     return {
       competitor_pricing: {
@@ -70,23 +71,15 @@ Return JSON with:
 - social_proof (likes, comments, shares, virality_score from 0 to 1)
 - category_suggestion (object with slug, name, confidence)`
 
-    const model = genAI.getGenerativeModel({
+    const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
-    })
-
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
+      contents: { parts: [{ text: prompt }] },
+      config: {
         responseMimeType: 'application/json',
       },
     })
 
-    const text = result.response.text()
+    const text = response.text
     if (!text) throw new Error("No content in response")
 
     const cleanedContent = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()

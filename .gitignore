@@ -88,5 +88,6 @@ scripts/scrapers/output/screenshots/
 scripts/scrapers/output/data/
 nul
 
-# Archive folder (archived data files)
+# Archive folders (archived data files and unused assets)
 _archive/
+_assets_archive/

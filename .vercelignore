@@ -1,0 +1,35 @@
+# Archived assets (unused icons, images, videos)
+_assets_archive/
+
+# Development files
+*.md
+!README.md
+.taskmaster/
+docs/
+scripts/
+
+# Build artifacts and temp files
+.next/
+node_modules/
+*.log
+
+# Git
+.git/
+
+# IDE
+.vscode/
+.idea/
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+
+# Other large/unused files
+public.zip
+USER_CREDENTIALS.md
+bun.lock
+update-imports.js
+studio-showcase-*.png

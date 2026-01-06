@@ -37,6 +37,7 @@ export default function ProductHuntPage() {
   const PRODUCTS_PER_PAGE = 12 // 3 rows × 4 columns
   
   const [products, setProducts] = useState<Product[]>([])
+  const [shuffledProducts, setShuffledProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [page, setPage] = useState(1)
@@ -116,6 +117,23 @@ export default function ProductHuntPage() {
     fetchCategories()
   }, [])
   
+  // Shuffle products whenever the products list changes
+  useEffect(() => {
+    if (!products.length) {
+      setShuffledProducts([])
+      return
+    }
+
+    // Fisher-Yates shuffle for a stable randomized order per fetch
+    const shuffled = [...products]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+
+    setShuffledProducts(shuffled)
+  }, [products])
+  
   // Reset page when category changes
   useEffect(() => {
     setPage(1)
@@ -127,7 +145,7 @@ export default function ProductHuntPage() {
   
   // Map products to ProductCard format
   const productCardData: ProductCardData[] = useMemo(() => {
-    return products.map((product) => ({
+    return shuffledProducts.map((product) => ({
       id: product.id,
       image: product.image,
       title: product.title,
@@ -142,7 +160,7 @@ export default function ProductHuntPage() {
         ? product.trend_data[product.trend_data.length - 1] > product.trend_data[0]
         : false,
     }))
-  }, [products])
+  }, [shuffledProducts])
   
   // Get unique categories from products
   const availableCategories = useMemo(() => {

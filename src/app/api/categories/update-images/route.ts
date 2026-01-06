@@ -3,9 +3,33 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// Load category mapping
-const mappingPath = path.join(process.cwd(), 'scripts', 'category-image-mapping.json')
-const categoryMapping = JSON.parse(fs.readFileSync(mappingPath, 'utf-8'))
+// Default category mapping (used when file doesn't exist)
+const defaultCategoryMapping: Record<string, { name: string }> = {
+  "beauty": { name: "Beauty" },
+  "electronics": { name: "Electronics" },
+  "fashion": { name: "Fashion" },
+  "gadgets": { name: "Gadgets" },
+  "home-decor": { name: "Home Decor" },
+  "home-garden": { name: "Home & Garden" },
+  "kitchen": { name: "Kitchen" },
+  "mother-kids": { name: "Mother & Kids" },
+  "other": { name: "Other" },
+  "pets": { name: "Pets" },
+  "sports-fitness": { name: "Sports & Fitness" }
+}
+
+// Load category mapping lazily
+function getCategoryMapping(): Record<string, { name: string }> {
+  try {
+    const mappingPath = path.join(process.cwd(), 'scripts', 'category-image-mapping.json')
+    if (fs.existsSync(mappingPath)) {
+      return JSON.parse(fs.readFileSync(mappingPath, 'utf-8'))
+    }
+  } catch (error) {
+    console.warn('Could not load category mapping file, using defaults:', error)
+  }
+  return defaultCategoryMapping
+}
 
 /**
  * POST /api/categories/update-images
@@ -19,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     const results: Array<{ slug: string; success: boolean; error?: string }> = []
 
+    const categoryMapping = getCategoryMapping()
     for (const [slug, category] of Object.entries(categoryMapping)) {
       const imageUrl = `/categories/${slug}.png`
       
