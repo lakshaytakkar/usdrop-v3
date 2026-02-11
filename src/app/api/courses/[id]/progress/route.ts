@@ -1,43 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { EnrollmentProgressResponse } from '@/types/courses'
-
-// Helper to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  })
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
-  }
-
-  return user
-}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser(request)
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json(
@@ -48,9 +19,6 @@ export async function GET(
 
     const { id: courseId } = await params
 
-    const supabaseAdmin = (await import('@/lib/supabase/server')).supabaseAdmin
-
-    // Get enrollment
     const { data: enrollment, error: enrollmentError } = await supabaseAdmin
       .from('course_enrollments')
       .select('*')
@@ -65,29 +33,25 @@ export async function GET(
       )
     }
 
-    // Get completed chapters
     const { data: completions } = await supabaseAdmin
       .from('chapter_completions')
       .select('chapter_id')
       .eq('enrollment_id', enrollment.id)
 
-    const completed_chapters = completions?.map(c => c.chapter_id) || []
+    const completed_chapters = completions?.map((c: { chapter_id: string }) => c.chapter_id) || []
 
-    // Get total chapters count
-    // First, get module IDs for this course
     const { data: modules } = await supabaseAdmin
       .from('course_modules')
       .select('id')
       .eq('course_id', courseId)
 
-    const moduleIds = modules?.map(m => m.id) || []
+    const moduleIds = modules?.map((m: { id: string }) => m.id) || []
     
     const { count: totalChapters } = await supabaseAdmin
       .from('course_chapters')
       .select('*', { count: 'exact', head: true })
       .in('module_id', moduleIds)
 
-    // Get last accessed chapter if exists
     let lastAccessedChapter = null
     if (enrollment.last_accessed_chapter_id) {
       const { data: chapter } = await supabaseAdmin
@@ -139,4 +103,3 @@ export async function GET(
     )
   }
 }
-

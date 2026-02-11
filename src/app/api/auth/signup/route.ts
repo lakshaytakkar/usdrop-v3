@@ -1,192 +1,52 @@
-import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { validateEmail, validatePassword } from '@/lib/utils/validation'
-import { getAuthErrorMessage } from '@/lib/utils/auth'
+import { hashPassword, createSession, setSessionCookie } from '@/lib/auth'
+import sql from '@/lib/db'
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json()
+    const { email, password, full_name } = await request.json()
 
-    // Validate input
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    // Email validation
     const emailValidation = validateEmail(email)
     if (!emailValidation.valid) {
-      return NextResponse.json(
-        { error: emailValidation.error },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: emailValidation.error }, { status: 400 })
     }
 
-    // Password validation
     const passwordValidation = validatePassword(password)
     if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { 
-          error: passwordValidation.errors[0] || 'Invalid password',
-          errors: passwordValidation.errors
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: passwordValidation.errors[0], errors: passwordValidation.errors }, { status: 400 })
     }
 
-    // Validate and construct emailRedirectTo URL
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-    const emailRedirectTo = `${siteUrl}/auth/callback`
-    
-    // Ensure the redirect URL is valid
-    try {
-      new URL(emailRedirectTo)
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid site URL configuration. Please contact support.' },
-        { status: 500 }
-      )
+    const existing = await sql`SELECT id FROM profiles WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
+    if (existing.length > 0) {
+      return NextResponse.json({ error: 'An account with this email already exists. Please sign in instead.' }, { status: 409 })
     }
 
-    const supabase = await createClient()
-    const adminClient = createAdminClient()
+    const password_hash = await hashPassword(password)
 
-    // Check if user already exists and their verification status
-    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers()
-    const existingUser = users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+    const freePlan = await sql`SELECT id FROM subscription_plans WHERE slug = 'free' LIMIT 1`
+    const planId = freePlan.length > 0 ? freePlan[0].id : null
 
-    // If user exists but email is not verified, we should resend verification instead
-    if (existingUser && !existingUser.email_confirmed_at) {
-      // User exists but not verified - resend verification email
-      const { error: resendError } = await adminClient.auth.admin.generateLink({
-        type: 'signup',
-        email: email,
-        password: password,
-        options: {
-          redirectTo: emailRedirectTo,
-        },
-      })
+    const result = await sql`
+      INSERT INTO profiles (email, password_hash, full_name, subscription_plan_id, account_type, status)
+      VALUES (${email.toLowerCase()}, ${password_hash}, ${full_name || null}, ${planId}, 'free', 'active')
+      RETURNING id, email, full_name
+    `
 
-      if (resendError) {
-        // Fallback to signUp which may still send verification
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo,
-          },
-        })
+    const user = result[0]
+    const token = await createSession(user.id, request)
+    await setSessionCookie(token)
 
-        if (error) {
-          // Handle specific Supabase errors
-          if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-            return NextResponse.json(
-              { error: 'Too many signup attempts. Please wait a moment and try again.' },
-              { status: 429 }
-            )
-          }
-
-          // Don't reveal if user exists for security
-          return NextResponse.json(
-            { error: getAuthErrorMessage(error) || 'Failed to create account' },
-            { status: 400 }
-          )
-        }
-
-        return NextResponse.json({
-          message: 'Please check your email to confirm your account before signing in.',
-          requiresConfirmation: true,
-          email: data.user?.email,
-        })
-      }
-
-      return NextResponse.json({
-        message: 'Please check your email to confirm your account before signing in.',
-        requiresConfirmation: true,
-        email: email,
-      })
-    }
-
-    // If user exists and is verified, return error
-    if (existingUser && existingUser.email_confirmed_at) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists. Please sign in instead.' },
-        { status: 409 }
-      )
-    }
-
-    // Create new user account
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo,
-      },
-    })
-
-    if (error) {
-      // Handle specific Supabase errors
-      if (error.message.includes('already registered') || error.message.includes('User already registered')) {
-        // Check if they're verified
-        if (existingUser?.email_confirmed_at) {
-          return NextResponse.json(
-            { error: 'An account with this email already exists. Please sign in instead.' },
-            { status: 409 }
-          )
-        }
-        // Not verified - treat as requires confirmation
-        return NextResponse.json({
-          message: 'Please check your email to confirm your account before signing in.',
-          requiresConfirmation: true,
-          email: email,
-        })
-      }
-
-      if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-        return NextResponse.json(
-          { error: 'Too many signup attempts. Please wait a moment and try again.' },
-          { status: 429 }
-        )
-      }
-
-      // Check for email sending errors
-      if (error.message.includes('email') && (error.message.includes('send') || error.message.includes('deliver'))) {
-        console.error('Email sending error:', error)
-        return NextResponse.json(
-          { error: 'Failed to send verification email. Please try again or contact support if the problem persists.' },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json(
-        { error: getAuthErrorMessage(error) || 'Failed to create account' },
-        { status: 400 }
-      )
-    }
-
-    // Check if email confirmation is required
-    // If no session is returned, email confirmation is required
-    if (data.user && !data.session) {
-      return NextResponse.json({
-        message: 'Please check your email to confirm your account before signing in.',
-        requiresConfirmation: true,
-        email: data.user.email,
-      })
-    }
-
-    // User created and auto-signed in (if email confirmation is disabled)
     return NextResponse.json({
       message: 'Account created successfully',
-      user: data.user,
-      session: data.session,
+      user: { id: user.id, email: user.email, full_name: user.full_name },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Signup error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error. Please try again later.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error. Please try again later.' }, { status: 500 })
   }
 }

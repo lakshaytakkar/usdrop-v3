@@ -1,38 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { QuizSubmissionRequest, QuizSubmissionResponse, QuizQuestion } from '@/types/courses'
 
-// Helper to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  })
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
-  }
-
-  return user
-}
-
-// Helper to calculate quiz score
 function calculateQuizScore(
   questions: QuizQuestion[],
   answers: Record<string, any>
@@ -50,7 +20,6 @@ function calculateQuizScore(
     } else if (question.type === 'true-false') {
       isCorrect = String(userAnswer).toLowerCase() === String(question.correct_answer).toLowerCase()
     } else if (question.type === 'short-answer') {
-      // Simple string comparison (could be enhanced with fuzzy matching)
       isCorrect = String(userAnswer).trim().toLowerCase() === String(question.correct_answer).trim().toLowerCase()
     }
 
@@ -66,7 +35,7 @@ function calculateQuizScore(
 
   const totalQuestions = questions.length
   const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0
-  const passed = score >= 70 // 70% passing threshold
+  const passed = score >= 70
 
   return { score, passed, feedback }
 }
@@ -76,7 +45,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string; chapterId: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser(request)
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json(
@@ -88,9 +57,6 @@ export async function POST(
     const { id: courseId, chapterId } = await params
     const body: QuizSubmissionRequest = await request.json()
 
-    const supabaseAdmin = (await import('@/lib/supabase/server')).supabaseAdmin
-
-    // Get enrollment
     const { data: enrollment, error: enrollmentError } = await supabaseAdmin
       .from('course_enrollments')
       .select('id')
@@ -105,7 +71,6 @@ export async function POST(
       )
     }
 
-    // Get chapter with quiz questions
     const { data: chapter, error: chapterError } = await supabaseAdmin
       .from('course_chapters')
       .select('*')
@@ -136,10 +101,8 @@ export async function POST(
       )
     }
 
-    // Calculate score
     const { score, passed, feedback } = calculateQuizScore(questions, body.answers)
 
-    // Save quiz attempt
     const { data: attempt, error: attemptError } = await supabaseAdmin
       .from('quiz_attempts')
       .insert({
@@ -187,4 +150,3 @@ export async function POST(
     )
   }
 }
-

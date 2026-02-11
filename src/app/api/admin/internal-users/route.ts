@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { hashPassword } from '@/lib/auth'
+import sql from '@/lib/db'
+import crypto from 'crypto'
 
-// GET /api/admin/internal-users - List all internal users
 export async function GET() {
   try {
-    console.log('Fetching users from Supabase...')
+    console.log('Fetching users from database...')
     
-    // Fetch all users and filter in memory (more reliable than .not() syntax)
     const { data: allUsers, error: fetchError } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
 
     if (fetchError) {
-      console.error('Supabase error fetching users:', {
+      console.error('Database error fetching users:', {
         message: fetchError.message,
         details: fetchError,
         code: fetchError.code,
@@ -29,8 +29,7 @@ export async function GET() {
 
     console.log(`Fetched ${allUsers?.length || 0} total users from database`)
 
-    // Filter for internal users (those with internal_role not null)
-    const data = allUsers?.filter(user => user.internal_role !== null) || []
+    const data = allUsers?.filter((user: any) => user.internal_role !== null) || []
     
     console.log(`Filtered to ${data.length} internal users`)
 
@@ -39,8 +38,7 @@ export async function GET() {
       return NextResponse.json([])
     }
 
-    // Transform to match InternalUser interface
-    const users = data.map((user) => ({
+    const users = data.map((user: any) => ({
       id: user.id,
       name: user.full_name || '',
       email: user.email,
@@ -64,7 +62,6 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/internal-users - Create a new internal user
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -77,7 +74,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate role
     const validRoles = ['superadmin', 'admin', 'manager', 'executive']
     if (!validRoles.includes(role)) {
       return NextResponse.json(
@@ -86,66 +82,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create user in auth.users first using service role
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: name,
-      },
-    })
-
-    if (authError) {
-      console.error('Error creating auth user:', authError)
-      return NextResponse.json({ error: authError.message }, { status: 500 })
+    const existing = await sql`SELECT id FROM profiles WHERE email = ${email} LIMIT 1`
+    if (existing.length > 0) {
+      return NextResponse.json(
+        { error: 'A user with this email already exists' },
+        { status: 409 }
+      )
     }
 
-    if (!authData.user) {
-      return NextResponse.json({ error: 'User not created in auth system' }, { status: 500 })
+    const passwordHash = await hashPassword(password)
+    const userId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const result = await sql`
+      INSERT INTO profiles (
+        id, email, full_name, password_hash, internal_role,
+        status, phone_number, username, avatar_url,
+        created_at, updated_at
+      ) VALUES (
+        ${userId}, ${email}, ${name}, ${passwordHash}, ${role},
+        ${status}, ${phoneNumber || null}, ${username || null}, ${avatarUrl || null},
+        ${now}, ${now}
+      )
+      RETURNING *
+    `
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
-    // Wait a bit for the trigger to create the profile
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // Update the profile with all fields
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .update({
-        full_name: name,
-        internal_role: role,
-        status,
-        phone_number: phoneNumber || null,
-        username: username || null,
-        avatar_url: avatarUrl || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', authData.user.id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating internal user:', error)
-      if (error.code === '23505') {
-        return NextResponse.json(
-          { error: 'A user with this email already exists' },
-          { status: 409 }
-        )
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
+    const data = result[0]
     const user = {
       id: data.id,
       name: data.full_name || '',
@@ -165,4 +131,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

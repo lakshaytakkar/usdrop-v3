@@ -1,29 +1,23 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
+import sql from '@/lib/db'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { onboarding_completed: false },
         { status: 200 }
       )
     }
 
-    // Check onboarding status
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('onboarding_completed')
-      .eq('id', user.id)
-      .single()
+    const result = await sql`
+      SELECT onboarding_completed FROM profiles WHERE id = ${user.id} LIMIT 1
+    `
 
-    if (profileError) {
-      // If profile doesn't exist, onboarding is not completed
+    if (result.length === 0) {
       return NextResponse.json(
         { onboarding_completed: false },
         { status: 200 }
@@ -31,7 +25,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      onboarding_completed: profile?.onboarding_completed || false,
+      onboarding_completed: result[0]?.onboarding_completed || false,
     })
   } catch (error) {
     console.error('Onboarding status check error:', error)
@@ -41,4 +35,3 @@ export async function GET() {
     )
   }
 }
-

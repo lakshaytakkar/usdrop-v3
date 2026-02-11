@@ -4,27 +4,26 @@ import Link from "next/link"
 
 const footerLinks = {
   Product: [
-    { name: "AI Research", href: "/research" },
-    { name: "AI Studio", href: "/studio" },
-    { name: "AI Fulfillment", href: "/fulfillment" },
-    { name: "Integrations", href: "/integrations" },
+    { name: "AI Research", href: "/#features" },
+    { name: "AI Studio", href: "/#studio" },
+    { name: "AI Fulfillment", href: "/#workflow" },
+    { name: "Integrations", href: "/#features" },
   ],
   Resources: [
-    { name: "Blog", href: "/resources/blog" },
-    { name: "Guides", href: "/resources/guides" },
-    { name: "Help Center", href: "/academy/help" },
-    { name: "Case Studies", href: "/resources/case-studies" },
+    { name: "Blog", href: "/blog" },
+    { name: "Guides", href: "/#features" },
+    { name: "Help Center", href: "/help-center" },
+    { name: "Academy", href: "/academy" },
   ],
   Company: [
-    { name: "About Us", href: "/about" },
+    { name: "About Us", href: "/#about" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Contact", href: "/contact" },
-    { name: "Careers", href: "/careers" },
+    { name: "Contact", href: "mailto:support@usdrop.ai" },
   ],
   Legal: [
-    { name: "Terms of Service", href: "/legal/terms" },
-    { name: "Privacy Policy", href: "/legal/privacy" },
-    { name: "Refund Policy", href: "/legal/refund" },
+    { name: "Terms of Service", href: "/terms" },
+    { name: "Privacy Policy", href: "/privacy" },
+    { name: "Refund Policy", href: "/refund" },
   ],
 }
 
@@ -73,26 +72,20 @@ export function Footer() {
           </p>
           <div className="flex gap-8">
             <Link
-              href="https://twitter.com"
+              href="#"
               className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               Twitter
             </Link>
             <Link
-              href="https://linkedin.com"
+              href="#"
               className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               LinkedIn
             </Link>
             <Link
-              href="https://discord.com"
+              href="#"
               className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-              target="_blank"
-              rel="noopener noreferrer"
             >
               Discord
             </Link>

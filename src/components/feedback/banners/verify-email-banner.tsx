@@ -13,8 +13,7 @@ export function VerifyEmailBanner() {
   const [dismissed, setDismissed] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Only show if user exists and email is not verified
-  if (!user || user.email_confirmed_at || dismissed) {
+  if (!user || dismissed) {
     return null
   }
 

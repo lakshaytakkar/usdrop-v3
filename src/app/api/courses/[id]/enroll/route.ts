@@ -1,43 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { CourseEnrollment } from '@/types/courses'
-
-// Helper to get authenticated user
-async function getAuthenticatedUser(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader?.startsWith('Bearer ')) {
-    return null
-  }
-
-  const token = authHeader.substring(7)
-  
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  })
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
-  }
-
-  return user
-}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser(request)
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json(
@@ -48,8 +19,6 @@ export async function POST(
 
     const { id: courseId } = await params
 
-    // Check if course exists
-    const supabaseAdmin = (await import('@/lib/supabase/server')).supabaseAdmin
     const { data: course, error: courseError } = await supabaseAdmin
       .from('courses')
       .select('id, published')
@@ -70,7 +39,6 @@ export async function POST(
       )
     }
 
-    // Check if already enrolled
     const { data: existingEnrollment } = await supabaseAdmin
       .from('course_enrollments')
       .select('id')
@@ -85,7 +53,6 @@ export async function POST(
       )
     }
 
-    // Create enrollment
     const { data: enrollment, error: enrollmentError } = await supabaseAdmin
       .from('course_enrollments')
       .insert({
@@ -127,4 +94,3 @@ export async function POST(
     )
   }
 }
-

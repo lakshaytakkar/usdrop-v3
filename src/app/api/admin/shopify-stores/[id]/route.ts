@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
 import { mapShopifyStoreFromDB, mapShopifyStoreToDB, normalizeShopifyStoreUrl, validateShopifyStoreUrl } from '@/lib/utils/shopify-store-helpers'
 
-// GET /api/admin/shopify-stores/[id] - Get a single store
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: storeId } = await params
-
-    // Use service role for admin access
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
 
     const { data, error } = await supabaseAdmin
       .from('shopify_stores')
@@ -56,7 +42,6 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/shopify-stores/[id] - Update a store
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -65,19 +50,6 @@ export async function PATCH(
     const { id: storeId } = await params
     const body = await request.json()
 
-    // Use service role for admin access
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    // Validate URL if provided
     if (body.url) {
       if (!validateShopifyStoreUrl(body.url)) {
         return NextResponse.json(
@@ -88,7 +60,6 @@ export async function PATCH(
       body.url = normalizeShopifyStoreUrl(body.url)
     }
 
-    // Validate status if provided
     if (body.status && !['connected', 'disconnected', 'syncing', 'error'].includes(body.status)) {
       return NextResponse.json(
         { error: 'Invalid status value' },
@@ -96,7 +67,6 @@ export async function PATCH(
       )
     }
 
-    // Validate sync_status if provided
     if (body.sync_status && !['success', 'failed', 'pending', 'never'].includes(body.sync_status)) {
       return NextResponse.json(
         { error: 'Invalid sync_status value' },
@@ -104,7 +74,6 @@ export async function PATCH(
       )
     }
 
-    // Validate plan if provided
     if (body.plan && !['basic', 'shopify', 'advanced', 'plus'].includes(body.plan)) {
       return NextResponse.json(
         { error: 'Invalid plan value' },
@@ -112,7 +81,6 @@ export async function PATCH(
       )
     }
 
-    // Map to DB format
     const updateData = mapShopifyStoreToDB(body)
     updateData.updated_at = new Date().toISOString()
 
@@ -156,7 +124,6 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/shopify-stores/[id] - Delete a store
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -164,19 +131,6 @@ export async function DELETE(
   try {
     const { id: storeId } = await params
 
-    // Use service role for admin access
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    // Check if store exists
     const { data: storeData, error: fetchError } = await supabaseAdmin
       .from('shopify_stores')
       .select('id, user_id')
@@ -186,10 +140,6 @@ export async function DELETE(
     if (fetchError || !storeData) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
-
-    // Check for dependencies (e.g., products, orders, etc.)
-    // For now, we'll do a hard delete. If there are dependencies, we can soft delete instead
-    // by setting status to 'disconnected'
 
     const { error } = await supabaseAdmin
       .from('shopify_stores')
@@ -207,4 +157,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

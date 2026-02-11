@@ -1,112 +1,59 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { validateEmail } from '@/lib/utils/validation'
-import { getAuthErrorMessage, isEmailVerificationRequired } from '@/lib/utils/auth'
+import { verifyPassword, createSession, setSessionCookie, getUserWithPlan } from '@/lib/auth'
+import sql from '@/lib/db'
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json()
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 })
     }
 
-    // Email validation
     const emailValidation = validateEmail(email)
     if (!emailValidation.valid) {
-      return NextResponse.json(
-        { error: emailValidation.error },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: emailValidation.error }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const users = await sql`
+      SELECT id, email, password_hash, full_name, status
+      FROM profiles 
+      WHERE LOWER(email) = LOWER(${email})
+      LIMIT 1
+    `
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      // Handle specific errors
-      if (isEmailVerificationRequired(error)) {
-        return NextResponse.json(
-          { 
-            error: 'Please verify your email before signing in. Check your inbox for a confirmation link.',
-            requiresVerification: true,
-            email,
-          },
-          { status: 403 }
-        )
-      }
-
-      if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-        return NextResponse.json(
-          { error: 'Too many sign-in attempts. Please wait a moment and try again.' },
-          { status: 429 }
-        )
-      }
-
-      // Generic error for invalid credentials (security best practice)
-      if (error.message.includes('Invalid login credentials') || error.message.includes('invalid credentials')) {
-        return NextResponse.json(
-          { error: 'Invalid email or password' },
-          { status: 401 }
-        )
-      }
-
-      return NextResponse.json(
-        { error: getAuthErrorMessage(error) || 'Failed to sign in' },
-        { status: 400 }
-      )
+    if (users.length === 0) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
     }
 
-    // Check if user is internal, onboarding status, and plan information
-    let isInternal = false
-    let requiresOnboarding = false
-    let plan = 'free'
-    let planName = 'Free'
+    const user = users[0]
 
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select(`
-          internal_role,
-          onboarding_completed,
-          subscription_plan_id,
-          account_type,
-          subscription_plans (
-            slug,
-            name
-          )
-        `)
-        .eq('id', data.user.id)
-        .single()
-      
-      isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined
-      
-      // Check if onboarding is needed (for existing users who haven't completed onboarding)
-      requiresOnboarding = !profile?.onboarding_completed && !isInternal
-
-      // Determine plan: subscription_plans.slug → account_type → 'free'
-      if (profile) {
-        const subscriptionPlanData = profile.subscription_plans as unknown
-        const subscriptionPlan = Array.isArray(subscriptionPlanData)
-          ? subscriptionPlanData[0] as { slug: string; name: string } | undefined
-          : subscriptionPlanData as { slug: string; name: string } | null
-
-        plan = subscriptionPlan?.slug || profile.account_type || 'free'
-        planName = subscriptionPlan?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
-      }
+    if (user.status === 'suspended') {
+      return NextResponse.json({ error: 'Your account has been suspended. Please contact support.' }, { status: 403 })
     }
+
+    if (!user.password_hash) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
+    }
+
+    const isValid = await verifyPassword(password, user.password_hash)
+    if (!isValid) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 })
+    }
+
+    const token = await createSession(user.id, request)
+    await setSessionCookie(token)
+
+    const profile = await getUserWithPlan(user.id)
+    const isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined
+    const requiresOnboarding = !profile?.onboarding_completed && !isInternal
+    const plan = profile?.plan_slug || profile?.account_type || 'free'
+    const planName = profile?.plan_name || 'Free'
 
     return NextResponse.json({
       message: 'Signed in successfully',
-      user: data.user,
-      session: data.session,
+      user: { id: user.id, email: user.email, user_metadata: { full_name: user.full_name } },
       isInternal,
       requiresOnboarding,
       plan,
@@ -114,9 +61,6 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error('Signin error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error. Please try again later.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error. Please try again later.' }, { status: 500 })
   }
 }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { hashPassword } from '@/lib/auth'
+import sql from '@/lib/db'
 
-// GET /api/admin/internal-users/[id] - Get a single internal user
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,7 +24,6 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Check if user is an internal user
     if (!data || data.internal_role === null) {
       return NextResponse.json({ error: 'User not found or not an internal user' }, { status: 404 })
     }
@@ -49,7 +48,6 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/internal-users/[id] - Update an internal user
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -59,7 +57,6 @@ export async function PATCH(
     const body = await request.json()
     const { name, email, role, status, phoneNumber, username, avatarUrl, password } = body
 
-    // Build update object with only provided fields
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     }
@@ -90,34 +87,11 @@ export async function PATCH(
     if (username !== undefined) updates.username = username || null
     if (avatarUrl !== undefined) updates.avatar_url = avatarUrl || null
 
-    // Handle password update separately if provided
     if (password !== undefined && password.trim() !== '') {
-      // Update password in auth.users using admin API
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      )
-      
-      const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(id, {
-        password: password
-      })
-
-      if (passwordError) {
-        console.error('Error updating password:', passwordError)
-        return NextResponse.json(
-          { error: 'Failed to update password: ' + passwordError.message },
-          { status: 500 }
-        )
-      }
+      const passwordHash = await hashPassword(password)
+      await sql`UPDATE profiles SET password_hash = ${passwordHash} WHERE id = ${id}`
     }
 
-    // First check if user exists and is internal
     const { data: existingUser } = await supabaseAdmin
       .from('profiles')
       .select('internal_role')
@@ -169,7 +143,6 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/internal-users/[id] - Delete an internal user
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -177,7 +150,6 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // First check if user exists and is internal
     const { data: existingUser } = await supabaseAdmin
       .from('profiles')
       .select('internal_role')
@@ -204,4 +176,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

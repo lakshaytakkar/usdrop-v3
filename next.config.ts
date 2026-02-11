@@ -1,11 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: [
-    `https://${process.env.REPLIT_DEV_DOMAIN || ''}`,
-    'http://127.0.0.1',
-    'http://0.0.0.0',
-  ],
+  allowedDevOrigins: ['*'],
   images: {
     // Enable image optimization
     formats: ['image/avif', 'image/webp'],
@@ -125,16 +121,6 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'd3r56lgpj005wx.cloudfront.net',
       },
-      // Supabase Storage CDN (for static assets)
-      // Extract hostname from Supabase URL (e.g., https://xxx.supabase.co -> xxx.supabase.co)
-      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
-        ? [
-            {
-              protocol: 'https' as const,
-              hostname: process.env.NEXT_PUBLIC_SUPABASE_URL.replace(/^https?:\/\//, '').split('/')[0],
-            },
-          ]
-        : []),
     ],
   },
 };

@@ -1,14 +1,15 @@
 # USDrop AI Platform (usdrop-v3)
 
 ## Overview
-USDrop is an all-in-one dropshipping platform powered by advanced AI. Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, and Supabase for backend/auth.
+USDrop is an all-in-one dropshipping platform powered by advanced AI. Built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, and Replit PostgreSQL for backend with custom JWT authentication.
 
 ## Project Architecture
 - **Framework**: Next.js 16 (App Router) with Turbopack
 - **Language**: TypeScript 5.9
 - **Styling**: Tailwind CSS 4 with PostCSS
 - **UI Components**: Radix UI primitives + shadcn/ui + Framer Motion
-- **Backend**: Supabase (auth, database, storage)
+- **Database**: Replit PostgreSQL (Neon-backed), accessed via `postgres` package
+- **Auth**: Custom JWT auth with bcrypt password hashing, httpOnly cookie sessions
 - **State Management**: TanStack React Query
 - **Rich Text**: Tiptap editor
 - **Charts**: Recharts
@@ -20,14 +21,22 @@ src/
   app/              - Next.js App Router pages and API routes
     (marketing)/    - Marketing/landing page components
       components/   - Hero, BentoFeatures, Workflow, StudioShowcase, etc.
+    api/auth/       - Auth endpoints (signin, signup, signout, user, etc.)
+    api/admin/      - Admin API routes
+    api/courses/    - Course management routes
   components/       - Reusable React components
+    auth/           - Auth forms (login, signup, reset password)
     motion/         - Animation primitives (MotionFadeIn, MotionCard, MotionMarquee)
     ui/             - shadcn/ui components
-  contexts/         - React context providers
+  contexts/         - React context providers (auth-context, user-plan-context)
   data/             - Static data/constants
   hooks/            - Custom React hooks
-  lib/              - Utility libraries (Supabase client, motion constants)
-  middleware.ts     - Auth middleware (Supabase SSR)
+  lib/
+    auth.ts         - JWT auth utilities (getCurrentUser, hashPassword, etc.)
+    db/             - Database connection (index.ts), schema (schema.sql), seed (seed.ts)
+    supabase/       - PostgreSQL query builder wrapper (Supabase-compatible API)
+    utils/          - Utility functions
+  middleware.ts     - JWT-based auth middleware (Node.js runtime)
   types/            - TypeScript type definitions
 public/
   images/
@@ -35,13 +44,30 @@ public/
     landing/        - Landing page feature images, showcase photos
     logos/          - Brand/partner logos
   3d-characters-ecom/ - 3D character illustrations
-docs/               - Project documentation
 ```
 
+## Authentication System
+- **Password hashing**: bcrypt with 12 salt rounds
+- **Sessions**: JWT stored in httpOnly cookie (`usdrop_session`), 7-day expiry
+- **Secret**: `SESSION_SECRET` environment variable
+- **Middleware**: Node.js runtime, JWT-only verification, no database calls
+- **Auth context**: Client-side via `/api/auth/user` endpoint
+
+## Test Credentials
+- Admin: `admin@usdrop.ai` / `Admin123!` (internal_role=admin)
+- Pro Seller: `seller@usdrop.ai` / `Seller123!` (account_type=pro)
+- Free User: `free@usdrop.ai` / `Free123!` (account_type=free)
+- Existing admin: `parthiv.kataria@usdrop.ai` / `USDrop2024!`
+
+## Database
+- **Connection**: `DATABASE_URL` environment variable, `postgres` package with tagged template literals
+- **Query Builder**: `src/lib/supabase/server.ts` wraps PostgreSQL with Supabase-compatible API (.from().select().eq() patterns)
+- **Tables**: profiles, products, categories, courses, course_modules, subscription_plans, competitor_stores, onboarding_modules, onboarding_videos, orders, and more (18 total)
+- **Seed script**: `npx tsx src/lib/db/seed.ts` - imports data from Supabase and creates test users
+
 ## Environment Variables Required
-- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (server-side)
+- `DATABASE_URL` - PostgreSQL connection string (auto-provided by Replit)
+- `SESSION_SECRET` - JWT signing secret
 - `NEXT_PUBLIC_APP_URL` - Application URL
 - `NEXT_PUBLIC_SITE_URL` - Site URL
 - `NEXT_PUBLIC_GEMINI_API_KEY` - Google Gemini API key (optional, for AI features)
@@ -58,8 +84,11 @@ docs/               - Project documentation
 - Build: `npm run build`
 - Start: `npm start`
 
-## Recent Changes
-- Configured for Replit environment (port 5000, allowed dev origins)
-- Redesigned landing page sections: BentoFeatures (image-heavy bento grid), Workflow (alternating image+text), StudioShowcase (masonry image gallery), Testimonials (glass-morphism cards), PricingPreview (ethereal aesthetic), FinalCTA (split layout with dashboard image), Footer (dark with subtle glow effects)
-- Generated AI showcase images for landing page (product discovery, AI studio, fulfillment dashboards, product photography)
-- Added PricingPreview to main page.tsx
+## Recent Changes (Feb 2026)
+- **Migrated from Supabase to Replit PostgreSQL**: 18 tables, all data imported
+- **Custom JWT auth system**: Replaced Supabase Auth with bcrypt + JWT cookies
+- **Simplified middleware**: JWT-only verification, no database calls
+- **Fixed all API routes**: Removed all direct `@supabase/supabase-js` imports
+- **Responsive landing page**: Mobile hamburger menu, responsive Hero section
+- **SEO metadata**: Added to landing page
+- **Fixed footer links**: Anchor links to landing page sections

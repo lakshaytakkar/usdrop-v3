@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { hashPassword } from '@/lib/auth'
+import sql from '@/lib/db'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 
-// GET /api/admin/external-users/[id] - Get a single external user
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,7 +36,6 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Use helper to map response
     const user = mapExternalUserFromDB(data)
 
     return NextResponse.json(user)
@@ -46,7 +45,6 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/external-users/[id] - Update an external user
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -70,7 +68,6 @@ export async function PATCH(
       password,
     } = body
 
-    // Build update object with only provided fields
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     }
@@ -105,33 +102,11 @@ export async function PATCH(
       updates.trial_ends_at = trialEndsAt ? new Date(trialEndsAt).toISOString() : null
     }
 
-    // Handle password update separately if provided
     if (password !== undefined && password.trim() !== '') {
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        }
-      )
-      
-      const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(id, {
-        password: password
-      })
-
-      if (passwordError) {
-        console.error('Error updating password:', passwordError)
-        return NextResponse.json(
-          { error: 'Failed to update password: ' + passwordError.message },
-          { status: 500 }
-        )
-      }
+      const passwordHash = await hashPassword(password)
+      await sql`UPDATE profiles SET password_hash = ${passwordHash} WHERE id = ${id}`
     }
 
-    // Validate subscription dates
     if (updates.subscription_started_at && updates.subscription_ends_at) {
       const startDate = new Date(updates.subscription_started_at as string)
       const endDate = new Date(updates.subscription_ends_at as string)
@@ -143,7 +118,6 @@ export async function PATCH(
       }
     }
 
-    // Handle plan change
     if (plan !== undefined) {
       const { data: planData, error: planError } = await supabaseAdmin
         .from('subscription_plans')
@@ -168,7 +142,6 @@ export async function PATCH(
       
       updates.subscription_plan_id = planData.id
 
-      // Auto-calculate trial end date if trial is enabled and plan has trial days
       if (isTrial !== undefined && isTrial && planData.trial_days > 0) {
         const startDate = updates.subscription_started_at 
           ? new Date(updates.subscription_started_at as string)
@@ -211,7 +184,6 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Use helper to map response
     const user = mapExternalUserFromDB(data)
 
     return NextResponse.json(user)
@@ -221,7 +193,6 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/external-users/[id] - Delete an external user
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -246,4 +217,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

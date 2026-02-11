@@ -1,25 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 import { validatePhoneNumber } from '@/lib/utils/onboarding'
+import sql from '@/lib/db'
 
 export async function POST(request: Request) {
   try {
     const { phone_number, ecommerce_experience, preferred_niche } = await request.json()
 
-    const supabase = await createClient()
+    const user = await getCurrentUser()
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      console.error('User authentication error:', userError)
+    if (!user) {
+      console.error('User authentication error: not authenticated')
       return NextResponse.json(
         { error: 'Unauthorized. Please sign in first.' },
         { status: 401 }
       )
     }
 
-    // Validate required fields
     if (!phone_number) {
       return NextResponse.json(
         { error: 'Phone number is required' },
@@ -41,7 +38,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate phone number
     const phoneValidation = validatePhoneNumber(phone_number)
     if (!phoneValidation.valid) {
       return NextResponse.json(
@@ -50,7 +46,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate ecommerce experience
     const validExperiences = ['none', 'beginner', 'intermediate', 'advanced', 'expert']
     if (!validExperiences.includes(ecommerce_experience)) {
       return NextResponse.json(
@@ -59,7 +54,6 @@ export async function POST(request: Request) {
       )
     }
 
-    // Validate preferred niche
     const validNiches = ['fashion', 'electronics', 'home-garden', 'health-beauty', 'sports', 'toys-games', 'automotive', 'pet-supplies', 'food-beverage', 'other']
     if (!validNiches.includes(preferred_niche)) {
       return NextResponse.json(
@@ -68,72 +62,22 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if profile exists first
-    const { data: existingProfile, error: fetchError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
+    const existingProfile = await sql`SELECT id FROM profiles WHERE id = ${user.id} LIMIT 1`
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      // PGRST116 is "not found" error
-      console.error('Error fetching profile:', fetchError)
-      return NextResponse.json(
-        { error: 'Profile not found. Please contact support.' },
-        { status: 404 }
-      )
-    }
-
-    // If profile doesn't exist, create it first
-    if (!existingProfile) {
-      const { error: createError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email || '',
-          status: 'active',
-          account_type: 'free',
-          phone_number,
-          ecommerce_experience,
-          preferred_niche,
-          // Note: onboarding_completed is NOT set here - it's controlled by video onboarding completion
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-
-      if (createError) {
-        console.error('Error creating profile:', createError)
-        return NextResponse.json(
-          { error: `Failed to create profile: ${createError.message}` },
-          { status: 500 }
-        )
-      }
+    if (existingProfile.length === 0) {
+      await sql`
+        INSERT INTO profiles (id, email, status, account_type, phone_number, ecommerce_experience, preferred_niche, created_at, updated_at)
+        VALUES (${user.id}, ${user.email}, 'active', 'free', ${phone_number}, ${ecommerce_experience}, ${preferred_niche}, NOW(), NOW())
+      `
     } else {
-      // Update existing profile with onboarding data
-      // Note: onboarding_completed is NOT set here - it's controlled by video onboarding completion
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          phone_number,
-          ecommerce_experience,
-          preferred_niche,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id)
-
-      if (updateError) {
-        console.error('Error updating profile with onboarding data:', updateError)
-        console.error('Update error details:', {
-          code: updateError.code,
-          message: updateError.message,
-          details: updateError.details,
-          hint: updateError.hint,
-        })
-        return NextResponse.json(
-          { error: `Failed to save onboarding data: ${updateError.message || 'Database error'}` },
-          { status: 500 }
-        )
-      }
+      await sql`
+        UPDATE profiles
+        SET phone_number = ${phone_number},
+            ecommerce_experience = ${ecommerce_experience},
+            preferred_niche = ${preferred_niche},
+            updated_at = NOW()
+        WHERE id = ${user.id}
+      `
     }
 
     return NextResponse.json({
@@ -149,4 +93,3 @@ export async function POST(request: Request) {
     )
   }
 }
-

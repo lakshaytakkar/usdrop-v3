@@ -24,7 +24,7 @@ export function ResetPasswordForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const { session, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showSuccess, showError } = useToast()
   
   const [password, setPassword] = useState("")
@@ -43,12 +43,12 @@ export function ResetPasswordForm({
 
   useEffect(() => {
     // If no session after loading, user didn't come from email link
-    if (!authLoading && !session) {
+    if (!authLoading && !user) {
       setErrors({ 
         token: "No active reset session found. Please click the password reset link from your email." 
       })
     }
-  }, [session, authLoading])
+  }, [user, authLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -116,7 +116,7 @@ export function ResetPasswordForm({
     )
   }
 
-  if (errors.token || !session) {
+  if (errors.token || !user) {
     return (
       <Card className={cn("w-full max-w-md", className)} {...props}>
         <CardContent className="p-6 md:p-8">

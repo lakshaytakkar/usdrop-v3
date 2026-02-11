@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
 import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
 
-// GET /api/admin/shopify-stores - List all stores with user relationship
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -14,18 +12,6 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
-
-    // Use service role for admin access
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
 
     let query = supabaseAdmin
       .from('shopify_stores')
@@ -38,7 +24,6 @@ export async function GET(request: NextRequest) {
         )
       `)
 
-    // Apply filters
     if (status) {
       query = query.eq('status', status)
     }
@@ -51,10 +36,8 @@ export async function GET(request: NextRequest) {
       query = query.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
     }
 
-    // Apply sorting
     query = query.order(sortBy, { ascending: sortOrder === 'asc' })
 
-    // Apply pagination
     const from = (page - 1) * pageSize
     const to = from + pageSize - 1
     query = query.range(from, to)
@@ -76,10 +59,8 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Transform to match ShopifyStore interface using helper
-    const stores = data.map((store) => mapShopifyStoreFromDB(store))
+    const stores = data.map((store: any) => mapShopifyStoreFromDB(store))
 
-    // Get total count for pagination
     let countQuery = supabaseAdmin
       .from('shopify_stores')
       .select('*', { count: 'exact', head: true })
@@ -108,4 +89,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

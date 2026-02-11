@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { Header } from "@/app/(marketing)/components/Header"
 import { Hero } from "@/app/(marketing)/components/Hero"
 import { LogoMarquee } from "@/app/(marketing)/components/LogoMarquee"
@@ -9,6 +10,16 @@ import { Testimonials } from "@/app/(marketing)/components/Testimonials"
 import { PricingPreview } from "@/app/(marketing)/components/PricingPreview"
 import { FinalCTA } from "@/app/(marketing)/components/FinalCTA"
 import { Footer } from "@/app/(marketing)/components/Footer"
+
+export const metadata: Metadata = {
+  title: 'USDrop AI - All-in-One AI-Powered Dropshipping Platform',
+  description: 'Discover winning products, create stunning ads, and automate fulfillment with AI. The #1 platform for dropshipping sellers.',
+  openGraph: {
+    title: 'USDrop AI - All-in-One AI-Powered Dropshipping Platform',
+    description: 'Discover winning products, create stunning ads, and automate fulfillment with AI.',
+    type: 'website',
+  },
+}
 
 export default function HomePage() {
   return (

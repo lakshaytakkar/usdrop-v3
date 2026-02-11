@@ -1,66 +1,45 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { getCurrentUser, getUserWithPlan } from '@/lib/auth'
+import sql from '@/lib/db'
 import { UserMetadataApiResponse } from '@/types/user-metadata'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Get user profile with subscription plan information
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select(`
-        id,
-        email,
-        full_name,
-        username,
-        avatar_url,
-        internal_role,
-        subscription_plan_id,
-        account_type,
-        status,
-        onboarding_completed,
-        subscription_status,
-        subscription_plans (
-          slug,
-          name
-        )
-      `)
-      .eq('id', user.id)
-      .single()
+    const result = await sql`
+      SELECT p.id, p.email, p.full_name, p.username, p.avatar_url,
+             p.internal_role, p.subscription_plan_id, p.account_type,
+             p.status, p.onboarding_completed, p.subscription_status,
+             sp.slug as plan_slug, sp.name as plan_name
+      FROM profiles p
+      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
+      WHERE p.id = ${user.id}
+      LIMIT 1
+    `
 
-    if (profileError) {
-      console.error('Error fetching profile:', profileError)
+    if (result.length === 0) {
       return NextResponse.json(
         { error: 'Failed to fetch profile' },
         { status: 500 }
       )
     }
 
-    // Determine plan: subscription_plans.slug → account_type → 'free'
-    const subscriptionPlanData = profile.subscription_plans as unknown
-    const subscriptionPlan = Array.isArray(subscriptionPlanData)
-      ? subscriptionPlanData[0] as { slug: string; name: string } | undefined
-      : subscriptionPlanData as { slug: string; name: string } | null
+    const profile = result[0]
 
-    const plan = subscriptionPlan?.slug || profile.account_type || 'free'
-    const planName = subscriptionPlan?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
+    const plan = profile.plan_slug || profile.account_type || 'free'
+    const planName = profile.plan_name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
 
-    // Determine user type
     const isInternal = profile.internal_role !== null && profile.internal_role !== undefined
     const isExternal = !isInternal
 
-    // Build response
     const response: UserMetadataApiResponse = {
       id: profile.id,
       email: profile.email,
@@ -86,4 +65,3 @@ export async function GET() {
     )
   }
 }
-
