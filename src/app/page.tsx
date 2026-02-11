@@ -6,6 +6,7 @@ import { BentoFeatures } from "@/app/(marketing)/components/BentoFeatures"
 import { Workflow } from "@/app/(marketing)/components/Workflow"
 import { StudioShowcase } from "@/app/(marketing)/components/StudioShowcase"
 import { Testimonials } from "@/app/(marketing)/components/Testimonials"
+import { PricingPreview } from "@/app/(marketing)/components/PricingPreview"
 import { FinalCTA } from "@/app/(marketing)/components/FinalCTA"
 import { Footer } from "@/app/(marketing)/components/Footer"
 
@@ -26,6 +27,7 @@ export default function HomePage() {
       <Workflow />
       <StudioShowcase />
       <Testimonials />
+      <PricingPreview />
       <FinalCTA />
       <Footer />
     </div>

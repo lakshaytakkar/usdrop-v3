@@ -1,103 +1,117 @@
 "use client"
 
+import Image from "next/image"
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
-import { MotionCard } from "@/components/motion/MotionCard"
 import { DISTANCE, DURATION } from "@/lib/motion"
-import Link from "next/link"
-import { ArrowRight, Search, Sparkles, Package } from "lucide-react"
+import { EtherealBackground } from "./EtherealBackground"
 
 const features = [
   {
-    title: "AI Research",
-    description: "Find Winners",
-    icon: Search,
-    bullets: [
-      "Product Intelligence Scanner",
-      "Competitor Store Analysis",
-      "Trend Detection",
-    ],
-    href: "/research",
-    gradient: "from-blue-500 to-cyan-500",
+    id: 1,
+    title: "AI Product Research",
+    subtitle: "Find Winners Before They Trend",
+    description: "AI scans thousands of products across marketplaces to identify trending winners with profit potential.",
+    image: "/images/landing/features-product-discovery.png",
+    span: "md:col-span-2",
+    rowSpan: "md:row-span-1",
   },
   {
-    title: "AI Studio",
-    description: "Create Content",
-    icon: Sparkles,
-    bullets: [
-      "Apparel Studio (Virtual Try-On)",
-      "Product Studio (Scene Generator)",
-      "Ad Creator (Creative Generator)",
-    ],
-    href: "/studio",
-    gradient: "from-purple-500 to-pink-500",
+    id: 2,
+    title: "AI Creative Studio",
+    subtitle: "Studio-Quality Content in Seconds",
+    description: "Generate professional product photos, model try-ons, and ad creatives without expensive photoshoots.",
+    image: "/images/landing/features-ai-studio.png",
+    span: "md:col-span-1",
+    rowSpan: "md:row-span-1",
   },
   {
-    title: "AI Fulfillment",
-    description: "Ship Products",
-    icon: Package,
-    bullets: [
-      "Verified Supplier Network",
-      "Auto Order Processing",
-      "Real-time Tracking",
-    ],
-    href: "/fulfillment",
-    gradient: "from-green-500 to-emerald-500",
+    id: 3,
+    title: "Smart Fulfillment",
+    subtitle: "Automated From Order to Doorstep",
+    description: "Connect with verified US suppliers, auto-process orders, and provide real-time tracking.",
+    image: "/images/landing/features-fulfillment.png",
+    span: "md:col-span-1",
+    rowSpan: "md:row-span-1",
   },
 ]
 
 export function BentoFeatures() {
   return (
-    <section className="py-16 lg:py-24 bg-white relative overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section className="relative py-16 lg:py-24 overflow-hidden">
+      <div className="absolute inset-0 bg-[rgba(255,255,255,0.4)] backdrop-blur-[1px]" />
+      
+      <EtherealBackground />
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
           <div className="text-center mb-16 max-w-[886px] mx-auto">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight mb-4">
               Everything You Need in One Platform
             </h2>
             <p className="text-[16px] text-[#555555] leading-[22px] max-w-[580px] mx-auto">
-              Three powerful modules working together to streamline your entire dropshipping workflow
+              Three powerful AI modules working together to streamline your entire dropshipping workflow
             </p>
           </div>
         </MotionFadeIn>
 
-        <div className="grid md:grid-cols-6 gap-4 max-w-[1024px] mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[1200px] mx-auto">
           {features.map((feature, index) => (
             <MotionFadeIn
-              key={feature.title}
+              key={feature.id}
               direction="up"
               distance={DISTANCE.lg}
               delay={index * 0.1}
               duration={DURATION.slow}
+              className={`${feature.span}`}
             >
-              <MotionCard
-                hoverLift={false}
-                hoverShadow={false}
-                hoverScale={1}
-                className={`h-full p-6 lg:p-7 bg-white rounded-[16px] border border-slate-200 ${
-                  index === 0 ? "md:col-span-3 lg:col-span-2" : index === 1 ? "md:col-span-3 lg:col-span-2" : "md:col-span-6 lg:col-span-2"
-                }`}
-              >
-                <div className={`w-12 h-12 rounded-[12px] bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-6`}>
-                  <feature.icon className="h-6 w-6 text-white" />
+              {index === 0 ? (
+                <div className="h-full bg-[rgba(255,255,255,0.6)] backdrop-blur-xl rounded-[16px] border border-[rgba(255,255,255,0.7)] overflow-hidden hover:bg-[rgba(255,255,255,0.7)] transition-all duration-300 flex flex-col md:flex-row">
+                  <div className="p-6 lg:p-8 flex-1 flex flex-col justify-center">
+                    <h3 className="text-2xl lg:text-3xl font-medium text-black tracking-[-0.04em] mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-lg lg:text-xl font-medium text-black tracking-[-0.04em] mb-4">
+                      {feature.subtitle}
+                    </p>
+                    <p className="text-[16px] text-[#555555] leading-[22px]">
+                      {feature.description}
+                    </p>
+                  </div>
+                  <div className="relative w-full md:w-1/2 h-64 md:h-auto md:min-h-[320px] flex-shrink-0">
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority={index === 0}
+                    />
+                  </div>
                 </div>
-                <h3 className="text-2xl font-medium text-black mb-2">{feature.title}</h3>
-                <p className="text-[16px] text-[#555555] leading-[22px] mb-6">{feature.description}</p>
-                <ul className="space-y-2 mb-8">
-                  {feature.bullets.map((bullet, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[16px] text-[#555555]">
-                      <span className="bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent mt-1">•</span>
-                      <span className="leading-[22px]">{bullet}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={feature.href}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:gap-3 transition-all"
-                >
-                  Learn More
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </MotionCard>
+              ) : (
+                <div className="h-full bg-[rgba(255,255,255,0.6)] backdrop-blur-xl rounded-[16px] border border-[rgba(255,255,255,0.7)] overflow-hidden hover:bg-[rgba(255,255,255,0.7)] transition-all duration-300 flex flex-col">
+                  <div className="relative w-full h-56 md:h-64 flex-shrink-0">
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </div>
+                  <div className="p-6 lg:p-7 flex flex-col flex-1">
+                    <h3 className="text-xl lg:text-2xl font-medium text-black tracking-[-0.04em] mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-lg font-medium text-black tracking-[-0.04em] mb-3">
+                      {feature.subtitle}
+                    </p>
+                    <p className="text-[16px] text-[#555555] leading-[22px]">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              )}
             </MotionFadeIn>
           ))}
         </div>
@@ -105,5 +119,3 @@ export function BentoFeatures() {
     </section>
   )
 }
-
-
