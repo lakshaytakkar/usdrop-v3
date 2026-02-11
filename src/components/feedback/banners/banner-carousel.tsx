@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { DURATION, EASING } from "@/lib/motion"
+import Image from "next/image"
+import { getAssetUrl } from "@/lib/utils/storage-url"
 
 interface BannerCarouselProps {
   children: React.ReactNode | React.ReactNode[]
@@ -112,36 +114,48 @@ export function ChristmasBanner() {
         <div className="relative w-full h-full flex items-center justify-end pr-4">
           {/* Christmas icons */}
           <div className="flex items-center gap-2">
-            <img
-              src="/christmas-icons/Object 01.png"
-              alt="Christmas icon 1"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
-              style={{
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-              }}
-            />
-            <img
-              src="/christmas-icons/Object 02.png"
-              alt="Christmas icon 2"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
-              style={{
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-              }}
-            />
-            <img
-              src="/christmas-icons/Object 03.png"
-              alt="Christmas icon 3"
-              width={96}
-              height={96}
-              className="w-24 h-24 object-contain transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer"
-              style={{
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-              }}
-            />
+            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+              <Image
+                src={getAssetUrl("/christmas-icons/Object 01.png")}
+                alt="Christmas icon 1"
+                width={96}
+                height={96}
+                className="object-contain"
+                style={{
+                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+                }}
+                loading="lazy"
+                quality={85}
+              />
+            </div>
+            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+              <Image
+                src={getAssetUrl("/christmas-icons/Object 02.png")}
+                alt="Christmas icon 2"
+                width={96}
+                height={96}
+                className="object-contain"
+                style={{
+                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+                }}
+                loading="lazy"
+                quality={85}
+              />
+            </div>
+            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+              <Image
+                src={getAssetUrl("/christmas-icons/Object 03.png")}
+                alt="Christmas icon 3"
+                width={96}
+                height={96}
+                className="object-contain"
+                style={{
+                  filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
+                }}
+                loading="lazy"
+                quality={85}
+              />
+            </div>
           </div>
         </div>
       </div>

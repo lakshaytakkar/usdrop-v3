@@ -166,22 +166,22 @@ async function researchProductWithRetry(product: Product, retryCount = 0): Promi
       category: product.category?.name || product.category?.slug,
     })
 
-    // Save to database (strip category_suggestion before upsert)
+    // Save to database (extract only valid columns)
     const anyData = researchData as any
     const categorySuggestion = anyData?.category_suggestion as
       | { slug?: string; name?: string; confidence?: number }
       | undefined
 
-    if (anyData && "category_suggestion" in anyData) {
-      delete anyData.category_suggestion
-    }
-
-    // Save to database
+    // Save to database - explicitly map only valid columns
     const { error: saveError } = await supabase
       .from('product_research')
       .upsert({
         product_id: product.id,
-        ...anyData,
+        competitor_pricing: anyData?.competitor_pricing || null,
+        seasonal_demand: anyData?.seasonal_demand || null,
+        audience_targeting: anyData?.audience_targeting || null,
+        supplier_notes: anyData?.supplier_notes || null,
+        social_proof: anyData?.social_proof || null,
         research_date: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }, {

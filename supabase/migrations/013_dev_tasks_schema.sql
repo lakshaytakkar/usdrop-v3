@@ -332,3 +332,5 @@ COMMENT ON TABLE dev_task_comments IS 'Comments and activity logs for developmen
 COMMENT ON TABLE dev_task_history IS 'Change history tracking for development tasks';
 
 
+
+

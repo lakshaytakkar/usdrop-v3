@@ -12,6 +12,8 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import Image from "next/image"
+import { getAssetUrl } from "@/lib/utils/storage-url"
 
 // Transform API category to local format
 type LocalCategory = {
@@ -126,13 +128,17 @@ function CategoriesPageContent() {
               {/* Content */}
               <div className="relative z-10 flex items-center gap-4 h-full">
               {/* 3D Thumbnail */}
-              <img
-                src="/3d-characters-ecom/shopping.png"
-                alt="Categories"
-                width={110}
-                height={110}
-                className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
-              />
+              <div className="relative w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0">
+                <Image
+                  src={getAssetUrl("/3d-characters-ecom/shopping.png")}
+                  alt="Categories"
+                  width={110}
+                  height={110}
+                  className="object-contain"
+                  loading="lazy"
+                  quality={85}
+                />
+              </div>
 
                 <div className="flex-1 min-w-0">
                   <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Categories</h2>

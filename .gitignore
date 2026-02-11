@@ -91,3 +91,6 @@ nul
 # Archive folders (archived data files and unused assets)
 _archive/
 _assets_archive/
+
+# Credentials
+USER_CREDENTIALS.md
