@@ -17,6 +17,7 @@ import { TrendingUp, DollarSign, Star, SlidersHorizontal, ArrowUpDown, X, Trendi
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 // Local types
 export type ProductCategory = 
   | "all"
@@ -338,6 +339,7 @@ export default function WinningProductsPage() {
         <AppSidebar />
         <SidebarInset>
           <Topbar />
+          <ProPageWrapper featureName="Winning Products" featureDescription="Access curated winning products with profit margins, supplier data, and market analysis">
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-yellow-900 via-amber-950 to-yellow-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -744,6 +746,7 @@ export default function WinningProductsPage() {
               />
             )}
           </div>
+          </ProPageWrapper>
         </SidebarInset>
       </SidebarProvider>
 

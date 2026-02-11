@@ -8,6 +8,7 @@ import { UserPlanProvider } from "@/contexts/user-plan-context";
 import { OnboardingProvider } from "@/contexts/onboarding-context";
 import { Toaster } from "@/components/ui/toast";
 import { ReactQueryProvider } from "@/contexts/react-query-provider";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,7 +52,9 @@ export default function RootLayout({
             <UnifiedUserProvider>
               <UserPlanProvider>
                 <OnboardingProvider>
-                  {children}
+                  <ErrorBoundary>
+                    {children}
+                  </ErrorBoundary>
                   <Toaster />
                 </OnboardingProvider>
               </UserPlanProvider>

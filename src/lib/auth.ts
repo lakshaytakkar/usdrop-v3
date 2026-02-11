@@ -32,12 +32,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function generateToken(userId: string): string {
+  if (!JWT_SECRET) throw new Error('SESSION_SECRET not configured')
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: TOKEN_EXPIRY })
 }
 
 export function verifyToken(token: string): { userId: string } | null {
+  if (!JWT_SECRET) return null
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string }
+    return jwt.verify(token, JWT_SECRET) as unknown as { userId: string }
   } catch {
     return null
   }

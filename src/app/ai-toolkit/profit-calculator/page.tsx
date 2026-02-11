@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ProfitCalculator } from "@/components/ai-tools/profit-calculator"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function ProfitCalculatorPage() {
   return (
@@ -14,6 +15,7 @@ export default function ProfitCalculatorPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Profit Calculator" featureDescription="Calculate product profit margins, ROI, and break-even points">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-green-950 to-emerald-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -94,6 +96,7 @@ export default function ProfitCalculatorPage() {
           <ProfitCalculator />
           <OnboardingProgressOverlay pageName="Profit Calculator" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

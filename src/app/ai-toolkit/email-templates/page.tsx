@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { EmailTemplates } from "@/components/ai-tools/email-templates"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function EmailTemplatesPage() {
   return (
@@ -14,6 +15,7 @@ export default function EmailTemplatesPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Email Templates" featureDescription="Generate professional email templates for your e-commerce business">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-900 via-emerald-950 to-teal-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -86,6 +88,7 @@ export default function EmailTemplatesPage() {
           <EmailTemplates />
           <OnboardingProgressOverlay pageName="Email Templates" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

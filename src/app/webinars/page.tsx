@@ -13,6 +13,7 @@ import { Webinar, sampleWebinars } from "./data/webinars"
 import { WebinarModal } from "./components/webinar-modal"
 import { WebinarEventList } from "./components/webinar-event-list"
 import { cn } from "@/lib/utils"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function WebinarsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
@@ -90,6 +91,7 @@ export default function WebinarsPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Webinars" featureDescription="Watch expert-led webinars on dropshipping strategies and e-commerce growth">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-blue-500 p-3 text-white h-[154px] flex-shrink-0">
@@ -223,6 +225,7 @@ export default function WebinarsPage() {
             </div>
           </div>
         </div>
+        </ProPageWrapper>
       </SidebarInset>
 
       {/* Webinar Modal */}

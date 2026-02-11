@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ModelStudio } from "@/components/ai-tools/model-studio"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function ModelStudioPage() {
   return (
@@ -14,6 +15,7 @@ export default function ModelStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Model Studio" featureDescription="Generate professional model photos for your products using AI">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-900 via-rose-950 to-pink-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -94,6 +96,7 @@ export default function ModelStudioPage() {
           <ModelStudio />
           <OnboardingProgressOverlay pageName="Model Studio" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

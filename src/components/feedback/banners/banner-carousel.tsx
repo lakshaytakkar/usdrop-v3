@@ -6,7 +6,6 @@ import { ArrowRight } from "lucide-react"
 import { motion, AnimatePresence } from "motion/react"
 import { DURATION, EASING } from "@/lib/motion"
 import Image from "next/image"
-import { getAssetUrl } from "@/lib/utils/storage-url"
 
 interface BannerCarouselProps {
   children: React.ReactNode | React.ReactNode[]
@@ -116,7 +115,7 @@ export function ChristmasBanner() {
           <div className="flex items-center gap-2">
             <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
               <Image
-                src={getAssetUrl("/christmas-icons/Object 01.png")}
+                src="/christmas-icons/Object 01.png"
                 alt="Christmas icon 1"
                 width={96}
                 height={96}
@@ -130,7 +129,7 @@ export function ChristmasBanner() {
             </div>
             <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
               <Image
-                src={getAssetUrl("/christmas-icons/Object 02.png")}
+                src="/christmas-icons/Object 02.png"
                 alt="Christmas icon 2"
                 width={96}
                 height={96}
@@ -144,7 +143,7 @@ export function ChristmasBanner() {
             </div>
             <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
               <Image
-                src={getAssetUrl("/christmas-icons/Object 03.png")}
+                src="/christmas-icons/Object 03.png"
                 alt="Christmas icon 3"
                 width={96}
                 height={96}

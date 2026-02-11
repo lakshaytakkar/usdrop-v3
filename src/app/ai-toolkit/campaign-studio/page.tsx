@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { CampaignStudio } from "@/components/ai-tools/campaign-studio"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function CampaignStudioPage() {
 
@@ -15,6 +16,7 @@ export default function CampaignStudioPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Campaign Studio" featureDescription="Plan and manage your advertising campaigns">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Blurred background content */}
           <div className="blur-sm pointer-events-none select-none">
@@ -93,6 +95,7 @@ export default function CampaignStudioPage() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Campaign Studio" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

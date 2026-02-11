@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
 import Link from "next/link"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function FulfillmentPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       <Header />
       
+      <ProPageWrapper featureName="Fulfillment Center" featureDescription="Track orders, manage inventory, and handle fulfillment logistics">
       <main className="pt-20">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
@@ -208,6 +210,7 @@ export default function FulfillmentPage() {
 
       </main>
 
+      </ProPageWrapper>
       <Footer />
     </div>
   )

@@ -19,6 +19,7 @@ import { Search, Users, HelpCircle } from "lucide-react"
 import { SupplierCard } from "./components/supplier-card"
 import { Supplier, sampleSuppliers } from "./data/suppliers"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function SuppliersPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -61,6 +62,7 @@ export default function SuppliersPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Private Suppliers" featureDescription="Connect with verified private suppliers for better margins and faster shipping">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -187,6 +189,7 @@ export default function SuppliersPage() {
           )}
           <OnboardingProgressOverlay pageName="Private Suppliers" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

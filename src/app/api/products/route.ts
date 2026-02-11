@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { ProductsQueryParams, ProductsResponse } from '@/types/products'
 
 export async function GET(request: NextRequest) {
@@ -15,206 +16,177 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    // First, get product IDs that match filters from related tables
-    let productIds: string[] | null = null
+    const whereClauses: string[] = []
+    const values: any[] = []
+    let paramIndex = 0
 
     if (sourceType) {
-      const { data: sourceData } = await supabaseAdmin
-        .from('product_source')
-        .select('product_id')
-        .eq('source_type', sourceType)
-      productIds = sourceData?.map(s => s.product_id) || []
-      if (productIds.length === 0) {
-        return NextResponse.json({
-          products: [],
-          total: 0,
-          page,
-          pageSize,
-          totalPages: 0,
-        })
-      }
+      paramIndex++
+      whereClauses.push(`ps.source_type = $${paramIndex}`)
+      values.push(sourceType)
     }
 
-    if (isWinning !== null) {
-      const { data: metadataData } = await supabaseAdmin
-        .from('product_metadata')
-        .select('product_id')
-        .eq('is_winning', isWinning === 'true')
-      const winningIds = metadataData?.map(m => m.product_id) || []
-      if (productIds) {
-        productIds = productIds.filter(id => winningIds.includes(id))
-      } else {
-        productIds = winningIds
-      }
-      if (productIds.length === 0) {
-        return NextResponse.json({
-          products: [],
-          total: 0,
-          page,
-          pageSize,
-          totalPages: 0,
-        })
-      }
+    if (isWinning !== null && isWinning !== undefined) {
+      paramIndex++
+      whereClauses.push(`pm.is_winning = $${paramIndex}`)
+      values.push(isWinning === 'true')
     }
 
-    if (isLocked !== null) {
-      const { data: metadataData } = await supabaseAdmin
-        .from('product_metadata')
-        .select('product_id')
-        .eq('is_locked', isLocked === 'true')
-      const lockedIds = metadataData?.map(m => m.product_id) || []
-      if (productIds) {
-        productIds = productIds.filter(id => lockedIds.includes(id))
-      } else {
-        productIds = lockedIds
-      }
-      if (productIds.length === 0) {
-        return NextResponse.json({
-          products: [],
-          total: 0,
-          page,
-          pageSize,
-          totalPages: 0,
-        })
-      }
-    }
-
-    // Build query
-    let query = supabaseAdmin
-      .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        supplier:suppliers(*),
-        metadata:product_metadata(*),
-        source:product_source(*)
-      `)
-
-    // Apply filters
-    if (productIds) {
-      query = query.in('id', productIds)
+    if (isLocked !== null && isLocked !== undefined) {
+      paramIndex++
+      whereClauses.push(`pm.is_locked = $${paramIndex}`)
+      values.push(isLocked === 'true')
     }
 
     if (categoryId) {
-      query = query.eq('category_id', categoryId)
+      paramIndex++
+      whereClauses.push(`p.category_id = $${paramIndex}`)
+      values.push(categoryId)
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+      paramIndex++
+      const searchParam = `%${search}%`
+      whereClauses.push(`(p.title ILIKE $${paramIndex} OR p.description ILIKE $${paramIndex})`)
+      values.push(searchParam)
     }
 
-    // Get total count for pagination (before pagination)
-    let countQuery = supabaseAdmin
-      .from('products')
-      .select('*', { count: 'exact', head: true })
-    
-    if (productIds) {
-      countQuery = countQuery.in('id', productIds)
-    }
-    if (categoryId) {
-      countQuery = countQuery.eq('category_id', categoryId)
-    }
-    if (search) {
-      countQuery = countQuery.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
-    }
+    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
 
-    const { count } = await countQuery
+    const orderColumn = sortBy === 'profit_per_order' ? 'p.profit_per_order' :
+                       sortBy === 'sell_price' ? 'p.sell_price' :
+                       sortBy === 'rating' ? 'p.rating' :
+                       'p.created_at'
+    const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC'
 
-    // Apply sorting
-    const orderColumn = sortBy === 'profit_per_order' ? 'profit_per_order' :
-                       sortBy === 'sell_price' ? 'sell_price' :
-                       sortBy === 'rating' ? 'rating' :
-                       'created_at'
-    
-    query = query.order(orderColumn, { ascending: sortOrder === 'asc' })
+    const countQuery = `
+      SELECT COUNT(*) as count
+      FROM products p
+      LEFT JOIN product_metadata pm ON pm.product_id = p.id
+      LEFT JOIN product_source ps ON ps.product_id = p.id
+      ${whereSQL}
+    `
+    const countResult = await sql.unsafe(countQuery, values)
+    const total = parseInt(countResult[0]?.count || '0')
 
-    // Apply pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    query = query.range(from, to)
+    const offset = (page - 1) * pageSize
 
-    const { data, error } = await query
+    const dataQuery = `
+      SELECT
+        p.id, p.title, p.image, p.description, p.category_id,
+        p.buy_price, p.sell_price, p.profit_per_order,
+        p.additional_images, p.specifications, p.rating, p.reviews_count,
+        p.trend_data, p.supplier_id, p.created_at, p.updated_at,
+        c.id as cat_id, c.name as cat_name, c.slug as cat_slug,
+        c.description as cat_description, c.image as cat_image,
+        c.thumbnail as cat_thumbnail, c.parent_category_id as cat_parent_category_id,
+        c.trending as cat_trending, c.product_count as cat_product_count,
+        c.avg_profit_margin as cat_avg_profit_margin, c.growth_percentage as cat_growth_percentage,
+        c.created_at as cat_created_at, c.updated_at as cat_updated_at,
+        s.id as sup_id, s.name as sup_name, s.website as sup_website,
+        s.country as sup_country, s.rating as sup_rating, s.verified as sup_verified,
+        s.shipping_time as sup_shipping_time, s.min_order_quantity as sup_min_order_quantity,
+        s.contact_email as sup_contact_email,
+        s.created_at as sup_created_at, s.updated_at as sup_updated_at,
+        pm.id as meta_id, pm.product_id as meta_product_id,
+        pm.is_winning as meta_is_winning, pm.is_locked as meta_is_locked,
+        pm.unlock_price as meta_unlock_price, pm.profit_margin as meta_profit_margin,
+        pm.pot_revenue as meta_pot_revenue, pm.revenue_growth_rate as meta_revenue_growth_rate,
+        pm.items_sold as meta_items_sold, pm.avg_unit_price as meta_avg_unit_price,
+        pm.revenue_trend as meta_revenue_trend, pm.found_date as meta_found_date,
+        pm.detailed_analysis as meta_detailed_analysis, pm.filters as meta_filters,
+        pm.created_at as meta_created_at, pm.updated_at as meta_updated_at,
+        ps.id as src_id, ps.product_id as src_product_id,
+        ps.source_type as src_source_type, ps.source_id as src_source_id,
+        ps.standardized_at as src_standardized_at, ps.standardized_by as src_standardized_by,
+        ps.created_at as src_created_at, ps.updated_at as src_updated_at
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
+      LEFT JOIN product_metadata pm ON pm.product_id = p.id
+      LEFT JOIN product_source ps ON ps.product_id = p.id
+      ${whereSQL}
+      ORDER BY ${orderColumn} ${orderDir}
+      LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
+    `
 
-    if (error) {
-      console.error('Error fetching products:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch products', details: error.message },
-        { status: 500 }
-      )
-    }
+    const data = await sql.unsafe(dataQuery, [...values, pageSize, offset])
 
-    // Transform data to match Product type
-    const products = (data || []).map((product: any) => ({
-      id: product.id,
-      title: product.title,
-      image: product.image,
-      description: product.description,
-      category_id: product.category_id,
-      category: product.category ? {
-        id: product.category.id,
-        name: product.category.name,
-        slug: product.category.slug,
-        description: product.category.description,
-        image: product.category.image,
-        thumbnail: product.category.thumbnail || null,
-        parent_category_id: product.category.parent_category_id,
-        trending: product.category.trending,
-        product_count: product.category.product_count,
-        avg_profit_margin: product.category.avg_profit_margin,
-        growth_percentage: product.category.growth_percentage,
-        created_at: product.category.created_at,
-        updated_at: product.category.updated_at,
+    const products = data.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      image: row.image,
+      description: row.description,
+      category_id: row.category_id,
+      category: row.cat_id ? {
+        id: row.cat_id,
+        name: row.cat_name,
+        slug: row.cat_slug,
+        description: row.cat_description,
+        image: row.cat_image,
+        thumbnail: row.cat_thumbnail || null,
+        parent_category_id: row.cat_parent_category_id,
+        trending: row.cat_trending,
+        product_count: row.cat_product_count,
+        avg_profit_margin: row.cat_avg_profit_margin,
+        growth_percentage: row.cat_growth_percentage,
+        created_at: row.cat_created_at,
+        updated_at: row.cat_updated_at,
       } : undefined,
-      buy_price: parseFloat(product.buy_price),
-      sell_price: parseFloat(product.sell_price),
-      profit_per_order: parseFloat(product.profit_per_order),
-      additional_images: product.additional_images || [],
-      specifications: product.specifications,
-      rating: product.rating ? parseFloat(product.rating) : null,
-      reviews_count: product.reviews_count || 0,
-      trend_data: product.trend_data || [],
-      supplier_id: product.supplier_id,
-      supplier: product.supplier ? {
-        id: product.supplier.id,
-        name: product.supplier.name,
-        company_name: product.supplier.company_name,
-        logo: product.supplier.logo,
-        created_at: product.supplier.created_at,
-        updated_at: product.supplier.updated_at,
+      buy_price: parseFloat(row.buy_price),
+      sell_price: parseFloat(row.sell_price),
+      profit_per_order: parseFloat(row.profit_per_order),
+      additional_images: row.additional_images || [],
+      specifications: row.specifications,
+      rating: row.rating ? parseFloat(row.rating) : null,
+      reviews_count: row.reviews_count || 0,
+      trend_data: row.trend_data || [],
+      supplier_id: row.supplier_id,
+      supplier: row.sup_id ? {
+        id: row.sup_id,
+        name: row.sup_name,
+        website: row.sup_website,
+        country: row.sup_country,
+        rating: row.sup_rating,
+        verified: row.sup_verified,
+        shipping_time: row.sup_shipping_time,
+        min_order_quantity: row.sup_min_order_quantity,
+        contact_email: row.sup_contact_email,
+        created_at: row.sup_created_at,
+        updated_at: row.sup_updated_at,
       } : undefined,
-      created_at: product.created_at,
-      updated_at: product.updated_at,
-      metadata: product.metadata ? {
-        id: product.metadata.id,
-        product_id: product.metadata.product_id,
-        is_winning: product.metadata.is_winning || false,
-        is_locked: product.metadata.is_locked || false,
-        unlock_price: product.metadata.unlock_price ? parseFloat(product.metadata.unlock_price) : null,
-        profit_margin: product.metadata.profit_margin ? parseFloat(product.metadata.profit_margin) : null,
-        pot_revenue: product.metadata.pot_revenue ? parseFloat(product.metadata.pot_revenue) : null,
-        revenue_growth_rate: product.metadata.revenue_growth_rate ? parseFloat(product.metadata.revenue_growth_rate) : null,
-        items_sold: product.metadata.items_sold,
-        avg_unit_price: product.metadata.avg_unit_price ? parseFloat(product.metadata.avg_unit_price) : null,
-        revenue_trend: product.metadata.revenue_trend || [],
-        found_date: product.metadata.found_date,
-        detailed_analysis: product.metadata.detailed_analysis,
-        filters: product.metadata.filters || [],
-        created_at: product.metadata.created_at,
-        updated_at: product.metadata.updated_at,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      metadata: row.meta_id ? {
+        id: row.meta_id,
+        product_id: row.meta_product_id,
+        is_winning: row.meta_is_winning || false,
+        is_locked: row.meta_is_locked || false,
+        unlock_price: row.meta_unlock_price ? parseFloat(row.meta_unlock_price) : null,
+        profit_margin: row.meta_profit_margin ? parseFloat(row.meta_profit_margin) : null,
+        pot_revenue: row.meta_pot_revenue ? parseFloat(row.meta_pot_revenue) : null,
+        revenue_growth_rate: row.meta_revenue_growth_rate ? parseFloat(row.meta_revenue_growth_rate) : null,
+        items_sold: row.meta_items_sold,
+        avg_unit_price: row.meta_avg_unit_price ? parseFloat(row.meta_avg_unit_price) : null,
+        revenue_trend: row.meta_revenue_trend || [],
+        found_date: row.meta_found_date,
+        detailed_analysis: row.meta_detailed_analysis,
+        filters: row.meta_filters || [],
+        created_at: row.meta_created_at,
+        updated_at: row.meta_updated_at,
       } : undefined,
-      source: product.source ? {
-        id: product.source.id,
-        product_id: product.source.product_id,
-        source_type: product.source.source_type,
-        source_id: product.source.source_id,
-        standardized_at: product.source.standardized_at,
-        standardized_by: product.source.standardized_by,
-        created_at: product.source.created_at,
-        updated_at: product.source.updated_at,
+      source: row.src_id ? {
+        id: row.src_id,
+        product_id: row.src_product_id,
+        source_type: row.src_source_type,
+        source_id: row.src_source_id,
+        standardized_at: row.src_standardized_at,
+        standardized_by: row.src_standardized_by,
+        created_at: row.src_created_at,
+        updated_at: row.src_updated_at,
       } : undefined,
     }))
 
-    const total = count || 0
     const totalPages = Math.ceil(total / pageSize)
 
     const response: ProductsResponse = {
@@ -255,7 +227,6 @@ export async function POST(request: NextRequest) {
       source,
     } = body
 
-    // Validate required fields
     if (!title || !image || !buy_price || !sell_price) {
       return NextResponse.json(
         { error: 'Missing required fields: title, image, buy_price, sell_price' },
@@ -263,7 +234,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert product
     const { data: product, error: productError } = await supabaseAdmin
       .from('products')
       .insert({
@@ -291,7 +261,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert metadata if provided
     if (metadata && product) {
       await supabaseAdmin
         .from('product_metadata')
@@ -301,7 +270,6 @@ export async function POST(request: NextRequest) {
         })
     }
 
-    // Insert source if provided
     if (source && product) {
       await supabaseAdmin
         .from('product_source')
@@ -311,25 +279,23 @@ export async function POST(request: NextRequest) {
         })
     }
 
-    // Fetch complete product with relations
-    const { data: completeProduct, error: fetchError } = await supabaseAdmin
-      .from('products')
-      .select(`
-        *,
-        category:categories(*),
-        supplier:suppliers(*),
-        metadata:product_metadata(*),
-        source:product_source(*)
-      `)
-      .eq('id', product.id)
-      .single()
-
-    if (fetchError) {
-      console.error('Error fetching created product:', fetchError)
-    }
+    const completeProduct = await sql`
+      SELECT p.*,
+        c.id as cat_id, c.name as cat_name, c.slug as cat_slug,
+        s.id as sup_id, s.name as sup_name,
+        pm.id as meta_id, pm.is_winning as meta_is_winning,
+        ps.id as src_id, ps.source_type as src_source_type
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
+      LEFT JOIN product_metadata pm ON pm.product_id = p.id
+      LEFT JOIN product_source ps ON ps.product_id = p.id
+      WHERE p.id = ${product.id}
+      LIMIT 1
+    `
 
     return NextResponse.json(
-      { product: completeProduct || product },
+      { product: completeProduct[0] || product },
       { status: 201 }
     )
   } catch (error) {
@@ -340,4 +306,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

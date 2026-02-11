@@ -8,6 +8,7 @@ import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context
 import { SeasonalBanner } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 // Seasonal collections data
 const seasonalCollections = [
@@ -54,6 +55,7 @@ function SeasonalCollectionsPageContent() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Seasonal Collections" featureDescription="Discover seasonal product opportunities and trending collections">
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
@@ -86,6 +88,7 @@ function SeasonalCollectionsPageContent() {
             })}
           </div>
         </div>
+        </ProPageWrapper>
       </SidebarInset>
       
       {/* Upsell Dialog */}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CompetitorStore } from '@/types/competitor-stores'
 
 export async function GET(request: NextRequest) {
@@ -8,68 +8,86 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('category_id')
     const country = searchParams.get('country')
     const search = searchParams.get('search')
-    const verified = searchParams.get('verified') // Default to true for public
+    const verified = searchParams.get('verified')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const sortBy = searchParams.get('sortBy') || 'monthly_revenue'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    let query = supabaseAdmin
-      .from('competitor_stores')
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `, { count: 'exact' })
+    const whereClauses: string[] = []
+    const values: any[] = []
+    let paramIndex = 0
 
-    // Public API: Only show verified stores by default
     const isVerified = verified === null ? true : verified === 'true'
-    query = query.eq('verified', isVerified)
+    paramIndex++
+    whereClauses.push(`cs.verified = $${paramIndex}`)
+    values.push(isVerified)
 
-    // Apply filters
     if (categoryId) {
-      query = query.eq('category_id', categoryId)
+      paramIndex++
+      whereClauses.push(`cs.category_id = $${paramIndex}`)
+      values.push(categoryId)
     }
 
     if (country) {
-      query = query.eq('country', country)
+      paramIndex++
+      whereClauses.push(`cs.country = $${paramIndex}`)
+      values.push(country)
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
+      paramIndex++
+      const searchParam = `%${search}%`
+      whereClauses.push(`(cs.name ILIKE $${paramIndex} OR cs.url ILIKE $${paramIndex})`)
+      values.push(searchParam)
     }
 
-    // Apply sorting
-    const orderColumn = sortBy === 'name' ? 'name' :
-                       sortBy === 'monthly_revenue' ? 'monthly_revenue' :
-                       sortBy === 'monthly_traffic' ? 'monthly_traffic' :
-                       sortBy === 'growth' ? 'growth' :
-                       sortBy === 'rating' ? 'rating' :
-                       'created_at'
+    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
 
-    query = query.order(orderColumn, { ascending: sortOrder === 'asc', nullsFirst: false })
+    const orderColumn = sortBy === 'name' ? 'cs.name' :
+                       sortBy === 'monthly_revenue' ? 'cs.monthly_revenue' :
+                       sortBy === 'monthly_traffic' ? 'cs.monthly_traffic' :
+                       sortBy === 'growth' ? 'cs.growth' :
+                       sortBy === 'rating' ? 'cs.rating' :
+                       'cs.created_at'
+    const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC'
 
-    // Apply pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    query = query.range(from, to)
+    const countQuery = `
+      SELECT COUNT(*) as count
+      FROM competitor_stores cs
+      ${whereSQL}
+    `
+    const countResult = await sql.unsafe(countQuery, values)
+    const totalCount = parseInt(countResult[0]?.count || '0')
 
-    const { data, error, count } = await query
+    const offset = (page - 1) * pageSize
 
-    if (error) {
-      console.error('Error fetching competitor stores:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch competitor stores', details: error.message },
-        { status: 500 }
-      )
-    }
+    const dataQuery = `
+      SELECT
+        cs.id, cs.name, cs.url, cs.logo, cs.category_id, cs.country,
+        cs.monthly_traffic, cs.monthly_revenue, cs.growth, cs.products_count,
+        cs.rating, cs.verified, cs.created_at, cs.updated_at,
+        c.id as cat_id, c.name as cat_name, c.slug as cat_slug
+      FROM competitor_stores cs
+      LEFT JOIN categories c ON cs.category_id = c.id
+      ${whereSQL}
+      ORDER BY ${orderColumn} ${orderDir} NULLS LAST
+      LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
+    `
 
-    const stores: CompetitorStore[] = (data || []).map((item: any) => ({
+    const data = await sql.unsafe(dataQuery, [...values, pageSize, offset])
+
+    const stores: CompetitorStore[] = data.map((item: any) => ({
       id: item.id,
       name: item.name,
       url: item.url,
       logo: item.logo,
       category_id: item.category_id,
-      category: item.category,
+      category: item.cat_id ? {
+        id: item.cat_id,
+        name: item.cat_name,
+        slug: item.cat_slug,
+      } : null,
       country: item.country,
       monthly_traffic: item.monthly_traffic,
       monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
@@ -81,7 +99,7 @@ export async function GET(request: NextRequest) {
       updated_at: item.updated_at,
     }))
 
-    return NextResponse.json({ stores, totalCount: count || 0 }, { status: 200 })
+    return NextResponse.json({ stores, totalCount }, { status: 200 })
   } catch (error: any) {
     console.error('Unexpected error in GET competitor stores:', error)
     return NextResponse.json(
@@ -90,4 +108,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

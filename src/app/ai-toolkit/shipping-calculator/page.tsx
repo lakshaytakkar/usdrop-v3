@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ShippingCalculator } from "@/components/ai-tools/shipping-calculator"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function ShippingCalculatorPage() {
   return (
@@ -14,6 +15,7 @@ export default function ShippingCalculatorPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Shipping Calculator" featureDescription="Calculate shipping costs and delivery times">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-cyan-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -94,6 +96,7 @@ export default function ShippingCalculatorPage() {
           <ShippingCalculator />
           <OnboardingProgressOverlay pageName="Shipping Calculator" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

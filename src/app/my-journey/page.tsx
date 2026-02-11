@@ -11,6 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { cn } from "@/lib/utils";
 import { journeyStages } from "@/data/journey-stages";
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay";
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 import {
   Check,
   ChevronRight,
@@ -79,6 +80,7 @@ export default function MyJourneyPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="My Roadmap" featureDescription="Track your dropshipping journey progress and milestones">
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Header Banner */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 p-4 md:p-6 text-white">
@@ -303,6 +305,7 @@ export default function MyJourneyPage() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="My Roadmap" />
         </div>
+        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   );

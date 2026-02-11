@@ -8,6 +8,7 @@ import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function SellingChannelsPage() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
@@ -18,6 +19,7 @@ export default function SellingChannelsPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        <ProPageWrapper featureName="Selling Channels" featureDescription="Manage and connect multiple selling channels for your products">
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-blue-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -96,6 +98,7 @@ export default function SellingChannelsPage() {
             </div>
           </div>
         </div>
+        </ProPageWrapper>
       </SidebarInset>
       
       {/* Upsell Dialog */}

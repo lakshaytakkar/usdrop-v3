@@ -41,8 +41,10 @@ export function createAdminClient() {
 function createQueryBuilder(table: string) {
   let selectFields = '*'
   let conditions: { column: string; value: any; op: string }[] = []
+  let orConditions: string[] = []
   let orderByField: string | null = null
   let orderDirection: string = 'asc'
+  let nullsFirst: boolean | null = null
   let limitCount: number | null = null
   let offsetCount: number | null = null
   let isSingle = false
@@ -94,15 +96,22 @@ function createQueryBuilder(table: string) {
       conditions.push({ column, value, op: 'IS' })
       return builder
     },
+    or(filterString: string) {
+      orConditions.push(filterString)
+      return builder
+    },
     not(column: string, op: string, value: any) {
       if (op === 'is') {
         conditions.push({ column, value, op: 'IS NOT' })
       }
       return builder
     },
-    order(column: string, opts?: { ascending?: boolean }) {
+    order(column: string, opts?: { ascending?: boolean; nullsFirst?: boolean }) {
       orderByField = column
       orderDirection = opts?.ascending === false ? 'DESC' : 'ASC'
+      if (opts?.nullsFirst !== undefined) {
+        nullsFirst = opts.nullsFirst
+      }
       return builder
     },
     limit(count: number) {
@@ -126,7 +135,7 @@ function createQueryBuilder(table: string) {
     },
     async then(resolve?: Function, reject?: Function) {
       try {
-        const result = await executeQuery(table, selectFields, conditions, orderByField, orderDirection, limitCount, offsetCount, isSingle, isCount)
+        const result = await executeQuery(table, selectFields, conditions, orderByField, orderDirection, limitCount, offsetCount, isSingle, isCount, orConditions, nullsFirst)
         const ret = resolve ? resolve(result) : result
         return ret
       } catch (err: any) {
@@ -155,7 +164,8 @@ async function executeQuery(
   table: string, fields: string, conditions: any[], 
   orderBy: string | null, orderDir: string,
   limit: number | null, offset: number | null,
-  isSingle: boolean, isCount: boolean
+  isSingle: boolean, isCount: boolean,
+  orConditions: string[] = [], nullsFirstOpt: boolean | null = null
 ) {
   let parsedFields = fields
   let joinTable: string | null = null
@@ -181,8 +191,9 @@ async function executeQuery(
   }
 
   const values: any[] = []
+  const whereParts: string[] = []
+  
   if (conditions.length > 0) {
-    const whereParts: string[] = []
     conditions.forEach((cond, i) => {
       const col = cond.column.includes('.') ? cond.column : `${table}.${cond.column}`
       if (cond.op === 'IS' || cond.op === 'IS NOT') {
@@ -196,11 +207,49 @@ async function executeQuery(
         whereParts.push(`${col} ${cond.op} $${values.length}`)
       }
     })
+  }
+
+  if (orConditions.length > 0) {
+    orConditions.forEach(filterStr => {
+      const parts = filterStr.split(',')
+      const orParts: string[] = []
+      parts.forEach(part => {
+        const segments = part.split('.')
+        if (segments.length >= 3) {
+          const col = segments[0].includes('.') ? segments[0] : `${table}.${segments[0]}`
+          const op = segments[1].toLowerCase()
+          const val = segments.slice(2).join('.')
+          if (op === 'ilike') {
+            values.push(val)
+            orParts.push(`${col} ILIKE $${values.length}`)
+          } else if (op === 'eq') {
+            values.push(val)
+            orParts.push(`${col} = $${values.length}`)
+          } else if (op === 'neq') {
+            values.push(val)
+            orParts.push(`${col} != $${values.length}`)
+          } else if (op === 'like') {
+            values.push(val)
+            orParts.push(`${col} LIKE $${values.length}`)
+          }
+        }
+      })
+      if (orParts.length > 0) {
+        whereParts.push(`(${orParts.join(' OR ')})`)
+      }
+    })
+  }
+
+  if (whereParts.length > 0) {
     query += ` WHERE ${whereParts.join(' AND ')}`
   }
 
   if (orderBy) {
-    query += ` ORDER BY ${orderBy} ${orderDir}`
+    let orderSuffix = ''
+    if (nullsFirstOpt !== null) {
+      orderSuffix = nullsFirstOpt ? ' NULLS FIRST' : ' NULLS LAST'
+    }
+    query += ` ORDER BY ${orderBy} ${orderDir}${orderSuffix}`
   }
   if (limit) {
     query += ` LIMIT ${limit}`

@@ -1,14 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['*'],
+  allowedDevOrigins: ['*.replit.dev', '*.replit.app'],
   images: {
-    // Enable image optimization
     formats: ['image/avif', 'image/webp'],
-    // Add device sizes for responsive images
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Minimum quality for optimization
+    qualities: [75, 85],
     minimumCacheTTL: 60,
     // Remote patterns for external images
     remotePatterns: [
