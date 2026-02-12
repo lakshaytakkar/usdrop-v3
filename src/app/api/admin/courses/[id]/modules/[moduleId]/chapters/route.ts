@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { CourseChapter, ChapterContentType } from '@/types/courses'
 import { moveVideoFromTemp } from '@/lib/storage/course-storage'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; moduleId: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id: courseId, moduleId } = await params
     const body = await request.json()
 

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { CompetitorStore } from '@/types/competitor-stores'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const searchParams = request.nextUrl.searchParams
     const categoryId = searchParams.get('category_id')
     const country = searchParams.get('country')
@@ -94,6 +97,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const body = await request.json()
     const {
       name,

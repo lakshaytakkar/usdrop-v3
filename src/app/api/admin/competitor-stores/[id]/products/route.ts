@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { CompetitorStoreProduct } from '@/types/competitor-stores'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
     const { data, error } = await supabaseAdmin
@@ -49,6 +52,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
     const body = await request.json()
     const { product_id } = body
@@ -110,6 +115,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
     const searchParams = request.nextUrl.searchParams
     const productId = searchParams.get('product_id')

@@ -3,9 +3,12 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import crypto from 'crypto'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET() {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     console.log('Fetching users from database...')
     
     const { data: allUsers, error: fetchError } = await supabaseAdmin
@@ -64,6 +67,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const body = await request.json()
     const { name, email, password, role, status = 'active', phoneNumber, username, avatarUrl } = body
 

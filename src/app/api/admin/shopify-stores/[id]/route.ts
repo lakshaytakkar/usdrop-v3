@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapShopifyStoreFromDB, mapShopifyStoreToDB, normalizeShopifyStoreUrl, validateShopifyStoreUrl } from '@/lib/utils/shopify-store-helpers'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id: storeId } = await params
 
     const { data, error } = await supabaseAdmin
@@ -47,6 +50,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id: storeId } = await params
     const body = await request.json()
 
@@ -129,6 +134,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id: storeId } = await params
 
     const { data: storeData, error: fetchError } = await supabaseAdmin

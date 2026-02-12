@@ -4,9 +4,12 @@ import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 import crypto from 'crypto'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET() {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .select(`
@@ -43,6 +46,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const body = await request.json()
     const { 
       name, 

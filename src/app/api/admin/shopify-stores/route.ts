@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const userId = searchParams.get('user_id')

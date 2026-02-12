@@ -3,12 +3,15 @@ import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
     const { data, error } = await supabaseAdmin
@@ -50,6 +53,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
     const body = await request.json()
     const { 
@@ -198,6 +203,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
     const { error } = await supabaseAdmin

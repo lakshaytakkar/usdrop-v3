@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { CoursesResponse, CourseQueryParams } from '@/types/courses'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const searchParams = request.nextUrl.searchParams
     const category = searchParams.get('category')
     const level = searchParams.get('level')
@@ -161,6 +164,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const body = await request.json()
     const {
       title,

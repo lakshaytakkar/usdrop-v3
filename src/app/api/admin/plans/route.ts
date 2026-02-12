@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapPlanFromDB } from '@/lib/utils/plan-helpers'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 // GET /api/admin/plans - List all subscription plans
 export async function GET() {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { data, error } = await supabaseAdmin
       .from('subscription_plans')
       .select('*')
@@ -33,6 +36,8 @@ export async function GET() {
 // POST /api/admin/plans - Create a new subscription plan
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const body = await request.json()
     const {
       name,

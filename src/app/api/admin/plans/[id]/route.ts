@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapPlanFromDB, mapPlanToDB } from '@/lib/utils/plan-helpers'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 // GET /api/admin/plans/[id] - Get a single subscription plan
 export async function GET(
@@ -8,6 +9,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
     const { data, error } = await supabaseAdmin
@@ -40,6 +43,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
     const body = await request.json()
 
@@ -171,6 +176,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
     // Check if plan is referenced by any profiles

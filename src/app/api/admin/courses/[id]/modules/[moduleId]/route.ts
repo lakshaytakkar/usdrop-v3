@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/server'
+import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; moduleId: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { moduleId } = await params
     const body = await request.json()
 
@@ -56,6 +59,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; moduleId: string }> }
 ) {
   try {
+    const authResult = await requireAdmin()
+    if (isAdminResponse(authResult)) return authResult
     const { moduleId } = await params
 
     const { error } = await supabaseAdmin
