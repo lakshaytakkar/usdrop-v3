@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
         c.trending as cat_trending, c.product_count as cat_product_count,
         c.avg_profit_margin as cat_avg_profit_margin, c.growth_percentage as cat_growth_percentage,
         c.created_at as cat_created_at, c.updated_at as cat_updated_at,
-        s.id as sup_id, s.name as sup_name, s.website as sup_website,
+        s.id as sup_id, s.name as sup_name, s.company_name as sup_company_name,
+        s.logo as sup_logo, s.website as sup_website,
         s.country as sup_country, s.rating as sup_rating, s.verified as sup_verified,
         s.shipping_time as sup_shipping_time, s.min_order_quantity as sup_min_order_quantity,
         s.contact_email as sup_contact_email,
@@ -144,6 +145,8 @@ export async function GET(request: NextRequest) {
       supplier: row.sup_id ? {
         id: row.sup_id,
         name: row.sup_name,
+        company_name: row.sup_company_name || null,
+        logo: row.sup_logo || null,
         website: row.sup_website,
         country: row.sup_country,
         rating: row.sup_rating,
@@ -233,9 +236,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const calculatedProfit = parseFloat(sell_price) - parseFloat(buy_price)
+
     const productResult = await sql`
-      INSERT INTO products (title, image, description, category_id, buy_price, sell_price, additional_images, specifications, rating, reviews_count, trend_data, supplier_id)
-      VALUES (${title}, ${image}, ${description || null}, ${category_id || null}, ${buy_price}, ${sell_price}, ${JSON.stringify(additional_images || [])}, ${specifications ? JSON.stringify(specifications) : null}, ${rating || null}, ${reviews_count || 0}, ${JSON.stringify(trend_data || [])}, ${supplier_id || null})
+      INSERT INTO products (title, image, description, category_id, buy_price, sell_price, profit_per_order, additional_images, specifications, rating, reviews_count, trend_data, supplier_id)
+      VALUES (${title}, ${image}, ${description || null}, ${category_id || null}, ${buy_price}, ${sell_price}, ${calculatedProfit}, ${JSON.stringify(additional_images || [])}, ${specifications ? JSON.stringify(specifications) : null}, ${rating || null}, ${reviews_count || 0}, ${JSON.stringify(trend_data || [])}, ${supplier_id || null})
       RETURNING *
     `
 

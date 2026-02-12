@@ -24,6 +24,7 @@ import { Plus, Lock, LockOpen, Trash2, MoreVertical, Eye, Star, DollarSign, Tren
 import Image from "next/image"
 import { AdminProductCard } from "./components/admin-product-card"
 import { ProductDetailDrawer } from "./components/product-detail-drawer"
+import { ProductFormModal } from "./components/product-form-modal"
 import { Input } from "@/components/ui/input"
 import { createHandPickedColumns } from "./components/hand-picked-columns"
 import { createProductPicksColumns } from "./components/product-picks-columns"
@@ -91,6 +92,8 @@ export default function AdminProductsPage() {
   const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
   const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
   const [assignedMembers, setAssignedMembers] = useState<string[]>([])
+  const [productFormOpen, setProductFormOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<ProductPick | null>(null)
   
   const internalUsers = sampleInternalUsers
 
@@ -642,8 +645,26 @@ export default function AdminProductsPage() {
       showError("You don't have permission to edit products")
       return
     }
-    router.push(`/admin/products/${product.id}?type=${activeTab}`)
+    if (activeTab === "product-picks") {
+      setEditingProduct(product as ProductPick)
+      setProductFormOpen(true)
+    } else {
+      router.push(`/admin/products/${product.id}?type=${activeTab}`)
+    }
   }, [canEdit, router, activeTab, showError])
+
+  const handleCreateProduct = useCallback(() => {
+    if (!canCreate) {
+      showError("You don't have permission to create products")
+      return
+    }
+    setEditingProduct(null)
+    setProductFormOpen(true)
+  }, [canCreate, showError])
+
+  const handleFormSuccess = useCallback(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const handleBulkExport = useCallback(() => {
     if (selectedProducts.length === 0) {
@@ -871,20 +892,14 @@ export default function AdminProductsPage() {
         {
           label: "Create Product",
           icon: <Plus className="h-4 w-4" />,
-          onClick: () => {
-            if (!canCreate) {
-              showError("You don't have permission to create products")
-              return
-            }
-            router.push(`/admin/products/new?type=${activeTab}`)
-          },
+          onClick: handleCreateProduct,
           variant: "default" as const,
           disabled: !canCreate,
           tooltip: !canCreate ? "You don't have permission to create products" : undefined,
         },
       ]
     }
-  }, [selectedProducts, bulkActionLoading, activeTab, canLockUnlock, canDelete, canCreate, handleBulkLock, handleBulkUnlock, handleBulkDelete, handleBulkExport, handleBulkUpload, showError, router, setSelectedProducts])
+  }, [selectedProducts, bulkActionLoading, activeTab, canLockUnlock, canDelete, canCreate, handleBulkLock, handleBulkUnlock, handleBulkDelete, handleBulkExport, handleBulkUpload, handleCreateProduct, setSelectedProducts])
 
   const currentQuickFilters = activeTab === "hand-picked" ? handPickedQuickFilters : productPicksQuickFilters
   
@@ -1324,6 +1339,19 @@ export default function AdminProductsPage() {
         productType={activeTab}
         onImportToShopify={handleImportToShopify}
         onEdit={handleEdit}
+      />
+
+      {/* Product Create/Edit Form Modal */}
+      <ProductFormModal
+        open={productFormOpen}
+        onOpenChange={(open) => {
+          setProductFormOpen(open)
+          if (!open) {
+            setEditingProduct(null)
+          }
+        }}
+        product={editingProduct}
+        onSuccess={handleFormSuccess}
       />
     </div>
   )

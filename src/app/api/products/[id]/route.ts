@@ -183,6 +183,17 @@ export async function PATCH(
     if (category_id !== undefined) { paramIndex++; setClauses.push(`category_id = $${paramIndex}`); values.push(category_id) }
     if (buy_price !== undefined) { paramIndex++; setClauses.push(`buy_price = $${paramIndex}`); values.push(buy_price) }
     if (sell_price !== undefined) { paramIndex++; setClauses.push(`sell_price = $${paramIndex}`); values.push(sell_price) }
+    if (buy_price !== undefined || sell_price !== undefined) {
+      const newBuy = buy_price !== undefined ? parseFloat(buy_price) : null
+      const newSell = sell_price !== undefined ? parseFloat(sell_price) : null
+      if (newBuy !== null && newSell !== null) {
+        paramIndex++; setClauses.push(`profit_per_order = $${paramIndex}`); values.push(newSell - newBuy)
+      } else if (newBuy !== null) {
+        paramIndex++; setClauses.push(`profit_per_order = sell_price - $${paramIndex}`); values.push(newBuy)
+      } else if (newSell !== null) {
+        paramIndex++; setClauses.push(`profit_per_order = $${paramIndex} - buy_price`); values.push(newSell)
+      }
+    }
     if (additional_images !== undefined) { paramIndex++; setClauses.push(`additional_images = $${paramIndex}`); values.push(JSON.stringify(additional_images)) }
     if (specifications !== undefined) { paramIndex++; setClauses.push(`specifications = $${paramIndex}`); values.push(specifications ? JSON.stringify(specifications) : null) }
     if (rating !== undefined) { paramIndex++; setClauses.push(`rating = $${paramIndex}`); values.push(rating) }

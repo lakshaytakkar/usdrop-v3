@@ -110,3 +110,6 @@ public/
 - **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added, SQL injection fixes, broken join queries fixed
 - **New admin APIs**: orders (GET/PATCH), suppliers (full CRUD)
 - **Disabled VerifyEmailBanner**: Component was showing for all users incorrectly
+- **Product Uploader (Multi-step Form)**: Full CRUD product management with 4-step wizard form (Basic Info → Pricing → Details → Review), edit mode with pre-fill, auto-calculated profit_per_order
+- **Product Detail Charts**: Recharts integration with profit breakdown BarChart and trend data AreaChart with gradient, stat cards
+- **Product API enhancements**: Auto-calculate profit_per_order on POST/PATCH, source_type persistence, SQL injection fixes in profit calculation

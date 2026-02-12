@@ -36,6 +36,8 @@ import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
 import { Loader2 } from "lucide-react"
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { ProductFormModal } from "../components/product-form-modal"
 
 type ProductType = "hand-picked" | "product-picks"
 type ProductUnion = HandPickedProduct | ProductPick
@@ -111,6 +113,7 @@ function ProductDetailContent() {
   const [allHandPicked, setAllHandPicked] = useState<HandPickedProduct[]>([])
   const [allProductPicks, setAllProductPicks] = useState<ProductPick[]>([])
   const [loading, setLoading] = useState(true)
+  const [productFormOpen, setProductFormOpen] = useState(false)
 
   // Fetch product and all products for navigation
   useEffect(() => {
@@ -206,13 +209,30 @@ function ProductDetailContent() {
     )
   }
 
+  const refetchProduct = async () => {
+    try {
+      const productResponse = await fetch(`/api/products/${productId}`)
+      if (!productResponse.ok) return
+      const productData = await productResponse.json()
+      const apiProduct: Product = productData.product
+      const sourceType = apiProduct.source?.source_type || 'hand_picked'
+      const isHandPicked = sourceType === 'hand_picked'
+      if (isHandPicked) {
+        setProduct(transformToHandPicked(apiProduct))
+      } else {
+        setProduct(transformToProductPick(apiProduct))
+      }
+    } catch (err) {
+      console.error('Error refetching product:', err)
+    }
+  }
+
   const handleEdit = () => {
     if (!canEdit) {
       showError("You don't have permission to edit products")
       return
     }
-    // TODO: Implement edit functionality
-    showError("Edit functionality will be implemented")
+    setProductFormOpen(true)
   }
 
   const handleDelete = async () => {
@@ -596,34 +616,56 @@ function ProductDetailContent() {
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Buy Price</p>
-                        <p className="text-2xl font-bold">
-                          ${(product as ProductPick).buy_price.toFixed(2)}
-                        </p>
+                  ) : (() => {
+                    const pp = product as ProductPick
+                    const buyPrice = pp.buy_price
+                    const sellPrice = pp.sell_price
+                    const profit = pp.profit_per_order
+                    const margin = buyPrice > 0 ? ((profit / sellPrice) * 100).toFixed(1) : "0.0"
+                    const chartData = [
+                      { name: 'Buy Price', value: buyPrice, fill: '#3b82f6' },
+                      { name: 'Profit', value: profit, fill: '#10b981' },
+                      { name: 'Sell Price', value: sellPrice, fill: '#6366f1' },
+                    ]
+                    return (
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs text-muted-foreground mb-1">Buy Price</p>
+                            <p className="text-2xl font-bold text-blue-500">${buyPrice.toFixed(2)}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs text-muted-foreground mb-1">Sell Price</p>
+                            <p className="text-2xl font-bold text-indigo-500">${sellPrice.toFixed(2)}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs text-muted-foreground mb-1">Profit per Order</p>
+                            <p className="text-2xl font-bold text-emerald-600">${profit.toFixed(2)}</p>
+                          </div>
+                          <div className="rounded-lg border p-3">
+                            <p className="text-xs text-muted-foreground mb-1">Profit Margin</p>
+                            <p className="text-2xl font-bold text-emerald-600">{margin}%</p>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-3">Profit Breakdown</p>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={chartData} barSize={60}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
+                              <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, '']} />
+                              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                                {chartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Sell Price</p>
-                        <p className="text-2xl font-bold">
-                          ${(product as ProductPick).sell_price.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Profit per Order</p>
-                        <p className="text-2xl font-bold text-emerald-600">
-                          ${(product as ProductPick).profit_per_order.toFixed(2)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Profit Margin</p>
-                        <p className="text-2xl font-bold text-emerald-600">
-                          {(((product as ProductPick).profit_per_order / (product as ProductPick).buy_price) * 100).toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    )
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -725,37 +767,56 @@ function ProductDetailContent() {
                     <CardTitle className="text-base">Trend Data</CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4">
-                    {(product as ProductPick).trend_data && (product as ProductPick).trend_data!.length > 0 ? (
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-2">Trend Values</p>
-                          <div className="flex items-end gap-1 h-32">
-                            {(product as ProductPick).trend_data!.map((value, idx) => {
-                              const maxValue = Math.max(...(product as ProductPick).trend_data!)
-                              const height = (value / maxValue) * 100
-                              return (
-                                <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                                  <div
-                                    className="w-full bg-emerald-600 rounded-t transition-all"
-                                    style={{ height: `${height}%` }}
-                                  />
-                                  <span className="text-xs text-muted-foreground">{value}</span>
-                                </div>
-                              )
-                            })}
+                    {(product as ProductPick).trend_data && (product as ProductPick).trend_data!.length > 0 ? (() => {
+                      const trendData = (product as ProductPick).trend_data!
+                      const chartData = trendData.map((val, i) => ({ period: `Week ${i + 1}`, value: val }))
+                      const minVal = Math.min(...trendData)
+                      const maxVal = Math.max(...trendData)
+                      const avgVal = trendData.reduce((a, b) => a + b, 0) / trendData.length
+                      const firstVal = trendData[0]
+                      const lastVal = trendData[trendData.length - 1]
+                      const pctChange = firstVal > 0 ? (((lastVal - firstVal) / firstVal) * 100).toFixed(1) : "0.0"
+                      const isTrendingUp = lastVal > firstVal
+                      return (
+                        <div className="space-y-6">
+                          <ResponsiveContainer width="100%" height={250}>
+                            <AreaChart data={chartData}>
+                              <defs>
+                                <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                              <YAxis tick={{ fontSize: 11 }} />
+                              <Tooltip />
+                              <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#trendGradient)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div className="rounded-lg border p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Min</p>
+                              <p className="text-lg font-bold">{minVal}</p>
+                            </div>
+                            <div className="rounded-lg border p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Max</p>
+                              <p className="text-lg font-bold">{maxVal}</p>
+                            </div>
+                            <div className="rounded-lg border p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Average</p>
+                              <p className="text-lg font-bold">{avgVal.toFixed(1)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className={`h-4 w-4 ${isTrendingUp ? 'text-emerald-600' : 'text-red-500'}`} />
+                            <span className="text-sm font-medium">
+                              {isTrendingUp ? "Trending Up" : "Trending Down"} {pctChange}%
+                            </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4 text-emerald-600" />
-                          <span className="text-sm">
-                            {((product as ProductPick).trend_data![(product as ProductPick).trend_data!.length - 1] >
-                            (product as ProductPick).trend_data![0])
-                              ? "Trending Up"
-                              : "Trending Down"}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
+                      )
+                    })() : (
                       <p className="text-sm text-muted-foreground">No trend data available</p>
                     )}
                   </CardContent>
@@ -778,6 +839,15 @@ function ProductDetailContent() {
           </div>
         </Tabs>
       </div>
+
+      {productType === "product-picks" && (
+        <ProductFormModal
+          open={productFormOpen}
+          onOpenChange={setProductFormOpen}
+          product={product as ProductPick}
+          onSuccess={refetchProduct}
+        />
+      )}
     </div>
   )
 }
