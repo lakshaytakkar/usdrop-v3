@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { mapShopifyStoreFromDB, mapShopifyStoreToDB, normalizeShopifyStoreUrl, validateShopifyStoreUrl } from '@/lib/utils/shopify-store-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -12,32 +12,29 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id: storeId } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('shopify_stores')
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .eq('id', storeId)
-      .single()
+    const data = await sql`
+      SELECT s.*, 
+        p.id as profile_id, p.email as profile_email, p.full_name as profile_full_name
+      FROM shopify_stores s
+      LEFT JOIN profiles p ON s.user_id = p.id
+      WHERE s.id = ${storeId}
+      LIMIT 1
+    `
 
-    if (error) {
-      console.error('Error fetching shopify store:', error)
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Store not found' }, { status: 404 })
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data) {
+    if (!data || data.length === 0) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    const store = mapShopifyStoreFromDB(data)
+    const row = data[0]
+    const store = mapShopifyStoreFromDB({
+      ...row,
+      profiles: row.profile_id ? {
+        id: row.profile_id,
+        email: row.profile_email,
+        full_name: row.profile_full_name,
+      } : null,
+    })
+
     return NextResponse.json(store)
   } catch (error) {
     console.error('Error in GET /api/admin/shopify-stores/[id]:', error)
@@ -89,40 +86,49 @@ export async function PATCH(
     const updateData = mapShopifyStoreToDB(body)
     updateData.updated_at = new Date().toISOString()
 
-    const { data, error } = await supabaseAdmin
-      .from('shopify_stores')
-      .update(updateData)
-      .eq('id', storeId)
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .single()
+    const setClauses: string[] = []
+    const values: unknown[] = []
+    let paramIndex = 1
 
-    if (error) {
-      console.error('Error updating shopify store:', error)
-      if (error.code === '23505') {
+    for (const [key, value] of Object.entries(updateData)) {
+      setClauses.push(`${key} = $${paramIndex++}`)
+      values.push(value)
+    }
+
+    if (setClauses.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    values.push(storeId)
+
+    try {
+      const result = await sql.unsafe(
+        `UPDATE shopify_stores SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+        values
+      )
+
+      if (!result || result.length === 0) {
+        return NextResponse.json({ error: 'Store not found' }, { status: 404 })
+      }
+
+      const row = result[0]
+      const profileData = await sql`SELECT id, email, full_name FROM profiles WHERE id = ${row.user_id} LIMIT 1`
+
+      const store = mapShopifyStoreFromDB({
+        ...row,
+        profiles: profileData.length > 0 ? profileData[0] : null,
+      })
+
+      return NextResponse.json(store)
+    } catch (err: any) {
+      if (err?.code === '23505') {
         return NextResponse.json(
           { error: 'A store with this URL already exists' },
           { status: 409 }
         )
       }
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Store not found' }, { status: 404 })
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      throw err
     }
-
-    if (!data) {
-      return NextResponse.json({ error: 'Store not found' }, { status: 404 })
-    }
-
-    const store = mapShopifyStoreFromDB(data)
-    return NextResponse.json(store)
   } catch (error) {
     console.error('Error in PATCH /api/admin/shopify-stores/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -138,25 +144,12 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id: storeId } = await params
 
-    const { data: storeData, error: fetchError } = await supabaseAdmin
-      .from('shopify_stores')
-      .select('id, user_id')
-      .eq('id', storeId)
-      .single()
-
-    if (fetchError || !storeData) {
+    const existing = await sql`SELECT id FROM shopify_stores WHERE id = ${storeId} LIMIT 1`
+    if (!existing || existing.length === 0) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    const { error } = await supabaseAdmin
-      .from('shopify_stores')
-      .delete()
-      .eq('id', storeId)
-
-    if (error) {
-      console.error('Error deleting shopify store:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    await sql`DELETE FROM shopify_stores WHERE id = ${storeId}`
 
     return NextResponse.json({ success: true, message: 'Store deleted successfully' })
   } catch (error) {

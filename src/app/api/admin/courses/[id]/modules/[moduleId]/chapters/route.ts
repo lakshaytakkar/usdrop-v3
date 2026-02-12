@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CourseChapter, ChapterContentType } from '@/types/courses'
 import { moveVideoFromTemp } from '@/lib/storage/course-storage'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
@@ -31,7 +31,6 @@ export async function POST(
       )
     }
 
-    // Validate content_type
     const validContentTypes: ChapterContentType[] = ['video', 'text', 'quiz', 'assignment', 'resource']
     if (!validContentTypes.includes(content_type)) {
       return NextResponse.json(
@@ -40,49 +39,31 @@ export async function POST(
       )
     }
 
-    // Get max order_index if not provided (calculate once)
     let finalOrderIndex = order_index
     if (finalOrderIndex === undefined) {
-      const { data: chapters } = await supabaseAdmin
-        .from('course_chapters')
-        .select('order_index')
-        .eq('module_id', moduleId)
-        .order('order_index', { ascending: false })
-        .limit(1)
-
-      finalOrderIndex = chapters && chapters.length > 0
-        ? chapters[0].order_index + 1
-        : 0
+      const maxResult = await sql`
+        SELECT COALESCE(MAX(order_index), -1) as max_order FROM course_chapters WHERE module_id = ${moduleId}
+      `
+      finalOrderIndex = maxResult[0].max_order + 1
     }
 
-    // Check if content contains a temp video path and move it to final location
     let finalContent = content
     if (content_type === 'video' && content?.video_storage_path) {
       const tempPath = content.video_storage_path
-      // Check if it's a temp path (contains /temp/ in the path)
       if (tempPath.includes('/temp/')) {
         try {
-          // Create chapter first to get the chapterId
-          const { data: tempChapter, error: tempError } = await supabaseAdmin
-            .from('course_chapters')
-            .insert({
-              module_id: moduleId,
-              title,
-              description: description || null,
-              content_type,
-              content: { ...content, video_storage_path: tempPath }, // Temporary content
-              order_index: finalOrderIndex,
-              duration_minutes: duration_minutes || null,
-              is_preview: is_preview || false,
-            })
-            .select()
-            .single()
+          const tempResult = await sql`
+            INSERT INTO course_chapters (module_id, title, description, content_type, content, order_index, duration_minutes, is_preview)
+            VALUES (${moduleId}, ${title}, ${description || null}, ${content_type}, ${JSON.stringify({ ...content, video_storage_path: tempPath })}, ${finalOrderIndex}, ${duration_minutes || null}, ${is_preview || false})
+            RETURNING *
+          `
 
-          if (tempError || !tempChapter) {
+          if (!tempResult || tempResult.length === 0) {
             throw new Error('Failed to create chapter for video move')
           }
 
-          // Move video from temp to final location
+          const tempChapter = tempResult[0]
+
           const movedVideo = await moveVideoFromTemp(
             tempPath,
             courseId,
@@ -90,34 +71,22 @@ export async function POST(
             tempChapter.id
           )
 
-          // Update content with final video path
           finalContent = {
             ...content,
             video_url: movedVideo.url,
             video_storage_path: movedVideo.path,
           }
 
-          // Update chapter with final content
-          const { data: chapter, error: updateError } = await supabaseAdmin
-            .from('course_chapters')
-            .update({
-              content: finalContent,
-            })
-            .eq('id', tempChapter.id)
-            .select()
-            .single()
+          const updateResult = await sql`
+            UPDATE course_chapters SET content = ${JSON.stringify(finalContent)} WHERE id = ${tempChapter.id} RETURNING *
+          `
 
-          if (updateError) {
-            // Cleanup: delete the temp chapter if update fails
-            await supabaseAdmin
-              .from('course_chapters')
-              .delete()
-              .eq('id', tempChapter.id)
-
-            throw updateError
+          if (!updateResult || updateResult.length === 0) {
+            await sql`DELETE FROM course_chapters WHERE id = ${tempChapter.id}`
+            throw new Error('Failed to update chapter with final video path')
           }
 
-          return NextResponse.json({ chapter }, { status: 201 })
+          return NextResponse.json({ chapter: updateResult[0] }, { status: 201 })
         } catch (moveError) {
           console.error('Error moving temp video:', moveError)
           return NextResponse.json(
@@ -128,30 +97,20 @@ export async function POST(
       }
     }
 
-    const { data: chapter, error } = await supabaseAdmin
-      .from('course_chapters')
-      .insert({
-        module_id: moduleId,
-        title,
-        description: description || null,
-        content_type,
-        content: finalContent,
-        order_index: finalOrderIndex,
-        duration_minutes: duration_minutes || null,
-        is_preview: is_preview || false,
-      })
-      .select()
-      .single()
+    const result = await sql`
+      INSERT INTO course_chapters (module_id, title, description, content_type, content, order_index, duration_minutes, is_preview)
+      VALUES (${moduleId}, ${title}, ${description || null}, ${content_type}, ${JSON.stringify(finalContent)}, ${finalOrderIndex}, ${duration_minutes || null}, ${is_preview || false})
+      RETURNING *
+    `
 
-    if (error) {
-      console.error('Error creating chapter:', error)
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to create chapter', details: error.message },
+        { error: 'Failed to create chapter' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ chapter }, { status: 201 })
+    return NextResponse.json({ chapter: result[0] }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error creating chapter:', error)
     return NextResponse.json(
@@ -160,4 +119,3 @@ export async function POST(
     )
   }
 }
-

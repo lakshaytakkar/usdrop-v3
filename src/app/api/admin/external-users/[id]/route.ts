@@ -1,9 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
+
+function mapRowToUserWithPlan(row: any) {
+  return {
+    ...row,
+    subscription_plans: row.plan_id ? {
+      id: row.plan_id,
+      name: row.plan_name,
+      slug: row.plan_slug,
+      price_monthly: row.plan_price_monthly,
+      features: row.plan_features,
+      trial_days: row.plan_trial_days,
+    } : null
+  }
+}
+
+async function fetchUserWithPlan(id: string) {
+  const rows = await sql`
+    SELECT
+      p.*,
+      sp.id AS plan_id,
+      sp.name AS plan_name,
+      sp.slug AS plan_slug,
+      sp.price_monthly AS plan_price_monthly,
+      sp.features AS plan_features,
+      sp.trial_days AS plan_trial_days
+    FROM profiles p
+    LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
+    WHERE p.id = ${id} AND p.internal_role IS NULL
+  `
+  return rows.length > 0 ? rows[0] : null
+}
 
 export async function GET(
   request: NextRequest,
@@ -14,32 +44,13 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select(`
-        *,
-        subscription_plans (
-          id,
-          name,
-          slug,
-          price_monthly,
-          features,
-          trial_days
-        )
-      `)
-      .eq('id', id)
-      .is('internal_role', null)
-      .single()
+    const row = await fetchUserWithPlan(id)
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
-      console.error('Error fetching external user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!row) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const user = mapExternalUserFromDB(data)
+    const user = mapExternalUserFromDB(mapRowToUserWithPlan(row))
 
     return NextResponse.json(user)
   } catch (error) {
@@ -124,27 +135,18 @@ export async function PATCH(
     }
 
     if (plan !== undefined) {
-      const { data: planData, error: planError } = await supabaseAdmin
-        .from('subscription_plans')
-        .select('id, trial_days')
-        .eq('slug', plan)
-        .single()
+      const planResult = await sql`
+        SELECT id, trial_days FROM subscription_plans WHERE slug = ${plan} LIMIT 1
+      `
 
-      if (planError && planError.code !== 'PGRST116') {
-        console.error('Error fetching plan:', planError)
+      if (planResult.length === 0) {
         return NextResponse.json(
           { error: `Plan "${plan}" not found` },
           { status: 400 }
         )
       }
 
-      if (!planData) {
-        return NextResponse.json(
-          { error: `Plan "${plan}" not found` },
-          { status: 400 }
-        )
-      }
-      
+      const planData = planResult[0]
       updates.subscription_plan_id = planData.id
 
       if (isTrial !== undefined && isTrial && planData.trial_days > 0) {
@@ -157,42 +159,34 @@ export async function PATCH(
       }
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .update(updates)
-      .eq('id', id)
-      .is('internal_role', null)
-      .select(`
-        *,
-        subscription_plans (
-          id,
-          name,
-          slug,
-          price_monthly,
-          features,
-          trial_days
-        )
-      `)
-      .single()
+    const setClauses = Object.entries(updates)
+      .map(([key], i) => `"${key}" = $${i + 1}`)
+      .join(', ')
+    const values = Object.values(updates)
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
-      if (error.code === '23505') {
-        return NextResponse.json(
-          { error: 'A user with this email already exists' },
-          { status: 409 }
-        )
-      }
-      console.error('Error updating external user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    const updateQuery = `UPDATE profiles SET ${setClauses} WHERE id = $${values.length + 1} AND internal_role IS NULL RETURNING id`
+    const updateResult = await sql.unsafe(updateQuery, [...values, id])
+
+    if (!updateResult || updateResult.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const user = mapExternalUserFromDB(data)
+    const row = await fetchUserWithPlan(id)
+
+    if (!row) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const user = mapExternalUserFromDB(mapRowToUserWithPlan(row))
 
     return NextResponse.json(user)
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === '23505') {
+      return NextResponse.json(
+        { error: 'A user with this email already exists' },
+        { status: 409 }
+      )
+    }
     console.error('Error in PATCH /api/admin/external-users/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -207,16 +201,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .delete()
-      .eq('id', id)
-      .is('internal_role', null)
-
-    if (error) {
-      console.error('Error deleting external user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    await sql`DELETE FROM profiles WHERE id = ${id} AND internal_role IS NULL`
 
     return NextResponse.json({ success: true })
   } catch (error) {

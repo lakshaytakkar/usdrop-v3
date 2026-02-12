@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
-import { mapPlanFromDB, mapPlanToDB } from '@/lib/utils/plan-helpers'
+import sql from '@/lib/db'
+import { mapPlanFromDB } from '@/lib/utils/plan-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
-// GET /api/admin/plans/[id] - Get a single subscription plan
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,23 +12,15 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('subscription_plans')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const data = await sql`
+      SELECT * FROM subscription_plans WHERE id = ${id} LIMIT 1
+    `
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-      }
-      console.error('Error fetching plan:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
-    // Use helper to map response
-    const plan = mapPlanFromDB(data)
-
+    const plan = mapPlanFromDB(data[0])
     return NextResponse.json(plan)
   } catch (error) {
     console.error('Error in GET /api/admin/plans/[id]:', error)
@@ -37,7 +28,6 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/plans/[id] - Update a subscription plan
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,14 +38,12 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    // Build update object with only provided fields
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     }
 
     if (body.name !== undefined) updates.name = body.name
     if (body.slug !== undefined) {
-      // Validate slug format if provided
       const { validatePlanSlug } = await import('@/lib/utils/plan-helpers')
       if (!validatePlanSlug(body.slug)) {
         return NextResponse.json(
@@ -100,7 +88,7 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.features = body.features
+      updates.features = JSON.stringify(body.features)
     }
     if (body.popular !== undefined) updates.popular = body.popular
     if (body.active !== undefined) updates.active = body.active
@@ -117,21 +105,11 @@ export async function PATCH(
       updates.trial_days = body.trialDays
     }
 
-    // Check slug uniqueness if slug is being updated
     if (updates.slug) {
-      const { data: existingPlan, error: checkError } = await supabaseAdmin
-        .from('subscription_plans')
-        .select('id')
-        .eq('slug', updates.slug as string)
-        .neq('id', id)
-        .single()
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking slug uniqueness:', checkError)
-        return NextResponse.json({ error: 'Failed to validate slug' }, { status: 500 })
-      }
-
-      if (existingPlan) {
+      const existingPlan = await sql`
+        SELECT id FROM subscription_plans WHERE slug = ${updates.slug as string} AND id != ${id} LIMIT 1
+      `
+      if (existingPlan.length > 0) {
         return NextResponse.json(
           { error: 'A plan with this slug already exists' },
           { status: 409 }
@@ -139,38 +117,48 @@ export async function PATCH(
       }
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('subscription_plans')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    const setClauses: string[] = []
+    const values: unknown[] = []
+    let paramIndex = 1
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+    for (const [key, value] of Object.entries(updates)) {
+      if (key === 'features') {
+        setClauses.push(`${key} = $${paramIndex++}::jsonb`)
+      } else {
+        setClauses.push(`${key} = $${paramIndex++}`)
+      }
+      values.push(value)
+    }
+
+    values.push(id)
+
+    try {
+      const result = await sql.unsafe(
+        `UPDATE subscription_plans SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+        values
+      )
+
+      if (!result || result.length === 0) {
         return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
       }
-      if (error.code === '23505') {
+
+      const plan = mapPlanFromDB(result[0])
+      return NextResponse.json(plan)
+    } catch (err: any) {
+      if (err?.code === '23505') {
         return NextResponse.json(
           { error: 'A plan with this name or slug already exists' },
           { status: 409 }
         )
       }
-      console.error('Error updating plan:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      throw err
     }
-
-    // Use helper to map response
-    const plan = mapPlanFromDB(data)
-
-    return NextResponse.json(plan)
   } catch (error) {
     console.error('Error in PATCH /api/admin/plans/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// DELETE /api/admin/plans/[id] - Delete a subscription plan
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -180,57 +168,33 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    // Check if plan is referenced by any profiles
-    const { data: profiles, error: checkError } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('subscription_plan_id', id)
-      .limit(1)
-
-    if (checkError) {
-      console.error('Error checking plan dependencies:', checkError)
-      return NextResponse.json({ error: 'Failed to check plan dependencies' }, { status: 500 })
-    }
+    const profiles = await sql`
+      SELECT id FROM profiles WHERE subscription_plan_id = ${id} LIMIT 1
+    `
 
     if (profiles && profiles.length > 0) {
-      // Plan is in use - soft delete by setting active=false
-      const { data, error } = await supabaseAdmin
-        .from('subscription_plans')
-        .update({
-          active: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single()
+      const now = new Date().toISOString()
+      const result = await sql`
+        UPDATE subscription_plans SET active = false, updated_at = ${now}
+        WHERE id = ${id}
+        RETURNING *
+      `
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-        }
-        console.error('Error deactivating plan:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+      if (!result || result.length === 0) {
+        return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
       }
 
       return NextResponse.json({
         success: true,
         message: 'Plan deactivated (in use by users)',
-        plan: mapPlanFromDB(data),
+        plan: mapPlanFromDB(result[0]),
       })
     }
 
-    // Plan is not in use - hard delete
-    const { error } = await supabaseAdmin
-      .from('subscription_plans')
-      .delete()
-      .eq('id', id)
+    const deleteResult = await sql`DELETE FROM subscription_plans WHERE id = ${id} RETURNING id`
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-      }
-      console.error('Error deleting plan:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!deleteResult || deleteResult.length === 0) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
     return NextResponse.json({ success: true, message: 'Plan deleted successfully' })
@@ -239,4 +203,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

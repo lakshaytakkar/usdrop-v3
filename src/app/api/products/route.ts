@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
 import sql from '@/lib/db'
 import { ProductsQueryParams, ProductsResponse } from '@/types/products'
 
@@ -234,49 +233,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: product, error: productError } = await supabaseAdmin
-      .from('products')
-      .insert({
-        title,
-        image,
-        description: description || null,
-        category_id: category_id || null,
-        buy_price,
-        sell_price,
-        additional_images: additional_images || [],
-        specifications: specifications || null,
-        rating: rating || null,
-        reviews_count: reviews_count || 0,
-        trend_data: trend_data || [],
-        supplier_id: supplier_id || null,
-      })
-      .select()
-      .single()
+    const productResult = await sql`
+      INSERT INTO products (title, image, description, category_id, buy_price, sell_price, additional_images, specifications, rating, reviews_count, trend_data, supplier_id)
+      VALUES (${title}, ${image}, ${description || null}, ${category_id || null}, ${buy_price}, ${sell_price}, ${JSON.stringify(additional_images || [])}, ${specifications ? JSON.stringify(specifications) : null}, ${rating || null}, ${reviews_count || 0}, ${JSON.stringify(trend_data || [])}, ${supplier_id || null})
+      RETURNING *
+    `
 
-    if (productError) {
-      console.error('Error creating product:', productError)
+    if (!productResult.length) {
+      console.error('Error creating product: no rows returned')
       return NextResponse.json(
-        { error: 'Failed to create product', details: productError.message },
+        { error: 'Failed to create product', details: 'Insert returned no rows' },
         { status: 500 }
       )
     }
 
+    const product = productResult[0]
+
     if (metadata && product) {
-      await supabaseAdmin
-        .from('product_metadata')
-        .insert({
-          product_id: product.id,
-          ...metadata,
-        })
+      await sql`
+        INSERT INTO product_metadata (product_id, is_winning, is_locked, unlock_price, profit_margin, pot_revenue, revenue_growth_rate, items_sold, avg_unit_price, revenue_trend, found_date, detailed_analysis, filters)
+        VALUES (${product.id}, ${metadata.is_winning || false}, ${metadata.is_locked || false}, ${metadata.unlock_price || null}, ${metadata.profit_margin || null}, ${metadata.pot_revenue || null}, ${metadata.revenue_growth_rate || null}, ${metadata.items_sold || null}, ${metadata.avg_unit_price || null}, ${JSON.stringify(metadata.revenue_trend || [])}, ${metadata.found_date || null}, ${metadata.detailed_analysis ? JSON.stringify(metadata.detailed_analysis) : null}, ${JSON.stringify(metadata.filters || [])})
+      `
     }
 
     if (source && product) {
-      await supabaseAdmin
-        .from('product_source')
-        .insert({
-          product_id: product.id,
-          ...source,
-        })
+      await sql`
+        INSERT INTO product_source (product_id, source_type, source_id, standardized_at, standardized_by)
+        VALUES (${product.id}, ${source.source_type || null}, ${source.source_id || null}, ${source.standardized_at || null}, ${source.standardized_by || null})
+      `
     }
 
     const completeProduct = await sql`

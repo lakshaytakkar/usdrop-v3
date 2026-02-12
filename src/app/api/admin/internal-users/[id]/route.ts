@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
@@ -13,35 +12,26 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const data = await sql`
+      SELECT * FROM profiles WHERE id = ${id} LIMIT 1
+    `
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
-      console.error('Error fetching internal user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data || data.internal_role === null) {
+    if (!data || data.length === 0 || data[0].internal_role === null) {
       return NextResponse.json({ error: 'User not found or not an internal user' }, { status: 404 })
     }
 
+    const row = data[0]
     const user = {
-      id: data.id,
-      name: data.full_name || '',
-      email: data.email,
-      role: data.internal_role,
-      status: data.status || 'active',
-      phoneNumber: data.phone_number || null,
-      username: data.username || null,
-      avatarUrl: data.avatar_url || null,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      id: row.id,
+      name: row.full_name || '',
+      email: row.email,
+      role: row.internal_role,
+      status: row.status || 'active',
+      phoneNumber: row.phone_number || null,
+      username: row.username || null,
+      avatarUrl: row.avatar_url || null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
     }
 
     return NextResponse.json(user)
@@ -61,6 +51,19 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
     const { name, email, role, status, phoneNumber, username, avatarUrl, password } = body
+
+    const existing = await sql`
+      SELECT internal_role FROM profiles WHERE id = ${id} LIMIT 1
+    `
+
+    if (!existing || existing.length === 0 || existing[0].internal_role === null) {
+      return NextResponse.json({ error: 'User not found or not an internal user' }, { status: 404 })
+    }
+
+    if (password !== undefined && password.trim() !== '') {
+      const passwordHash = await hashPassword(password)
+      await sql`UPDATE profiles SET password_hash = ${passwordHash} WHERE id = ${id}`
+    }
 
     const updates: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -92,56 +95,51 @@ export async function PATCH(
     if (username !== undefined) updates.username = username || null
     if (avatarUrl !== undefined) updates.avatar_url = avatarUrl || null
 
-    if (password !== undefined && password.trim() !== '') {
-      const passwordHash = await hashPassword(password)
-      await sql`UPDATE profiles SET password_hash = ${passwordHash} WHERE id = ${id}`
+    const setClauses: string[] = []
+    const values: unknown[] = []
+    let paramIndex = 1
+
+    for (const [key, value] of Object.entries(updates)) {
+      setClauses.push(`${key} = $${paramIndex++}`)
+      values.push(value)
     }
 
-    const { data: existingUser } = await supabaseAdmin
-      .from('profiles')
-      .select('internal_role')
-      .eq('id', id)
-      .single()
+    values.push(id)
 
-    if (!existingUser || existingUser.internal_role === null) {
-      return NextResponse.json({ error: 'User not found or not an internal user' }, { status: 404 })
-    }
+    try {
+      const result = await sql.unsafe(
+        `UPDATE profiles SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+        values
+      )
 
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      if (error.code === 'PGRST116') {
+      if (!result || result.length === 0) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
-      if (error.code === '23505') {
+
+      const data = result[0]
+      const user = {
+        id: data.id,
+        name: data.full_name || '',
+        email: data.email,
+        role: data.internal_role,
+        status: data.status || 'active',
+        phoneNumber: data.phone_number || null,
+        username: data.username || null,
+        avatarUrl: data.avatar_url || null,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      }
+
+      return NextResponse.json(user)
+    } catch (err: any) {
+      if (err?.code === '23505') {
         return NextResponse.json(
           { error: 'A user with this email already exists' },
           { status: 409 }
         )
       }
-      console.error('Error updating internal user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      throw err
     }
-
-    const user = {
-      id: data.id,
-      name: data.full_name || '',
-      email: data.email,
-      role: data.internal_role,
-      status: data.status || 'active',
-      phoneNumber: data.phone_number || null,
-      username: data.username || null,
-      avatarUrl: data.avatar_url || null,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    }
-
-    return NextResponse.json(user)
   } catch (error) {
     console.error('Error in PATCH /api/admin/internal-users/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -157,25 +155,15 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data: existingUser } = await supabaseAdmin
-      .from('profiles')
-      .select('internal_role')
-      .eq('id', id)
-      .single()
+    const existing = await sql`
+      SELECT internal_role FROM profiles WHERE id = ${id} LIMIT 1
+    `
 
-    if (!existingUser || existingUser.internal_role === null) {
+    if (!existing || existing.length === 0 || existing[0].internal_role === null) {
       return NextResponse.json({ error: 'User not found or not an internal user' }, { status: 404 })
     }
 
-    const { error } = await supabaseAdmin
-      .from('profiles')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting internal user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    await sql`DELETE FROM profiles WHERE id = ${id}`
 
     return NextResponse.json({ success: true })
   } catch (error) {

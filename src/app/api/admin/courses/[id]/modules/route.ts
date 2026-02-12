@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CourseModule } from '@/types/courses'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -29,44 +29,28 @@ export async function POST(
       )
     }
 
-    // Get max order_index if not provided
     let finalOrderIndex = order_index
     if (finalOrderIndex === undefined) {
-      const { data: modules } = await supabaseAdmin
-        .from('course_modules')
-        .select('order_index')
-        .eq('course_id', courseId)
-        .order('order_index', { ascending: false })
-        .limit(1)
-
-      finalOrderIndex = modules && modules.length > 0
-        ? modules[0].order_index + 1
-        : 0
+      const maxResult = await sql`
+        SELECT COALESCE(MAX(order_index), -1) as max_order FROM course_modules WHERE course_id = ${courseId}
+      `
+      finalOrderIndex = maxResult[0].max_order + 1
     }
 
-    const { data: module, error } = await supabaseAdmin
-      .from('course_modules')
-      .insert({
-        course_id: courseId,
-        title,
-        description: description || null,
-        thumbnail: thumbnail || null,
-        order_index: finalOrderIndex,
-        duration_minutes: duration_minutes || null,
-        is_preview: is_preview || false,
-      })
-      .select()
-      .single()
+    const result = await sql`
+      INSERT INTO course_modules (course_id, title, description, thumbnail, order_index, duration_minutes, is_preview)
+      VALUES (${courseId}, ${title}, ${description || null}, ${thumbnail || null}, ${finalOrderIndex}, ${duration_minutes || null}, ${is_preview || false})
+      RETURNING *
+    `
 
-    if (error) {
-      console.error('Error creating module:', error)
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to create module', details: error.message },
+        { error: 'Failed to create module' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ module }, { status: 201 })
+    return NextResponse.json({ module: result[0] }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error creating module:', error)
     return NextResponse.json(
@@ -75,4 +59,3 @@ export async function POST(
     )
   }
 }
-

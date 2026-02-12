@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function PATCH(
@@ -20,39 +20,37 @@ export async function PATCH(
       )
     }
 
-    const updates: any = {
-      published,
-    }
+    let publishedAt = undefined
 
-    // Set published_at if publishing for the first time
     if (published) {
-      const { data: existing } = await supabaseAdmin
-        .from('courses')
-        .select('published_at')
-        .eq('id', id)
-        .single()
+      const existing = await sql`SELECT published_at FROM courses WHERE id = ${id} LIMIT 1`
 
-      if (!existing?.published_at) {
-        updates.published_at = new Date().toISOString()
+      if (existing.length > 0 && !existing[0].published_at) {
+        publishedAt = new Date().toISOString()
       }
     }
 
-    const { data: course, error } = await supabaseAdmin
-      .from('courses')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    let result
+    if (publishedAt !== undefined) {
+      result = await sql`
+        UPDATE courses SET published = ${published}, published_at = ${publishedAt}, updated_at = now()
+        WHERE id = ${id} RETURNING *
+      `
+    } else {
+      result = await sql`
+        UPDATE courses SET published = ${published}, updated_at = now()
+        WHERE id = ${id} RETURNING *
+      `
+    }
 
-    if (error) {
-      console.error('Error updating course publish status:', error)
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update course publish status', details: error.message },
+        { error: 'Failed to update course publish status' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ course })
+    return NextResponse.json({ course: result[0] })
   } catch (error) {
     console.error('Unexpected error updating course publish status:', error)
     return NextResponse.json(
@@ -61,4 +59,3 @@ export async function PATCH(
     )
   }
 }
-

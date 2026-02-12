@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import crypto from 'crypto'
@@ -9,35 +8,14 @@ export async function GET() {
   try {
     const authResult = await requireAdmin()
     if (isAdminResponse(authResult)) return authResult
-    console.log('Fetching users from database...')
-    
-    const { data: allUsers, error: fetchError } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
 
-    if (fetchError) {
-      console.error('Database error fetching users:', {
-        message: fetchError.message,
-        details: fetchError,
-        code: fetchError.code,
-        hint: fetchError.hint,
-      })
-      return NextResponse.json({ 
-        error: fetchError.message || 'Failed to fetch users',
-        details: fetchError.code || 'Unknown error',
-        hint: fetchError.hint
-      }, { status: 500 })
-    }
-
-    console.log(`Fetched ${allUsers?.length || 0} total users from database`)
-
-    const data = allUsers?.filter((user: any) => user.internal_role !== null) || []
-    
-    console.log(`Filtered to ${data.length} internal users`)
+    const data = await sql`
+      SELECT * FROM profiles
+      WHERE internal_role IS NOT NULL
+      ORDER BY created_at DESC
+    `
 
     if (!data || data.length === 0) {
-      console.log('No internal users found, returning empty array')
       return NextResponse.json([])
     }
 

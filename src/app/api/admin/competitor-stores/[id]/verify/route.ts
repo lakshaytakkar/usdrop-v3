@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
-import { CompetitorStore } from '@/types/competitor-stores'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
+
+function mapStore(item: any) {
+  return {
+    id: item.id,
+    name: item.name,
+    url: item.url,
+    logo: item.logo,
+    category_id: item.category_id,
+    category: item.category_name ? { id: item.category_id_ref, name: item.category_name, slug: item.category_slug } : null,
+    country: item.country,
+    monthly_traffic: item.monthly_traffic,
+    monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
+    growth: parseFloat(item.growth),
+    products_count: item.products_count,
+    rating: item.rating ? parseFloat(item.rating) : null,
+    verified: item.verified,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -21,47 +40,27 @@ export async function PATCH(
       )
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_stores')
-      .update({ verified })
-      .eq('id', id)
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `)
-      .single()
+    const updateResult = await sql.unsafe(
+      `UPDATE competitor_stores SET verified = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [verified, id]
+    )
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Competitor store not found' },
-          { status: 404 }
-        )
-      }
-      console.error('Error updating competitor store verification:', error)
+    if (updateResult.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update verification status', details: error.message },
-        { status: 500 }
+        { error: 'Competitor store not found' },
+        { status: 404 }
       )
     }
 
-    const store: CompetitorStore = {
-      id: data.id,
-      name: data.name,
-      url: data.url,
-      logo: data.logo,
-      category_id: data.category_id,
-      category: data.category,
-      country: data.country,
-      monthly_traffic: data.monthly_traffic,
-      monthly_revenue: data.monthly_revenue ? parseFloat(data.monthly_revenue) : null,
-      growth: parseFloat(data.growth),
-      products_count: data.products_count,
-      rating: data.rating ? parseFloat(data.rating) : null,
-      verified: data.verified,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    }
+    const result = await sql.unsafe(
+      `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
+       FROM competitor_stores cs
+       LEFT JOIN categories c ON cs.category_id = c.id
+       WHERE cs.id = $1`,
+      [id]
+    )
+
+    const store = mapStore(result[0])
 
     return NextResponse.json({ store }, { status: 200 })
   } catch (error: any) {
@@ -72,4 +71,3 @@ export async function PATCH(
     )
   }
 }
-

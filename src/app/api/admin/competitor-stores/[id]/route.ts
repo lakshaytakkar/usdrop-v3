@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
-import { CompetitorStore } from '@/types/competitor-stores'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
+
+function mapStore(item: any) {
+  return {
+    id: item.id,
+    name: item.name,
+    url: item.url,
+    logo: item.logo,
+    category_id: item.category_id,
+    category: item.category_name ? { id: item.category_id_ref, name: item.category_name, slug: item.category_slug } : null,
+    country: item.country,
+    monthly_traffic: item.monthly_traffic,
+    monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
+    growth: parseFloat(item.growth),
+    products_count: item.products_count,
+    rating: item.rating ? parseFloat(item.rating) : null,
+    verified: item.verified,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -12,46 +31,22 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_stores')
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `)
-      .eq('id', id)
-      .single()
+    const result = await sql.unsafe(
+      `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
+       FROM competitor_stores cs
+       LEFT JOIN categories c ON cs.category_id = c.id
+       WHERE cs.id = $1`,
+      [id]
+    )
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Competitor store not found' },
-          { status: 404 }
-        )
-      }
-      console.error('Error fetching competitor store:', error)
+    if (result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to fetch competitor store', details: error.message },
-        { status: 500 }
+        { error: 'Competitor store not found' },
+        { status: 404 }
       )
     }
 
-    const store: CompetitorStore = {
-      id: data.id,
-      name: data.name,
-      url: data.url,
-      logo: data.logo,
-      category_id: data.category_id,
-      category: data.category,
-      country: data.country,
-      monthly_traffic: data.monthly_traffic,
-      monthly_revenue: data.monthly_revenue ? parseFloat(data.monthly_revenue) : null,
-      growth: parseFloat(data.growth),
-      products_count: data.products_count,
-      rating: data.rating ? parseFloat(data.rating) : null,
-      verified: data.verified,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    }
+    const store = mapStore(result[0])
 
     return NextResponse.json({ store }, { status: 200 })
   } catch (error: any) {
@@ -87,61 +82,52 @@ export async function PATCH(
       verified,
     } = body
 
-    // Build update object (only include provided fields)
-    const updateData: any = {}
-    if (name !== undefined) updateData.name = name
-    if (url !== undefined) updateData.url = url
-    if (logo !== undefined) updateData.logo = logo || null
-    if (category_id !== undefined) updateData.category_id = category_id || null
-    if (country !== undefined) updateData.country = country || null
-    if (monthly_traffic !== undefined) updateData.monthly_traffic = monthly_traffic
-    if (monthly_revenue !== undefined) updateData.monthly_revenue = monthly_revenue || null
-    if (growth !== undefined) updateData.growth = growth
-    if (products_count !== undefined) updateData.products_count = products_count || null
-    if (rating !== undefined) updateData.rating = rating || null
-    if (verified !== undefined) updateData.verified = verified
+    const setParts: string[] = []
+    const values: any[] = []
+    let paramIndex = 1
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_stores')
-      .update(updateData)
-      .eq('id', id)
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `)
-      .single()
+    if (name !== undefined) { setParts.push(`name = $${paramIndex}`); values.push(name); paramIndex++ }
+    if (url !== undefined) { setParts.push(`url = $${paramIndex}`); values.push(url); paramIndex++ }
+    if (logo !== undefined) { setParts.push(`logo = $${paramIndex}`); values.push(logo || null); paramIndex++ }
+    if (category_id !== undefined) { setParts.push(`category_id = $${paramIndex}`); values.push(category_id || null); paramIndex++ }
+    if (country !== undefined) { setParts.push(`country = $${paramIndex}`); values.push(country || null); paramIndex++ }
+    if (monthly_traffic !== undefined) { setParts.push(`monthly_traffic = $${paramIndex}`); values.push(monthly_traffic); paramIndex++ }
+    if (monthly_revenue !== undefined) { setParts.push(`monthly_revenue = $${paramIndex}`); values.push(monthly_revenue || null); paramIndex++ }
+    if (growth !== undefined) { setParts.push(`growth = $${paramIndex}`); values.push(growth); paramIndex++ }
+    if (products_count !== undefined) { setParts.push(`products_count = $${paramIndex}`); values.push(products_count || null); paramIndex++ }
+    if (rating !== undefined) { setParts.push(`rating = $${paramIndex}`); values.push(rating || null); paramIndex++ }
+    if (verified !== undefined) { setParts.push(`verified = $${paramIndex}`); values.push(verified); paramIndex++ }
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Competitor store not found' },
-          { status: 404 }
-        )
-      }
-      console.error('Error updating competitor store:', error)
+    if (setParts.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update competitor store', details: error.message },
-        { status: 500 }
+        { error: 'No fields to update' },
+        { status: 400 }
       )
     }
 
-    const store: CompetitorStore = {
-      id: data.id,
-      name: data.name,
-      url: data.url,
-      logo: data.logo,
-      category_id: data.category_id,
-      category: data.category,
-      country: data.country,
-      monthly_traffic: data.monthly_traffic,
-      monthly_revenue: data.monthly_revenue ? parseFloat(data.monthly_revenue) : null,
-      growth: parseFloat(data.growth),
-      products_count: data.products_count,
-      rating: data.rating ? parseFloat(data.rating) : null,
-      verified: data.verified,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
+    setParts.push(`updated_at = NOW()`)
+
+    const updateQuery = `UPDATE competitor_stores SET ${setParts.join(', ')} WHERE id = $${paramIndex} RETURNING id`
+    values.push(id)
+
+    const updateResult = await sql.unsafe(updateQuery, values)
+
+    if (updateResult.length === 0) {
+      return NextResponse.json(
+        { error: 'Competitor store not found' },
+        { status: 404 }
+      )
     }
+
+    const result = await sql.unsafe(
+      `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
+       FROM competitor_stores cs
+       LEFT JOIN categories c ON cs.category_id = c.id
+       WHERE cs.id = $1`,
+      [id]
+    )
+
+    const store = mapStore(result[0])
 
     return NextResponse.json({ store }, { status: 200 })
   } catch (error: any) {
@@ -162,18 +148,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { error } = await supabaseAdmin
-      .from('competitor_stores')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting competitor store:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete competitor store', details: error.message },
-        { status: 500 }
-      )
-    }
+    await sql.unsafe(`DELETE FROM competitor_stores WHERE id = $1`, [id])
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
@@ -184,4 +159,3 @@ export async function DELETE(
     )
   }
 }
-

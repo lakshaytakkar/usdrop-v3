@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
-import { CompetitorStoreProduct } from '@/types/competitor-stores'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
+
+function mapProduct(item: any) {
+  return {
+    id: item.id,
+    competitor_store_id: item.competitor_store_id,
+    product_id: item.product_id,
+    discovered_at: item.discovered_at,
+    last_seen_at: item.last_seen_at,
+    product: item.product_id_ref ? { id: item.product_id_ref, title: item.product_title, image: item.product_image } : null,
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -12,30 +22,15 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_store_products')
-      .select(`
-        *,
-        product:products(id, title, image)
-      `)
-      .eq('competitor_store_id', id)
+    const result = await sql.unsafe(
+      `SELECT csp.*, p.id as product_id_ref, p.title as product_title, p.image as product_image
+       FROM competitor_store_products csp
+       LEFT JOIN products p ON csp.product_id = p.id
+       WHERE csp.competitor_store_id = $1`,
+      [id]
+    )
 
-    if (error) {
-      console.error('Error fetching competitor store products:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch products', details: error.message },
-        { status: 500 }
-      )
-    }
-
-    const products: CompetitorStoreProduct[] = (data || []).map((item: any) => ({
-      id: item.id,
-      competitor_store_id: item.competitor_store_id,
-      product_id: item.product_id,
-      discovered_at: item.discovered_at,
-      last_seen_at: item.last_seen_at,
-      product: item.product,
-    }))
+    const products = result.map(mapProduct)
 
     return NextResponse.json({ products }, { status: 200 })
   } catch (error: any) {
@@ -65,40 +60,35 @@ export async function POST(
       )
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_store_products')
-      .insert({
-        competitor_store_id: id,
-        product_id,
-      })
-      .select(`
-        *,
-        product:products(id, title, image)
-      `)
-      .single()
-
-    if (error) {
-      if (error.code === '23505') {
+    let insertResult
+    try {
+      insertResult = await sql.unsafe(
+        `INSERT INTO competitor_store_products (competitor_store_id, product_id)
+         VALUES ($1, $2)
+         RETURNING id`,
+        [id, product_id]
+      )
+    } catch (err: any) {
+      if (err.code === '23505') {
         return NextResponse.json(
           { error: 'Product is already linked to this store' },
           { status: 409 }
         )
       }
-      console.error('Error linking product to competitor store:', error)
-      return NextResponse.json(
-        { error: 'Failed to link product', details: error.message },
-        { status: 500 }
-      )
+      throw err
     }
 
-    const product: CompetitorStoreProduct = {
-      id: data.id,
-      competitor_store_id: data.competitor_store_id,
-      product_id: data.product_id,
-      discovered_at: data.discovered_at,
-      last_seen_at: data.last_seen_at,
-      product: data.product,
-    }
+    const newId = insertResult[0].id
+
+    const result = await sql.unsafe(
+      `SELECT csp.*, p.id as product_id_ref, p.title as product_title, p.image as product_image
+       FROM competitor_store_products csp
+       LEFT JOIN products p ON csp.product_id = p.id
+       WHERE csp.id = $1`,
+      [newId]
+    )
+
+    const product = mapProduct(result[0])
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error: any) {
@@ -128,19 +118,10 @@ export async function DELETE(
       )
     }
 
-    const { error } = await supabaseAdmin
-      .from('competitor_store_products')
-      .delete()
-      .eq('competitor_store_id', id)
-      .eq('product_id', productId)
-
-    if (error) {
-      console.error('Error unlinking product from competitor store:', error)
-      return NextResponse.json(
-        { error: 'Failed to unlink product', details: error.message },
-        { status: 500 }
-      )
-    }
+    await sql.unsafe(
+      `DELETE FROM competitor_store_products WHERE competitor_store_id = $1 AND product_id = $2`,
+      [id, productId]
+    )
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {
@@ -151,4 +132,3 @@ export async function DELETE(
     )
   }
 }
-

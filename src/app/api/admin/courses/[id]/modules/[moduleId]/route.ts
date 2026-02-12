@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function PATCH(
@@ -21,30 +21,36 @@ export async function PATCH(
       is_preview,
     } = body
 
-    const updates: any = {}
-    if (title !== undefined) updates.title = title
-    if (description !== undefined) updates.description = description
-    if (thumbnail !== undefined) updates.thumbnail = thumbnail
-    if (order_index !== undefined) updates.order_index = order_index
-    if (duration_minutes !== undefined) updates.duration_minutes = duration_minutes
-    if (is_preview !== undefined) updates.is_preview = is_preview
+    const setClauses: string[] = []
+    const params_arr: unknown[] = []
+    let paramIndex = 1
 
-    const { data: module, error } = await supabaseAdmin
-      .from('course_modules')
-      .update(updates)
-      .eq('id', moduleId)
-      .select()
-      .single()
+    if (title !== undefined) { setClauses.push(`title = $${paramIndex++}`); params_arr.push(title) }
+    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
+    if (thumbnail !== undefined) { setClauses.push(`thumbnail = $${paramIndex++}`); params_arr.push(thumbnail) }
+    if (order_index !== undefined) { setClauses.push(`order_index = $${paramIndex++}`); params_arr.push(order_index) }
+    if (duration_minutes !== undefined) { setClauses.push(`duration_minutes = $${paramIndex++}`); params_arr.push(duration_minutes) }
+    if (is_preview !== undefined) { setClauses.push(`is_preview = $${paramIndex++}`); params_arr.push(is_preview) }
 
-    if (error) {
-      console.error('Error updating module:', error)
+    if (setClauses.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
+
+    setClauses.push(`updated_at = now()`)
+
+    const query = `UPDATE course_modules SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
+    params_arr.push(moduleId)
+
+    const result = await sql.unsafe(query, params_arr)
+
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update module', details: error.message },
+        { error: 'Failed to update module' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ module })
+    return NextResponse.json({ module: result[0] })
   } catch (error) {
     console.error('Unexpected error updating module:', error)
     return NextResponse.json(
@@ -63,18 +69,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { moduleId } = await params
 
-    const { error } = await supabaseAdmin
-      .from('course_modules')
-      .delete()
-      .eq('id', moduleId)
-
-    if (error) {
-      console.error('Error deleting module:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete module', details: error.message },
-        { status: 500 }
-      )
-    }
+    await sql`DELETE FROM course_modules WHERE id = ${moduleId}`
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -85,4 +80,3 @@ export async function DELETE(
     )
   }
 }
-

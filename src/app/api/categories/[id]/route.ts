@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -8,35 +8,30 @@ export async function GET(
   try {
     const { id } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('categories')
-      .select(`
-        *,
-        parent_category:categories!categories_parent_category_id_fkey(id, name, slug)
-      `)
-      .eq('id', id)
-      .single()
+    const result = await sql`SELECT * FROM categories WHERE id = ${id} LIMIT 1`
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Category not found' },
-          { status: 404 }
-        )
-      }
-      console.error('Error fetching category:', error)
+    if (result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to fetch category', details: error.message },
-        { status: 500 }
+        { error: 'Category not found' },
+        { status: 404 }
       )
     }
 
-    // Fetch subcategories
-    const { data: subcategories } = await supabaseAdmin
-      .from('categories')
-      .select('*')
-      .eq('parent_category_id', id)
-      .order('name', { ascending: true })
+    const data = result[0]
+
+    let parentCategory = null
+    if (data.parent_category_id) {
+      const parentResult = await sql`SELECT id, name, slug FROM categories WHERE id = ${data.parent_category_id} LIMIT 1`
+      if (parentResult.length > 0) {
+        parentCategory = {
+          id: parentResult[0].id,
+          name: parentResult[0].name,
+          slug: parentResult[0].slug,
+        }
+      }
+    }
+
+    const subcategories = await sql`SELECT * FROM categories WHERE parent_category_id = ${id} ORDER BY name ASC`
 
     const category = {
       id: data.id,
@@ -46,18 +41,14 @@ export async function GET(
       image: data.image,
       thumbnail: data.thumbnail,
       parent_category_id: data.parent_category_id,
-      parent_category: data.parent_category ? {
-        id: data.parent_category.id,
-        name: data.parent_category.name,
-        slug: data.parent_category.slug,
-      } : null,
+      parent_category: parentCategory,
       trending: data.trending || false,
       product_count: data.product_count || 0,
       avg_profit_margin: data.avg_profit_margin ? parseFloat(data.avg_profit_margin) : null,
       growth_percentage: data.growth_percentage ? parseFloat(data.growth_percentage) : null,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      subcategories: subcategories?.map((sub: any) => ({
+      subcategories: subcategories.map((sub: any) => ({
         id: sub.id,
         name: sub.name,
         slug: sub.slug,
@@ -71,7 +62,7 @@ export async function GET(
         growth_percentage: sub.growth_percentage ? parseFloat(sub.growth_percentage) : null,
         created_at: sub.created_at,
         updated_at: sub.updated_at,
-      })) || [],
+      })),
     }
 
     return NextResponse.json({ category })
@@ -103,16 +94,9 @@ export async function PATCH(
       growth_percentage,
     } = body
 
-    // Check if slug is being changed and if new slug exists
     if (slug) {
-      const { data: existing } = await supabaseAdmin
-        .from('categories')
-        .select('id')
-        .eq('slug', slug)
-        .neq('id', id)
-        .single()
-
-      if (existing) {
+      const existing = await sql`SELECT id FROM categories WHERE slug = ${slug} AND id != ${id} LIMIT 1`
+      if (existing.length > 0) {
         return NextResponse.json(
           { error: 'Category with this slug already exists' },
           { status: 400 }
@@ -120,35 +104,38 @@ export async function PATCH(
       }
     }
 
-    // Build update object
-    const updateData: any = {}
-    if (name !== undefined) updateData.name = name
-    if (slug !== undefined) updateData.slug = slug
-    if (description !== undefined) updateData.description = description
-    if (image !== undefined) updateData.image = image
-    if (thumbnail !== undefined) updateData.thumbnail = thumbnail
-    if (parent_category_id !== undefined) {
-      updateData.parent_category_id = parent_category_id || null
+    const setClauses: string[] = []
+    const params_arr: unknown[] = []
+    let paramIndex = 1
+
+    if (name !== undefined) { setClauses.push(`name = $${paramIndex++}`); params_arr.push(name) }
+    if (slug !== undefined) { setClauses.push(`slug = $${paramIndex++}`); params_arr.push(slug) }
+    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
+    if (image !== undefined) { setClauses.push(`image = $${paramIndex++}`); params_arr.push(image) }
+    if (thumbnail !== undefined) { setClauses.push(`thumbnail = $${paramIndex++}`); params_arr.push(thumbnail) }
+    if (parent_category_id !== undefined) { setClauses.push(`parent_category_id = $${paramIndex++}`); params_arr.push(parent_category_id || null) }
+    if (trending !== undefined) { setClauses.push(`trending = $${paramIndex++}`); params_arr.push(trending) }
+    if (growth_percentage !== undefined) { setClauses.push(`growth_percentage = $${paramIndex++}`); params_arr.push(growth_percentage) }
+
+    if (setClauses.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
-    if (trending !== undefined) updateData.trending = trending
-    if (growth_percentage !== undefined) updateData.growth_percentage = growth_percentage
 
-    const { data: category, error } = await supabaseAdmin
-      .from('categories')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
+    setClauses.push(`updated_at = now()`)
 
-    if (error) {
-      console.error('Error updating category:', error)
+    const query = `UPDATE categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
+    params_arr.push(id)
+
+    const result = await sql.unsafe(query, params_arr)
+
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update category', details: error.message },
+        { error: 'Failed to update category' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ category })
+    return NextResponse.json({ category: result[0] })
   } catch (error) {
     console.error('Unexpected error updating category:', error)
     return NextResponse.json(
@@ -165,46 +152,23 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Check if category has subcategories
-    const { data: subcategories } = await supabaseAdmin
-      .from('categories')
-      .select('id')
-      .eq('parent_category_id', id)
-      .limit(1)
-
-    if (subcategories && subcategories.length > 0) {
+    const subcategories = await sql`SELECT id FROM categories WHERE parent_category_id = ${id} LIMIT 1`
+    if (subcategories.length > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category with subcategories. Please delete or reassign subcategories first.' },
         { status: 400 }
       )
     }
 
-    // Check if category has products
-    const { data: products } = await supabaseAdmin
-      .from('products')
-      .select('id')
-      .eq('category_id', id)
-      .limit(1)
-
-    if (products && products.length > 0) {
+    const products = await sql`SELECT id FROM products WHERE category_id = ${id} LIMIT 1`
+    if (products.length > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category with products. Please reassign or delete products first.' },
         { status: 400 }
       )
     }
 
-    const { error } = await supabaseAdmin
-      .from('categories')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting category:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete category', details: error.message },
-        { status: 500 }
-      )
-    }
+    await sql`DELETE FROM categories WHERE id = ${id}`
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -215,4 +179,3 @@ export async function DELETE(
     )
   }
 }
-

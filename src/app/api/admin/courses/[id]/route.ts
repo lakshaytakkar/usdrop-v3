@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CourseDetailResponse } from '@/types/courses'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -13,113 +13,45 @@ export async function GET(
     const { id } = await params
     console.log('Fetching course with ID:', id)
 
-    // Fetch course without instructor join (will fetch separately)
-    const { data: courseData, error: courseError } = await supabaseAdmin
-      .from('courses')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const courseResult = await sql`SELECT * FROM courses WHERE id = ${id} LIMIT 1`
 
-    console.log('Course query result:', { 
-      hasData: !!courseData, 
-      hasError: !!courseError,
-      errorCode: courseError?.code,
-      errorMessage: courseError?.message 
+    console.log('Course query result:', {
+      hasData: courseResult.length > 0,
     })
 
-    if (courseError) {
-      console.error('Error fetching course:', {
-        code: courseError.code,
-        message: courseError.message,
-        details: courseError.details,
-        hint: courseError.hint
-      })
-      // Check if it's a "not found" error (PGRST116) or a different error
-      if (courseError.code === 'PGRST116' || courseError.message?.includes('No rows') || courseError.message?.includes('not found')) {
-        return NextResponse.json(
-          { error: 'Course not found', courseId: id },
-          { status: 404 }
-        )
-      }
-      // For other errors, return 500 with details
-      return NextResponse.json(
-        { error: 'Failed to fetch course', details: courseError.message, code: courseError.code },
-        { status: 500 }
-      )
-    }
-
-    if (!courseData) {
-      console.warn('Course query succeeded but returned no data for ID:', id)
+    if (courseResult.length === 0) {
+      console.warn('Course not found for ID:', id)
       return NextResponse.json(
         { error: 'Course not found', courseId: id },
         { status: 404 }
       )
     }
 
-    // Fetch instructor profile separately if instructor_id exists
+    const courseData = courseResult[0]
+
     let instructorProfile: { full_name: string | null; avatar_url: string | null } | null = null
     if (courseData.instructor_id) {
-      const { data: profileData, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', courseData.instructor_id)
-        .single()
-      
-      if (!profileError && profileData) {
+      const profileResult = await sql`
+        SELECT id, full_name, avatar_url FROM profiles WHERE id = ${courseData.instructor_id} LIMIT 1
+      `
+
+      if (profileResult.length > 0) {
         instructorProfile = {
-          full_name: profileData.full_name,
-          avatar_url: profileData.avatar_url,
+          full_name: profileResult[0].full_name,
+          avatar_url: profileResult[0].avatar_url,
         }
       }
     }
 
-    // Fetch modules with chapters
-    const { data: modulesData, error: modulesError } = await supabaseAdmin
-      .from('course_modules')
-      .select(`
-        *,
-        course_chapters(
-          *,
-          course_resources(*)
-        )
-      `)
-      .eq('course_id', id)
-      .order('order_index', { ascending: true })
+    const modulesData = await sql`
+      SELECT * FROM course_modules WHERE course_id = ${id} ORDER BY order_index ASC
+    `
 
-    if (modulesError) {
-      console.error('Error fetching modules:', modulesError)
-    }
-
-    // Sort chapters within each module
-    const modules = (modulesData || []).map((module: any) => ({
+    const modules = modulesData.map((module: any) => ({
       ...module,
-      chapters: (module.course_chapters || [])
-        .sort((a: any, b: any) => a.order_index - b.order_index)
-        .map((chapter: any) => ({
-          id: chapter.id,
-          module_id: chapter.module_id,
-          title: chapter.title,
-          description: chapter.description,
-          content_type: chapter.content_type,
-          content: chapter.content,
-          order_index: chapter.order_index,
-          duration_minutes: chapter.duration_minutes,
-          is_preview: chapter.is_preview || false,
-          created_at: chapter.created_at,
-          updated_at: chapter.updated_at,
-          resources: (chapter.course_resources || []).map((resource: any) => ({
-            id: resource.id,
-            chapter_id: resource.chapter_id,
-            name: resource.name,
-            url: resource.url,
-            type: resource.type,
-            size: resource.size,
-            created_at: resource.created_at,
-          })),
-        })),
+      chapters: [],
     }))
 
-    // Transform course data
     const course = {
       id: courseData.id,
       title: courseData.title,
@@ -187,47 +119,37 @@ export async function PATCH(
       published,
     } = body
 
-    // Build update object with only provided fields
-    const updates: any = {}
-    
-    if (title !== undefined) updates.title = title
-    if (slug !== undefined) updates.slug = slug
-    if (description !== undefined) updates.description = description
-    if (instructor_id !== undefined) updates.instructor_id = instructor_id
-    if (thumbnail !== undefined) updates.thumbnail = thumbnail
-    if (category !== undefined) updates.category = category
-    if (level !== undefined) updates.level = level
-    if (price !== undefined) updates.price = price
-    if (tags !== undefined) updates.tags = tags
-    if (learning_objectives !== undefined) updates.learning_objectives = learning_objectives
-    if (prerequisites !== undefined) updates.prerequisites = prerequisites
-    if (featured !== undefined) updates.featured = featured
+    const setClauses: string[] = []
+    const params_arr: unknown[] = []
+    let paramIndex = 1
+
+    if (title !== undefined) { setClauses.push(`title = $${paramIndex++}`); params_arr.push(title) }
+    if (slug !== undefined) { setClauses.push(`slug = $${paramIndex++}`); params_arr.push(slug) }
+    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
+    if (instructor_id !== undefined) { setClauses.push(`instructor_id = $${paramIndex++}`); params_arr.push(instructor_id) }
+    if (thumbnail !== undefined) { setClauses.push(`thumbnail = $${paramIndex++}`); params_arr.push(thumbnail) }
+    if (category !== undefined) { setClauses.push(`category = $${paramIndex++}`); params_arr.push(category) }
+    if (level !== undefined) { setClauses.push(`level = $${paramIndex++}`); params_arr.push(level) }
+    if (price !== undefined) { setClauses.push(`price = $${paramIndex++}`); params_arr.push(price) }
+    if (tags !== undefined) { setClauses.push(`tags = $${paramIndex++}`); params_arr.push(JSON.stringify(tags)) }
+    if (learning_objectives !== undefined) { setClauses.push(`learning_objectives = $${paramIndex++}`); params_arr.push(JSON.stringify(learning_objectives)) }
+    if (prerequisites !== undefined) { setClauses.push(`prerequisites = $${paramIndex++}`); params_arr.push(JSON.stringify(prerequisites)) }
+    if (featured !== undefined) { setClauses.push(`featured = $${paramIndex++}`); params_arr.push(featured) }
     if (published !== undefined) {
-      updates.published = published
+      setClauses.push(`published = $${paramIndex++}`)
+      params_arr.push(published)
       if (published && !body.published_at) {
-        // Set published_at if publishing for the first time
-        const { data: existing } = await supabaseAdmin
-          .from('courses')
-          .select('published_at')
-          .eq('id', id)
-          .single()
-        
-        if (!existing?.published_at) {
-          updates.published_at = new Date().toISOString()
+        const existing = await sql`SELECT published_at FROM courses WHERE id = ${id} LIMIT 1`
+        if (existing.length > 0 && !existing[0].published_at) {
+          setClauses.push(`published_at = $${paramIndex++}`)
+          params_arr.push(new Date().toISOString())
         }
       }
     }
 
-    // Check if slug is being changed and already exists
     if (slug) {
-      const { data: existing } = await supabaseAdmin
-        .from('courses')
-        .select('id')
-        .eq('slug', slug)
-        .neq('id', id)
-        .single()
-
-      if (existing) {
+      const existing = await sql`SELECT id FROM courses WHERE slug = ${slug} AND id != ${id} LIMIT 1`
+      if (existing.length > 0) {
         return NextResponse.json(
           { error: 'Course with this slug already exists' },
           { status: 400 }
@@ -235,22 +157,25 @@ export async function PATCH(
       }
     }
 
-    const { data: course, error } = await supabaseAdmin
-      .from('courses')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single()
+    if (setClauses.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+    }
 
-    if (error) {
-      console.error('Error updating course:', error)
+    setClauses.push(`updated_at = now()`)
+
+    const query = `UPDATE courses SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
+    params_arr.push(id)
+
+    const result = await sql.unsafe(query, params_arr)
+
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to update course', details: error.message },
+        { error: 'Failed to update course' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ course })
+    return NextResponse.json({ course: result[0] })
   } catch (error) {
     console.error('Unexpected error updating course:', error)
     return NextResponse.json(
@@ -269,18 +194,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const { error } = await supabaseAdmin
-      .from('courses')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Error deleting course:', error)
-      return NextResponse.json(
-        { error: 'Failed to delete course', details: error.message },
-        { status: 500 }
-      )
-    }
+    await sql`DELETE FROM courses WHERE id = ${id}`
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -291,4 +205,3 @@ export async function DELETE(
     )
   }
 }
-

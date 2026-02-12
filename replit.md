@@ -84,6 +84,21 @@ public/
 - Build: `npm run build`
 - Start: `npm start`
 
+## Admin Panel
+- **Admin Auth**: All admin API routes protected via `requireAdmin()` helper from `src/lib/admin-auth.ts`
+- **Admin Roles**: admin, super_admin, editor, moderator
+- **Admin API Routes**: All converted from supabaseAdmin wrapper to direct SQL with parameterized queries
+- **Working Admin APIs**: products, categories, courses, competitor-stores, internal-users, external-users, plans, shopify-stores, orders, suppliers
+- **Admin Pages with Real Data**: products, categories, courses, competitor stores, users, plans
+- **Admin Pages with Mock Data**: orders, suppliers, intelligence, email-automation, knowledge-base, store-research, permissions (use local sample data files)
+- **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
+
+## Query Builder Notes
+- `supabaseAdmin` wrapper (`src/lib/supabase/server.ts`) works for simple single-table queries
+- For JOINs and complex queries, use direct SQL via `sql` tagged template from `src/lib/db`
+- The wrapper's alias join syntax with colons (e.g., `parent_category:categories!fkey(...)`) is BROKEN - always use direct SQL for joins
+- Use `sql.unsafe(query, params)` for dynamic queries with parameterized values
+
 ## Recent Changes (Feb 2026)
 - **Migrated from Supabase to Replit PostgreSQL**: 18 tables, all data imported
 - **Custom JWT auth system**: Replaced Supabase Auth with bcrypt + JWT cookies
@@ -92,3 +107,6 @@ public/
 - **Responsive landing page**: Mobile hamburger menu, responsive Hero section
 - **SEO metadata**: Added to landing page
 - **Fixed footer links**: Anchor links to landing page sections
+- **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added, SQL injection fixes, broken join queries fixed
+- **New admin APIs**: orders (GET/PATCH), suppliers (full CRUD)
+- **Disabled VerifyEmailBanner**: Component was showing for all users incorrectly

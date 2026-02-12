@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
-import { CompetitorStore } from '@/types/competitor-stores'
+import sql from '@/lib/db'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
+
+function mapStore(item: any) {
+  return {
+    id: item.id,
+    name: item.name,
+    url: item.url,
+    logo: item.logo,
+    category_id: item.category_id,
+    category: item.category_name ? { id: item.category_id_ref, name: item.category_name, slug: item.category_slug } : null,
+    country: item.country,
+    monthly_traffic: item.monthly_traffic,
+    monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
+    growth: parseFloat(item.growth),
+    products_count: item.products_count,
+    rating: item.rating ? parseFloat(item.rating) : null,
+    verified: item.verified,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,75 +36,68 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    let query = supabaseAdmin
-      .from('competitor_stores')
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `, { count: 'exact' })
+    const values: any[] = []
+    let paramIndex = 1
 
-    // Admin API: Show all stores (no verified filter by default)
+    const baseSelect = `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
+             FROM competitor_stores cs
+             LEFT JOIN categories c ON cs.category_id = c.id`
+
+    const whereParts: string[] = []
+
     if (verified !== null) {
-      query = query.eq('verified', verified === 'true')
+      whereParts.push(`cs.verified = $${paramIndex}`)
+      values.push(verified === 'true')
+      paramIndex++
     }
 
-    // Apply filters
     if (categoryId) {
-      query = query.eq('category_id', categoryId)
+      whereParts.push(`cs.category_id = $${paramIndex}`)
+      values.push(categoryId)
+      paramIndex++
     }
 
     if (country) {
-      query = query.eq('country', country)
+      whereParts.push(`cs.country = $${paramIndex}`)
+      values.push(country)
+      paramIndex++
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
+      whereParts.push(`(cs.name ILIKE $${paramIndex} OR cs.url ILIKE $${paramIndex})`)
+      values.push(`%${search}%`)
+      paramIndex++
     }
 
-    // Apply sorting
-    const orderColumn = sortBy === 'name' ? 'name' :
-                       sortBy === 'monthly_revenue' ? 'monthly_revenue' :
-                       sortBy === 'monthly_traffic' ? 'monthly_traffic' :
-                       sortBy === 'growth' ? 'growth' :
-                       sortBy === 'rating' ? 'rating' :
-                       'created_at'
+    const whereClause = whereParts.length > 0 ? ` WHERE ${whereParts.join(' AND ')}` : ''
 
-    query = query.order(orderColumn, { ascending: sortOrder === 'asc', nullsFirst: false })
-
-    // Apply pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    query = query.range(from, to)
-
-    const { data, error, count } = await query
-
-    if (error) {
-      console.error('Error fetching competitor stores:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch competitor stores', details: error.message },
-        { status: 500 }
-      )
+    const allowedSortColumns: Record<string, string> = {
+      name: 'cs.name',
+      monthly_revenue: 'cs.monthly_revenue',
+      monthly_traffic: 'cs.monthly_traffic',
+      growth: 'cs.growth',
+      rating: 'cs.rating',
+      created_at: 'cs.created_at',
     }
+    const orderCol = allowedSortColumns[sortBy] || 'cs.created_at'
+    const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC'
 
-    const stores: CompetitorStore[] = (data || []).map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      url: item.url,
-      logo: item.logo,
-      category_id: item.category_id,
-      category: item.category,
-      country: item.country,
-      monthly_traffic: item.monthly_traffic,
-      monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
-      growth: parseFloat(item.growth),
-      products_count: item.products_count,
-      rating: item.rating ? parseFloat(item.rating) : null,
-      verified: item.verified,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-    }))
+    const offset = (page - 1) * pageSize
 
-    return NextResponse.json({ stores, totalCount: count || 0 }, { status: 200 })
+    const query = `${baseSelect}${whereClause} ORDER BY ${orderCol} ${orderDir} NULLS LAST LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`
+    const queryValues = [...values, pageSize, offset]
+
+    const countQuery = `SELECT COUNT(*) FROM competitor_stores cs${whereClause}`
+
+    const [result, countResult] = await Promise.all([
+      sql.unsafe(query, queryValues),
+      sql.unsafe(countQuery, values),
+    ])
+
+    const stores = result.map(mapStore)
+    const totalCount = parseInt(countResult[0].count, 10)
+
+    return NextResponse.json({ stores, totalCount }, { status: 200 })
   } catch (error: any) {
     console.error('Unexpected error in GET admin competitor stores:', error)
     return NextResponse.json(
@@ -114,7 +126,6 @@ export async function POST(request: NextRequest) {
       verified,
     } = body
 
-    // Validation
     if (!name || !url) {
       return NextResponse.json(
         { error: 'Name and URL are required' },
@@ -122,52 +133,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data, error } = await supabaseAdmin
-      .from('competitor_stores')
-      .insert({
+    const insertResult = await sql.unsafe(
+      `INSERT INTO competitor_stores (name, url, logo, category_id, country, monthly_traffic, monthly_revenue, growth, products_count, rating, verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id`,
+      [
         name,
         url,
-        logo: logo || null,
-        category_id: category_id || null,
-        country: country || null,
-        monthly_traffic: monthly_traffic || 0,
-        monthly_revenue: monthly_revenue || null,
-        growth: growth || 0,
-        products_count: products_count || null,
-        rating: rating || null,
-        verified: verified || false,
-      })
-      .select(`
-        *,
-        category:categories(id, name, slug)
-      `)
-      .single()
+        logo || null,
+        category_id || null,
+        country || null,
+        monthly_traffic || 0,
+        monthly_revenue || null,
+        growth || 0,
+        products_count || null,
+        rating || null,
+        verified || false,
+      ]
+    )
 
-    if (error) {
-      console.error('Error creating competitor store:', error)
-      return NextResponse.json(
-        { error: 'Failed to create competitor store', details: error.message },
-        { status: 500 }
-      )
-    }
+    const newId = insertResult[0].id
 
-    const store: CompetitorStore = {
-      id: data.id,
-      name: data.name,
-      url: data.url,
-      logo: data.logo,
-      category_id: data.category_id,
-      category: data.category,
-      country: data.country,
-      monthly_traffic: data.monthly_traffic,
-      monthly_revenue: data.monthly_revenue ? parseFloat(data.monthly_revenue) : null,
-      growth: parseFloat(data.growth),
-      products_count: data.products_count,
-      rating: data.rating ? parseFloat(data.rating) : null,
-      verified: data.verified,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    }
+    const result = await sql.unsafe(
+      `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
+       FROM competitor_stores cs
+       LEFT JOIN categories c ON cs.category_id = c.id
+       WHERE cs.id = $1`,
+      [newId]
+    )
+
+    const store = mapStore(result[0])
 
     return NextResponse.json({ store }, { status: 201 })
   } catch (error: any) {
@@ -178,4 +173,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

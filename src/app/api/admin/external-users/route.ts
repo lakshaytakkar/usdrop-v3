@@ -1,41 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
 import { hashPassword } from '@/lib/auth'
 import sql from '@/lib/db'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 import crypto from 'crypto'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
+function mapRowToUserWithPlan(row: any) {
+  return {
+    ...row,
+    subscription_plans: row.plan_id ? {
+      id: row.plan_id,
+      name: row.plan_name,
+      slug: row.plan_slug,
+      price_monthly: row.plan_price_monthly,
+      features: row.plan_features,
+      trial_days: row.plan_trial_days,
+    } : null
+  }
+}
+
 export async function GET() {
   try {
     const authResult = await requireAdmin()
     if (isAdminResponse(authResult)) return authResult
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select(`
-        *,
-        subscription_plans (
-          id,
-          name,
-          slug,
-          price_monthly,
-          features,
-          trial_days
-        )
-      `)
-      .is('internal_role', null)
-      .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching external users:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    const rows = await sql`
+      SELECT
+        p.*,
+        sp.id AS plan_id,
+        sp.name AS plan_name,
+        sp.slug AS plan_slug,
+        sp.price_monthly AS plan_price_monthly,
+        sp.features AS plan_features,
+        sp.trial_days AS plan_trial_days
+      FROM profiles p
+      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
+      WHERE p.internal_role IS NULL
+      ORDER BY p.created_at DESC
+    `
 
-    if (!data || data.length === 0) {
+    if (!rows || rows.length === 0) {
       return NextResponse.json([])
     }
 
-    const users = data.map((user: any) => mapExternalUserFromDB(user))
+    const users = rows.map((row: any) => mapExternalUserFromDB(mapRowToUserWithPlan(row)))
 
     return NextResponse.json(users)
   } catch (error) {
@@ -132,28 +140,25 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    const { data, error } = await supabaseAdmin
-      .from('profiles')
-      .select(`
-        *,
-        subscription_plans (
-          id,
-          name,
-          slug,
-          price_monthly,
-          features,
-          trial_days
-        )
-      `)
-      .eq('id', userId)
-      .single()
+    const rows = await sql`
+      SELECT
+        p.*,
+        sp.id AS plan_id,
+        sp.name AS plan_name,
+        sp.slug AS plan_slug,
+        sp.price_monthly AS plan_price_monthly,
+        sp.features AS plan_features,
+        sp.trial_days AS plan_trial_days
+      FROM profiles p
+      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
+      WHERE p.id = ${userId}
+    `
 
-    if (error) {
-      console.error('Error fetching created external user:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({ error: 'Failed to fetch created user' }, { status: 500 })
     }
 
-    const user = mapExternalUserFromDB(data)
+    const user = mapExternalUserFromDB(mapRowToUserWithPlan(rows[0]))
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {

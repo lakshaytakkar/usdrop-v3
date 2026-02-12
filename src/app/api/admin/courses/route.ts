@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CoursesResponse, CourseQueryParams } from '@/types/courses'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -18,89 +18,68 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '20')
 
-    // Build query - admin can see all courses
-    // Simplified without profiles join - will fetch profiles separately
-    let query = supabaseAdmin
-      .from('courses')
-      .select('*')
+    const conditions: string[] = []
+    const params: unknown[] = []
+    let paramIndex = 1
 
-    // Apply filters
     if (category) {
-      query = query.eq('category', category)
+      conditions.push(`category = $${paramIndex++}`)
+      params.push(category)
     }
 
     if (level) {
-      query = query.eq('level', level)
+      conditions.push(`level = $${paramIndex++}`)
+      params.push(level)
     }
 
     if (featured === 'true') {
-      query = query.eq('featured', true)
+      conditions.push(`featured = true`)
     }
 
     if (published === 'true') {
-      query = query.eq('published', true)
+      conditions.push(`published = true`)
     } else if (published === 'false') {
-      query = query.eq('published', false)
+      conditions.push(`published = false`)
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,slug.ilike.%${search}%`)
+      conditions.push(`(title ILIKE $${paramIndex} OR description ILIKE $${paramIndex} OR slug ILIKE $${paramIndex})`)
+      params.push(`%${search}%`)
+      paramIndex++
     }
 
-    // Get total count before pagination
-    let countQuery = supabaseAdmin
-      .from('courses')
-      .select('*', { count: 'exact', head: true })
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
-    if (category) countQuery = countQuery.eq('category', category)
-    if (level) countQuery = countQuery.eq('level', level)
-    if (featured === 'true') countQuery = countQuery.eq('featured', true)
-    if (published === 'true') countQuery = countQuery.eq('published', true)
-    if (published === 'false') countQuery = countQuery.eq('published', false)
-    if (search) {
-      countQuery = countQuery.or(`title.ilike.%${search}%,description.ilike.%${search}%,slug.ilike.%${search}%`)
-    }
+    const allowedSortColumns = ['created_at', 'updated_at', 'title', 'price', 'students_count', 'rating', 'published_at']
+    const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC'
 
-    const { count, error: countError } = await countQuery
+    const offset = (page - 1) * pageSize
 
-    if (countError) {
-      console.error('Error counting courses:', countError)
-    }
+    const countQuery = `SELECT COUNT(*) as total FROM courses ${whereClause}`
+    const countResult = await sql.unsafe(countQuery, params)
+    const total = parseInt(countResult[0]?.total || '0')
 
-    const total = count || 0
+    const dataQuery = `
+      SELECT * FROM courses
+      ${whereClause}
+      ORDER BY ${safeSortBy} ${safeSortOrder} NULLS LAST
+      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
+    `
+    const dataParams = [...params, pageSize, offset]
+    const data = await sql.unsafe(dataQuery, dataParams)
 
-    // Apply sorting
-    const ascending = sortOrder === 'asc'
-    query = query.order(sortBy, { ascending, nullsFirst: false })
-
-    // Apply pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    query = query.range(from, to)
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching courses:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch courses', details: error.message },
-        { status: 500 }
-      )
-    }
-
-    // Fetch instructor profiles if instructor_id exists
     const instructorIds = (data || [])
       .map((c: any) => c.instructor_id)
       .filter((id: any) => id !== null)
-    
+
     let instructorMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {}
-    
+
     if (instructorIds.length > 0) {
-      const { data: profiles } = await supabaseAdmin
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', instructorIds)
-      
+      const profiles = await sql`
+        SELECT id, full_name, avatar_url FROM profiles WHERE id = ANY(${instructorIds})
+      `
+
       if (profiles) {
         profiles.forEach((profile: any) => {
           instructorMap[profile.id] = {
@@ -111,10 +90,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Transform data to match Course interface
     const courses = (data || []).map((course: any) => {
       const instructor = course.instructor_id ? instructorMap[course.instructor_id] : null
-      
+
       return {
         id: course.id,
         title: course.title,
@@ -183,7 +161,6 @@ export async function POST(request: NextRequest) {
       published = false,
     } = body
 
-    // Validate required fields
     if (!title || !slug) {
       return NextResponse.json(
         { error: 'Missing required fields: title, slug' },
@@ -191,55 +168,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if slug already exists
-    const { data: existing } = await supabaseAdmin
-      .from('courses')
-      .select('id')
-      .eq('slug', slug)
-      .single()
+    const existing = await sql`SELECT id FROM courses WHERE slug = ${slug} LIMIT 1`
 
-    if (existing) {
+    if (existing.length > 0) {
       return NextResponse.json(
         { error: 'Course with this slug already exists' },
         { status: 400 }
       )
     }
 
-    // Insert course
-    const { data: course, error } = await supabaseAdmin
-      .from('courses')
-      .insert({
-        title,
-        slug,
-        description: description || null,
-        instructor_id: instructor_id || null,
-        thumbnail: thumbnail || null,
-        category: category || null,
-        level: level || null,
-        price: price || 0,
-        tags: tags || [],
-        learning_objectives: learning_objectives || [],
-        prerequisites: prerequisites || [],
-        featured: featured || false,
-        published: published || false,
-        published_at: published ? new Date().toISOString() : null,
-        duration_minutes: 0,
-        lessons_count: 0,
-        students_count: 0,
-      })
-      .select()
-      .single()
+    const result = await sql`
+      INSERT INTO courses (
+        title, slug, description, instructor_id, thumbnail,
+        category, level, price, tags, learning_objectives,
+        prerequisites, featured, published, published_at,
+        duration_minutes, lessons_count, students_count
+      ) VALUES (
+        ${title}, ${slug}, ${description || null}, ${instructor_id || null}, ${thumbnail || null},
+        ${category || null}, ${level || null}, ${price || 0}, ${JSON.stringify(tags || [])}, ${JSON.stringify(learning_objectives || [])},
+        ${JSON.stringify(prerequisites || [])}, ${featured || false}, ${published || false}, ${published ? new Date().toISOString() : null},
+        ${0}, ${0}, ${0}
+      )
+      RETURNING *
+    `
 
-    if (error) {
-      console.error('Error creating course:', error)
+    if (!result || result.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to create course', details: error.message },
+        { error: 'Failed to create course' },
         { status: 500 }
       )
     }
 
     return NextResponse.json(
-      { course },
+      { course: result[0] },
       { status: 201 }
     )
   } catch (error) {
@@ -250,4 +211,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
