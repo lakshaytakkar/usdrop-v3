@@ -108,4 +108,6 @@ public/
 - **Simplified middleware**: JWT-only verification, no database calls
 - **Fixed all API routes**: Removed all direct `@supabase/supabase-js` imports
 - **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added
+- **Fixed admin role bypass**: Admin/internal users (admin, super_admin, editor, moderator) no longer treated as free users; both onboarding-context and user-plan-context now track internalRole and isAdmin
+- **Generated missing icons**: 21 icons created across 3d-ecom-icons-blue/ (9), 3d-icons/ (9), christmas-icons/ (3) - all broken image references resolved
 - **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created

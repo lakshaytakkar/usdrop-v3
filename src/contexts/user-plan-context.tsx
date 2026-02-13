@@ -7,6 +7,8 @@ interface UserPlanContextType {
   plan: string | null
   isFree: boolean
   isPro: boolean
+  isAdmin: boolean
+  internalRole: string | null
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -23,11 +25,15 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 interface CachedPlanData {
   plan: string
+  internalRole: string | null
   timestamp: number
 }
 
+const ADMIN_ROLES = ["admin", "super_admin", "editor", "moderator"]
+
 export function UserPlanProvider({ children }: UserPlanProviderProps) {
   const [plan, setPlan] = useState<string | null>(null)
+  const [internalRole, setInternalRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -45,6 +51,7 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
             // Use cached data if still valid
             if (now - cachedData.timestamp < CACHE_DURATION) {
               setPlan(cachedData.plan || "free")
+              setInternalRole(cachedData.internalRole || null)
               setIsLoading(false)
               setError(null)
               return
@@ -72,14 +79,17 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
       if (response.ok) {
         const data = await response.json()
         const userPlan = data.plan || "free"
+        const userRole = data.user?.internal_role || null
         
         setPlan(userPlan)
+        setInternalRole(userRole)
         
         // Cache the result in sessionStorage
         if (typeof window !== "undefined") {
           try {
             const cacheData: CachedPlanData = {
               plan: userPlan,
+              internalRole: userRole,
               timestamp: Date.now(),
             }
             sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
@@ -159,13 +169,16 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
     }
   }, [fetchUserPlan])
 
-  const isFree = plan === "free" || plan === null
-  const isPro = plan === "pro"
+  const isAdmin = internalRole != null && ADMIN_ROLES.includes(internalRole)
+  const isFree = !isAdmin && (plan === "free" || plan === null)
+  const isPro = isAdmin || plan === "pro"
 
   const value: UserPlanContextType = {
     plan,
     isFree,
     isPro,
+    isAdmin,
+    internalRole,
     isLoading,
     error,
     refetch: () => fetchUserPlan(true),
@@ -186,6 +199,8 @@ export function useUserPlanContext(): UserPlanContextType {
       plan: "free",
       isFree: true,
       isPro: false,
+      isAdmin: false,
+      internalRole: null,
       isLoading: false,
       error: null,
       refetch: async () => {},

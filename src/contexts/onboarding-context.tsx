@@ -4,7 +4,6 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { OnboardingStatus } from "@/types/onboarding"
 
 interface OnboardingContextType {
-  // Onboarding status
   isComplete: boolean
   progressPercentage: number
   completedVideos: number
@@ -12,16 +11,15 @@ interface OnboardingContextType {
   completedModules: number
   totalModules: number
   
-  // User plan - Only Free and Pro
   plan: string | null
   isFree: boolean
   isPro: boolean
+  isAdmin: boolean
+  internalRole: string | null
   
-  // Loading state
   isLoading: boolean
   error: string | null
   
-  // Actions
   refetch: () => Promise<void>
 }
 
@@ -31,9 +29,12 @@ interface OnboardingProviderProps {
   children: ReactNode
 }
 
+const ADMIN_ROLES = ["admin", "super_admin", "editor", "moderator"]
+
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [status, setStatus] = useState<OnboardingStatus | null>(null)
   const [plan, setPlan] = useState<string | null>(null)
+  const [internalRole, setInternalRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -102,9 +103,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
           try {
             const userData = await userResponse.json()
             setPlan(userData.plan || "free")
+            setInternalRole(userData.user?.internal_role || null)
           } catch (parseError) {
             console.warn("Failed to parse user data JSON:", parseError)
             setPlan("free")
+            setInternalRole(null)
           }
         } else {
           setPlan("free")
@@ -135,11 +138,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     fetchData()
   }, [fetchData])
 
-  // Determine if user is free
-  const isFreeUser = plan === "free" || plan === null
+  const isAdminUser = internalRole != null && ADMIN_ROLES.includes(internalRole)
+  const isFreeUser = !isAdminUser && (plan === "free" || plan === null)
 
   const value: OnboardingContextType = {
-    // For free users, always set onboarding as incomplete
     isComplete: isFreeUser ? false : (status?.onboarding_completed || false),
     progressPercentage: status?.onboarding_progress || 0,
     completedVideos: status?.completed_videos || 0,
@@ -148,7 +150,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     totalModules: status?.total_modules || 6,
     plan,
     isFree: isFreeUser,
-    isPro: plan === "pro",
+    isPro: isAdminUser || plan === "pro",
+    isAdmin: isAdminUser,
+    internalRole,
     isLoading,
     error,
     refetch: fetchData,
@@ -175,6 +179,8 @@ export function useOnboarding(): OnboardingContextType {
       plan: "free",
       isFree: true,
       isPro: false,
+      isAdmin: false,
+      internalRole: null,
       isLoading: false,
       error: null,
       refetch: async () => {},
