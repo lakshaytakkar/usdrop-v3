@@ -15,7 +15,6 @@ import { Card } from "@/components/ui/card"
 import Image from "next/image"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
@@ -210,7 +209,6 @@ export default function ProductHuntPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <ProPageWrapper featureName="Product Hunt" featureDescription="Discover trending products with AI-powered research and real-time market data">
         <div 
           ref={containerRef}
           className="flex flex-1 flex-col gap-4 p-4 md:p-6 overflow-y-auto relative"
@@ -409,7 +407,6 @@ export default function ProductHuntPage() {
           {/* Upsell Dialog */}
           <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
         </div>
-        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

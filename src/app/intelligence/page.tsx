@@ -21,7 +21,6 @@ import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { EmptyState } from "@/components/ui/empty-state"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 export default function IntelligencePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -49,7 +48,6 @@ export default function IntelligencePage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <ProPageWrapper featureName="Intelligence Hub" featureDescription="Access industry reports, market insights, and dropshipping news">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 via-violet-950 to-purple-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -159,7 +157,8 @@ export default function IntelligencePage() {
                 {filteredArticles.map((article, index) => {
                   // Use details-locked strategy: show all articles but lock "Read more" buttons
                   const { isLocked } = getTeaserLockState(index, isFree, {
-                    strategy: "details-locked"
+                    freeVisibleCount: 3,
+                    strategy: "first-n-items"
                   })
                   return (
                     <ArticleCard 
@@ -179,7 +178,6 @@ export default function IntelligencePage() {
             />
           )}
         </div>
-        </ProPageWrapper>
       </SidebarInset>
       
       {/* Upsell Dialog */}

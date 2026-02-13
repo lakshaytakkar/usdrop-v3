@@ -85,7 +85,7 @@ export default function AdminProductsPage() {
         params.set("category_id", categoryFilter)
       }
 
-      const response = await fetch(`/api/products?${params.toString()}`)
+      const response = await fetch(`/api/admin/products?${params.toString()}`)
       if (!response.ok) throw new Error("Failed to fetch products")
       const data = await response.json()
       setProducts(data.products || [])
@@ -99,7 +99,7 @@ export default function AdminProductsPage() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch("/api/categories")
+      const response = await fetch("/api/admin/categories")
       if (response.ok) {
         const data = await response.json()
         setCategories(data.categories || [])
@@ -172,7 +172,7 @@ export default function AdminProductsPage() {
   const confirmDelete = async () => {
     if (!productToDelete) return
     try {
-      const response = await fetch(`/api/products/${productToDelete.id}`, { method: "DELETE" })
+      const response = await fetch(`/api/admin/products/${productToDelete.id}`, { method: "DELETE" })
       if (!response.ok) throw new Error("Failed to delete product")
       showSuccess(`"${productToDelete.title}" deleted`)
       setDeleteConfirmOpen(false)
@@ -190,7 +190,7 @@ export default function AdminProductsPage() {
     }
     try {
       const promises = Array.from(selectedIds).map((id) =>
-        fetch(`/api/products/${id}`, { method: "DELETE" })
+        fetch(`/api/admin/products/${id}`, { method: "DELETE" })
       )
       const results = await Promise.allSettled(promises)
       const failed = results.filter((r) => r.status === "rejected").length

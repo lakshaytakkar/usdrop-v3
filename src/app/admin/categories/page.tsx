@@ -293,7 +293,7 @@ export default function AdminCategoriesPage() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('/api/categories?include_subcategories=true')
+      const response = await fetch('/api/admin/categories?include_subcategories=true')
       if (!response.ok) {
         throw new Error('Failed to fetch categories')
       }
@@ -337,7 +337,7 @@ export default function AdminCategoriesPage() {
   const confirmDelete = async () => {
     if (!categoryToDelete) return
     try {
-      const response = await fetch(`/api/categories/${categoryToDelete.id}`, {
+      const response = await fetch(`/api/admin/categories/${categoryToDelete.id}`, {
         method: 'DELETE',
       })
       
@@ -367,7 +367,7 @@ export default function AdminCategoriesPage() {
     try {
       // Delete all selected categories
       const deletePromises = selectedCategories.map(category =>
-        fetch(`/api/categories/${category.id}`, { method: 'DELETE' })
+        fetch(`/api/admin/categories/${category.id}`, { method: 'DELETE' })
       )
       const results = await Promise.allSettled(deletePromises)
       const failed = results.filter(r => r.status === 'rejected').length

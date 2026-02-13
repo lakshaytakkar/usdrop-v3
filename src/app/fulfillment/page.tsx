@@ -7,15 +7,24 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
 import Link from "next/link"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
 
 export default function FulfillmentPage() {
+  const { isFree } = useOnboarding()
+
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       <Header />
       
-      <ProPageWrapper featureName="Fulfillment Center" featureDescription="Track orders, manage inventory, and handle fulfillment logistics">
       <main className="pt-20">
+        {isFree && (
+          <FeatureLockedOverlay 
+            featureName="Fulfillment Center" 
+            description="Upgrade to Pro to unlock full access."
+            variant="inline"
+          />
+        )}
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white" />
@@ -210,7 +219,6 @@ export default function FulfillmentPage() {
 
       </main>
 
-      </ProPageWrapper>
       <Footer />
     </div>
   )

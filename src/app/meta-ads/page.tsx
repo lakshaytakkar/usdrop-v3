@@ -19,9 +19,11 @@ import { AdDetailSheet } from "./components/ad-detail-sheet"
 import { MetaAd, sampleAds } from "./data/ads"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { ComingSoonOverlay } from "./components/coming-soon-overlay"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
 
 export default function MetaAdsPage() {
+  const { isFree } = useOnboarding()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
@@ -78,8 +80,14 @@ export default function MetaAdsPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <ProPageWrapper featureName="Meta Ads" featureDescription="Plan and optimize your Meta advertising campaigns with AI-powered insights">
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
+          {isFree && (
+            <FeatureLockedOverlay 
+              featureName="Meta Ads" 
+              description="Upgrade to Pro to unlock full access."
+              variant="inline"
+            />
+          )}
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}
@@ -266,7 +274,6 @@ export default function MetaAdsPage() {
             onClose={handleCloseSidebar}
           />
         </div>
-        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
   )

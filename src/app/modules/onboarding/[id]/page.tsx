@@ -5,7 +5,6 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
-import { OnboardingProvider } from "@/contexts/onboarding-context"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -432,32 +431,30 @@ function OnboardingModuleContent() {
 
 export default function OnboardingModulePage() {
   return (
-    <OnboardingProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
-          <main className="flex flex-1 flex-col min-h-0">
-            <Suspense
-              fallback={
-                <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
-                  <Skeleton className="h-8 w-64" />
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
-                    <Skeleton className="aspect-video w-full rounded-xl" />
-                    <div className="space-y-2">
-                      {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-16 w-full rounded-lg" />
-                      ))}
-                    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Topbar />
+        <main className="flex flex-1 flex-col min-h-0">
+          <Suspense
+            fallback={
+              <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+                <Skeleton className="h-8 w-64" />
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+                  <Skeleton className="aspect-video w-full rounded-xl" />
+                  <div className="space-y-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                    ))}
                   </div>
                 </div>
-              }
-            >
-              <OnboardingModuleContent />
-            </Suspense>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </OnboardingProvider>
+              </div>
+            }
+          >
+            <OnboardingModuleContent />
+          </Suspense>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

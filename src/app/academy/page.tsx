@@ -18,7 +18,8 @@ import { useOnboarding } from "@/contexts/onboarding-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BookOpen, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 // Mentor features for the banner
 const mentorFeatures = [
@@ -76,6 +77,7 @@ export default function AcademyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showOnboardingDialog, setShowOnboardingDialog] = useState(false)
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const { isFree, isPro } = useOnboarding()
 
   const fetchCourses = useCallback(async () => {
@@ -111,7 +113,6 @@ export default function AcademyPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <ProPageWrapper featureName="My Mentor" featureDescription="Access personalized learning paths and courses from dropshipping experts">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Mentor Introduction Banner */}
           <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 h-[154px] flex-shrink-0">
@@ -213,16 +214,17 @@ export default function AcademyPage() {
             
             {!loading && !error && courses.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {courses.map((course) => {
-                  // For pro users: all courses are unlocked (no locked overlay)
-                  // For free users: lock all courses
-                  const isLocked = isPro ? false : isFree
+                {courses.map((course, index) => {
+                  const { isLocked } = getTeaserLockState(index, isFree, {
+                    freeVisibleCount: 3,
+                    strategy: "first-n-items"
+                  })
                   return (
                     <CourseCard 
                       key={course.id} 
                       course={course}
                       isLocked={isLocked}
-                      onLockedClick={() => setShowOnboardingDialog(true)}
+                      onLockedClick={() => setIsUpsellOpen(true)}
                     />
                   )
                 })}
@@ -267,8 +269,12 @@ export default function AcademyPage() {
             </DialogContent>
           </Dialog>
         </div>
-        </ProPageWrapper>
       </SidebarInset>
+
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </SidebarProvider>
   )
 }

@@ -91,7 +91,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
   const fetchCategories = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/categories")
+      const res = await fetch("/api/admin/categories")
       if (!res.ok) throw new Error("Failed to fetch categories")
       const data = await res.json()
       setCategories(data.categories || [])
@@ -218,7 +218,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
         body.source = { source_type: "scraped" }
       }
 
-      const url = isEditMode ? `/api/products/${product!.id}` : "/api/products"
+      const url = isEditMode ? `/api/admin/products/${product!.id}` : "/api/admin/products"
       const method = isEditMode ? "PATCH" : "POST"
 
       const res = await fetch(url, {

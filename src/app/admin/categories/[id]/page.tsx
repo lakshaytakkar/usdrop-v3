@@ -78,7 +78,7 @@ export default function CategoryDetailPage() {
         setLoading(true)
         
         // Fetch the specific category
-        const categoryResponse = await fetch(`/api/categories/${categoryId}`)
+        const categoryResponse = await fetch(`/api/admin/categories/${categoryId}`)
         if (!categoryResponse.ok) {
           throw new Error('Failed to fetch category')
         }
@@ -87,7 +87,7 @@ export default function CategoryDetailPage() {
         setCategory(transformToProductCategory(apiCategory))
         
         // Fetch all categories for navigation
-        const allCategoriesResponse = await fetch('/api/categories?include_subcategories=true')
+        const allCategoriesResponse = await fetch('/api/admin/categories?include_subcategories=true')
         if (allCategoriesResponse.ok) {
           const allCategoriesData = await allCategoriesResponse.json()
           const allCats: Category[] = allCategoriesData.categories || []

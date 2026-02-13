@@ -4,7 +4,7 @@ import { useMemo, useEffect, useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
-import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
+import { useOnboarding } from "@/contexts/onboarding-context"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { CategoryCard } from "./components/category-card"
 import { Category } from "@/types/categories"
@@ -12,7 +12,6 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 import Image from "next/image"
 
 // Transform API category to local format
@@ -88,7 +87,6 @@ function CategoriesPageContent() {
         <AppSidebar />
         <SidebarInset>
           <Topbar />
-          <ProPageWrapper featureName="Categories" featureDescription="Browse product categories with trend data, profit margins, and growth analysis">
           <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 via-indigo-950 to-purple-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -182,7 +180,7 @@ function CategoriesPageContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {sortedCategories.map((category, index) => {
                         const { isLocked } = getTeaserLockState(index, isFree, {
-                          freeVisibleCount: 6,
+                          freeVisibleCount: 4,
                           strategy: "first-n-items"
                         })
                         return (
@@ -203,7 +201,6 @@ function CategoriesPageContent() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Categories" />
         </div>
-        </ProPageWrapper>
       </SidebarInset>
     </SidebarProvider>
     
@@ -217,9 +214,5 @@ function CategoriesPageContent() {
 }
 
 export default function CategoriesPage() {
-  return (
-    <OnboardingProvider>
-      <CategoriesPageContent />
-    </OnboardingProvider>
-  )
+  return <CategoriesPageContent />
 }

@@ -19,12 +19,17 @@ import { Search, Users, HelpCircle } from "lucide-react"
 import { SupplierCard } from "./components/supplier-card"
 import { Supplier, sampleSuppliers } from "./data/suppliers"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { LockOverlay } from "@/components/ui/lock-overlay"
 
 export default function SuppliersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"rating" | "reviews" | "minOrder">("rating")
+  const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const { isFree } = useOnboarding()
 
   const categories = useMemo(() => {
     return ["all", ...Array.from(new Set(sampleSuppliers.map((s) => s.category)))]
@@ -62,7 +67,6 @@ export default function SuppliersPage() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <ProPageWrapper featureName="Private Suppliers" featureDescription="Connect with verified private suppliers for better margins and faster shipping">
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -182,15 +186,33 @@ export default function SuppliersPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredAndSortedSuppliers.map((supplier) => (
-                <SupplierCard key={supplier.id} supplier={supplier} />
-              ))}
+              {filteredAndSortedSuppliers.map((supplier, index) => {
+                const { isLocked } = getTeaserLockState(index, isFree, {
+                  freeVisibleCount: 3,
+                  strategy: "first-n-items"
+                })
+                return (
+                  <div key={supplier.id} className="relative">
+                    <SupplierCard supplier={supplier} />
+                    {isLocked && (
+                      <LockOverlay 
+                        onClick={() => setIsUpsellOpen(true)}
+                        size="md"
+                      />
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
           <OnboardingProgressOverlay pageName="Private Suppliers" />
         </div>
-        </ProPageWrapper>
       </SidebarInset>
+
+      <UpsellDialog 
+        isOpen={isUpsellOpen} 
+        onClose={() => setIsUpsellOpen(false)} 
+      />
     </SidebarProvider>
   )
 }

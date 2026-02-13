@@ -5,7 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
-import { OnboardingProvider, useOnboarding } from "@/contexts/onboarding-context"
+import { useOnboarding } from "@/contexts/onboarding-context"
 import { Card } from "@/components/ui/card"
 import { OnboardingModule } from "@/types/onboarding"
 import {
@@ -469,16 +469,14 @@ function DashboardContent() {
 
 export default function MyDashboardPage() {
   return (
-    <OnboardingProvider>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
-          <main className="flex flex-1 flex-col min-h-0">
-            <DashboardContent />
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
-    </OnboardingProvider>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Topbar />
+        <main className="flex flex-1 flex-col min-h-0">
+          <DashboardContent />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

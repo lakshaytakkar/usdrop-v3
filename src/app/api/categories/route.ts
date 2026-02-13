@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 import { CategoriesResponse } from '@/types/categories'
 
 export async function GET(request: NextRequest) {
@@ -10,41 +10,39 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const includeSubcategories = searchParams.get('include_subcategories') === 'true'
 
-    // Build query
-    let query = supabaseAdmin
-      .from('categories')
-      .select('*')
+    const whereClauses: string[] = []
+    const values: any[] = []
+    let paramIndex = 0
 
-    // Apply filters
     if (parentCategoryId === 'null' || parentCategoryId === '') {
-      query = query.is('parent_category_id', null)
+      whereClauses.push('parent_category_id IS NULL')
     } else if (parentCategoryId) {
-      query = query.eq('parent_category_id', parentCategoryId)
+      paramIndex++
+      whereClauses.push(`parent_category_id = $${paramIndex}`)
+      values.push(parentCategoryId)
     }
 
     if (trending === 'true') {
-      query = query.eq('trending', true)
+      whereClauses.push('trending = true')
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%,description.ilike.%${search}%`)
+      paramIndex++
+      const searchParam = `%${search}%`
+      whereClauses.push(`(name ILIKE $${paramIndex} OR slug ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`)
+      values.push(searchParam)
     }
 
-    // Order by growth_percentage desc, then by name
-    query = query.order('growth_percentage', { ascending: false, nullsFirst: false })
-      .order('name', { ascending: true })
+    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
 
-    const { data, error } = await query
+    const query = `
+      SELECT * FROM categories
+      ${whereSQL}
+      ORDER BY growth_percentage DESC NULLS LAST, name ASC
+    `
 
-    if (error) {
-      console.error('Error fetching categories:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch categories', details: error.message },
-        { status: 500 }
-      )
-    }
+    const data = await sql.unsafe(query, values)
 
-    // Transform and add parent category info
     let categories = (data || []).map((cat: any) => ({
       id: cat.id,
       name: cat.name,
@@ -61,21 +59,20 @@ export async function GET(request: NextRequest) {
       updated_at: cat.updated_at,
     }))
 
-    // If include_subcategories, fetch and attach subcategories
     if (includeSubcategories) {
-      const parentIds = categories.map(c => c.id)
+      const parentIds = categories.map((c: any) => c.id)
       if (parentIds.length > 0) {
-        const { data: subcategories } = await supabaseAdmin
-          .from('categories')
-          .select('*')
-          .in('parent_category_id', parentIds)
-          .order('name', { ascending: true })
+        const placeholders = parentIds.map((_: any, i: number) => `$${i + 1}`).join(', ')
+        const subcategories = await sql.unsafe(
+          `SELECT * FROM categories WHERE parent_category_id IN (${placeholders}) ORDER BY name ASC`,
+          parentIds
+        )
 
         if (subcategories) {
-          categories = categories.map(cat => ({
+          categories = categories.map((cat: any) => ({
             ...cat,
             subcategories: subcategories
-              .filter(sub => sub.parent_category_id === cat.id)
+              .filter((sub: any) => sub.parent_category_id === cat.id)
               .map((sub: any) => ({
                 id: sub.id,
                 name: sub.name,
@@ -96,22 +93,22 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add parent category info if parent_category_id exists
     const parentIds = [...new Set(categories
-      .filter(c => c.parent_category_id)
-      .map(c => c.parent_category_id!))]
-    
+      .filter((c: any) => c.parent_category_id)
+      .map((c: any) => c.parent_category_id!))]
+
     if (parentIds.length > 0) {
-      const { data: parents } = await supabaseAdmin
-        .from('categories')
-        .select('id, name, slug')
-        .in('id', parentIds)
+      const placeholders = parentIds.map((_: any, i: number) => `$${i + 1}`).join(', ')
+      const parents = await sql.unsafe(
+        `SELECT id, name, slug FROM categories WHERE id IN (${placeholders})`,
+        parentIds
+      )
 
       if (parents) {
-        categories = categories.map(cat => ({
+        categories = categories.map((cat: any) => ({
           ...cat,
           parent_category: cat.parent_category_id
-            ? parents.find(p => p.id === cat.parent_category_id)
+            ? parents.find((p: any) => p.id === cat.parent_category_id)
             : undefined,
         }))
       }
@@ -131,77 +128,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const {
-      name,
-      slug,
-      description,
-      image,
-      thumbnail,
-      parent_category_id,
-      trending,
-      growth_percentage,
-    } = body
-
-    // Validate required fields
-    if (!name || !slug) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, slug' },
-        { status: 400 }
-      )
-    }
-
-    // Check if slug already exists
-    const { data: existing } = await supabaseAdmin
-      .from('categories')
-      .select('id')
-      .eq('slug', slug)
-      .single()
-
-    if (existing) {
-      return NextResponse.json(
-        { error: 'Category with this slug already exists' },
-        { status: 400 }
-      )
-    }
-
-    // Insert category
-    const { data: category, error } = await supabaseAdmin
-      .from('categories')
-      .insert({
-        name,
-        slug,
-        description: description || null,
-        image: image || null,
-        thumbnail: thumbnail || null,
-        parent_category_id: parent_category_id || null,
-        trending: trending || false,
-        growth_percentage: growth_percentage || null,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating category:', error)
-      return NextResponse.json(
-        { error: 'Failed to create category', details: error.message },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(
-      { category },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error('Unexpected error creating category:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
-

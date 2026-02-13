@@ -59,7 +59,6 @@ import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-pr
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
-import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 type SortOption = "revenue" | "traffic" | "growth" | "rating"
@@ -283,7 +282,6 @@ export default function CompetitorStoresPage() {
         <AppSidebar />
         <SidebarInset>
           <Topbar />
-          <ProPageWrapper featureName="Competitor Stores" featureDescription="Analyze competitor Shopify stores, their best-selling products, and pricing strategies">
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-red-950 to-orange-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -687,7 +685,7 @@ export default function CompetitorStoresPage() {
                       ) : (
                         filteredAndSortedStores.map((store, index) => {
                           const { isLocked } = getTeaserLockState(index, isFree, {
-                            freeVisibleCount: 6,
+                            freeVisibleCount: 4,
                             strategy: "first-n-items"
                           })
                           return (
@@ -777,7 +775,6 @@ export default function CompetitorStoresPage() {
 
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Competitor Stores" />
-          </ProPageWrapper>
         </SidebarInset>
       </SidebarProvider>
 

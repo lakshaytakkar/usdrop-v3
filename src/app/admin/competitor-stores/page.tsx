@@ -138,7 +138,7 @@ export default function AdminCompetitorStoresPage() {
   // Fetch categories for dropdown
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch("/api/categories", {
+      const response = await fetch("/api/admin/categories", {
         credentials: 'include'
       })
       if (!response.ok) throw new Error("Failed to fetch categories")

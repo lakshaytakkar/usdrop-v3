@@ -129,7 +129,7 @@ function ProductDetailContent() {
         }
         
         // Fetch the specific product
-        const productResponse = await fetch(`/api/products/${productId}`)
+        const productResponse = await fetch(`/api/admin/products/${productId}`)
         if (!productResponse.ok) {
           throw new Error('Failed to fetch product')
         }
@@ -149,7 +149,7 @@ function ProductDetailContent() {
         
         // Fetch all products for navigation
         const allProductsResponse = await fetch(
-          `/api/products?source_type=${isHandPicked ? 'hand_picked' : 'scraped'}&pageSize=1000`
+          `/api/admin/products?source_type=${isHandPicked ? 'hand_picked' : 'scraped'}&pageSize=1000`
         )
         if (allProductsResponse.ok) {
           const allProductsData = await allProductsResponse.json()
@@ -211,7 +211,7 @@ function ProductDetailContent() {
 
   const refetchProduct = async () => {
     try {
-      const productResponse = await fetch(`/api/products/${productId}`)
+      const productResponse = await fetch(`/api/admin/products/${productId}`)
       if (!productResponse.ok) return
       const productData = await productResponse.json()
       const apiProduct: Product = productData.product
@@ -246,7 +246,7 @@ function ProductDetailContent() {
     }
     
     try {
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await fetch(`/api/admin/products/${product.id}`, {
         method: 'DELETE',
       })
       
@@ -269,7 +269,7 @@ function ProductDetailContent() {
     }
     try {
       const hp = product as HandPickedProduct
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await fetch(`/api/admin/products/${product.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
