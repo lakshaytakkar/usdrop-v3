@@ -1,6 +1,7 @@
 modules = ["nodejs-20", "web", "postgresql-16"]
 [agent]
 expertMode = true
+integrations = ["javascript_database:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -21,13 +22,13 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[ports]]
 localPort = 5000
@@ -36,11 +37,8 @@ externalPort = 80
 [userenv]
 
 [userenv.shared]
-NEXT_PUBLIC_SUPABASE_URL = "https://placeholder.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY = "placeholder"
-NEXT_PUBLIC_APP_URL = "https://placeholder.replit.dev"
-NEXT_PUBLIC_SITE_URL = "https://placeholder.replit.dev"
-SUPABASE_SERVICE_ROLE_KEY = "placeholder"
+NEXT_PUBLIC_APP_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13grs470.kirk.replit.dev"
+NEXT_PUBLIC_SITE_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13grs470.kirk.replit.dev"
 
 [deployment]
 deploymentTarget = "autoscale"

@@ -100,17 +100,12 @@ public/
 - Use `sql.unsafe(query, params)` for dynamic queries with parameterized values
 
 ## Recent Changes (Feb 2026)
+- **Replit Environment Import**: Fully imported project to Replit with PostgreSQL database, schema created, data seeded from Supabase
+- **Removed placeholder Supabase env vars**: Cleaned up NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+- **Database seeded**: 225 products, 11 categories, 2 subscription plans, 10 courses, 23 competitor stores, 4 test users
 - **Migrated from Supabase to Replit PostgreSQL**: 18 tables, all data imported
 - **Custom JWT auth system**: Replaced Supabase Auth with bcrypt + JWT cookies
 - **Simplified middleware**: JWT-only verification, no database calls
 - **Fixed all API routes**: Removed all direct `@supabase/supabase-js` imports
-- **Responsive landing page**: Mobile hamburger menu, responsive Hero section
-- **SEO metadata**: Added to landing page
-- **Fixed footer links**: Anchor links to landing page sections
-- **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added, SQL injection fixes, broken join queries fixed
-- **New admin APIs**: orders (GET/PATCH), suppliers (full CRUD)
-- **Disabled VerifyEmailBanner**: Component was showing for all users incorrectly
-- **Product Uploader (Multi-step Form)**: Full CRUD product management with 4-step wizard form (Basic Info → Pricing → Details → Review), edit mode with pre-fill, auto-calculated profit_per_order
-- **Product Detail Charts**: Recharts integration with profit breakdown BarChart and trend data AreaChart with gradient, stat cards
-- **Product API enhancements**: Auto-calculate profit_per_order on POST/PATCH, source_type persistence, SQL injection fixes in profit calculation
-- **Admin Products Table View**: Replaced grid/tabs with Shopify-style table view - sortable columns, checkbox selection, server-side pagination, category filter, bulk delete/export. Products created here appear on the public product-hunt page (source_type=scraped)
+- **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added
+- **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
