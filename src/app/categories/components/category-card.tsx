@@ -78,6 +78,8 @@ export function CategoryCard({ category, isLocked = false, onLockedClick }: Cate
                     src={category.thumbnail || category.image || '/categories/other-thumbnail.png'}
                     alt={category.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={65}
                     className={cn(
                       "object-cover transition-all duration-300",
                       isLocked && "blur-sm"

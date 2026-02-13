@@ -97,6 +97,8 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
             src={product.image || "/demo-products/product-1.png"}
             alt={product.title}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            quality={65}
             className={`object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}
           />
@@ -169,9 +171,8 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
                 alt="United States flag"
                 width={16}
                 height={12}
+                sizes="16px"
                 className="object-cover"
-                priority
-                unoptimized
               />
             </div>
           </div>

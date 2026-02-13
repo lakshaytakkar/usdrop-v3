@@ -60,6 +60,7 @@ export function StoreCard({ store }: StoreCardProps) {
             src="/shopify_glyph.svg"
             alt="Shopify"
             fill
+            sizes="48px"
             className="object-contain p-2"
           />
         </div>

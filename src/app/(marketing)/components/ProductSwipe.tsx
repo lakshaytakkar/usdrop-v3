@@ -179,6 +179,8 @@ export function ProductSwipe() {
                       src={product.image} 
                       alt={product.name}
                       fill
+                      sizes="(max-width: 768px) 80vw, 300px"
+                      quality={65}
                       className="object-cover"
                     />
                   </div>
