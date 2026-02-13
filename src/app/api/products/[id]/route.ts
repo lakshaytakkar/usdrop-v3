@@ -40,8 +40,8 @@ function mapRowToProduct(row: any) {
     supplier: row.sup_id ? {
       id: row.sup_id,
       name: row.sup_name,
-      company_name: row.sup_company_name,
-      logo: row.sup_logo,
+      company_name: row.sup_name,
+      logo: null,
       website: row.sup_website,
       country: row.sup_country,
       rating: row.sup_rating,
