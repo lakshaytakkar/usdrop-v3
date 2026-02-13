@@ -1,19 +1,10 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { 
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import { Users } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Users, Lightbulb } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AudienceDemographicsChartProps {
   demographics?: {
@@ -24,160 +15,127 @@ interface AudienceDemographicsChartProps {
   suggestions?: string[]
 }
 
-// Generate sample data if not provided
-const generateSampleData = () => {
-  return {
-    demographics: {
-      age: "25-34",
-      gender: "Unisex",
-    },
-    interests: [
-      "Home & Garden",
-      "Lifestyle",
-      "Technology",
-    ],
-    suggestions: [
-      "Target value-conscious consumers",
-      "Focus on lifestyle enthusiasts",
-    ],
-  }
+const defaultData = {
+  demographics: { age: "25-34", gender: "Unisex" },
+  interests: ["Home & Garden", "Lifestyle", "Technology", "Trending Products", "Online Shopping"],
+  suggestions: [
+    "Target value-conscious consumers aged 25-44",
+    "Focus on lifestyle and home improvement enthusiasts",
+    "Use social proof in ad creatives for higher conversion",
+    "Test TikTok and Instagram Reels for organic reach",
+  ],
 }
 
-export function AudienceDemographicsChart({ 
+const ageGroups = [
+  { range: "18-24", percent: 18, color: "bg-blue-400" },
+  { range: "25-34", percent: 38, color: "bg-blue-500" },
+  { range: "35-44", percent: 24, color: "bg-blue-600" },
+  { range: "45-54", percent: 13, color: "bg-blue-700" },
+  { range: "55+", percent: 7, color: "bg-blue-800" },
+]
+
+const genderSplit = [
+  { label: "Female", percent: 48, color: "bg-pink-500" },
+  { label: "Male", percent: 42, color: "bg-blue-500" },
+  { label: "Other", percent: 10, color: "bg-gray-400" },
+]
+
+export function AudienceDemographicsChart({
   demographics,
   interests,
-  suggestions
+  suggestions,
 }: AudienceDemographicsChartProps) {
-  const data = demographics 
-    ? { demographics, interests: interests || [], suggestions: suggestions || [] }
-    : generateSampleData()
-
-  // Age distribution data
-  const ageGroups = [
-    { name: "18-24", value: 15, color: "hsl(var(--chart-1))" },
-    { name: "25-34", value: 35, color: "hsl(var(--chart-2))" },
-    { name: "35-44", value: 25, color: "hsl(var(--chart-3))" },
-    { name: "45-54", value: 15, color: "hsl(var(--chart-4))" },
-    { name: "55+", value: 10, color: "hsl(var(--chart-5))" },
-  ]
-
-  // Gender distribution
-  const genderData = [
-    { name: "Male", value: 40, color: "hsl(var(--chart-1))" },
-    { name: "Female", value: 45, color: "hsl(var(--chart-2))" },
-    { name: "Other", value: 15, color: "hsl(var(--chart-3))" },
-  ]
-
-  const chartConfig = {
-    age: {
-      label: "Age",
-      color: "hsl(var(--chart-1))",
-    },
-    gender: {
-      label: "Gender",
-      color: "hsl(var(--chart-2))",
-    },
-  } satisfies ChartConfig
+  const data = {
+    demographics: demographics || defaultData.demographics,
+    interests: interests && interests.length > 0 ? interests : defaultData.interests,
+    suggestions: suggestions && suggestions.length > 0 ? suggestions : defaultData.suggestions,
+  }
 
   return (
-    <Card className="p-6 min-w-0">
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Target Audience Demographics
-          </h4>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {data.demographics.age}
-            </Badge>
-            <Badge variant="outline" className="text-xs">
-              {data.demographics.gender}
-            </Badge>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card className="p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Audience Demographics</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-5">
+          Primary: {data.demographics.age} · {data.demographics.gender}
+        </p>
+
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-3">Age Distribution</p>
+            <div className="space-y-2.5">
+              {ageGroups.map((group) => (
+                <div key={group.range} className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground w-10 shrink-0">{group.range}</span>
+                  <div className="flex-1 h-5 bg-muted/50 rounded-full overflow-hidden">
+                    <div
+                      className={cn("h-full rounded-full transition-all", group.color)}
+                      style={{ width: `${group.percent}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium w-8 text-right">{group.percent}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Gender Split</p>
+            <div className="flex h-3 rounded-full overflow-hidden mb-2">
+              {genderSplit.map((g) => (
+                <div key={g.label} className={cn("h-full", g.color)} style={{ width: `${g.percent}%` }} />
+              ))}
+            </div>
+            <div className="flex items-center gap-4">
+              {genderSplit.map((g) => (
+                <div key={g.label} className="flex items-center gap-1.5 text-xs">
+                  <div className={cn("w-2 h-2 rounded-full", g.color)} />
+                  <span className="text-muted-foreground">{g.label} {g.percent}%</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      </Card>
 
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Age Distribution */}
-          <div className="space-y-3">
-            <h5 className="text-xs font-medium text-muted-foreground">Age Distribution</h5>
-            <ChartContainer config={chartConfig} className="h-[180px] w-full">
-              <PieChart>
-                <Pie
-                  data={ageGroups}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  outerRadius={60}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {ageGroups.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ChartContainer>
-          </div>
-
-          {/* Gender Distribution */}
-          <div className="space-y-3">
-            <h5 className="text-xs font-medium text-muted-foreground">Gender Distribution</h5>
-            <ChartContainer config={chartConfig} className="h-[180px] w-full">
-              <PieChart>
-                <Pie
-                  data={genderData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-                  outerRadius={60}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {genderData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <ChartTooltip content={<ChartTooltipContent />} />
-              </PieChart>
-            </ChartContainer>
-          </div>
+      <Card className="p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Lightbulb className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Targeting Insights</h3>
         </div>
+        <p className="text-xs text-muted-foreground mb-5">
+          Interest groups and marketing recommendations
+        </p>
 
-        {/* Interests & Suggestions */}
-        {data.interests.length > 0 && (
-          <div className="space-y-3 pt-4 border-t">
-            <h5 className="text-xs font-medium text-muted-foreground">Top Interests</h5>
-            <div className="flex flex-wrap gap-2">
-              {data.interests.map((interest, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2.5">Top Interests</p>
+            <div className="flex flex-wrap gap-1.5">
+              {data.interests.map((interest, i) => (
+                <Badge key={i} variant="secondary" className="text-xs font-normal px-2.5 py-1">
                   {interest}
                 </Badge>
               ))}
             </div>
           </div>
-        )}
 
-        {data.suggestions.length > 0 && (
-          <div className="space-y-2 pt-2">
-            <h5 className="text-xs font-medium text-muted-foreground">Targeting Suggestions</h5>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              {data.suggestions.map((suggestion, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-primary mt-0.5">•</span>
-                  <span>{suggestion}</span>
-                </li>
+          <div className="pt-4 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-2.5">Recommendations</p>
+            <div className="space-y-2">
+              {data.suggestions.map((suggestion, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-blue-600 font-semibold text-[10px]">{i + 1}</span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">{suggestion}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        )}
-      </div>
-    </Card>
+        </div>
+      </Card>
+    </div>
   )
 }
-

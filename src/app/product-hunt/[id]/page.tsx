@@ -8,10 +8,8 @@ import { Topbar } from "@/components/layout/topbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
 import { 
   ArrowLeft, 
-  ExternalLink,
   TrendingUp,
   Star,
   Share2,
@@ -20,19 +18,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
-  Check
+  Check,
 } from "lucide-react"
 import { ProductImageGallery } from "../components/product-image-gallery"
+import { ProductKPICards } from "../components/product-kpi-cards"
+import { MarketAnalyticsChart } from "../components/market-analytics-chart"
+import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
+import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
 import { ReviewsSection } from "../components/reviews-section"
-import { SeasonalInterestChart } from "../components/seasonal-interest-chart"
-import { SaturationGauge } from "../components/saturation-gauge"
-import { TargetingSection } from "../components/targeting-section"
-import { CompetitionSection } from "../components/competition-section"
-import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
-import { MarketTrendChart } from "../components/market-trend-chart"
-import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
-import { PerformanceMetricsDashboard } from "../components/performance-metrics-dashboard"
 import { Product, ProductResearch } from "@/types/products"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
@@ -40,7 +34,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 
-// Utility function to create product slug for search URLs
 function createProductSlug(productName: string): string {
   return productName
     .toLowerCase()
@@ -49,6 +42,15 @@ function createProductSlug(productName: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+function SectionHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="space-y-1">
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
+    </div>
+  )
 }
 
 export default function ProductDetailPage() {
@@ -69,9 +71,7 @@ export default function ProductDetailPage() {
   const [isLoadingResearch, setIsLoadingResearch] = useState(false)
   const { showSuccess, showError } = useToast()
 
-  // Fetch product from API
   useEffect(() => {
-    // Prevent fetching if productId is invalid
     if (!productId || productId === 'undefined' || productId === 'null') {
       setError('Product ID is missing or invalid')
       setIsLoading(false)
@@ -94,9 +94,6 @@ export default function ProductDetailPage() {
           try {
             const errorData = await response.json()
             errorMessage = errorData.error || errorData.message || errorMessage
-            if (errorData.details) {
-              console.error('API Error Details:', errorData.details)
-            }
           } catch (e) {
             errorMessage = response.statusText || errorMessage
           }
@@ -105,7 +102,6 @@ export default function ProductDetailPage() {
             setError('Product not found')
           } else {
             setError(errorMessage)
-            console.error('API Error Status:', response.status, 'Message:', errorMessage)
           }
           setIsLoading(false)
           return
@@ -123,14 +119,12 @@ export default function ProductDetailPage() {
         
         setProduct(data.product)
         
-        // Fetch all products for navigation
         const allProductsResponse = await fetch('/api/products?source_type=scraped&pageSize=1000&sortBy=created_at&sortOrder=desc')
         if (allProductsResponse.ok && isMounted) {
           const allProductsData = await allProductsResponse.json()
           setAllProducts(allProductsData.products || [])
         }
         
-        // Check if product is in user's picklist
         const picklistResponse = await fetch('/api/picklist')
         if (picklistResponse.ok && isMounted) {
           const picklistData = await picklistResponse.json()
@@ -138,7 +132,6 @@ export default function ProductDetailPage() {
           setIsInPicklist(isInList)
         }
         
-        // Fetch research data
         setIsLoadingResearch(true)
         const researchResponse = await fetch(`/api/products/${productId}/research`)
         if (researchResponse.ok && isMounted) {
@@ -165,7 +158,6 @@ export default function ProductDetailPage() {
     }
   }, [productId])
   
-  // Find previous and next products
   const { prevProduct, nextProduct } = useMemo(() => {
     if (!product || allProducts.length === 0) return { prevProduct: null, nextProduct: null }
     
@@ -176,7 +168,6 @@ export default function ProductDetailPage() {
     return { prevProduct: prev, nextProduct: next }
   }, [product, allProducts])
 
-  // Sticky header and scroll to top button effects
   useEffect(() => {
     const handleScroll = () => {
       if (topActionsRef.current) {
@@ -194,7 +185,6 @@ export default function ProductDetailPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <SidebarProvider>
@@ -213,7 +203,6 @@ export default function ProductDetailPage() {
     )
   }
 
-  // Error state or product not found
   if (error || !product) {
     return (
       <SidebarProvider>
@@ -236,20 +225,23 @@ export default function ProductDetailPage() {
     )
   }
 
-  // Map API product to expected format
-  const productImages = product.additional_images && product.additional_images.length > 0
-    ? [product.image, ...product.additional_images]
+  const safeAdditionalImages = Array.isArray(product.additional_images) ? product.additional_images : []
+  const productImages = safeAdditionalImages.length > 0
+    ? [product.image, ...safeAdditionalImages]
     : [product.image]
   
+  const safeTrendData = Array.isArray(product.trend_data) ? product.trend_data : []
   const description = product.description || 'No description available.'
   const categoryName = product.category?.name || product.category?.slug || 'Uncategorized'
-  const isTrending = product.trend_data && product.trend_data.length > 1
-    ? product.trend_data[product.trend_data.length - 1] > product.trend_data[0]
+  const isTrending = safeTrendData.length > 1
+    ? safeTrendData[safeTrendData.length - 1] > safeTrendData[0]
     : false
   
   const addedDate = product.created_at 
     ? new Date(product.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'Recently'
+
+  const competitionLevel: "Low" | "Medium" | "High" = isTrending ? "Medium" : "Low"
 
   const handleAddToMyProducts = async () => {
     if (isInPicklist || isAddingToPicklist) return
@@ -258,20 +250,14 @@ export default function ProductDetailPage() {
     try {
       const response = await fetch('/api/picklist', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: productId,
-          source: 'product-hunt',
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: productId, source: 'product-hunt' }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
         if (response.status === 409) {
-          // Already exists
           setIsInPicklist(true)
           showError('Product is already in your list')
         } else if (response.status === 401) {
@@ -284,8 +270,6 @@ export default function ProductDetailPage() {
 
       setIsInPicklist(true)
       showSuccess('Product added to My Products')
-      
-      // Dispatch event to update sidebar badge
       window.dispatchEvent(new CustomEvent("picklist-updated"))
     } catch (err) {
       console.error('Error adding to picklist:', err)
@@ -311,6 +295,11 @@ export default function ProductDetailPage() {
     router.push(`/ai-toolkit?productId=${productId}`)
   }
 
+  const productSlug = createProductSlug(product.title)
+  const aliExpressUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(productSlug)}`
+  const amazonUrl = `https://www.amazon.com/s?k=${encodeURIComponent(productSlug)}`
+  const facebookAdsUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=US&search_type=keyword_unordered&media_type=all&q=${encodeURIComponent(productSlug)}`
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -325,68 +314,29 @@ export default function ProductDetailPage() {
               isSticky && "shadow-sm"
             )}
           >
-            <div className="flex items-center justify-between p-4 md:p-6 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
-              {/* Breadcrumbs */}
+            <div className="flex items-center justify-between p-3 md:px-6 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
               <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-1 min-w-0 overflow-hidden">
-                <button 
-                  onClick={() => router.push("/")}
-                  className="hover:text-foreground transition-colors cursor-pointer"
-                >
-                  Home
-                </button>
+                <button onClick={() => router.push("/")} className="hover:text-foreground transition-colors cursor-pointer">Home</button>
                 <span>/</span>
-                <button 
-                  onClick={() => router.push("/product-hunt")}
-                  className="hover:text-foreground transition-colors cursor-pointer"
-                >
-                  Product Hunt
-                </button>
+                <button onClick={() => router.push("/product-hunt")} className="hover:text-foreground transition-colors cursor-pointer">Product Hunt</button>
                 <span>/</span>
                 <span className="text-foreground line-clamp-1 truncate">{product.title}</span>
               </nav>
 
-              {/* Top Action Buttons */}
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                {/* Prev/Next Navigation */}
                 <div className="hidden sm:flex items-center gap-1 border-r pr-2 mr-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => prevProduct && router.push(`/product-hunt/${prevProduct.id}`)}
-                    disabled={!prevProduct}
-                    className="h-8 w-8 p-0"
-                    title={prevProduct ? `Previous: ${prevProduct.title}` : "No previous product"}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => prevProduct && router.push(`/product-hunt/${prevProduct.id}`)} disabled={!prevProduct} className="h-8 w-8 p-0" title={prevProduct ? `Previous: ${prevProduct.title}` : "No previous product"}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => nextProduct && router.push(`/product-hunt/${nextProduct.id}`)}
-                    disabled={!nextProduct}
-                    className="h-8 w-8 p-0"
-                    title={nextProduct ? `Next: ${nextProduct.title}` : "No next product"}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => nextProduct && router.push(`/product-hunt/${nextProduct.id}`)} disabled={!nextProduct} className="h-8 w-8 p-0" title={nextProduct ? `Next: ${nextProduct.title}` : "No next product"}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.push("/product-hunt")}
-                  className="h-8 px-2"
-                  title="Back"
-                >
+                <Button variant="ghost" size="sm" onClick={() => router.push("/product-hunt")} className="h-8 px-2" title="Back">
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline ml-1">Back</span>
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleShareProduct}
-                  className="h-8 w-8 p-0"
-                  title="Share"
-                >
+                <Button variant="outline" size="sm" onClick={handleShareProduct} className="h-8 w-8 p-0" title="Share">
                   <Share2 className="h-4 w-4" />
                 </Button>
                 <Button
@@ -394,22 +344,13 @@ export default function ProductDetailPage() {
                   disabled={isInPicklist || isAddingToPicklist}
                   variant={isInPicklist ? "default" : "outline"}
                   size="sm"
-                  className={cn(
-                    "h-8 px-2",
-                    isInPicklist && "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  )}
+                  className={cn("h-8 px-2", isInPicklist && "bg-emerald-600 hover:bg-emerald-700 text-white")}
                   title={isInPicklist ? "Already in My Products" : "Add to My Products"}
                 >
                   {isInPicklist ? (
-                    <>
-                      <Check className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Added</span>
-                    </>
+                    <><Check className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Added</span></>
                   ) : (
-                    <>
-                      <Package className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Add to My Products</span>
-                    </>
+                    <><Package className="h-4 w-4 sm:mr-2" /><span className="hidden sm:inline">Add to My Products</span></>
                   )}
                 </Button>
                 <Button
@@ -427,257 +368,154 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col gap-8 p-4 md:p-6 max-w-full overflow-x-hidden min-w-0 w-full">
-            <div className="w-full space-y-12 min-w-0 max-w-full">
-            {/* Main Product Section: Images & Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0 w-full max-w-full">
-              {/* Image Gallery */}
-              <ProductImageGallery 
-                images={productImages}
-                videos={[]}
-              />
+          <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 max-w-full overflow-x-hidden min-w-0 w-full">
+            <div className="w-full space-y-8 min-w-0 max-w-full">
 
-              {/* Product Info & Pricing */}
-              <div className="space-y-4">
-                {/* Product Header - Moved to right side */}
-                <div className="space-y-3">
-                  <div className="text-sm text-muted-foreground">
-                    <span>Added to USDrop {addedDate}</span>
-                  </div>
+              {/* Product Hero: Images + Info */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0 w-full max-w-full">
+                <ProductImageGallery images={productImages} videos={[]} />
 
-                  <div>
-                    <h1 className="text-3xl md:text-4xl font-bold mb-3">{product.title}</h1>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {product.rating && (
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{product.rating.toFixed(1)}</span>
-                          <span className="text-muted-foreground">({product.reviews_count || 0})</span>
-                        </div>
-                      )}
-                      <Badge variant="outline">{categoryName}</Badge>
-                      {isTrending && (
-                        <Badge className="bg-orange-500 text-white">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          Trending
-                        </Badge>
-                      )}
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="text-xs text-muted-foreground">Added to USDrop {addedDate}</div>
+                    <div>
+                      <h1 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight">{product.title}</h1>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {product.rating && (
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm font-semibold">{product.rating.toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground">({product.reviews_count || 0})</span>
+                          </div>
+                        )}
+                        <Badge variant="outline" className="text-xs">{categoryName}</Badge>
+                        {isTrending && (
+                          <Badge className="bg-orange-500 text-white text-xs">
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                            Trending
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
                   </div>
 
-                  {/* Product Description */}
-                  <div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {description}
-                    </p>
+                  {/* Pricing Card */}
+                  <Card className="p-4 bg-gradient-to-br from-slate-50 to-white border-slate-200">
+                    <div className="space-y-2.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Product Cost</span>
+                        <span className="font-semibold">${product.buy_price.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Selling Price</span>
+                        <span className="font-semibold text-primary">${product.sell_price.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2.5 border-t border-slate-200">
+                        <span className="text-sm font-medium">Profit per Sale</span>
+                        <div className="text-right">
+                          <span className="text-xl font-bold text-emerald-600">${product.profit_per_order.toFixed(2)}</span>
+                          <p className="text-xs text-muted-foreground">
+                            {product.sell_price > 0 ? `${(((product.sell_price - product.buy_price) / product.sell_price) * 100).toFixed(0)}% margin` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Source Links */}
+                  <div className="grid grid-cols-3 gap-2 min-w-0 max-w-full">
+                    <Link href={aliExpressUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full text-xs h-9">
+                        <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
+                          <Image src="/images/logos/aliexpress.svg" alt="AliExpress" fill className="object-contain" />
+                        </div>
+                        <span className="truncate">AliExpress</span>
+                      </Button>
+                    </Link>
+                    <Link href={amazonUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full text-xs h-9">
+                        <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
+                          <Image src="/images/logos/amazon.svg" alt="Amazon" fill className="object-contain" />
+                        </div>
+                        <span className="truncate">Amazon</span>
+                      </Button>
+                    </Link>
+                    <Link href={facebookAdsUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full text-xs h-9">
+                        <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
+                          <Image src="/images/logos/meta.svg" alt="Facebook Ads" fill className="object-contain" />
+                        </div>
+                        <span className="truncate">FB Ads</span>
+                      </Button>
+                    </Link>
                   </div>
                 </div>
-                {/* Pricing Card */}
-                <Card className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Product Cost</span>
-                      <span className="font-semibold">${product.buy_price.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Selling Price</span>
-                      <span className="font-semibold text-primary">${product.sell_price.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t">
-                      <span className="text-sm font-medium">Profit per Sale</span>
-                      <span className="text-lg font-bold text-emerald-600">
-                        ${product.profit_per_order.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-
-                {/* Supplier Links */}
-                {(() => {
-                  const productSlug = createProductSlug(product.title)
-                  const aliExpressUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(productSlug)}`
-                  const amazonUrl = `https://www.amazon.com/s?k=${encodeURIComponent(productSlug)}`
-                  const facebookAdsUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=US&search_type=keyword_unordered&media_type=all&q=${encodeURIComponent(productSlug)}`
-                  
-                  return (
-                    <div className="grid grid-cols-2 gap-2 min-w-0 max-w-full">
-                      <Link 
-                        href={aliExpressUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full"
-                      >
-                        <Button variant="outline" className="w-full">
-                          <div className="relative w-4 h-4 mr-2 flex-shrink-0">
-                            <Image
-                              src="/images/logos/aliexpress.svg"
-                              alt="AliExpress"
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                          <span className="truncate">AliExpress</span>
-                        </Button>
-                      </Link>
-                      <Link 
-                        href={amazonUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full"
-                      >
-                        <Button variant="outline" className="w-full">
-                          <div className="relative w-4 h-4 mr-2 flex-shrink-0">
-                            <Image
-                              src="/images/logos/amazon.svg"
-                              alt="Amazon"
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                          <span className="truncate">Amazon</span>
-                        </Button>
-                      </Link>
-                      <Link 
-                        href={facebookAdsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full"
-                      >
-                        <Button variant="outline" className="w-full">
-                          <div className="relative w-4 h-4 mr-2 flex-shrink-0">
-                            <Image
-                              src="/images/logos/meta.svg"
-                              alt="Facebook Ads"
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                          <span className="truncate">Facebook Ads</span>
-                        </Button>
-                      </Link>
-                    </div>
-                  )
-                })()}
-
               </div>
-            </div>
 
-            {/* Competitor Analysis */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Competitor Analysis</h2>
-              <CompetitorPricingChart
-                productPrice={product.sell_price}
-                competitors={researchData?.competitor_pricing?.competitors}
-                priceRange={researchData?.competitor_pricing?.price_range}
-              />
-            </div>
-
-            {/* Market Trends */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Market Trends</h2>
-              <MarketTrendChart
-                data={product.trend_data?.map((value, index) => {
-                  const date = new Date(2022, 6 + index) // Start from July 2022
-                  return {
-                    month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-                    value
-                  }
-                })}
-                seasonalDemand={researchData?.seasonal_demand || undefined}
-              />
-            </div>
-
-            {/* Product Demand & Saturation */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Product Demand & Saturation</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 min-w-0 w-full max-w-full">
-                <SeasonalInterestChart 
-                  data={product.trend_data?.map((value, index) => {
-                    const date = new Date(2022, 6 + index) // Start from July 2022
-                    return {
-                      month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-                      value
-                    }
-                  })}
-                />
-                <SaturationGauge 
-                  storesSelling={1}
-                  competitionLevel={isTrending ? "Medium" : "Low"}
+              {/* KPI Summary */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Performance Overview" description="Key metrics at a glance for quick evaluation" />
+                <ProductKPICards
+                  buyPrice={product.buy_price}
+                  sellPrice={product.sell_price}
+                  profitPerOrder={product.profit_per_order}
+                  trendData={safeTrendData}
+                  competitionLevel={competitionLevel}
+                  rating={product.rating}
+                  reviewsCount={product.reviews_count}
                 />
               </div>
-            </div>
 
-            {/* Target Audience */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Target Audience</h2>
-              <AudienceDemographicsChart
-                demographics={researchData?.audience_targeting?.demographics}
-                interests={researchData?.audience_targeting?.interests}
-                suggestions={researchData?.audience_targeting?.suggestions}
-              />
-            </div>
+              {/* Market Analytics */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Market Analytics" description="Search interest trends and revenue projections based on market data" />
+                <MarketAnalyticsChart
+                  trendData={safeTrendData}
+                  sellPrice={product.sell_price}
+                  profitPerOrder={product.profit_per_order}
+                  seasonalDemand={researchData?.seasonal_demand || undefined}
+                />
+              </div>
 
-            {/* Performance Insights */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Performance Insights</h2>
-              <PerformanceMetricsDashboard
-                profitMargin={product.metadata?.profit_margin || undefined}
-                roi={product.metadata?.revenue_growth_rate || undefined}
-                marketSaturation={isTrending ? 60 : 30}
-                socialProof={researchData?.social_proof || undefined}
-                productPrice={product.sell_price}
-                buyPrice={product.buy_price}
-              />
-            </div>
+              {/* Competitor Pricing */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Pricing & Competition" description="How your pricing compares to competitors in the market" />
+                <CompetitorPricingChart
+                  productPrice={product.sell_price}
+                  competitors={researchData?.competitor_pricing?.competitors}
+                  priceRange={researchData?.competitor_pricing?.price_range}
+                />
+              </div>
 
-            {/* Targeting on Social Media */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Targeting on Social Media</h2>
-              <TargetingSection />
-            </div>
+              {/* Audience & Targeting */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Audience & Targeting" description="Who buys this product and how to reach them effectively" />
+                <AudienceDemographicsChart
+                  demographics={researchData?.audience_targeting?.demographics}
+                  interests={researchData?.audience_targeting?.interests}
+                  suggestions={researchData?.audience_targeting?.suggestions}
+                />
+              </div>
 
-            {/* Competition & Key Metrics */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Competition & Key Metrics</h2>
-              <CompetitionSection 
-                productSpecs={{
-                  dimensions: product.specifications?.dimensions || product.specifications?.product_dimensions || "8.7 x 3.5 x 3.1 inches",
-                  weight: product.specifications?.weight || product.specifications?.item_weight || "0.70 pounds"
-                }}
-              />
-            </div>
+              {/* Product Reviews */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Product Reviews" description="Customer feedback and ratings" />
+                <ReviewsSection reviews={[]} />
+              </div>
 
-            {/* Product Complements & Upsales */}
-            {product.metadata?.filters && product.metadata.filters.length > 0 && (
-              <div className="space-y-6 min-w-0 max-w-full">
-                <h2 className="text-2xl font-bold">Product Complements & Upsales</h2>
+              {/* More Products */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="More Products" description="Explore similar and related products" />
                 <RelatedProductsCarousel 
                   productIds={[]}
                   currentProductId={productId}
                   products={allProducts}
                 />
               </div>
-            )}
-
-            {/* Product Reviews */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">Product Reviews</h2>
-              <ReviewsSection reviews={[]} />
-            </div>
-
-            {/* More Products */}
-            <div className="space-y-6 min-w-0 max-w-full">
-              <h2 className="text-2xl font-bold">More Products</h2>
-              <RelatedProductsCarousel 
-                productIds={[]}
-                currentProductId={productId}
-                products={allProducts}
-              />
-            </div>
 
             </div>
             
-            {/* Scroll to Top Button */}
             {showScrollTop && (
               <Button
                 onClick={scrollToTop}
@@ -693,4 +531,3 @@ export default function ProductDetailPage() {
     </SidebarProvider>
   )
 }
-
