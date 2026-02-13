@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Eye, Lock, LockOpen, Trash2, Star } from "lucide-react"
+import { MoreVertical, Eye, Lock, LockOpen, Trash2, Star, Package } from "lucide-react"
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
 
 type ProductType = HandPickedProduct | ProductPick
@@ -111,13 +111,19 @@ export function ProductsTable({
                 </TableCell>
                 <TableCell>
                   <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                    <Image
-                      src={product.image}
-                      alt={product.title}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
+                    {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+                      <Image
+                        src={product.image}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>

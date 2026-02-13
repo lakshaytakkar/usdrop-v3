@@ -465,7 +465,7 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
-                        {product.image ? (
+                        {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
                           <Image
                             src={product.image}
                             alt={product.title}
@@ -644,7 +644,7 @@ export default function AdminProductsPage() {
           {productToDelete && (
             <div className="flex items-center gap-3 py-2">
               <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
-                {productToDelete.image ? (
+                {productToDelete.image && (productToDelete.image.startsWith('http') || productToDelete.image.startsWith('/')) ? (
                   <Image src={productToDelete.image} alt={productToDelete.title} fill className="object-cover" sizes="40px" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

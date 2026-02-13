@@ -88,7 +88,7 @@ export function AdminProductCard({
       onClick={handleCardClick}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-t-xl">
-        {product.image ? (
+        {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
           <Image
             src={product.image}
             alt={product.title}

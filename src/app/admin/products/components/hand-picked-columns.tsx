@@ -57,7 +57,7 @@ export function createHandPickedColumns({
       cell: ({ row }) => (
         <div className="w-20 px-2">
           <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0 mx-auto" onClick={(e) => e.stopPropagation()}>
-            {row.original.image ? (
+            {row.original.image && (row.original.image.startsWith('http') || row.original.image.startsWith('/')) ? (
               <Image
                 src={row.original.image}
                 alt={row.original.title}

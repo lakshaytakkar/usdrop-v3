@@ -65,7 +65,7 @@ export function ProductDetailDrawer({
         <div className="space-y-6">
           {/* Product Image */}
           <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted">
-            {product.image ? (
+            {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
               <Image
                 src={product.image}
                 alt={product.title}
