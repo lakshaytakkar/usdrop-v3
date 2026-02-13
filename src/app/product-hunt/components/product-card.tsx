@@ -43,13 +43,14 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
   const [imageError, setImageError] = useState(false)
   const [currentTagIndex, setCurrentTagIndex] = useState(0)
 
+  const safeTrendData = Array.isArray(product.trendData) ? product.trendData : []
+
   const profitMargin = product.sellPrice > 0 
     ? ((product.profitPerOrder / product.sellPrice) * 100).toFixed(1)
     : "0.0"
 
-  // Calculate trend direction
-  const trendDirection = product.trendData.length >= 2
-    ? product.trendData[product.trendData.length - 1] > product.trendData[0] ? "up" : "down"
+  const trendDirection = safeTrendData.length >= 2
+    ? safeTrendData[safeTrendData.length - 1] > safeTrendData[0] ? "up" : "down"
     : "neutral"
 
   // Create array of tags to rotate through
@@ -234,7 +235,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
             className="h-full w-full"
           >
             <AreaChart
-              data={product.trendData.map((value, index) => ({
+              data={safeTrendData.map((value, index) => ({
                 index,
                 orders: value,
               }))}

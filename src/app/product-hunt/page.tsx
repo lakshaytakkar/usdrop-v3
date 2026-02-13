@@ -152,11 +152,11 @@ export default function ProductHuntPage() {
       buyPrice: product.buy_price,
       sellPrice: product.sell_price,
       profitPerOrder: product.profit_per_order,
-      trendData: product.trend_data || [],
+      trendData: Array.isArray(product.trend_data) ? product.trend_data : [],
       category: product.category?.name || product.category?.slug || 'uncategorized',
       rating: product.rating || 0,
       reviews: product.reviews_count || 0,
-      trending: product.trend_data && product.trend_data.length > 1 
+      trending: Array.isArray(product.trend_data) && product.trend_data.length > 1 
         ? product.trend_data[product.trend_data.length - 1] > product.trend_data[0]
         : false,
     }))

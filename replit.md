@@ -110,4 +110,6 @@ public/
 - **Admin panel overhaul**: All admin API routes converted to direct SQL, admin auth added
 - **Fixed admin role bypass**: Admin/internal users (admin, super_admin, editor, moderator) no longer treated as free users; both onboarding-context and user-plan-context now track internalRole and isAdmin
 - **Generated missing icons**: 21 icons created across 3d-ecom-icons-blue/ (9), 3d-icons/ (9), christmas-icons/ (3) - all broken image references resolved
+- **Fixed ProductCard crash**: JSONB fields (trend_data, additional_images, specifications) from API were returned as strings; added proper parsing in /api/products route and defensive Array.isArray checks in ProductCard
+- **Admin route guard**: AdminRouteGuard component in root layout redirects admin/internal users away from external user pages (product-hunt, home, webinars, etc.) to /admin; allows access to /admin/*, public pages, /settings
 - **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
