@@ -2,10 +2,9 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -15,334 +14,207 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Plus, Lock, LockOpen, Trash2, MoreVertical, Eye, Star, DollarSign, TrendingUp, Package, Building, Copy, Edit, Download, RefreshCw, Calendar, ArrowUpRight, UserPlus, X, Search, Upload } from "lucide-react"
-import Image from "next/image"
-import { AdminProductCard } from "./components/admin-product-card"
-import { ProductDetailDrawer } from "./components/product-detail-drawer"
-import { ProductFormModal } from "./components/product-form-modal"
-import { Input } from "@/components/ui/input"
-import { createHandPickedColumns } from "./components/hand-picked-columns"
-import { createProductPicksColumns } from "./components/product-picks-columns"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Filter, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { HandPickedProduct, ProductPick } from "@/types/admin/products"
-import { Product, ProductMetadata } from "@/types/products"
-import { format } from "date-fns"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Plus, Trash2, MoreHorizontal, Eye, Package, Edit, Download, RefreshCw, Search, Upload, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import Image from "next/image"
+import { ProductFormModal } from "./components/product-form-modal"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
 import { Loader } from "@/components/ui/loader"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { PageAssigneeModal } from "@/components/ui/page-assignee-modal"
-import { sampleInternalUsers } from "@/app/admin/internal-users/data/users"
-import { InternalUser } from "@/types/admin/users"
-import { getAvatarUrl } from "@/lib/utils/avatar"
+import { Product } from "@/types/products"
+import { Category } from "@/types/categories"
 
-type ProductType = "hand-picked" | "product-picks"
-type ProductUnion = HandPickedProduct | ProductPick
+type SortField = "title" | "created_at" | "sell_price" | "profit_per_order" | "rating"
+type SortOrder = "asc" | "desc"
 
 export default function AdminProductsPage() {
   const router = useRouter()
-  const { showSuccess, showError, showInfo } = useToast()
-  
-  // Permission checks
-  const { hasPermission: canView } = useHasPermission("products.view")
-  const { hasPermission: canViewHandPicked } = useHasPermission("products.view_hand_picked")
-  const { hasPermission: canViewProductPicks } = useHasPermission("products.view_product_picks")
-  const { hasPermission: canEdit } = useHasPermission("products.edit")
+  const { showSuccess, showError } = useToast()
   const { hasPermission: canCreate } = useHasPermission("products.create")
+  const { hasPermission: canEdit } = useHasPermission("products.edit")
   const { hasPermission: canDelete } = useHasPermission("products.delete")
-  const { hasPermission: canLockUnlock } = useHasPermission("products.lock_unlock")
-  
-  const [handPickedProducts, setHandPickedProducts] = useState<HandPickedProduct[]>([])
-  const [productPicks, setProductPicks] = useState<ProductPick[]>([])
-  const [activeTab, setActiveTab] = useState<ProductType>("hand-picked")
-  const [selectedProducts, setSelectedProducts] = useState<ProductUnion[]>([])
+
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState("")
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [statusTab, setStatusTab] = useState<"all" | "locked" | "unlocked" | "high_profit" | "high_revenue">("all")
-  const [statusTabPicks, setStatusTabPicks] = useState<"all" | "high_profit" | "high_rated" | "with_supplier" | "recent">("all")
-  const [quickFilter, setQuickFilter] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined })
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [sortField, setSortField] = useState<SortField>("created_at")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
+  const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [pageCount, setPageCount] = useState(0)
-  const [quickViewOpen, setQuickViewOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState<ProductUnion | null>(null)
+  const [total, setTotal] = useState(0)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
-  const [drawerProduct, setDrawerProduct] = useState<ProductUnion | null>(null)
-  const [productToDelete, setProductToDelete] = useState<ProductUnion | null>(null)
-  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
-  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
-  const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
-  const [assignedMembers, setAssignedMembers] = useState<string[]>([])
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
   const [productFormOpen, setProductFormOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState<ProductPick | null>(null)
-  
-  const internalUsers = sampleInternalUsers
+  const [editingProduct, setEditingProduct] = useState<any>(null)
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
 
-  // Quick filters per product type
-  const handPickedQuickFilters = [
-    { id: "high_profit", label: "High Profit", count: 0 },
-    { id: "high_revenue", label: "High Revenue", count: 0 },
-    { id: "locked", label: "Locked", count: 0 },
-    { id: "unlocked", label: "Unlocked", count: 0 },
-    { id: "recent", label: "Recent", count: 0 },
-  ]
+  const totalPages = Math.ceil(total / pageSize)
 
-  const productPicksQuickFilters = [
-    { id: "high_profit", label: "High Profit", count: 0 },
-    { id: "high_rated", label: "High Rated", count: 0 },
-    { id: "with_supplier", label: "With Supplier", count: 0 },
-    { id: "recent", label: "Recent", count: 0 },
-    { id: "trending", label: "Trending", count: 0 },
-  ]
-
-
-  const categories = useMemo(() => {
-    const products = activeTab === "hand-picked" ? handPickedProducts : productPicks
-    const categorySet = new Set(products.map((p) => p.category))
-    return Array.from(categorySet)
-  }, [activeTab, handPickedProducts, productPicks])
-
-  const filteredProducts = useMemo(() => {
-    const products = activeTab === "hand-picked" ? handPickedProducts : productPicks
-
-    let filtered = products.filter((product) => {
-      // Status tab filter
-      if (activeTab === "hand-picked") {
-        const hp = product as HandPickedProduct
-        if (statusTab !== "all") {
-          switch (statusTab) {
-            case "locked":
-              if (!hp.is_locked) return false
-              break
-            case "unlocked":
-              if (hp.is_locked) return false
-              break
-            case "high_profit":
-              if (hp.profit_margin <= 40) return false
-              break
-            case "high_revenue":
-              if (hp.pot_revenue <= 10000) return false
-              break
-          }
-        }
-      } else {
-        const pp = product as ProductPick
-        if (statusTabPicks !== "all") {
-          switch (statusTabPicks) {
-            case "high_profit":
-              if (pp.profit_per_order <= 50) return false
-              break
-            case "high_rated":
-              if (!pp.rating || pp.rating <= 4.0) return false
-              break
-            case "with_supplier":
-              if (!pp.supplier) return false
-              break
-            case "recent":
-              const weekAgo = new Date()
-              weekAgo.setDate(weekAgo.getDate() - 7)
-              if (new Date(pp.created_at) < weekAgo) return false
-              break
-          }
-        }
-      }
-
-      // Date range filter
-      if (dateRange.from || dateRange.to) {
-        const productDate = new Date(activeTab === "hand-picked" ? (product as HandPickedProduct).found_date : product.created_at)
-        if (dateRange.from && productDate < dateRange.from) return false
-        if (dateRange.to) {
-          const toDate = new Date(dateRange.to)
-          toDate.setHours(23, 59, 59, 999)
-          if (productDate > toDate) return false
-        }
-      }
-
-      // Quick filter - support overlapping filters
-      if (quickFilter) {
-        if (activeTab === "hand-picked") {
-          const hp = product as HandPickedProduct
-          switch (quickFilter) {
-            case "high_profit":
-              if (hp.profit_margin <= 40) return false
-              break
-            case "high_revenue":
-              if (hp.pot_revenue <= 10000) return false
-              break
-            case "locked":
-              if (!hp.is_locked) return false
-              break
-            case "unlocked":
-              if (hp.is_locked) return false
-              break
-            case "recent":
-              const weekAgo = new Date()
-              weekAgo.setDate(weekAgo.getDate() - 7)
-              if (new Date(hp.found_date) < weekAgo) return false
-              break
-          }
-        } else {
-          const pp = product as ProductPick
-          switch (quickFilter) {
-            case "high_profit":
-              if (pp.profit_per_order <= 50) return false
-              break
-            case "high_rated":
-              if (!pp.rating || pp.rating <= 4.0) return false
-              break
-            case "with_supplier":
-              if (!pp.supplier) return false
-              break
-            case "recent":
-              const weekAgo = new Date()
-              weekAgo.setDate(weekAgo.getDate() - 7)
-              if (new Date(pp.created_at) < weekAgo) return false
-              break
-            case "trending":
-              if (!pp.trend_data || pp.trend_data.length < 2) return false
-              const isTrending = pp.trend_data[pp.trend_data.length - 1] > pp.trend_data[0]
-              if (!isTrending) return false
-              break
-          }
-        }
-      }
-
-      // Search filter
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase()
-        const matchesSearch =
-          product.title.toLowerCase().includes(searchLower) ||
-          product.category.toLowerCase().includes(searchLower) ||
-          (activeTab === "hand-picked" && (product as HandPickedProduct).supplier_info?.name?.toLowerCase().includes(searchLower)) ||
-          (activeTab === "product-picks" && (product as ProductPick).supplier?.name?.toLowerCase().includes(searchLower))
-        if (!matchesSearch) return false
-      }
-
-      // Category filter from column filters
-      const categoryFilter = columnFilters.find((f) => f.id === "category")
-      if (categoryFilter && categoryFilter.value && Array.isArray(categoryFilter.value) && categoryFilter.value.length > 0) {
-        if (!categoryFilter.value.includes(product.category)) return false
-      }
-
-      // Lock filter (only for hand-picked)
-      if (activeTab === "hand-picked") {
-        const lockFilter = columnFilters.find((f) => f.id === "is_locked")
-        if (lockFilter && lockFilter.value && Array.isArray(lockFilter.value) && lockFilter.value.length > 0) {
-          const hp = product as HandPickedProduct
-          const isLocked = lockFilter.value.includes("locked")
-          const isUnlocked = lockFilter.value.includes("unlocked")
-          if (isLocked && !hp.is_locked) return false
-          if (isUnlocked && hp.is_locked) return false
-        }
-      }
-
-      return true
-    })
-
-    // Apply sorting
-    if (sorting.length > 0) {
-      const sort = sorting[0]
-      filtered.sort((a, b) => {
-        let aValue: any
-        let bValue: any
-
-        switch (sort.id) {
-          case "title":
-            aValue = a.title
-            bValue = b.title
-            break
-          case "category":
-            aValue = a.category
-            bValue = b.category
-            break
-          case "profit_margin":
-            aValue = (a as HandPickedProduct).profit_margin
-            bValue = (b as HandPickedProduct).profit_margin
-            break
-          case "pot_revenue":
-            aValue = (a as HandPickedProduct).pot_revenue
-            bValue = (b as HandPickedProduct).pot_revenue
-            break
-          case "buy_price":
-            aValue = (a as ProductPick).buy_price
-            bValue = (b as ProductPick).buy_price
-            break
-          case "sell_price":
-            aValue = (a as ProductPick).sell_price
-            bValue = (b as ProductPick).sell_price
-            break
-          default:
-            return 0
-        }
-
-        if (aValue < bValue) return sort.desc ? 1 : -1
-        if (aValue > bValue) return sort.desc ? -1 : 1
-        return 0
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        sortBy: sortField,
+        sortOrder: sortOrder,
       })
+
+      if (searchQuery.trim()) {
+        params.set("search", searchQuery.trim())
+      }
+
+      if (categoryFilter && categoryFilter !== "all") {
+        params.set("category_id", categoryFilter)
+      }
+
+      const response = await fetch(`/api/products?${params.toString()}`)
+      if (!response.ok) throw new Error("Failed to fetch products")
+      const data = await response.json()
+      setProducts(data.products || [])
+      setTotal(data.total || 0)
+    } catch (err) {
+      showError("Failed to load products")
+    } finally {
+      setLoading(false)
     }
+  }, [page, pageSize, sortField, sortOrder, searchQuery, categoryFilter, showError])
 
-    return filtered
-  }, [activeTab, handPickedProducts, productPicks, searchQuery, columnFilters, sorting, quickFilter, dateRange])
-
-  const paginatedProducts = useMemo(() => {
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    return filteredProducts.slice(start, end)
-  }, [filteredProducts, page, pageSize])
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch("/api/categories")
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data.categories || [])
+      }
+    } catch (err) {
+      console.error("Error fetching categories:", err)
+    }
+  }, [])
 
   useEffect(() => {
-    setPageCount(Math.ceil(filteredProducts.length / pageSize))
-    setInitialLoading(false)
-  }, [filteredProducts.length, pageSize])
+    fetchProducts()
+  }, [fetchProducts])
 
-  // Transform API Product to HandPickedProduct
-  const transformToHandPicked = (product: Product): HandPickedProduct => {
-    const metadata: Partial<ProductMetadata> = product.metadata || {}
-    return {
-      id: product.id,
-      image: product.image,
-      title: product.title,
-      profit_margin: metadata.profit_margin || 0,
-      pot_revenue: metadata.pot_revenue || 0,
-      category: product.category?.slug || product.category?.name || 'other',
-      is_locked: metadata.is_locked || false,
-      found_date: metadata.found_date || product.created_at,
-      filters: metadata.filters || [],
-      description: product.description,
-      supplier_info: product.supplier ? {
-        name: product.supplier.name,
-        company_name: product.supplier.company_name || undefined,
-        min_order: 0,
-      } : null,
-      unlock_price: metadata.unlock_price || null,
-      detailed_analysis: metadata.detailed_analysis || null,
-      created_at: product.created_at,
-      updated_at: product.updated_at,
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
+
+  useEffect(() => {
+    setPage(1)
+    setSelectedIds(new Set())
+  }, [searchQuery, categoryFilter])
+
+  useEffect(() => {
+    if (page > 1 && page > totalPages && totalPages > 0) {
+      setPage(totalPages)
+    }
+  }, [total, pageSize, page, totalPages])
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortOrder("asc")
     }
   }
 
-  // Transform API Product to ProductPick
-  const transformToProductPick = (product: Product): ProductPick => {
-    return {
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 ml-1 opacity-40" />
+    return sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 ml-1" /> : <ArrowDown className="h-3.5 w-3.5 ml-1" />
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(products.map((p) => p.id)))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) {
+      next.delete(id)
+    } else {
+      next.add(id)
+    }
+    setSelectedIds(next)
+  }
+
+  const handleDelete = (product: Product) => {
+    if (!canDelete) {
+      showError("You don't have permission to delete products")
+      return
+    }
+    setProductToDelete(product)
+    setDeleteConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return
+    try {
+      const response = await fetch(`/api/products/${productToDelete.id}`, { method: "DELETE" })
+      if (!response.ok) throw new Error("Failed to delete product")
+      showSuccess(`"${productToDelete.title}" deleted`)
+      setDeleteConfirmOpen(false)
+      setProductToDelete(null)
+      fetchProducts()
+    } catch {
+      showError("Failed to delete product")
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!canDelete) {
+      showError("You don't have permission to delete products")
+      return
+    }
+    try {
+      const promises = Array.from(selectedIds).map((id) =>
+        fetch(`/api/products/${id}`, { method: "DELETE" })
+      )
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter((r) => r.status === "rejected").length
+      const succeeded = selectedIds.size - failed
+      if (failed > 0) {
+        showError(`Failed to delete ${failed} product(s)`)
+      }
+      if (succeeded > 0) {
+        showSuccess(`${succeeded} product(s) deleted`)
+      }
+      setSelectedIds(new Set())
+      setBulkDeleteConfirmOpen(false)
+      fetchProducts()
+    } catch {
+      showError("Failed to delete products")
+    }
+  }
+
+  const handleEdit = (product: Product) => {
+    if (!canEdit) {
+      showError("You don't have permission to edit products")
+      return
+    }
+    const pick = {
       id: product.id,
       image: product.image,
       title: product.title,
@@ -350,946 +222,417 @@ export default function AdminProductsPage() {
       sell_price: product.sell_price,
       profit_per_order: product.profit_per_order,
       trend_data: product.trend_data || [],
-      category: product.category?.slug || product.category?.name || 'other',
+      category: product.category?.slug || product.category?.name || "other",
       rating: product.rating,
       reviews_count: product.reviews_count || 0,
       description: product.description,
       supplier_id: product.supplier_id,
-      supplier: product.supplier ? {
-        id: product.supplier.id,
-        name: product.supplier.name,
-        company_name: product.supplier.company_name || null,
-        logo: product.supplier.logo || null,
-      } : undefined,
+      supplier: product.supplier,
       additional_images: product.additional_images || [],
       specifications: product.specifications,
       created_at: product.created_at,
       updated_at: product.updated_at,
     }
-  }
-
-  const fetchProducts = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      // Fetch hand-picked products
-      const handPickedResponse = await fetch('/api/products?source_type=hand_picked&pageSize=1000')
-      if (!handPickedResponse.ok) throw new Error('Failed to fetch hand-picked products')
-      const handPickedData = await handPickedResponse.json()
-      const handPicked = (handPickedData.products || []).map(transformToHandPicked)
-      setHandPickedProducts(handPicked)
-      
-      // Fetch scraped products (product picks)
-      const picksResponse = await fetch('/api/products?source_type=scraped&pageSize=1000')
-      if (!picksResponse.ok) throw new Error('Failed to fetch product picks')
-      const picksData = await picksResponse.json()
-      const picks = (picksData.products || []).map(transformToProductPick)
-      setProductPicks(picks)
-      
-      setInitialLoading(false)
-    } catch (err) {
-      console.error("Error fetching products:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to load products. Please try again."
-      setError(errorMessage)
-      showError(errorMessage)
-    } finally {
-      setLoading(false)
-      setInitialLoading(false)
-    }
-  }, [showError])
-
-  useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
-
-  const handleViewDetails = useCallback((product: ProductUnion) => {
-    router.push(`/admin/products/${product.id}?type=${activeTab}`)
-  }, [router, activeTab])
-
-  const handleQuickView = useCallback((product: ProductUnion) => {
-    setSelectedProduct(product)
-    setQuickViewOpen(true)
-  }, [])
-
-  const handleOpenDrawer = useCallback((product: ProductUnion) => {
-    setDrawerProduct(product)
-    setDetailDrawerOpen(true)
-  }, [])
-
-  const handleImportToShopify = useCallback((product: ProductUnion) => {
-    // TODO: Implement import to Shopify
-    showInfo(`Import to Shopify functionality will be implemented. Product: ${product.title}`)
-  }, [showInfo])
-
-  const handleDelete = useCallback((product: ProductUnion) => {
-    if (!canDelete) {
-      showError("You don't have permission to delete products")
-      return
-    }
-    setProductToDelete(product)
-    setDeleteConfirmOpen(true)
-  }, [canDelete, showError])
-
-  const confirmDelete = async () => {
-    if (!productToDelete) return
-    try {
-      const response = await fetch(`/api/products/${productToDelete.id}`, {
-        method: 'DELETE',
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete product')
-      }
-      
-      if (activeTab === "hand-picked") {
-        setHandPickedProducts((prev) => prev.filter((p) => p.id !== productToDelete.id))
-      } else {
-        setProductPicks((prev) => prev.filter((p) => p.id !== productToDelete.id))
-      }
-      setSelectedProducts((prev) => prev.filter((p) => p.id !== productToDelete.id))
-      setDeleteConfirmOpen(false)
-      setProductToDelete(null)
-      showSuccess(`Product "${productToDelete.title}" deleted successfully`)
-      await fetchProducts()
-    } catch (err) {
-      showError("Failed to delete product")
-    }
-  }
-
-  const handleBulkDelete = async () => {
-    if (selectedProducts.length === 0) return
-    if (!canDelete) {
-      showError("You don't have permission to delete products")
-      return
-    }
-    setBulkActionLoading("delete")
-    try {
-      // Delete all selected products
-      const deletePromises = selectedProducts.map(product =>
-        fetch(`/api/products/${product.id}`, { method: 'DELETE' })
-      )
-      const results = await Promise.allSettled(deletePromises)
-      const failed = results.filter(r => r.status === 'rejected').length
-      
-      if (failed > 0) {
-        showError(`Failed to delete ${failed} product(s)`)
-      }
-      
-      const deletedCount = selectedProducts.length - failed
-      if (activeTab === "hand-picked") {
-        setHandPickedProducts((prev) => prev.filter((p) => !selectedProducts.some((sp) => sp.id === p.id)))
-      } else {
-        setProductPicks((prev) => prev.filter((p) => !selectedProducts.some((sp) => sp.id === p.id)))
-      }
-      setSelectedProducts([])
-      if (deletedCount > 0) {
-        showSuccess(`${deletedCount} product(s) deleted successfully`)
-      }
-      await fetchProducts()
-    } catch (err) {
-      showError("Failed to delete products")
-    } finally {
-      setBulkActionLoading(null)
-    }
-  }
-
-  const handleBulkLock = async () => {
-    if (selectedProducts.length === 0 || activeTab !== "hand-picked") return
-    if (!canLockUnlock) {
-      showError("You don't have permission to lock/unlock products")
-      return
-    }
-    setBulkActionLoading("lock")
-    try {
-      // Update all selected products
-      const updatePromises = selectedProducts.map(product =>
-        fetch(`/api/products/${product.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            metadata: { is_locked: true }
-          })
-        })
-      )
-      await Promise.all(updatePromises)
-      
-      setHandPickedProducts((prev) =>
-        prev.map((p) =>
-          selectedProducts.some((sp) => sp.id === p.id)
-            ? { ...p, is_locked: true, updated_at: new Date().toISOString() }
-            : p
-        )
-      )
-      setSelectedProducts([])
-      showSuccess(`${selectedProducts.length} product(s) locked successfully`)
-      await fetchProducts()
-    } catch (err) {
-      showError("Failed to lock products")
-    } finally {
-      setBulkActionLoading(null)
-    }
-  }
-
-  const handleBulkUnlock = async () => {
-    if (selectedProducts.length === 0 || activeTab !== "hand-picked") return
-    if (!canLockUnlock) {
-      showError("You don't have permission to lock/unlock products")
-      return
-    }
-    setBulkActionLoading("unlock")
-    try {
-      // Update all selected products
-      const updatePromises = selectedProducts.map(product =>
-        fetch(`/api/products/${product.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            metadata: { is_locked: false }
-          })
-        })
-      )
-      await Promise.all(updatePromises)
-      
-      setHandPickedProducts((prev) =>
-        prev.map((p) =>
-          selectedProducts.some((sp) => sp.id === p.id)
-            ? { ...p, is_locked: false, updated_at: new Date().toISOString() }
-            : p
-        )
-      )
-      setSelectedProducts([])
-      showSuccess(`${selectedProducts.length} product(s) unlocked successfully`)
-      await fetchProducts()
-    } catch (err) {
-      showError("Failed to unlock products")
-    } finally {
-      setBulkActionLoading(null)
-    }
-  }
-
-  const handleToggleLock = useCallback(async (product: HandPickedProduct) => {
-    if (!canLockUnlock) {
-      showError("You don't have permission to lock/unlock products")
-      return
-    }
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setHandPickedProducts((prev) =>
-        prev.map((p) =>
-          p.id === product.id
-            ? { ...p, is_locked: !p.is_locked, updated_at: new Date().toISOString() }
-            : p
-        )
-      )
-      showSuccess(`Product ${!product.is_locked ? "locked" : "unlocked"} successfully`)
-      await fetchProducts()
-    } catch (err) {
-      showError("Failed to update product")
-    }
-  }, [canLockUnlock, showSuccess, showError, fetchProducts])
-
-  const handleCopyProductId = useCallback(async (product: ProductUnion) => {
-    try {
-      await navigator.clipboard.writeText(product.id)
-      showSuccess("Product ID copied to clipboard")
-    } catch (err) {
-      showError("Failed to copy Product ID")
-    }
-  }, [showSuccess, showError])
-
-  const handleCopyTitle = useCallback(async (product: ProductUnion) => {
-    try {
-      await navigator.clipboard.writeText(product.title)
-      showSuccess("Product title copied to clipboard")
-    } catch (err) {
-      showError("Failed to copy title")
-    }
-  }, [showSuccess, showError])
-
-  const handleViewCategory = useCallback((product: ProductUnion) => {
-    router.push(`/admin/categories?category=${product.category}`)
-  }, [router])
-
-  const handleViewSupplier = useCallback((product: ProductUnion) => {
-    if (activeTab === "hand-picked") {
-      const hp = product as HandPickedProduct
-      if (hp.supplier_info) {
-        // TODO: Navigate to supplier page
-        showInfo(`Supplier navigation will be implemented. Supplier: ${hp.supplier_info.name}`)
-      }
-    } else {
-      const pp = product as ProductPick
-      if (pp.supplier_id) {
-        router.push(`/admin/suppliers/${pp.supplier_id}`)
-      }
-    }
-  }, [activeTab, router, showInfo])
-
-  const handleViewTrendData = useCallback((product: ProductPick) => {
-    // TODO: Show trend data modal or navigate to trend analysis
-    showInfo(`Trend data visualization will be implemented. Product: ${product.title}`)
-  }, [showInfo])
-
-  const handleDuplicate = useCallback(async (product: ProductUnion) => {
-    if (!canCreate) {
-      showError("You don't have permission to create products")
-      return
-    }
-    // TODO: Implement duplicate functionality
-    showInfo(`Duplicate functionality will be implemented. Product: ${product.title}`)
-  }, [canCreate, showError, showInfo])
-
-  const handleEdit = useCallback((product: ProductUnion) => {
-    if (!canEdit) {
-      showError("You don't have permission to edit products")
-      return
-    }
-    if (activeTab === "product-picks") {
-      setEditingProduct(product as ProductPick)
-      setProductFormOpen(true)
-    } else {
-      router.push(`/admin/products/${product.id}?type=${activeTab}`)
-    }
-  }, [canEdit, router, activeTab, showError])
-
-  const handleCreateProduct = useCallback(() => {
-    if (!canCreate) {
-      showError("You don't have permission to create products")
-      return
-    }
-    setEditingProduct(null)
+    setEditingProduct(pick)
     setProductFormOpen(true)
-  }, [canCreate, showError])
+  }
 
-  const handleFormSuccess = useCallback(() => {
-    fetchProducts()
-  }, [fetchProducts])
+  const handleExport = () => {
+    const exportProducts = selectedIds.size > 0
+      ? products.filter((p) => selectedIds.has(p.id))
+      : products
 
-  const handleBulkExport = useCallback(() => {
-    if (selectedProducts.length === 0) {
-      showError("No products selected for export")
-      return
-    }
-    try {
-      const headers = activeTab === "hand-picked"
-        ? ["Product ID", "Title", "Category", "Profit Margin", "Pot Revenue", "Lock Status", "Found Date"]
-        : ["Product ID", "Title", "Category", "Buy Price", "Sell Price", "Profit per Order", "Rating", "Supplier"]
-      
-      const rows = selectedProducts.map((product) => {
-        if (activeTab === "hand-picked") {
-          const hp = product as HandPickedProduct
-          return [
-            hp.id,
-            hp.title,
-            hp.category,
-            `${hp.profit_margin}%`,
-            `$${hp.pot_revenue.toFixed(2)}`,
-            hp.is_locked ? "Locked" : "Unlocked",
-            new Date(hp.found_date).toLocaleString(),
-          ]
-        } else {
-          const pp = product as ProductPick
-          return [
-            pp.id,
-            pp.title,
-            pp.category,
-            `$${pp.buy_price.toFixed(2)}`,
-            `$${pp.sell_price.toFixed(2)}`,
-            `$${pp.profit_per_order.toFixed(2)}`,
-            pp.rating?.toFixed(1) || "",
-            pp.supplier?.name || "",
-          ]
-        }
-      })
+    const headers = ["Title", "Category", "Buy Price", "Sell Price", "Profit", "Rating", "Created"]
+    const rows = exportProducts.map((p) => [
+      p.title,
+      p.category?.name || "",
+      `$${p.buy_price?.toFixed(2) || "0.00"}`,
+      `$${p.sell_price?.toFixed(2) || "0.00"}`,
+      `$${p.profit_per_order?.toFixed(2) || "0.00"}`,
+      p.rating?.toFixed(1) || "",
+      new Date(p.created_at).toLocaleDateString(),
+    ])
 
-      const csv = [
-        headers.map(h => `"${h}"`).join(","),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(",")),
-      ].join("\n")
+    const csv = [
+      headers.map((h) => `"${h}"`).join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n")
 
-      const blob = new Blob([csv], { type: "text/csv" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `selected-products-${activeTab}-${new Date().toISOString().split("T")[0]}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
-      showSuccess(`Exported ${selectedProducts.length} product(s) to CSV`)
-    } catch (err) {
-      showError("Failed to export products")
-    }
-  }, [selectedProducts, activeTab, showSuccess, showError])
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `products-${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    showSuccess(`Exported ${exportProducts.length} product(s)`)
+  }
 
-  const handleBulkUpload = useCallback(() => {
-    // Create file input
-    const input = document.createElement("input")
-    input.type = "file"
-    input.accept = ".csv,.xlsx,.xls"
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
+  const formatPrice = (price: number | null | undefined) => {
+    if (price === null || price === undefined) return "$0.00"
+    return `$${Number(price).toFixed(2)}`
+  }
 
-      try {
-        setBulkActionLoading("upload")
-        // TODO: Implement actual bulk upload API call
-        // For now, show a message
-        console.log("Bulk upload file:", file.name)
-        // Simulate processing
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        showInfo(`Bulk upload functionality will be implemented. File: ${file.name}`)
-      } catch (err) {
-        console.error("Error uploading file:", err)
-        const errorMessage = err instanceof Error ? err.message : "Failed to upload file"
-        showError(errorMessage)
-      } finally {
-        setBulkActionLoading(null)
-      }
-    }
-    input.click()
-  }, [showInfo, showError])
-
-  const handleRowClick = useCallback((product: ProductUnion) => {
-    setSelectedProduct(product)
-    setQuickViewOpen(true)
-  }, [])
-
-  const handPickedColumns = useMemo(
-    () =>
-      createHandPickedColumns({
-        onViewDetails: handleViewDetails,
-        onQuickView: handleQuickView,
-        onOpenDrawer: handleOpenDrawer,
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onCopyProductId: handleCopyProductId,
-        onCopyTitle: handleCopyTitle,
-        onToggleLock: handleToggleLock,
-        onViewCategory: handleViewCategory,
-        onViewSupplier: handleViewSupplier,
-        onDuplicate: handleDuplicate,
-        canEdit,
-        canDelete,
-        canLockUnlock,
-      }),
-    [
-      handleViewDetails,
-      handleQuickView,
-      handleOpenDrawer,
-      handleEdit,
-      handleDelete,
-      handleCopyProductId,
-      handleCopyTitle,
-      handleToggleLock,
-      handleViewCategory,
-      handleViewSupplier,
-      handleDuplicate,
-      canEdit,
-      canDelete,
-      canLockUnlock,
-    ]
-  )
-
-  const productPicksColumns = useMemo(
-    () =>
-      createProductPicksColumns({
-        onViewDetails: handleViewDetails,
-        onQuickView: handleQuickView,
-        onOpenDrawer: handleOpenDrawer,
-        onEdit: handleEdit,
-        onDelete: handleDelete,
-        onCopyProductId: handleCopyProductId,
-        onCopyTitle: handleCopyTitle,
-        onViewCategory: handleViewCategory,
-        onViewSupplier: handleViewSupplier,
-        onViewTrendData: handleViewTrendData,
-        onDuplicate: handleDuplicate,
-        canEdit,
-        canDelete,
-      }),
-    [
-      handleViewDetails,
-      handleQuickView,
-      handleOpenDrawer,
-      handleEdit,
-      handleDelete,
-      handleCopyProductId,
-      handleCopyTitle,
-      handleViewCategory,
-      handleViewSupplier,
-      handleViewTrendData,
-      handleDuplicate,
-      canEdit,
-      canDelete,
-    ]
-  )
-
-  const categoryOptions = categories.map((cat) => ({
-    label: cat.replace(/-/g, " "),
-    value: cat,
-  }))
-
-  const lockOptions = [
-    { label: "Locked", value: "locked" },
-    { label: "Unlocked", value: "unlocked" },
-  ]
-
-  // Memoize secondary buttons to avoid hook order issues
-  const secondaryButtons = useMemo(() => {
-    if (selectedProducts.length > 0) {
-      const buttons = []
-      if (activeTab === "hand-picked") {
-        buttons.push(
-          {
-            label: bulkActionLoading === "lock" ? "Locking..." : "Lock Selected",
-            icon: bulkActionLoading === "lock" ? <Loader size="sm" className="mr-2" /> : <Lock className="h-4 w-4" />,
-            onClick: handleBulkLock,
-            variant: "outline" as const,
-            disabled: !canLockUnlock || bulkActionLoading !== null,
-            tooltip: !canLockUnlock ? "You don't have permission to lock/unlock products" : undefined,
-          },
-          {
-            label: bulkActionLoading === "unlock" ? "Unlocking..." : "Unlock Selected",
-            icon: bulkActionLoading === "unlock" ? <Loader size="sm" className="mr-2" /> : <LockOpen className="h-4 w-4" />,
-            onClick: handleBulkUnlock,
-            variant: "outline" as const,
-            disabled: !canLockUnlock || bulkActionLoading !== null,
-            tooltip: !canLockUnlock ? "You don't have permission to lock/unlock products" : undefined,
-          }
-        )
-      }
-      buttons.push(
-        {
-          label: "Export Selected",
-          icon: <Download className="h-4 w-4" />,
-          onClick: handleBulkExport,
-          variant: "outline" as const,
-        },
-        {
-          label: bulkActionLoading === "delete" ? "Deleting..." : "Delete Selected",
-          icon: bulkActionLoading === "delete" ? <Loader size="sm" className="mr-2" /> : <Trash2 className="h-4 w-4" />,
-          onClick: handleBulkDelete,
-          variant: "destructive" as const,
-          disabled: !canDelete || bulkActionLoading !== null,
-          tooltip: !canDelete ? "You don't have permission to delete products" : undefined,
-        },
-        {
-          label: "Clear Selection",
-          onClick: () => setSelectedProducts([]),
-          variant: "ghost" as const,
-        }
-      )
-      return buttons
-    } else {
-      return [
-        {
-          label: bulkActionLoading === "upload" ? "Uploading..." : "Bulk Upload",
-          icon: bulkActionLoading === "upload" ? <Loader size="sm" className="mr-2" /> : <Upload className="h-4 w-4" />,
-          onClick: handleBulkUpload,
-          variant: "outline" as const,
-          disabled: bulkActionLoading !== null,
-        },
-        {
-          label: "Create Product",
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreateProduct,
-          variant: "default" as const,
-          disabled: !canCreate,
-          tooltip: !canCreate ? "You don't have permission to create products" : undefined,
-        },
-      ]
-    }
-  }, [selectedProducts, bulkActionLoading, activeTab, canLockUnlock, canDelete, canCreate, handleBulkLock, handleBulkUnlock, handleBulkDelete, handleBulkExport, handleBulkUpload, handleCreateProduct, setSelectedProducts])
-
-  const currentQuickFilters = activeTab === "hand-picked" ? handPickedQuickFilters : productPicksQuickFilters
-  
-  const handleSaveAssignees = (owner: string | null, members: string[]) => {
-    setAssignedOwner(owner)
-    setAssignedMembers(members)
-    showSuccess("Assignees updated successfully")
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-white">Products</h1>
             <p className="text-xs text-white/90 mt-0.5">
-              Manage hand-picked products and product picks
+              Manage your product catalog
             </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {assignedOwner || assignedMembers.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center -space-x-2">
-                  {assignedOwner && (
-                    <Avatar className="h-8 w-8 border-2 border-white/20">
-                      <AvatarImage src={getAvatarUrl(assignedOwner, internalUsers.find(u => u.id === assignedOwner)?.email || "")} />
-                      <AvatarFallback className="text-xs bg-white/20 text-white">
-                        {internalUsers.find(u => u.id === assignedOwner)?.name.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  {assignedMembers.slice(0, 3).map((memberId) => {
-                    const member = internalUsers.find(u => u.id === memberId)
-                    if (!member) return null
-                    return (
-                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
-                        <AvatarImage src={getAvatarUrl(memberId, member.email)} />
-                        <AvatarFallback className="text-xs bg-white/20 text-white">
-                          {member.name.charAt(0) || "M"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })}
-                  {assignedMembers.length > 3 && (
-                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
-                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
-                    </div>
-                  )}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setAssigneeModalOpen(true)}
-                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Assignee
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setAssigneeModalOpen(true)}
-                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Assignee
-              </Button>
-            )}
           </div>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm text-destructive">{error}</p>
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 pl-8 text-sm"
+          />
+        </div>
+
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="h-9 w-[160px] text-sm">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {selectedIds.size > 0 && (
+          <>
+            <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-1.5" />
+              Export ({selectedIds.size})
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-9"
+              onClick={() => setBulkDeleteConfirmOpen(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete ({selectedIds.size})
+            </Button>
+          </>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-1.5" />
+            Export
+          </Button>
           <Button
-            variant="outline"
             size="sm"
-            onClick={fetchProducts}
-            className="mt-2 cursor-pointer"
+            className="h-9"
+            disabled={!canCreate}
+            onClick={() => {
+              if (!canCreate) {
+                showError("You don't have permission to create products")
+                return
+              }
+              setEditingProduct(null)
+              setProductFormOpen(true)
+            }}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add product
           </Button>
         </div>
-      )}
+      </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => {
-        setActiveTab(v as ProductType)
-        setQuickFilter(null)
-        setSelectedProducts([])
-      }} className="mt-0">
-        <TabsList>
-          <TabsTrigger value="hand-picked" className="cursor-pointer">
-            Hand-picked Products
-            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-              {handPickedProducts.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="product-picks" className="cursor-pointer">
-            Product Picks
-            <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-              {productPicks.length}
-            </Badge>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value={activeTab} className="space-y-4 mt-4">
-          {/* Toolbar */}
-          <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
-              />
-              {currentQuickFilters.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={quickFilter ? "default" : "outline"}
-                      size="sm"
-                      className="h-8 px-2"
-                    >
-                      <Filter className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {currentQuickFilters.map((filter) => (
-                      <DropdownMenuItem
-                        key={filter.id}
-                        onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
-                        className={cn(
-                          "cursor-pointer",
-                          quickFilter === filter.id && "bg-accent"
-                        )}
-                      >
-                        <span>{filter.label}</span>
-                        {quickFilter === filter.id && (
-                          <Check className="h-4 w-4 ml-auto" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                    {quickFilter && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setQuickFilter(null)}
-                          className="cursor-pointer"
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Clear Filter
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              {secondaryButtons.map((button, index) => (
-                <Button
-                  key={index}
-                  variant={button.variant || "outline"}
-                  size="sm"
-                  onClick={button.onClick}
-                  disabled={button.disabled}
-                  className="h-8"
-                >
-                  {button.icon}
-                  {button.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Grid View */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {initialLoading ? (
-              <div className="flex items-center justify-center p-8">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader size="sm" />
-                  <span>Loading products...</span>
-                </div>
-              </div>
-            ) : paginatedProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <Package className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-                <p className="text-sm text-muted-foreground">No products found</p>
-                <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {paginatedProducts.map((product) => (
-                  <AdminProductCard
-                    key={product.id}
-                    product={product}
-                    productType={activeTab}
-                    onEdit={handleEdit}
-                    onViewDetails={handleViewDetails}
-                    onDelete={handleDelete}
-                    onToggleLock={handleToggleLock}
-                    onDuplicate={handleDuplicate}
-                    onViewCategory={handleViewCategory}
-                    onViewSupplier={handleViewSupplier}
-                    onOpenDrawer={handleOpenDrawer}
-                    canEdit={canEdit}
-                    canDelete={canDelete}
-                    canLockUnlock={canLockUnlock}
+      <Card className="flex-1 overflow-hidden border rounded-lg">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="w-10 px-3 py-2.5">
+                  <Checkbox
+                    checked={products.length > 0 && selectedIds.size === products.length}
+                    onCheckedChange={toggleSelectAll}
                   />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Pagination */}
-          {!initialLoading && paginatedProducts.length > 0 && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-muted-foreground">
-                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredProducts.length)} of {filteredProducts.length} products
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <div className="text-sm text-muted-foreground">
-                  Page {page} of {pageCount}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(pageCount, p + 1))}
-                  disabled={page === pageCount}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Quick View Modal - Enhanced */}
-      {selectedProduct && (
-        <Dialog 
-          open={quickViewOpen}
-          onOpenChange={(open) => {
-            setQuickViewOpen(open)
-            if (!open) {
-              setSelectedProduct(null)
-            }
-          }}
-        >
-          <DialogContent className="max-w-xs p-4">
-            <DialogHeader className="pb-3 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
-                  {selectedProduct.image ? (
-              <Image
-                src={selectedProduct.image}
-                alt={selectedProduct.title}
-                fill
-                className="object-cover"
-                      sizes="48px"
-              />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <Package className="h-6 w-6 text-muted-foreground" />
-            </div>
-                  )}
-            </div>
-                <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-base truncate">{selectedProduct.title}</DialogTitle>
-                  <DialogDescription className="text-xs truncate">
-                    <Badge variant="outline" className="text-xs">
-                      {selectedProduct.category.replace(/-/g, " ")}
-                  </Badge>
-                  </DialogDescription>
-                </div>
-                </div>
-            </DialogHeader>
-            <div className="space-y-2 py-2">
-              {activeTab === "hand-picked" && (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Profit Margin</span>
-                    <span className="text-xs font-medium text-emerald-600">
-                      {(selectedProduct as HandPickedProduct).profit_margin}%
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Pot Revenue</span>
-                    <span className="text-xs font-medium">
-                      ${(selectedProduct as HandPickedProduct).pot_revenue.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Status</span>
-                    <Badge variant={(selectedProduct as HandPickedProduct).is_locked ? "destructive" : "default"} className="text-xs px-2 py-0.5">
-                      {(selectedProduct as HandPickedProduct).is_locked ? (
-                        <>
-                          <Lock className="h-3 w-3 mr-1" />
-                          Locked
-                        </>
-                      ) : (
-                        "Unlocked"
-                      )}
-                          </Badge>
-                        </div>
-                  {(selectedProduct as HandPickedProduct).supplier_info && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">Supplier</span>
-                      <span className="text-xs font-medium truncate max-w-[120px]">
-                        {(selectedProduct as HandPickedProduct).supplier_info?.name}
-                      </span>
-                        </div>
-                  )}
-                      </>
-                    )}
-                    {activeTab === "product-picks" && (
-                      <>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Buy Price</span>
-                    <span className="text-xs font-medium">
-                            ${(selectedProduct as ProductPick).buy_price.toFixed(2)}
-                    </span>
-                        </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Sell Price</span>
-                    <span className="text-xs font-medium">
-                            ${(selectedProduct as ProductPick).sell_price.toFixed(2)}
-                    </span>
-                        </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-muted-foreground">Profit per Order</span>
-                    <span className="text-xs font-medium text-emerald-600">
-                            ${(selectedProduct as ProductPick).profit_per_order.toFixed(2)}
-                    </span>
-                        </div>
-                      {(selectedProduct as ProductPick).rating && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">Rating</span>
-                          <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium">
-                              {(selectedProduct as ProductPick).rating?.toFixed(1)}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                          ({(selectedProduct as ProductPick).reviews_count})
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                  {(selectedProduct as ProductPick).supplier && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">Supplier</span>
-                      <span className="text-xs font-medium truncate max-w-[120px]">
-                        {(selectedProduct as ProductPick).supplier?.name}
-                      </span>
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-16"></th>
+                <th className="px-3 py-2.5 text-left">
+                  <button
+                    className="flex items-center font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => handleSort("title")}
+                  >
+                    Product
+                    <SortIcon field="title" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Category</th>
+                <th className="px-3 py-2.5 text-right">
+                  <button
+                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => handleSort("sell_price")}
+                  >
+                    Price
+                    <SortIcon field="sell_price" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-right">
+                  <button
+                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => handleSort("profit_per_order")}
+                  >
+                    Profit
+                    <SortIcon field="profit_per_order" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-right">
+                  <button
+                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => handleSort("rating")}
+                  >
+                    Rating
+                    <SortIcon field="rating" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-right">
+                  <button
+                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => handleSort("created_at")}
+                  >
+                    Date
+                    <SortIcon field="created_at" />
+                  </button>
+                </th>
+                <th className="w-12 px-3 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader size="sm" />
+                      <span>Loading products...</span>
                     </div>
-                  )}
-                    </>
-                  )}
-                </div>
-            <DialogFooter className="pt-3 border-t mt-2">
-                <Button
-                  variant="outline"
-                onClick={() => {
-                  setQuickViewOpen(false)
-                  handleViewDetails(selectedProduct)
+                  </td>
+                </tr>
+              ) : products.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Package className="h-10 w-10 opacity-40" />
+                      <p className="text-sm font-medium">No products found</p>
+                      <p className="text-xs">Try adjusting your search or filters, or add a new product.</p>
+                      <Button
+                        size="sm"
+                        className="mt-2"
+                        disabled={!canCreate}
+                        onClick={() => {
+                          setEditingProduct(null)
+                          setProductFormOpen(true)
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        Add product
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                products.map((product) => (
+                  <tr
+                    key={product.id}
+                    className="border-b hover:bg-muted/30 transition-colors group"
+                  >
+                    <td className="px-3 py-2.5">
+                      <Checkbox
+                        checked={selectedIds.has(product.id)}
+                        onCheckedChange={() => toggleSelect(product.id)}
+                      />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
+                        {product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.title}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="min-w-0">
+                        <button
+                          className="font-medium truncate max-w-[280px] text-left hover:text-primary hover:underline transition-colors cursor-pointer block"
+                          onClick={() => router.push(`/admin/products/${product.id}`)}
+                        >
+                          {product.title}
+                        </button>
+                        {product.description && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[280px] mt-0.5">
+                            {product.description}
+                          </p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <Badge variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200">
+                        Active
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="text-sm text-muted-foreground">
+                        {product.category?.name || "—"}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {formatPrice(product.sell_price)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      <span className="text-emerald-600 font-medium">
+                        {formatPrice(product.profit_per_order)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">
+                      {product.rating ? (
+                        <span>{Number(product.rating).toFixed(1)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-muted-foreground text-xs whitespace-nowrap">
+                      {formatDate(product.created_at)}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/admin/products/${product.id}`)}
+                            className="cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(product)}
+                            className="cursor-pointer"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(product)}
+                            className="cursor-pointer text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {!loading && products.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total} products
+              </span>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(v) => {
+                  setPageSize(Number(v))
+                  setPage(1)
                 }}
-                className="w-full text-sm h-8 cursor-pointer"
               >
-                View More Details
-                </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+                <SelectTrigger className="h-7 w-[70px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-xs">per page</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm px-2 text-muted-foreground">
+                Page {page} of {totalPages || 1}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setPage(totalPages)}
+                disabled={page >= totalPages}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
 
-
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1299,10 +642,17 @@ export default function AdminProductsPage() {
             </DialogDescription>
           </DialogHeader>
           {productToDelete && (
-            <div className="space-y-2">
-              <p className="text-sm">
-                <span className="font-medium">Product:</span> {productToDelete.title}
-              </p>
+            <div className="flex items-center gap-3 py-2">
+              <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
+                {productToDelete.image ? (
+                  <Image src={productToDelete.image} alt={productToDelete.title} fill className="object-cover" sizes="40px" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm font-medium">{productToDelete.title}</p>
             </div>
           )}
           <DialogFooter>
@@ -1316,42 +666,33 @@ export default function AdminProductsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Assignee Modal */}
-      <PageAssigneeModal
-        open={assigneeModalOpen}
-        onOpenChange={setAssigneeModalOpen}
-        internalUsers={internalUsers}
-        assignedOwner={assignedOwner}
-        assignedMembers={assignedMembers}
-        onSave={handleSaveAssignees}
-      />
+      <Dialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedIds.size} Products</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedIds.size} selected product(s)? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleBulkDelete}>
+              Delete {selectedIds.size} products
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Product Detail Drawer */}
-      <ProductDetailDrawer
-        open={detailDrawerOpen}
-        onOpenChange={(open) => {
-          setDetailDrawerOpen(open)
-          if (!open) {
-            setDrawerProduct(null)
-          }
-        }}
-        product={drawerProduct}
-        productType={activeTab}
-        onImportToShopify={handleImportToShopify}
-        onEdit={handleEdit}
-      />
-
-      {/* Product Create/Edit Form Modal */}
       <ProductFormModal
         open={productFormOpen}
         onOpenChange={(open) => {
           setProductFormOpen(open)
-          if (!open) {
-            setEditingProduct(null)
-          }
+          if (!open) setEditingProduct(null)
         }}
         product={editingProduct}
-        onSuccess={handleFormSuccess}
+        onSuccess={() => fetchProducts()}
       />
     </div>
   )
