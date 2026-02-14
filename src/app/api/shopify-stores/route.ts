@@ -1,24 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
+import { getCurrentUser } from '@/lib/auth'
+import sql from '@/lib/db'
 
-// Helper to get authenticated user
-async function getAuthenticatedUser() {
-  const supabase = await createClient()
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
+function mapStoreFromDB(row: any) {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.store_name || row.shop_domain || '',
+    url: row.shop_domain || '',
+    logo: null,
+    status: row.is_active ? 'connected' : 'disconnected',
+    connected_at: row.created_at || new Date().toISOString(),
+    last_synced_at: row.last_synced_at || null,
+    sync_status: row.last_synced_at ? 'success' : 'never',
+    api_key: '',
+    access_token: row.access_token ? '••••••••' : '',
+    products_count: 0,
+    monthly_revenue: null,
+    monthly_traffic: null,
+    niche: null,
+    country: null,
+    currency: 'USD',
+    plan: row.plan || 'basic',
+    user: row.user_email ? {
+      id: row.user_id,
+      email: row.user_email,
+      full_name: row.user_full_name,
+    } : undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   }
-  
-  return user
 }
 
-// GET /api/shopify-stores - Get stores for authenticated user
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,81 +45,124 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
-    const sortBy = searchParams.get('sortBy') || 'created_at'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const offset = (page - 1) * pageSize
 
-    const supabaseClient = await createClient()
-
-    let query = supabaseClient
-      .from('shopify_stores')
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .eq('user_id', user.id)
-
-    // Apply filters
-    if (status) {
-      query = query.eq('status', status)
+    let data
+    if (status === 'connected') {
+      if (search) {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id} AND s.is_active = true
+            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      } else {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id} AND s.is_active = true
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      }
+    } else if (status === 'disconnected') {
+      if (search) {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id} AND s.is_active = false
+            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      } else {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id} AND s.is_active = false
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      }
+    } else {
+      if (search) {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id}
+            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      } else {
+        data = await sql`
+          SELECT s.*, p.email as user_email, p.full_name as user_full_name
+          FROM shopify_stores s
+          LEFT JOIN profiles p ON s.user_id = p.id
+          WHERE s.user_id = ${user.id}
+          ORDER BY s.created_at DESC
+          LIMIT ${pageSize} OFFSET ${offset}
+        `
+      }
     }
 
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
+    const stores = data.map(mapStoreFromDB)
+
+    let countResult
+    if (status === 'connected') {
+      if (search) {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores
+          WHERE user_id = ${user.id} AND is_active = true
+            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
+        `
+      } else {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores
+          WHERE user_id = ${user.id} AND is_active = true
+        `
+      }
+    } else if (status === 'disconnected') {
+      if (search) {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores
+          WHERE user_id = ${user.id} AND is_active = false
+            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
+        `
+      } else {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores
+          WHERE user_id = ${user.id} AND is_active = false
+        `
+      }
+    } else {
+      if (search) {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores
+          WHERE user_id = ${user.id}
+            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
+        `
+      } else {
+        countResult = await sql`
+          SELECT COUNT(*) as count FROM shopify_stores WHERE user_id = ${user.id}
+        `
+      }
     }
-
-    // Apply sorting
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
-
-    // Apply pagination
-    const from = (page - 1) * pageSize
-    const to = from + pageSize - 1
-    query = query.range(from, to)
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching shopify stores:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data || data.length === 0) {
-      return NextResponse.json({
-        stores: [],
-        total: 0,
-        page,
-        pageSize,
-        totalPages: 0
-      })
-    }
-
-    // Transform to match ShopifyStore interface using helper
-    const stores = data.map((store) => mapShopifyStoreFromDB(store))
-
-    // Get total count for pagination
-    let countQuery = supabaseClient
-      .from('shopify_stores')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-
-    if (status) {
-      countQuery = countQuery.eq('status', status)
-    }
-    if (search) {
-      countQuery = countQuery.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
-    }
-
-    const { count: totalCount } = await countQuery
+    const totalCount = parseInt(countResult[0]?.count || '0')
 
     return NextResponse.json({
       stores,
-      total: totalCount || 0,
+      total: totalCount,
       page,
       pageSize,
-      totalPages: Math.ceil((totalCount || 0) / pageSize)
+      totalPages: Math.ceil(totalCount / pageSize)
     })
   } catch (error) {
     console.error('Error in GET /api/shopify-stores:', error)
@@ -111,10 +170,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/shopify-stores - Initiate OAuth flow
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -127,26 +185,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Shop parameter is required' }, { status: 400 })
     }
 
-    // Import OAuth helpers
     const { generateOAuthState, buildShopifyOAuthUrl } = await import('@/lib/utils/shopify-oauth')
     
-    // Generate state token
     const state = generateOAuthState()
-    
-    // TODO: Store state in session/cache for validation in callback
-    // For now, we'll proceed without state storage in development
-    
-    // Build OAuth URL
     const oauthUrl = buildShopifyOAuthUrl(shop, state)
     
-    // Return redirect URL
     return NextResponse.json({ 
       oauth_url: oauthUrl,
-      state: state // In production, don't return state to client
+      state: state
     })
   } catch (error) {
     console.error('Error in POST /api/shopify-stores:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

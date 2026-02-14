@@ -1,27 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, supabaseAdmin } from '@/lib/supabase/server'
-import { mapShopifyStoreFromDB, mapShopifyStoreToDB, normalizeShopifyStoreUrl, validateShopifyStoreUrl } from '@/lib/utils/shopify-store-helpers'
+import { getCurrentUser } from '@/lib/auth'
+import sql from '@/lib/db'
 
-// Helper to get authenticated user
-async function getAuthenticatedUser() {
-  const supabase = await createClient()
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
+function mapStoreFromDB(row: any) {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    name: row.store_name || row.shop_domain || '',
+    url: row.shop_domain || '',
+    logo: null,
+    status: row.is_active ? 'connected' : 'disconnected',
+    connected_at: row.created_at || new Date().toISOString(),
+    last_synced_at: row.last_synced_at || null,
+    sync_status: row.last_synced_at ? 'success' : 'never',
+    api_key: '',
+    access_token: row.access_token ? '••••••••' : '',
+    products_count: 0,
+    monthly_revenue: null,
+    monthly_traffic: null,
+    niche: null,
+    country: null,
+    currency: 'USD',
+    plan: row.plan || 'basic',
+    user: row.user_email ? {
+      id: row.user_id,
+      email: row.user_email,
+      full_name: row.user_full_name,
+    } : undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   }
-  
-  return user
 }
 
-// GET /api/shopify-stores/[id] - Get a single store (user's own stores only)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,47 +45,31 @@ export async function GET(
 
     const { id: storeId } = await params
 
-    const { data, error } = await supabaseAdmin
-      .from('shopify_stores')
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .eq('id', storeId)
-      .eq('user_id', user.id) // Ensure user owns this store
-      .single()
+    const data = await sql`
+      SELECT s.*, p.email as user_email, p.full_name as user_full_name
+      FROM shopify_stores s
+      LEFT JOIN profiles p ON s.user_id = p.id
+      WHERE s.id = ${storeId} AND s.user_id = ${user.id}
+      LIMIT 1
+    `
 
-    if (error) {
-      console.error('Error fetching shopify store:', error)
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Store not found' }, { status: 404 })
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data) {
+    if (data.length === 0) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    const store = mapShopifyStoreFromDB(data)
-    return NextResponse.json(store)
+    return NextResponse.json(mapStoreFromDB(data[0]))
   } catch (error) {
     console.error('Error in GET /api/shopify-stores/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// PATCH /api/shopify-stores/[id] - Update user's own store
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -78,78 +78,46 @@ export async function PATCH(
     const { id: storeId } = await params
     const body = await request.json()
 
-    // First verify ownership
-    const { data: existingStore, error: fetchError } = await supabaseAdmin
-      .from('shopify_stores')
-      .select('id, user_id')
-      .eq('id', storeId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (fetchError || !existingStore) {
+    const existing = await sql`
+      SELECT id FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
+    `
+    if (existing.length === 0) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
 
-    // Validate URL if provided
-    if (body.url) {
-      if (!validateShopifyStoreUrl(body.url)) {
-        return NextResponse.json(
-          { error: 'Invalid Shopify store URL format' },
-          { status: 400 }
-        )
-      }
-      body.url = normalizeShopifyStoreUrl(body.url)
-    }
+    const storeName = body.name !== undefined ? body.name : null
+    const shopDomain = body.url !== undefined ? body.url : null
+    const isActive = body.status !== undefined ? (body.status === 'connected') : null
+    const planVal = body.plan !== undefined ? body.plan : null
 
-    // Map to DB format
-    const updateData = mapShopifyStoreToDB(body)
-    updateData.updated_at = new Date().toISOString()
+    const result = await sql`
+      UPDATE shopify_stores SET
+        updated_at = NOW(),
+        store_name = COALESCE(${storeName}, store_name),
+        shop_domain = COALESCE(${shopDomain}, shop_domain),
+        is_active = COALESCE(${isActive}, is_active),
+        plan = COALESCE(${planVal}, plan)
+      WHERE id = ${storeId} AND user_id = ${user.id}
+      RETURNING *
+    `
 
-    const { data, error } = await supabaseAdmin
-      .from('shopify_stores')
-      .update(updateData)
-      .eq('id', storeId)
-      .eq('user_id', user.id) // Double-check ownership
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .single()
-
-    if (error) {
-      console.error('Error updating shopify store:', error)
-      if (error.code === '23505') {
-        return NextResponse.json(
-          { error: 'A store with this URL already exists' },
-          { status: 409 }
-        )
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!data) {
+    if (result.length === 0) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    const store = mapShopifyStoreFromDB(data)
-    return NextResponse.json(store)
+    return NextResponse.json(mapStoreFromDB(result[0]))
   } catch (error) {
     console.error('Error in PATCH /api/shopify-stores/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// DELETE /api/shopify-stores/[id] - Delete user's own store
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -157,28 +125,16 @@ export async function DELETE(
 
     const { id: storeId } = await params
 
-    // Verify ownership before deleting
-    const { data: storeData, error: fetchError } = await supabaseAdmin
-      .from('shopify_stores')
-      .select('id, user_id')
-      .eq('id', storeId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (fetchError || !storeData) {
+    const existing = await sql`
+      SELECT id FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
+    `
+    if (existing.length === 0) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
 
-    const { error } = await supabaseAdmin
-      .from('shopify_stores')
-      .delete()
-      .eq('id', storeId)
-      .eq('user_id', user.id) // Double-check ownership
-
-    if (error) {
-      console.error('Error deleting shopify store:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    await sql`
+      DELETE FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
+    `
 
     return NextResponse.json({ success: true, message: 'Store deleted successfully' })
   } catch (error) {
@@ -186,4 +142,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-

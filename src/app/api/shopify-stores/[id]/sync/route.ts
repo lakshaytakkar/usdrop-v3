@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, supabaseAdmin } from '@/lib/supabase/server'
-import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
+import { getCurrentUser } from '@/lib/auth'
+import sql from '@/lib/db'
 
-// Helper to get authenticated user
-async function getAuthenticatedUser() {
-  const supabase = await createClient()
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
-  }
-  
-  return user
-}
-
-// POST /api/shopify-stores/[id]/sync - Trigger store sync
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,110 +15,69 @@ export async function POST(
 
     const { id: storeId } = await params
 
-    // Verify ownership
-    const { data: storeData, error: fetchError } = await supabaseAdmin
-      .from('shopify_stores')
-      .select('id, user_id, url, access_token, status')
-      .eq('id', storeId)
-      .eq('user_id', user.id)
-      .single()
+    const stores = await sql`
+      SELECT id, user_id, shop_domain, access_token, is_active
+      FROM shopify_stores
+      WHERE id = ${storeId} AND user_id = ${user.id}
+      LIMIT 1
+    `
 
-    if (fetchError || !storeData) {
+    if (stores.length === 0) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
 
-    if (storeData.status !== 'connected') {
+    const store = stores[0]
+
+    if (!store.is_active) {
       return NextResponse.json(
         { error: 'Store must be connected to sync' },
         { status: 400 }
       )
     }
 
-    if (!storeData.access_token) {
+    if (!store.access_token) {
       return NextResponse.json(
         { error: 'Store access token is missing' },
         { status: 400 }
       )
     }
 
-    // Update sync status to pending
-    const { data: updatedStore, error: updateError } = await supabaseAdmin
-      .from('shopify_stores')
-      .update({
-        sync_status: 'pending',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', storeId)
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .single()
+    await sql`
+      UPDATE shopify_stores
+      SET last_synced_at = NOW(), updated_at = NOW()
+      WHERE id = ${storeId} AND user_id = ${user.id}
+    `
 
-    if (updateError) {
-      console.error('Error updating sync status:', updateError)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    const updated = await sql`
+      SELECT s.*, p.email as user_email, p.full_name as user_full_name
+      FROM shopify_stores s
+      LEFT JOIN profiles p ON s.user_id = p.id
+      WHERE s.id = ${storeId}
+      LIMIT 1
+    `
+
+    const row = updated[0]
+    const mappedStore = {
+      id: row.id,
+      user_id: row.user_id,
+      name: row.store_name || row.shop_domain || '',
+      url: row.shop_domain || '',
+      status: row.is_active ? 'connected' : 'disconnected',
+      connected_at: row.created_at,
+      last_synced_at: row.last_synced_at,
+      sync_status: 'success',
+      plan: row.plan || 'basic',
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     }
 
-    // TODO: Implement actual Shopify API sync
-    // For now, simulate sync by updating some fields
-    // In production, this would:
-    // 1. Call Shopify API to fetch products, orders, etc.
-    // 2. Update products_count, monthly_revenue, etc.
-    // 3. Handle errors and update sync_status accordingly
-
-    // Simulate sync delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Update with sync results (mock data for now)
-    const { data: syncedStore, error: syncError } = await supabaseAdmin
-      .from('shopify_stores')
-      .update({
-        sync_status: 'success',
-        last_synced_at: new Date().toISOString(),
-        // In production, these would come from Shopify API
-        // products_count: shopifyProducts.length,
-        // monthly_revenue: calculateMonthlyRevenue(shopifyOrders),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', storeId)
-      .select(`
-        *,
-        profiles (
-          id,
-          email,
-          full_name
-        )
-      `)
-      .single()
-
-    if (syncError) {
-      console.error('Error completing sync:', syncError)
-      // Update to failed status
-      await supabaseAdmin
-        .from('shopify_stores')
-        .update({
-          sync_status: 'failed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', storeId)
-
-      return NextResponse.json({ error: syncError.message }, { status: 500 })
-    }
-
-    const store = mapShopifyStoreFromDB(syncedStore!)
     return NextResponse.json({ 
       success: true, 
       message: 'Store synced successfully',
-      store 
+      store: mappedStore
     })
   } catch (error) {
     console.error('Error in POST /api/shopify-stores/[id]/sync:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
