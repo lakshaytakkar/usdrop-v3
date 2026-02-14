@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -22,12 +22,9 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const mainImageRef = useRef<HTMLDivElement>(null)
 
-  // Ensure we have at least 5 items (images + videos) for the grid
-  const allMedia = [...images, ...videos]
-  const displayImages = images.length > 0 ? images : [images[0] || '/demo-products/Screenshot 2024-07-24 185228.png']
+  const displayImages = images.length > 0 ? images : ['/demo-products/Screenshot 2024-07-24 185228.png']
   const displayVideos = videos || []
-  
-  // Create grid items: main image + 4 thumbnails
+
   const gridItems = [
     displayImages[0],
     displayImages[1] || displayImages[0],
@@ -46,11 +43,9 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mainImageRef.current) return
-    
     const rect = mainImageRef.current.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
-    
     setZoomPosition({ x, y })
   }
 
@@ -66,8 +61,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
 
   return (
     <>
-      <div className="space-y-3 min-w-0 max-w-full">
-        {/* Main Image - Shopify Style */}
+      <div className="space-y-1.5 min-w-0 max-w-full">
         <Card 
           className="overflow-hidden p-0 group cursor-zoom-in relative min-w-0 max-w-full"
           onMouseEnter={() => setIsZoomed(true)}
@@ -77,7 +71,8 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
         >
           <div 
             ref={mainImageRef}
-            className="relative aspect-square w-full bg-muted overflow-hidden min-w-0 max-w-full"
+            className="relative w-full bg-muted overflow-hidden min-w-0 max-w-full"
+            style={{ aspectRatio: '4 / 3' }}
           >
             {isLoading && (
               <div className="absolute inset-0">
@@ -112,46 +107,39 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
             )}
-            
-            {/* Zoom Indicator */}
             {!isVideo(selectedIndex) && (
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-sm rounded-full p-2">
-                <ZoomIn className="h-5 w-5 text-white" />
+              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-sm rounded-full p-1.5">
+                <ZoomIn className="h-4 w-4 text-white" />
               </div>
             )}
-
-            {/* Video Play Indicator */}
             {isVideo(selectedIndex) && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-                <div className="rounded-full bg-white/90 p-4">
-                  <Play className="h-8 w-8 text-primary fill-primary" />
+                <div className="rounded-full bg-white/90 p-3">
+                  <Play className="h-6 w-6 text-primary fill-primary" />
                 </div>
               </div>
             )}
           </div>
         </Card>
 
-        {/* Thumbnail Grid - 4 Images */}
-        <div className="grid grid-cols-4 gap-2 min-w-0 max-w-full">
-          {gridItems.slice(1, 5).map((item, index) => {
-            const actualIndex = index + 1
-            const isVideoItem = isVideo(actualIndex)
-            const isSelected = selectedIndex === actualIndex
-            
+        <div className="grid grid-cols-5 gap-1.5 min-w-0 max-w-full">
+          {gridItems.map((item, index) => {
+            const isVideoItem = isVideo(index)
+            const isSelected = selectedIndex === index
             return (
               <button
                 key={index}
-                onClick={() => handleThumbnailClick(actualIndex)}
+                onClick={() => handleThumbnailClick(index)}
                 className={cn(
-                  "relative aspect-square rounded-md overflow-hidden border-2 transition-all duration-200 group",
+                  "relative aspect-square rounded-md overflow-hidden border-2 transition-all duration-200 group cursor-pointer",
                   isSelected
-                    ? "border-primary ring-2 ring-primary/20"
+                    ? "border-primary ring-1 ring-primary/20"
                     : "border-transparent hover:border-muted-foreground/50"
                 )}
               >
-                {isVideoItem && displayVideos[actualIndex] ? (
+                {isVideoItem && displayVideos[index] ? (
                   <video
-                    src={displayVideos[actualIndex]}
+                    src={displayVideos[index]}
                     className="w-full h-full object-cover"
                     muted
                     playsInline
@@ -159,21 +147,17 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                 ) : (
                   <Image
                     src={item}
-                    alt={`Product thumbnail ${actualIndex + 1}`}
+                    alt={`Product thumbnail ${index + 1}`}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 768px) 25vw, 12.5vw"
+                    sizes="(max-width: 768px) 20vw, 10vw"
                   />
                 )}
-                
-                {/* Video Indicator */}
                 {isVideoItem && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-colors">
-                    <Play className="h-4 w-4 text-white fill-white" />
+                    <Play className="h-3 w-3 text-white fill-white" />
                   </div>
                 )}
-                
-                {/* Selected Overlay */}
                 {isSelected && (
                   <div className="absolute inset-0 bg-primary/10" />
                 )}
@@ -183,7 +167,6 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
         </div>
       </div>
 
-      {/* Lightbox Modal */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-7xl w-full p-0 bg-black/95 border-none">
           <div className="relative w-full h-[90vh] flex items-center justify-center">
@@ -193,7 +176,6 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
             >
               <X className="h-6 w-6 text-white" />
             </button>
-            
             {isVideo(lightboxIndex) && displayVideos[lightboxIndex] ? (
               <video
                 src={displayVideos[lightboxIndex]}
@@ -216,26 +198,3 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
     </>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
