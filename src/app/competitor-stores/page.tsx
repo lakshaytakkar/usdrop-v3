@@ -284,7 +284,7 @@ export default function CompetitorStoresPage() {
           <Topbar />
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-red-950 to-orange-800 p-3 text-white h-[154px] flex-shrink-0">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-red-950 to-orange-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
               {/* Enhanced grainy texture layers */}
               <div 
                 className="absolute inset-0 z-0"
@@ -320,20 +320,18 @@ export default function CompetitorStoresPage() {
               ></div>
 
               {/* Content */}
-              <div className="relative z-10 flex items-center gap-4 h-full">
-                {/* 3D Thumbnail */}
+              <div className="relative z-10 flex items-center gap-5 h-full">
                 <img
                   src="/3d-ecom-icons-blue/Competitor_Search.png"
                   alt="Competitor Stores"
-                  width={110}
-                  height={110}
-                  className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
+                  width={120}
+                  height={120}
+                  className="w-[6rem] h-[6rem] md:w-[7rem] md:h-[7rem] flex-shrink-0 object-contain"
                 />
-
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">Competitor Stores</h2>
-                  <p className="text-white/90 text-sm md:text-base leading-relaxed">
-                    Discover and analyze top-performing Shopify stores to understand market trends and opportunities.
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-1">Competitor Stores</h2>
+                  <p className="text-white/80 text-sm leading-relaxed">
+                    Analyze top-performing Shopify stores and market trends
                   </p>
                 </div>
               </div>

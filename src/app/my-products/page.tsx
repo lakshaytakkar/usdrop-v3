@@ -23,7 +23,6 @@ import {
   Eye,
   Search,
   MoreVertical,
-  ExternalLink,
   Loader2
 } from "lucide-react"
 import {
@@ -158,7 +157,7 @@ export default function MyProductsPage() {
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
-            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-slate-950 to-blue-800 p-3 text-white h-[154px] flex-shrink-0">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-slate-950 to-blue-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
               {/* Enhanced grainy texture layers */}
               <div 
                 className="absolute inset-0 z-0"
@@ -194,36 +193,19 @@ export default function MyProductsPage() {
               ></div>
 
               {/* Content */}
-              <div className="relative z-10 flex items-center gap-4 h-full">
-                {/* 3D Thumbnail */}
+              <div className="relative z-10 flex items-center gap-5 h-full">
                 <img
                   src="/3d-ecom-icons-blue/My_Products.png"
                   alt="My Products"
-                  width={110}
-                  height={110}
-                  className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
+                  width={120}
+                  height={120}
+                  className="w-[6rem] h-[6rem] md:w-[7rem] md:h-[7rem] flex-shrink-0 object-contain"
                 />
-
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-2">My Products</h2>
-                  <p className="text-white/90 text-sm md:text-base leading-relaxed">
-                    Save and manage your favorite products for easy access and quick import to Shopify.
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight mb-1">My Products</h2>
+                  <p className="text-white/80 text-sm leading-relaxed">
+                    Your saved products ready for Shopify import
                   </p>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex-shrink-0 flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white hover:border-white/50 backdrop-blur-sm cursor-pointer"
-                    asChild
-                  >
-                    <a href="/winning-products">
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      <span className="text-xs">Browse Products</span>
-                    </a>
-                  </Button>
                 </div>
               </div>
             </div>
