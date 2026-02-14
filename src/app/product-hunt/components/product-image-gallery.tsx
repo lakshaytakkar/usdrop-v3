@@ -72,7 +72,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
           <div 
             ref={mainImageRef}
             className="relative w-full bg-muted overflow-hidden min-w-0 max-w-full"
-            style={{ aspectRatio: '4 / 3' }}
+            style={{ aspectRatio: '16 / 9' }}
           >
             {isLoading && (
               <div className="absolute inset-0">
