@@ -21,7 +21,7 @@ interface UserPlanProviderProps {
 }
 
 const CACHE_KEY = "usdrop_user_plan"
-const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000
 
 interface CachedPlanData {
   plan: string
@@ -36,55 +36,55 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
   const [internalRole, setInternalRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
 
-  const fetchUserPlan = useCallback(async (skipCache = false) => {
+  const applyFromCache = useCallback((): boolean => {
+    if (typeof window === "undefined") return false
     try {
-      // Check sessionStorage cache first
-      if (!skipCache && typeof window !== "undefined") {
-        try {
-          const cached = sessionStorage.getItem(CACHE_KEY)
-          if (cached) {
-            const cachedData: CachedPlanData = JSON.parse(cached)
-            const now = Date.now()
-            
-            // Use cached data if still valid
-            if (now - cachedData.timestamp < CACHE_DURATION) {
-              setPlan(cachedData.plan || "free")
-              setInternalRole(cachedData.internalRole || null)
-              setIsLoading(false)
-              setError(null)
-              return
-            }
-          }
-        } catch (cacheError) {
-          // If cache parsing fails, continue to fetch
-          console.warn("Failed to read plan cache:", cacheError)
+      const cached = sessionStorage.getItem(CACHE_KEY)
+      if (cached) {
+        const cachedData: CachedPlanData = JSON.parse(cached)
+        if (Date.now() - cachedData.timestamp < CACHE_DURATION) {
+          setPlan(cachedData.plan || "free")
+          setInternalRole(cachedData.internalRole || null)
+          setIsLoading(false)
+          setError(null)
+          return true
         }
       }
+    } catch {
+    }
+    return false
+  }, [])
 
+  const fetchUserPlan = useCallback(async (skipCache = false) => {
+    if (!user) {
+      setPlan(null)
+      setInternalRole(null)
+      setIsLoading(false)
+      setError(null)
+      if (typeof window !== "undefined") {
+        try { sessionStorage.removeItem(CACHE_KEY) } catch {}
+      }
+      return
+    }
+
+    if (!skipCache && applyFromCache()) return
+
+    try {
       setIsLoading(true)
       setError(null)
 
-      // Only fetch if user is logged in
-      if (!user) {
-        setPlan(null)
-        setIsLoading(false)
-        return
-      }
-
-      // Fetch user plan
       const response = await fetch("/api/auth/user")
-      
+
       if (response.ok) {
         const data = await response.json()
         const userPlan = data.plan || "free"
         const userRole = data.user?.internal_role || null
-        
+
         setPlan(userPlan)
         setInternalRole(userRole)
-        
-        // Cache the result in sessionStorage
+
         if (typeof window !== "undefined") {
           try {
             const cacheData: CachedPlanData = {
@@ -93,77 +93,62 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
               timestamp: Date.now(),
             }
             sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData))
-          } catch (cacheError) {
-            console.warn("Failed to cache plan data:", cacheError)
-          }
+          } catch {}
         }
       } else {
-        // Default to free if API fails
         setPlan("free")
-        
-        // Don't cache errors
         if (typeof window !== "undefined") {
-          try {
-            sessionStorage.removeItem(CACHE_KEY)
-          } catch (cacheError) {
-            // Ignore cache removal errors
-          }
+          try { sessionStorage.removeItem(CACHE_KEY) } catch {}
         }
       }
     } catch (err) {
       console.error("Error fetching user plan:", err)
       setError(err instanceof Error ? err.message : "Failed to load plan")
       setPlan("free")
-      
-      // Clear cache on error
       if (typeof window !== "undefined") {
-        try {
-          sessionStorage.removeItem(CACHE_KEY)
-        } catch (cacheError) {
-          // Ignore cache removal errors
-        }
+        try { sessionStorage.removeItem(CACHE_KEY) } catch {}
       }
     } finally {
       setIsLoading(false)
     }
-  }, [user])
+  }, [user, applyFromCache])
 
-  // Fetch plan on mount and when user changes
   useEffect(() => {
     if (typeof window === "undefined") return
+    if (authLoading) return
 
     if (user) {
-      // User is logged in, fetch plan data (cache will prevent unnecessary refetches)
+      if (applyFromCache()) return
+
+      const userRole = user.internal_role || null
+      const isAdminUser = userRole != null && ADMIN_ROLES.includes(userRole)
+      const userPlan = isAdminUser ? "pro" : (user.account_type || "free")
+      setPlan(userPlan)
+      setInternalRole(userRole)
+      setIsLoading(false)
+
       fetchUserPlan()
     } else {
-      // User logged out, clear cache and reset state
       try {
         sessionStorage.removeItem(CACHE_KEY)
-        setPlan(null)
-        setIsLoading(false)
-        setError(null)
-      } catch (cacheError) {
-        // Ignore cache errors
-        setPlan(null)
-        setIsLoading(false)
-      }
+      } catch {}
+      setPlan(null)
+      setInternalRole(null)
+      setIsLoading(false)
+      setError(null)
     }
-  }, [user, fetchUserPlan])
+  }, [user, authLoading, fetchUserPlan, applyFromCache])
 
-  // Clear cache when user logs out (listen for storage events or auth changes)
   useEffect(() => {
     if (typeof window === "undefined") return
 
     const handleStorageChange = (e: StorageEvent) => {
-      // If sessionStorage is cleared, refetch plan
       if (e.key === null || e.key === CACHE_KEY) {
         fetchUserPlan(true)
       }
     }
 
-    // Listen for storage events (from other tabs/windows)
     window.addEventListener("storage", handleStorageChange)
-
     return () => {
       window.removeEventListener("storage", handleStorageChange)
     }
@@ -194,7 +179,6 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
 export function useUserPlanContext(): UserPlanContextType {
   const context = useContext(UserPlanContext)
   if (!context) {
-    // Return default values if used outside provider (graceful fallback)
     return {
       plan: "free",
       isFree: true,
@@ -208,4 +192,3 @@ export function useUserPlanContext(): UserPlanContextType {
   }
   return context
 }
-

@@ -7,7 +7,7 @@ import { Topbar } from "@/components/layout/topbar"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import {
   Accordion,
   AccordionContent,
@@ -24,7 +24,6 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import Loader from "@/components/kokonutui/loader"
 
 interface LearningVideo {
   id: string
@@ -95,14 +94,8 @@ function LearnContent() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
-          ))}
-        </div>
+      <div className="flex flex-1 items-center justify-center min-h-[60vh] bg-gray-50/50">
+        <BlueSpinner size="lg" label="Loading modules..." />
       </div>
     )
   }

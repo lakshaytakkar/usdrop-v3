@@ -366,10 +366,9 @@ export function AppSidebar() {
   const sidebarContentRef = useRef<HTMLDivElement>(null)
   const { isFree, isLoading: isPlanLoading } = useUserPlan()
 
-  // Helper to check if item is locked for current user
   const isItemLocked = (item: SidebarItem) => {
-    // Items with isPro: false are always accessible, regardless of plan
     if (!item.isPro) return false
+    if (isPlanLoading) return false
     return isFree && item.isPro
   }
 

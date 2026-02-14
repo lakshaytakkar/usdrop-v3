@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { Flame, ChevronRight, BookOpen, Play, CheckCircle2, Lock } from "lucide-react"
 import { BannerCarousel, ChristmasBanner } from "@/components/feedback/banners/banner-carousel"
 import { MotionCard } from "@/components/motion/MotionCard"
@@ -456,7 +456,7 @@ export default function HomePage() {
                 className="flex justify-center items-center"
                 style={{ minHeight: "calc(100vh - 300px)" }}
               >
-                <Loader title="Loading..." subtitle="Please wait" size="md" />
+                <BlueSpinner size="lg" label="Loading dashboard..." />
               </div>
             </div>
           </SidebarInset>

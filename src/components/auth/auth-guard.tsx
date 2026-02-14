@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 
 export function AuthGuard({ 
   children, 
@@ -43,11 +43,7 @@ export function AuthGuard({
   if (loading || !shouldRender) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader 
-          title="Verifying authentication..." 
-          subtitle="Please wait while we check your access"
-          size="md"
-        />
+        <BlueSpinner size="lg" label="Verifying access..." />
       </div>
     )
   }

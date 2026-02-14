@@ -2,7 +2,7 @@
 
 import { useUserPlan } from "@/hooks/use-user-plan"
 import { UpgradeOverlay } from "@/components/ui/upgrade-overlay"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 
 interface ProPageWrapperProps {
   featureName: string
@@ -20,11 +20,7 @@ export function ProPageWrapper({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader
-          title="Checking your plan..."
-          subtitle="Please wait a moment"
-          size="sm"
-        />
+        <BlueSpinner size="lg" label="Checking access..." />
       </div>
     )
   }
