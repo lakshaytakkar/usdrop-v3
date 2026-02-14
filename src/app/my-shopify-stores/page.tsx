@@ -139,7 +139,7 @@ function ShopifyStoresContent() {
             <div className="relative z-10 flex items-center gap-4 h-full">
               {/* 3D Thumbnail */}
               <img
-                src="/3d-characters-ecom/manage-online-store.png"
+                src="/3d-ecom-icons-blue/My_Store.png"
                 alt="My Shopify Stores"
                 width={110}
                 height={110}

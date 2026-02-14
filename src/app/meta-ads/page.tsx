@@ -117,7 +117,7 @@ export default function MetaAdsPage() {
             <div className="relative z-10 flex items-center gap-4 h-full">
               {/* 3D Thumbnail */}
               <img
-                src="/3d-characters-ecom/promote-product.png"
+                src="/3d-ecom-icons-blue/Megaphone_Ads.png"
                 alt="Meta Ads Research"
                 width={110}
                 height={110}

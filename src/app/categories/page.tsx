@@ -129,7 +129,7 @@ function CategoriesPageContent() {
               {/* 3D Thumbnail */}
               <div className="relative w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0">
                 <Image
-                  src="/3d-characters-ecom/shopping.png"
+                  src="/3d-ecom-icons-blue/Category_Grid.png"
                   alt="Categories"
                   width={110}
                   height={110}

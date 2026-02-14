@@ -379,7 +379,7 @@ export default function WinningProductsPage() {
               <div className="relative z-10 flex items-center gap-4 h-full">
                 {/* 3D Thumbnail */}
                 <img
-                  src="/3d-characters-ecom/promote-product.png"
+                  src="/3d-ecom-icons-blue/Trophy_Star.png"
                   alt="Winning Products"
                   width={110}
                   height={110}

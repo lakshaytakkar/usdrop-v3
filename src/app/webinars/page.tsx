@@ -130,7 +130,7 @@ export default function WebinarsPage() {
             <div className="relative z-10 flex items-center gap-4 h-full">
               {/* 3D Thumbnail */}
               <img
-                src="/3d-ecom-icons-blue/Balloons_Surprise.png"
+                src="/3d-ecom-icons-blue/Webinar_Video.png"
                 alt="Webinars"
                 width={110}
                 height={110}

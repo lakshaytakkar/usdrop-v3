@@ -323,7 +323,7 @@ export default function CompetitorStoresPage() {
               <div className="relative z-10 flex items-center gap-4 h-full">
                 {/* 3D Thumbnail */}
                 <img
-                  src="/3d-characters-ecom/chatting-with-seller.png"
+                  src="/3d-ecom-icons-blue/Competitor_Search.png"
                   alt="Competitor Stores"
                   width={110}
                   height={110}
