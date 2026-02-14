@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
-import { Button } from "@/components/ui/button"
 import { ProductCard } from "./components/product-card"
-import { Loader2, Play } from "lucide-react"
-import { LockOverlay } from "@/components/ui/lock-overlay"
+import { Loader2 } from "lucide-react"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -34,7 +32,7 @@ type ProductCardData = {
 }
 
 export default function ProductHuntPage() {
-  const PRODUCTS_PER_PAGE = 12 // 3 rows × 4 columns
+  const PRODUCTS_PER_PAGE = 12
   
   const [products, setProducts] = useState<Product[]>([])
   const [shuffledProducts, setShuffledProducts] = useState<Product[]>([])
@@ -45,16 +43,15 @@ export default function ProductHuntPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
-  const [showFade, setShowFade] = useState(false)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
   const { isFree } = useOnboarding()
   
-  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setIsLoading(true)
+        if (page === 1) setIsLoading(true)
         setError(null)
         
         const params = new URLSearchParams({
@@ -66,7 +63,6 @@ export default function ProductHuntPage() {
         })
         
         if (selectedCategory !== "all") {
-          // Find category ID by slug
           const category = categories.find(c => c.slug === selectedCategory || c.name.toLowerCase() === selectedCategory.toLowerCase())
           if (category) {
             params.append('category_id', category.id)
@@ -100,7 +96,6 @@ export default function ProductHuntPage() {
     fetchProducts()
   }, [page, selectedCategory, categories])
   
-  // Fetch categories for filter
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -117,14 +112,12 @@ export default function ProductHuntPage() {
     fetchCategories()
   }, [])
   
-  // Shuffle products whenever the products list changes
   useEffect(() => {
     if (!products.length) {
       setShuffledProducts([])
       return
     }
 
-    // Fisher-Yates shuffle for a stable randomized order per fetch
     const shuffled = [...products]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
@@ -134,7 +127,6 @@ export default function ProductHuntPage() {
     setShuffledProducts(shuffled)
   }, [products])
   
-  // Reset page when category changes
   useEffect(() => {
     setPage(1)
     setProducts([])
@@ -143,7 +135,6 @@ export default function ProductHuntPage() {
     }
   }, [selectedCategory])
   
-  // Map products to ProductCard format
   const productCardData: ProductCardData[] = useMemo(() => {
     return shuffledProducts.map((product) => ({
       id: product.id,
@@ -161,48 +152,34 @@ export default function ProductHuntPage() {
         : false,
     }))
   }, [shuffledProducts])
-  
-  // Get unique categories from products
-  const availableCategories = useMemo(() => {
-    const categorySet = new Set<string>()
-    products.forEach(p => {
-      if (p.category?.slug) {
-        categorySet.add(p.category.slug)
-      } else if (p.category?.name) {
-        categorySet.add(p.category.name.toLowerCase().replace(/\s+/g, '-'))
-      }
-    })
-    return Array.from(categorySet)
-  }, [products])
 
-  const loadMore = async () => {
-    if (isLoadingMore || !hasMore) return
-    
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore || isFree) return
     setIsLoadingMore(true)
     setPage(prev => prev + 1)
-  }
+  }, [isLoadingMore, hasMore, isFree])
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return
-      
-      const { scrollTop, scrollHeight, clientHeight } = containerRef.current
-      const scrolledPercentage = (scrollTop + clientHeight) / scrollHeight
-      
-      // Show fade effect when scrolled 80% of the way down
-      if (scrolledPercentage > 0.8 && hasMore) {
-        setShowFade(true)
-      } else {
-        setShowFade(false)
-      }
-    }
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
 
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('scroll', handleScroll)
-      return () => container.removeEventListener('scroll', handleScroll)
-    }
-  }, [hasMore, products.length])
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting && hasMore && !isLoadingMore && !isLoading && !isFree) {
+          loadMore()
+        }
+      },
+      {
+        root: containerRef.current,
+        rootMargin: '200px',
+        threshold: 0,
+      }
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, isLoadingMore, isLoading, isFree, loadMore])
 
   return (
     <SidebarProvider>
@@ -213,10 +190,8 @@ export default function ProductHuntPage() {
           ref={containerRef}
           className="flex flex-1 flex-col gap-4 p-4 md:p-6 overflow-y-auto relative"
         >
-          {/* Category Filter */}
           <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 border-b border-border/50">
             <div className="grid grid-cols-5 gap-2">
-              {/* All Products Button */}
               <button
                 onClick={() => setSelectedCategory("all")}
                 className={`flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer border shadow-sm ${
@@ -228,10 +203,9 @@ export default function ProductHuntPage() {
                 <span className="truncate">All Products</span>
               </button>
               
-              {/* Category Filter Buttons */}
               {categories
-                .filter(cat => !cat.parent_category_id) // Only show parent categories
-                .slice(0, 9) // Show 9 categories (10 total with "All Products")
+                .filter(cat => !cat.parent_category_id)
+                .slice(0, 9)
                 .map(category => {
                   const categorySlug = category.slug
                   const isSelected = selectedCategory === categorySlug
@@ -245,7 +219,6 @@ export default function ProductHuntPage() {
                           : "bg-card text-foreground hover:bg-accent border-border hover:border-accent-foreground/20 hover:shadow-md"
                       }`}
                     >
-                      {/* Category Thumbnail */}
                       {(category.thumbnail || category.image) ? (
                         <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-border/50">
                           <Image
@@ -270,7 +243,6 @@ export default function ProductHuntPage() {
             </div>
           </div>
 
-          {/* Error State */}
           {error && (
             <SectionError
               className="max-w-2xl mx-auto"
@@ -287,7 +259,6 @@ export default function ProductHuntPage() {
           )}
           
           <div className="relative">
-            {/* Loading State */}
             {isLoading && products.length === 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {Array.from({ length: 12 }).map((_, index) => (
@@ -310,11 +281,9 @@ export default function ProductHuntPage() {
               </div>
             ) : (
               <>
-                {/* Products Grid */}
                 {productCardData.length > 0 ? (
                   <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {productCardData.map((product, index) => {
-                      // Use teaser lock helper for consistent behavior
                       const { isLocked } = getTeaserLockState(index, isFree, { 
                         freeVisibleCount: 6,
                         strategy: "first-n-items"
@@ -346,69 +315,60 @@ export default function ProductHuntPage() {
                     }}
                   />
                 )}
-
-                {/* Fade Overlay */}
-                {showFade && hasMore && (
-                  <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none backdrop-blur-[2px]" />
-                )}
               </>
             )}
           </div>
 
-          {/* Load More Button */}
-          {!isLoading && hasMore && productCardData.length > 0 && (
-            <div className="flex justify-center py-8 relative">
-              {isFree ? (
-                <div className="relative">
-                  <Button
-                    disabled
-                    size="lg"
-                    className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white opacity-60 cursor-not-allowed"
-                  >
-                    Load More
-                  </Button>
-                  <LockOverlay 
-                    onClick={() => setIsUpsellOpen(true)}
-                    variant="button"
-                    size="sm"
-                    className="rounded-lg"
-                  />
-                  <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
-                    Upgrade to Pro to load more products
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  size="lg"
-                  className="min-w-[200px] bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
+          <div ref={sentinelRef} className="w-full py-2" />
+
+          {isLoadingMore && (
+            <div className="flex flex-col items-center gap-3 py-6">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                <span className="text-sm font-medium">Loading more products...</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Card key={index} className="overflow-hidden border-border/50 p-0 animate-pulse">
+                    <Skeleton className="aspect-square w-full" />
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isFree && hasMore && !isLoading && productCardData.length > 0 && (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <div className="text-center max-w-sm">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upgrade to Pro to browse unlimited products
+                </p>
+                <button
+                  onClick={() => setIsUpsellOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium hover:from-blue-700 hover:to-blue-600 transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
-                  {isLoadingMore ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load More"
-                  )}
-                </Button>
-              )}
+                  Unlock All Products
+                </button>
+              </div>
             </div>
           )}
 
-          {/* End Message */}
           {!hasMore && productCardData.length > 0 && (
-            <div className="text-center py-8 text-sm text-muted-foreground">
-              You've reached the end of the products
+            <div className="flex flex-col items-center py-8">
+              <div className="w-16 h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
+              <p className="text-sm text-muted-foreground">
+                You&apos;ve seen all the products
+              </p>
             </div>
           )}
 
-          {/* Upsell Dialog */}
           <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
         </div>
       </SidebarInset>
     </SidebarProvider>
   )
 }
-
