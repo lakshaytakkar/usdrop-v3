@@ -208,22 +208,16 @@ const aiToolkitItems: SidebarItem[] = [
 // USDrop AI Workspace items - All Pro features except home and onboarding
 const aiWorkspaceItems: SidebarItem[] = [
   {
-    title: "Learn",
-    icon: LayoutDashboard,
-    url: "/learn",
-    isPro: false,
-  },
-  {
     title: "Home",
     icon: Home,
     url: "/home",
-    isPro: false, // Free access
+    isPro: false,
   },
   {
     title: "My Mentor",
     icon: GraduationCap,
     url: "/academy",
-    isPro: true,
+    isPro: false,
   },
   {
     title: "My Roadmap",
