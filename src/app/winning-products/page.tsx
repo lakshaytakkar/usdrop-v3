@@ -174,7 +174,7 @@ export default function WinningProductsPage() {
           revenueGrowthRate: metadata.revenue_growth_rate || 0,
           itemsSold: metadata.items_sold || 0,
           avgUnitPrice: metadata.avg_unit_price || product.sell_price,
-          revenueTrend: metadata.revenue_trend || [],
+          revenueTrend: Array.isArray(metadata.revenue_trend) ? metadata.revenue_trend : (typeof metadata.revenue_trend === 'string' ? JSON.parse(metadata.revenue_trend) : []),
           price: product.sell_price,
         }
       })
