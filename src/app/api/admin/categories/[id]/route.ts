@@ -137,7 +137,7 @@ export async function PATCH(
     const query = `UPDATE categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
     params_arr.push(id)
 
-    const result = await sql.unsafe(query, params_arr)
+    const result = await sql.unsafe(query, params_arr as any[])
 
     if (!result || result.length === 0) {
       return NextResponse.json(
