@@ -116,7 +116,7 @@ export async function PATCH(
     }
 
     const setClauses: string[] = []
-    const params_arr: unknown[] = []
+    const params_arr: (string | number | boolean | null)[] = []
     let paramIndex = 1
 
     if (name !== undefined) { setClauses.push(`name = $${paramIndex++}`); params_arr.push(name) }
