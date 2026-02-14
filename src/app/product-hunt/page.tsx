@@ -35,7 +35,6 @@ export default function ProductHuntPage() {
   const PRODUCTS_PER_PAGE = 12
   
   const [products, setProducts] = useState<Product[]>([])
-  const [shuffledProducts, setShuffledProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [page, setPage] = useState(1)
@@ -46,7 +45,10 @@ export default function ProductHuntPage() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const categoriesRef = useRef<Category[]>([])
   const { isFree } = useOnboarding()
+
+  categoriesRef.current = categories
   
   useEffect(() => {
     const fetchProducts = async () => {
@@ -63,7 +65,7 @@ export default function ProductHuntPage() {
         })
         
         if (selectedCategory !== "all") {
-          const category = categories.find(c => c.slug === selectedCategory || c.name.toLowerCase() === selectedCategory.toLowerCase())
+          const category = categoriesRef.current.find(c => c.slug === selectedCategory || c.name.toLowerCase() === selectedCategory.toLowerCase())
           if (category) {
             params.append('category_id', category.id)
           }
@@ -94,7 +96,7 @@ export default function ProductHuntPage() {
     }
     
     fetchProducts()
-  }, [page, selectedCategory, categories])
+  }, [page, selectedCategory])
   
   useEffect(() => {
     const fetchCategories = async () => {
@@ -113,21 +115,6 @@ export default function ProductHuntPage() {
   }, [])
   
   useEffect(() => {
-    if (!products.length) {
-      setShuffledProducts([])
-      return
-    }
-
-    const shuffled = [...products]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-
-    setShuffledProducts(shuffled)
-  }, [products])
-  
-  useEffect(() => {
     setPage(1)
     setProducts([])
     if (containerRef.current) {
@@ -136,7 +123,7 @@ export default function ProductHuntPage() {
   }, [selectedCategory])
   
   const productCardData: ProductCardData[] = useMemo(() => {
-    return shuffledProducts.map((product) => ({
+    return products.map((product) => ({
       id: product.id,
       image: product.image,
       title: product.title,
@@ -151,7 +138,7 @@ export default function ProductHuntPage() {
         ? product.trend_data[product.trend_data.length - 1] > product.trend_data[0]
         : false,
     }))
-  }, [shuffledProducts])
+  }, [products])
 
   const loadMore = useCallback(() => {
     if (isLoadingMore || !hasMore || isFree) return

@@ -44,3 +44,4 @@ NEXT_PUBLIC_SITE_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13g
 deploymentTarget = "autoscale"
 run = ["npm", "start"]
 build = ["npm", "run", "build"]
+publicDir = "public"
