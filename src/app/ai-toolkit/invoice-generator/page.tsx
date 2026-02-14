@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { InvoiceGenerator } from "@/components/ai-tools/invoice-generator"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
-
 export default function InvoiceGeneratorPage() {
-  const { isFree } = useOnboarding()
-
   const toolContent = (
     <>
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-900 via-blue-950 to-sky-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -88,17 +83,7 @@ export default function InvoiceGeneratorPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          {isFree ? (
-            <FeatureLockedOverlay 
-              featureName="Invoice Generator" 
-              description="Upgrade to Pro to access this tool."
-              variant="overlay"
-            >
-              {toolContent}
-            </FeatureLockedOverlay>
-          ) : (
-            toolContent
-          )}
+          {toolContent}
 
           <OnboardingProgressOverlay pageName="Invoice Generator" />
         </div>

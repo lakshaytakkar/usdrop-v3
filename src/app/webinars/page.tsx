@@ -13,11 +13,7 @@ import { Webinar, sampleWebinars } from "./data/webinars"
 import { WebinarModal } from "./components/webinar-modal"
 import { WebinarEventList } from "./components/webinar-event-list"
 import { cn } from "@/lib/utils"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
-
 export default function WebinarsPage() {
-  const { isFree } = useOnboarding()
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -94,13 +90,6 @@ export default function WebinarsPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
-          {isFree && (
-            <FeatureLockedOverlay 
-              featureName="Webinars" 
-              description="Upgrade to Pro to unlock full access."
-              variant="inline"
-            />
-          )}
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-blue-500 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}

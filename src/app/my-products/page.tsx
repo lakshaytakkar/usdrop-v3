@@ -5,9 +5,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { useOnboarding } from "@/contexts/onboarding-context"
 import { useAuth } from "@/contexts/auth-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,7 +49,6 @@ interface PicklistItem {
 }
 
 export default function MyProductsPage() {
-  const { isFree } = useOnboarding()
   const { user, loading: authLoading } = useAuth()
   const { showSuccess, showError } = useToast()
   const [items, setItems] = useState<PicklistItem[]>([])
@@ -160,13 +157,6 @@ export default function MyProductsPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          {isFree && (
-            <FeatureLockedOverlay 
-              featureName="My Products" 
-              description="Upgrade to Pro to unlock full access."
-              variant="inline"
-            />
-          )}
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-800 p-3 text-white h-[154px] flex-shrink-0">
               {/* Enhanced grainy texture layers */}

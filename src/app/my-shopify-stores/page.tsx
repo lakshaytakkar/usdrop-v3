@@ -6,8 +6,6 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -19,7 +17,6 @@ import { useToast } from "@/hooks/use-toast"
 import Loader from "@/components/kokonutui/loader"
 
 function ShopifyStoresContent() {
-  const { isFree } = useOnboarding()
   const { showSuccess, showError } = useToast()
   const searchParams = useSearchParams()
   const [stores, setStores] = useState<ShopifyStore[]>([])
@@ -102,13 +99,6 @@ function ShopifyStoresContent() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          {isFree && (
-            <FeatureLockedOverlay 
-              featureName="My Shopify Stores" 
-              description="Upgrade to Pro to unlock full access."
-              variant="inline"
-            />
-          )}
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-800 p-3 text-white h-[154px] flex-shrink-0">
             {/* Enhanced grainy texture layers */}

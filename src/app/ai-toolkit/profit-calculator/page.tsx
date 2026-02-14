@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ProfitCalculator } from "@/components/ai-tools/profit-calculator"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
-
 export default function ProfitCalculatorPage() {
-  const { isFree } = useOnboarding()
-
   const toolContent = (
     <>
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-green-950 to-emerald-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -96,17 +91,7 @@ export default function ProfitCalculatorPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          {isFree ? (
-            <FeatureLockedOverlay 
-              featureName="Profit Calculator" 
-              description="Upgrade to Pro to access this tool."
-              variant="overlay"
-            >
-              {toolContent}
-            </FeatureLockedOverlay>
-          ) : (
-            toolContent
-          )}
+          {toolContent}
 
           <OnboardingProgressOverlay pageName="Profit Calculator" />
         </div>

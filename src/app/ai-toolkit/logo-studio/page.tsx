@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { LogoStudio } from "@/components/ai-tools/logo-studio"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
-
 export default function LogoStudioPage() {
-  const { isFree } = useOnboarding()
-
   const toolContent = (
     <>
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-900 via-cyan-950 to-teal-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -88,17 +83,7 @@ export default function LogoStudioPage() {
       <SidebarInset>
         <Topbar />
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          {isFree ? (
-            <FeatureLockedOverlay 
-              featureName="Whitelabelling Studio" 
-              description="Upgrade to Pro to access this tool."
-              variant="overlay"
-            >
-              {toolContent}
-            </FeatureLockedOverlay>
-          ) : (
-            toolContent
-          )}
+          {toolContent}
 
           <OnboardingProgressOverlay pageName="Whitelabelling" />
         </div>
