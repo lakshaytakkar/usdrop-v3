@@ -201,7 +201,7 @@ export function OnboardingProgressOverlay({
 
           {/* CTA Button - Golden */}
           <button
-            onClick={() => router.push("/onboarding")}
+            onClick={() => router.push("/home")}
             className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Sparkles className="h-4 w-4" />

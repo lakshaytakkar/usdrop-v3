@@ -37,7 +37,7 @@ function VerifyEmailContent() {
         showSuccess("Your email has already been verified!")
         // Redirect after a short delay
         setTimeout(() => {
-          router.push("/onboarding")
+          router.push("/home")
         }, 2000)
         return
       }
@@ -152,7 +152,7 @@ function VerifyEmailContent() {
                       Your email address has been verified successfully. Redirecting...
                     </p>
                   </div>
-                  <Link href="/onboarding">
+                  <Link href="/home">
                     <Button className="w-full">
                       Continue to Dashboard
                     </Button>

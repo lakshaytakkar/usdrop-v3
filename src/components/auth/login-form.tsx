@@ -142,7 +142,7 @@ export function LoginForm({
                     try {
                       // For Google signin, we'll redirect to /onboarding by default
                       // The callback will check if user is internal and redirect accordingly
-                      const redirectTo = getRedirectUrl(searchParams, "/onboarding")
+                      const redirectTo = getRedirectUrl(searchParams, "/home")
                       window.location.href = `/api/auth/google?redirectTo=${encodeURIComponent(redirectTo)}`
                     } catch (error) {
                       setGoogleLoading(false)

@@ -90,7 +90,7 @@ export function OnboardingModal({ open, onComplete }: OnboardingModalProps) {
       if (onComplete) {
         onComplete()
       } else {
-        router.push("/onboarding")
+        router.push("/home")
         router.refresh()
       }
     } catch (error) {

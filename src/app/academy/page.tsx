@@ -251,7 +251,7 @@ export default function AcademyPage() {
                 <Button
                   onClick={() => {
                     setShowOnboardingDialog(false)
-                    router.push("/onboarding")
+                    router.push("/home")
                   }}
                   className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
                 >

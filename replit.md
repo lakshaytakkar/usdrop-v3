@@ -113,4 +113,12 @@ public/
 - **Fixed ProductCard crash**: JSONB fields (trend_data, additional_images, specifications) from API were returned as strings; added proper parsing in /api/products route and defensive Array.isArray checks in ProductCard
 - **Admin route guard**: AdminRouteGuard component in root layout redirects admin/internal users away from external user pages (product-hunt, home, webinars, etc.) to /admin; allows access to /admin/*, public pages, /settings
 - **Product details page redesign**: Replaced 7+ redundant chart sections with clean dashboard layout: KPI summary cards, unified market analytics (search interest + revenue potential), horizontal competitor pricing comparison, horizontal-bar audience demographics, targeting insights. Removed old components: demand-charts, seasonal-interest-chart, saturation-gauge, performance-metrics-dashboard, targeting-section, competition-section, profit-calculator, instagram-influencers, fulfillment-section, product-video-gallery
+- **LMS/Learning System**: Unified learning system at `/learn` replacing old `/onboarding` page. First 5 videos are "Preview" (free access), remaining locked for Free users with Pro upgrade overlay. Completion tracking via `video_progress` table. Home page upgraded with quick stats grid and learning progress widget.
 - **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
+
+## Learning System (LMS)
+- **Routes**: `/learn` (module list), `/learn/[moduleId]?video=[videoId]` (video player)
+- **API**: `/api/learning/modules` (GET - returns modules+videos with progress, free/pro flags), `/api/learning/progress` (GET/POST - completion tracking)
+- **Free/Pro Gating**: First 5 videos globally (across modules) are "Preview" and accessible to Free users. Remaining videos require Pro plan. Admin/internal users get full access.
+- **Completion Tracking**: `video_progress` table stores per-user, per-video completion with timestamps. UPSERT pattern avoids duplicates.
+- **Data Source**: Uses `onboarding_modules` and `onboarding_videos` tables (columns: thumbnail, video_duration - NOT thumbnail_url, duration)

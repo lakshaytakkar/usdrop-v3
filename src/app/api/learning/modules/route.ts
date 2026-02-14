@@ -17,21 +17,21 @@ export async function GET() {
 
     const modules = await sql`
       SELECT 
-        m.id, m.title, m.description, m.order_index, m.thumbnail_url,
+        m.id, m.title, m.description, m.order_index, m.thumbnail,
         json_agg(
           json_build_object(
             'id', v.id,
             'title', v.title,
             'description', v.description,
             'video_url', v.video_url,
-            'duration', v.duration,
+            'video_duration', v.video_duration,
             'order_index', v.order_index,
-            'thumbnail_url', v.thumbnail_url
+            'thumbnail', v.thumbnail
           ) ORDER BY v.order_index
         ) as videos
       FROM onboarding_modules m
       LEFT JOIN onboarding_videos v ON v.module_id = m.id
-      GROUP BY m.id, m.title, m.description, m.order_index, m.thumbnail_url
+      GROUP BY m.id, m.title, m.description, m.order_index, m.thumbnail
       ORDER BY m.order_index
     `
 
@@ -73,7 +73,7 @@ export async function GET() {
         title: mod.title,
         description: mod.description,
         order_index: mod.order_index,
-        thumbnail_url: mod.thumbnail_url,
+        thumbnail: mod.thumbnail,
         videos,
         completedCount: completedInModule,
         totalCount: totalInModule,
