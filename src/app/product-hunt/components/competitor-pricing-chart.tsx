@@ -127,14 +127,29 @@ export function CompetitorPricingChart({
           />
           <ReferenceLine x={avgPrice} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" strokeOpacity={0.5} />
           <Bar dataKey="price" radius={[0, 6, 6, 0]} barSize={20}>
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.isYours ? "hsl(221.2 83.2% 53.3%)" : "hsl(var(--muted-foreground)/0.2)"}
-                stroke={entry.isYours ? "hsl(221.2 83.2% 53.3%)" : "transparent"}
-                strokeWidth={entry.isYours ? 2 : 0}
-              />
-            ))}
+            {chartData.map((entry, index) => {
+              const competitorColors = [
+                "#f97316",
+                "#8b5cf6",
+                "#10b981",
+                "#f43f5e",
+                "#06b6d4",
+                "#eab308",
+                "#ec4899",
+                "#14b8a6",
+              ]
+              const color = entry.isYours
+                ? "hsl(221.2 83.2% 53.3%)"
+                : competitorColors[index % competitorColors.length]
+              return (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={color}
+                  stroke={entry.isYours ? "hsl(221.2 83.2% 53.3%)" : "transparent"}
+                  strokeWidth={entry.isYours ? 2 : 0}
+                />
+              )
+            })}
           </Bar>
         </BarChart>
       </ChartContainer>
