@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import sql from '@/lib/db'
 
-// DELETE /api/picklist/[id] - Remove product from user's picklist
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient()
+    const user = await getCurrentUser()
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -21,20 +18,10 @@ export async function DELETE(
 
     const { id } = await params
 
-    // Delete the picklist item (RLS ensures user can only delete their own items)
-    const { error: deleteError } = await supabase
-      .from('user_picklist')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id)
-
-    if (deleteError) {
-      console.error('Error removing from picklist:', deleteError)
-      return NextResponse.json(
-        { error: 'Failed to remove product from picklist' },
-        { status: 500 }
-      )
-    }
+    const result = await sql`
+      DELETE FROM user_picklist
+      WHERE id = ${id} AND user_id = ${user.id}
+    `
 
     return NextResponse.json(
       { message: 'Product removed from picklist' },
@@ -48,4 +35,3 @@ export async function DELETE(
     )
   }
 }
-

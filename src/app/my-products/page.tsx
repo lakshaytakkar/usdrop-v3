@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { useAuth } from "@/contexts/auth-context"
 import { FeatureLockedOverlay } from "@/components/feedback/overlays/feature-locked-overlay"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,21 +52,37 @@ interface PicklistItem {
 
 export default function MyProductsPage() {
   const { isFree } = useOnboarding()
+  const { user, loading: authLoading } = useAuth()
   const { showSuccess, showError } = useToast()
   const [items, setItems] = useState<PicklistItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const hasFetched = useRef(false)
 
-  // Fetch picklist items from API
   useEffect(() => {
+    if (authLoading) return
+    if (hasFetched.current) return
+    hasFetched.current = true
+
+    if (!user) {
+      setItems([])
+      setIsLoading(false)
+      return
+    }
+
+    let cancelled = false
+
     const fetchPicklist = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch('/api/picklist')
+        const response = await fetch('/api/picklist', {
+          credentials: 'include',
+        })
         
+        if (cancelled) return
+
         if (!response.ok) {
           if (response.status === 401) {
-            // User not authenticated, show empty state
             setItems([])
             return
           }
@@ -73,18 +90,28 @@ export default function MyProductsPage() {
         }
 
         const data = await response.json()
-        setItems(data.items || [])
+        if (!cancelled) {
+          setItems(data.items || [])
+        }
       } catch (error) {
-        console.error('Error fetching picklist:', error)
-        showError('Failed to load picklist items')
-        setItems([])
+        if (!cancelled) {
+          console.error('Error fetching picklist:', error)
+          showError('Failed to load picklist items')
+          setItems([])
+        }
       } finally {
-        setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchPicklist()
-  }, [showError])
+
+    return () => {
+      cancelled = true
+    }
+  }, [authLoading, user])
 
   const handleRemove = async (id: string) => {
     try {
