@@ -117,6 +117,12 @@ public/
 - **My Mentor (Academy) is the learn page**: `/academy` shows all courses from the `courses` table. Course structure is flat (no nested modules hierarchy). Sidebar link made free-access.
 - **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
 
+## Banner System
+- **Consistent Format**: All sidebar pages use h-[154px] banners with 4-layer grainy texture, dark gradient background, 3D icon left, title/description center
+- **Icon Set**: All banners use unique `/3d-ecom-icons-blue/` icons (no background, blue/white 3D style)
+- **Icon Mapping**: winning-products=Trophy_Star, categories=Category_Grid, suppliers=Delivery_Truck, competitor-stores=Competitor_Search, intelligence=Open_Board, selling-channels=Shopping_Cart, my-products=My_Products, my-shopify-stores=My_Store, my-journey=Rocket_Launch, meta-ads=Megaphone_Ads, webinars=Webinar_Video
+- **Exceptions**: product-hunt (no banner, uses tab layout), seasonal-collections (per-item banners), fulfillment (marketing page with Header/Footer), academy (white mentor portrait banner)
+
 ## Learning System
 - **Routes**: `/academy` (course list with mentor banner), `/academy/[id]` (course viewer with video player)
 - **API**: `/api/courses` (GET - returns published courses from `courses` table)
