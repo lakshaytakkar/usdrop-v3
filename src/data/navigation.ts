@@ -25,6 +25,12 @@ import {
   Calendar,
   UserCircle,
   KeyRound,
+  Compass,
+  Play,
+  Palette,
+  Wrench,
+  FileText,
+  MonitorPlay,
 } from "lucide-react"
 
 export interface NavItem {
@@ -36,12 +42,14 @@ export interface NavItem {
 
 export interface NavGroup {
   label: string
+  icon: LucideIcon
   items: NavItem[]
 }
 
 export const externalNavGroups: NavGroup[] = [
   {
     label: "Framework",
+    icon: Compass,
     items: [
       { title: "Home", icon: Home, url: "/home", isPro: false },
       { title: "My Roadmap", icon: Map, url: "/my-roadmap", isPro: false },
@@ -51,12 +59,14 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Mentorship",
+    icon: GraduationCap,
     items: [
       { title: "Mentorship", icon: GraduationCap, url: "/mentorship", isPro: false },
     ],
   },
   {
     label: "Product",
+    icon: Package,
     items: [
       { title: "Product Hunt", icon: TrendingUp, url: "/product-hunt", isPro: true },
       { title: "Winning Products", icon: Trophy, url: "/winning-products", isPro: true },
@@ -67,12 +77,14 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Videos & Ads",
+    icon: Play,
     items: [
       { title: "Meta Ads", icon: BarChart3, url: "/meta-ads", isPro: true },
     ],
   },
   {
     label: "Order Fulfilment",
+    icon: Truck,
     items: [
       { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: true },
       { title: "Selling Channels", icon: ExternalLink, url: "/selling-channels", isPro: true },
@@ -81,6 +93,7 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Shopify",
+    icon: ShoppingBag,
     items: [
       { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
       { title: "My Products", icon: Bookmark, url: "/my-products", isPro: true },
@@ -88,6 +101,7 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Studio",
+    icon: Palette,
     items: [
       { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
       { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
@@ -95,6 +109,7 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Important Tools",
+    icon: Wrench,
     items: [
       { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
       { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
@@ -105,12 +120,14 @@ export const externalNavGroups: NavGroup[] = [
   },
   {
     label: "Blogs",
+    icon: FileText,
     items: [
       { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
     ],
   },
   {
     label: "Webinars",
+    icon: MonitorPlay,
     items: [
       { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
     ],

@@ -140,17 +140,19 @@ export function AppTopNavigation() {
             {externalNavGroups.map((group) => {
               const isActive = isGroupActive(group.label)
               const firstItem = group.items[0]
+              const GroupIcon = group.icon
               return (
                 <Link
                   key={group.label}
                   href={firstItem.url}
                   className={cn(
-                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                    "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap inline-flex items-center gap-1.5",
                     isActive
                       ? "text-blue-600 bg-blue-50"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
+                  <GroupIcon className="h-4 w-4 flex-shrink-0" />
                   {group.label}
                 </Link>
               )
@@ -257,9 +259,14 @@ export function AppTopNavigation() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-14 z-40 bg-white overflow-y-auto">
           <nav className="p-4 space-y-4">
-            {externalNavGroups.map((group) => (
+            {externalNavGroups.map((group) => {
+              const MobileGroupIcon = group.icon
+              return (
               <div key={group.label}>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{group.label}</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider inline-flex items-center gap-1.5">
+                  <MobileGroupIcon className="h-3.5 w-3.5" />
+                  {group.label}
+                </span>
                 <div className="mt-1.5 space-y-0.5">
                   {group.items.map((item) => {
                     const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
@@ -282,7 +289,8 @@ export function AppTopNavigation() {
                   })}
                 </div>
               </div>
-            ))}
+              )
+            })}
           </nav>
         </div>
       )}
