@@ -129,7 +129,7 @@ export const Hero: React.FC = () => {
                 className="inline-block align-middle ml-1"
               >
                 <Image
-                  src="/3d-icons/1_0000.png"
+                  src="/3d-icons/crown.png"
                   alt="Crown"
                   width={64}
                   height={64}

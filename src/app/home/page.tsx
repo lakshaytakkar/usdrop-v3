@@ -47,26 +47,26 @@ function QuickStatsGrid() {
     {
       title: "Courses Available",
       value: courseCount,
-      iconSrc: "/3d-icons/1_0003.png",
+      iconSrc: "/3d-icons/courses.png",
       link: "/mentorship",
       highlighted: true,
     },
     {
       title: "Products Saved",
       value: stats?.products?.inPicklist || 0,
-      iconSrc: "/3d-icons/1_0001.png",
+      iconSrc: "/3d-icons/products-saved.png",
       link: "/my-products",
     },
     {
       title: "Connected Stores",
       value: stats?.stores?.connected || 0,
-      iconSrc: "/3d-icons/1_0002.png",
+      iconSrc: "/3d-icons/store.png",
       link: "/my-store",
     },
     {
       title: "Day Streak",
       value: stats?.activity?.streakDays || 0,
-      iconSrc: "/3d-icons/1_0004.png",
+      iconSrc: "/3d-icons/streak.png",
       suffix: stats?.activity?.streakDays === 1 ? " day" : " days",
     },
   ]
@@ -282,7 +282,7 @@ function HomePageContent() {
                       delay={0.1}
                     >
                       <img
-                        src="/3d-icons/1_0024.png"
+                        src="/3d-ecom-icons-blue/Shopping_Sale.png"
                         alt="Model Studio"
                         width={64}
                         height={64}
@@ -303,7 +303,7 @@ function HomePageContent() {
                     >
                       <div className="mb-4 flex items-center justify-between">
                         <img
-                          src="/3d-icons/1_0011.png"
+                          src="/3d-ecom-icons-blue/Open_Board.png"
                           alt="Whitelabelling"
                           width={64}
                           height={64}
@@ -359,7 +359,7 @@ function HomePageContent() {
                       delay={0.2}
                     >
                       <img
-                        src="/3d-icons/1_0022.png"
+                        src="/3d-ecom-icons-blue/Click_On_Buy_Now.png"
                         alt="Brand Studio"
                         width={64}
                         height={64}
@@ -379,7 +379,7 @@ function HomePageContent() {
                       delay={0.25}
                     >
                       <img
-                        src="/3d-icons/1_0024.png"
+                        src="/3d-ecom-icons-blue/Megaphone_Ads.png"
                         alt="Campaign Studio"
                         width={64}
                         height={64}

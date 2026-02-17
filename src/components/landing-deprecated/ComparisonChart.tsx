@@ -56,7 +56,7 @@ const CompetitorBar: React.FC<CompetitorBarProps> = ({ competitor, isWinner }) =
       {isWinner && (
         <div className="absolute -top-16 z-10">
           <Image
-            src="/3d-icons/1_0000.png"
+            src="/3d-icons/crown.png"
             alt="Crown"
             width={64}
             height={64}

@@ -159,7 +159,7 @@ export const Header: React.FC = () => {
               <span className="relative z-10 flex items-center gap-2">
                 <MotionIcon hoverScale={1.1}>
                   <Image 
-                    src="/3d-icons/1_0019.png" 
+                    src="/3d-icons/coins.png" 
                     alt="Coins" 
                     width={20} 
                     height={20}
