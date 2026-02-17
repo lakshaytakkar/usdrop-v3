@@ -120,6 +120,7 @@ export function ChristmasBanner() {
                 width={96}
                 height={96}
                 className="object-contain"
+                decoding="async"
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}
@@ -134,6 +135,7 @@ export function ChristmasBanner() {
                 width={96}
                 height={96}
                 className="object-contain"
+                decoding="async"
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}
@@ -148,6 +150,7 @@ export function ChristmasBanner() {
                 width={96}
                 height={96}
                 className="object-contain"
+                decoding="async"
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}

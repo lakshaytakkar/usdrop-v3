@@ -60,6 +60,7 @@ const CompetitorBar: React.FC<CompetitorBarProps> = ({ competitor, isWinner }) =
             alt="Crown"
             width={64}
             height={64}
+            decoding="async"
             className="animate-bounce drop-shadow-lg"
             style={{ animationDuration: '3s' }}
           />

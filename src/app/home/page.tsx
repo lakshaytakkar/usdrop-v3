@@ -286,6 +286,7 @@ function HomePageContent() {
                         alt="Model Studio"
                         width={64}
                         height={64}
+                        decoding="async"
                         className="object-contain mb-4 w-16 h-16"
                       />
                       <h4 className="font-semibold mb-2 text-lg">Model Studio</h4>
@@ -307,6 +308,7 @@ function HomePageContent() {
                           alt="Whitelabelling"
                           width={64}
                           height={64}
+                          decoding="async"
                           className="object-contain w-16 h-16"
                         />
                         <motion.div
@@ -363,6 +365,7 @@ function HomePageContent() {
                         alt="Brand Studio"
                         width={64}
                         height={64}
+                        decoding="async"
                         className="object-contain mb-4 w-16 h-16"
                       />
                       <h4 className="font-semibold mb-2 text-lg">Brand Studio</h4>
@@ -383,6 +386,7 @@ function HomePageContent() {
                         alt="Campaign Studio"
                         width={64}
                         height={64}
+                        decoding="async"
                         className="object-contain mb-4 w-16 h-16"
                       />
                       <h4 className="font-semibold mb-2 text-lg">Campaign Studio</h4>

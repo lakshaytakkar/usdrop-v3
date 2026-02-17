@@ -133,6 +133,7 @@ export const Hero: React.FC = () => {
                   alt="Crown"
                   width={64}
                   height={64}
+                  decoding="async"
                   className="w-[0.9em] h-[0.9em] object-contain"
                 />
               </motion.span>

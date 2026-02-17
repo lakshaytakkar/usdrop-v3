@@ -48,6 +48,7 @@ export default function DescriptionGeneratorPage() {
             alt="Description Generator"
             width={110}
             height={110}
+            decoding="async"
             className="w-[5.5rem] h-[5.5rem] md:w-[6.6rem] md:h-[6.6rem] flex-shrink-0 object-contain"
           />
 

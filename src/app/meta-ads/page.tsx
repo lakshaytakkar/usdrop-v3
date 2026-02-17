@@ -115,6 +115,7 @@ export default function MetaAdsPage() {
                 alt="Meta Ads Research"
                 width={120}
                 height={120}
+                decoding="async"
                 className="w-[6rem] h-[6rem] md:w-[7rem] md:h-[7rem] flex-shrink-0 object-contain"
               />
               <div className="flex-1 min-w-0">

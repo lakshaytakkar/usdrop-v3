@@ -163,6 +163,7 @@ export const Header: React.FC = () => {
                     alt="Coins" 
                     width={20} 
                     height={20}
+                    decoding="async"
                     className="object-contain"
                   />
                 </MotionIcon>
