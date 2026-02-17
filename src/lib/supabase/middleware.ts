@@ -1,34 +1,49 @@
+import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
-import { sql } from '@/lib/db/index'
-
-const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'usdrop-session-secret-key-change-in-production'
 
 export async function updateSession(request: NextRequest) {
-  const supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
-  const sessionToken = request.cookies.get('session_token')?.value
-  
-  let user: { id: string; email?: string } | null = null
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
   let profile: { internal_role: string | null } | null = null
 
-  if (sessionToken) {
-    try {
-      const payload = jwt.verify(sessionToken, JWT_SECRET) as any
-      const userId = payload.userId || payload.sub
-
-      if (userId) {
-        const result = await sql`
-          SELECT id, email, internal_role FROM profiles WHERE id = ${userId} AND status = 'active' LIMIT 1
-        `
-        if (result.length > 0) {
-          user = { id: result[0].id, email: result[0].email }
-          profile = { internal_role: result[0].internal_role }
-        }
-      }
-    } catch {
-      // Invalid token - user stays null
-    }
+  if (user) {
+    const admin = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    const { data } = await admin
+      .from('profiles')
+      .select('internal_role')
+      .eq('id', user.id)
+      .single()
+    profile = data
   }
 
   return { user, profile, supabaseResponse }
