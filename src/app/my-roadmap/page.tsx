@@ -147,7 +147,7 @@ export default function MyJourneyPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {journeyStages.map((stage) => {
             const stats = getStageStats(stage.id);
             const isExpanded = expandedStages.has(stage.id);
@@ -155,144 +155,129 @@ export default function MyJourneyPage() {
             const isStageCompleted = stageProgress === 100;
 
             return (
-              <div key={stage.id} className="border rounded-lg bg-white overflow-hidden">
+              <div key={stage.id} className="border rounded-lg bg-white overflow-hidden self-start">
                 <button
                   onClick={() => toggleStage(stage.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors",
+                    "w-full flex items-center gap-2.5 px-3 py-2.5 text-left cursor-pointer transition-colors",
                     isStageCompleted ? "bg-green-50" : "hover:bg-gray-50"
                   )}
                 >
-                  <ChevronRight className={cn("h-4 w-4 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
+                  <ChevronRight className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
 
                   <div className={cn(
-                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                    "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
                     isStageCompleted ? "bg-green-500 text-white" : "bg-indigo-100 text-indigo-700"
                   )}>
                     {stage.number}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-400 uppercase">{stage.phase}</span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-gray-900 truncate">Stage {stage.number}: {stage.title}</h3>
+                    <span className="text-[10px] font-medium text-gray-400 uppercase leading-none">{stage.phase}</span>
+                    <h3 className="text-xs font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="hidden sm:flex items-center gap-1.5 text-xs">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="hidden sm:flex items-center gap-1 text-[10px]">
                       {stats.completed > 0 && (
-                        <span className="flex items-center gap-1 text-green-600">
-                          <span className="w-2 h-2 rounded-full bg-green-500" />
+                        <span className="flex items-center gap-0.5 text-green-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                           {stats.completed}
                         </span>
                       )}
                       {stats.inProgress > 0 && (
-                        <span className="flex items-center gap-1 text-yellow-600">
-                          <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                        <span className="flex items-center gap-0.5 text-yellow-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                           {stats.inProgress}
                         </span>
                       )}
                       {stats.notStarted > 0 && (
-                        <span className="flex items-center gap-1 text-red-600">
-                          <span className="w-2 h-2 rounded-full bg-red-500" />
+                        <span className="flex items-center gap-0.5 text-red-600">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                           {stats.notStarted}
                         </span>
                       )}
                     </div>
-                    <span className="text-xs font-medium text-gray-500">{stats.completed}/{stats.total}</span>
+                    <span className="text-[10px] font-medium text-gray-500">{stats.completed}/{stats.total}</span>
                   </div>
                 </button>
 
                 {isExpanded && (
                   <div className="border-t">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase tracking-wider">
-                          <th className="px-4 py-2 text-left font-medium w-12">#</th>
-                          <th className="px-4 py-2 text-left font-medium">Task</th>
-                          <th className="px-4 py-2 text-left font-medium w-36">Progress</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stage.tasks.map((task) => {
-                          const status = getTaskStatus(task.id);
-                          const statusOption = getStatusOption(status);
-                          const isDropdownOpen = openDropdownId === task.id;
+                    <div className="divide-y">
+                      {stage.tasks.map((task) => {
+                        const status = getTaskStatus(task.id);
+                        const statusOption = getStatusOption(status);
+                        const isDropdownOpen = openDropdownId === task.id;
 
-                          return (
-                            <tr
-                              key={task.id}
-                              className={cn(
-                                "border-b last:border-b-0 transition-colors",
-                                status === "completed" ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : "hover:bg-gray-50/50"
+                        return (
+                          <div
+                            key={task.id}
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-1.5 text-xs",
+                              status === "completed" ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
+                            )}
+                          >
+                            <span className="text-gray-400 font-mono text-[10px] w-5 shrink-0">{task.taskNo}</span>
+                            <span className="flex-1 min-w-0 truncate">
+                              {task.link ? (
+                                <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
+                                  {task.title}
+                                </Link>
+                              ) : (
+                                <span className={cn(
+                                  "text-gray-900",
+                                  status === "completed" && "line-through text-gray-500"
+                                )}>
+                                  {task.title}
+                                </span>
                               )}
-                            >
-                              <td className="px-4 py-2.5 text-gray-400 font-mono text-xs">{task.taskNo}</td>
-                              <td className="px-4 py-2.5">
-                                {task.link ? (
-                                  <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
-                                    {task.title}
-                                  </Link>
-                                ) : (
-                                  <span className={cn(
-                                    "text-gray-900",
-                                    status === "completed" && "line-through text-gray-500"
-                                  )}>
-                                    {task.title}
-                                  </span>
+                            </span>
+                            <div className="relative shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenDropdownId(isDropdownOpen ? null : task.id);
+                                }}
+                                className={cn(
+                                  "flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-medium cursor-pointer transition-colors",
+                                  statusOption.bgClass,
+                                  statusOption.textClass
                                 )}
-                              </td>
-                              <td className="px-4 py-2.5">
-                                <div className="relative">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setOpenDropdownId(isDropdownOpen ? null : task.id);
-                                    }}
-                                    className={cn(
-                                      "flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium w-full justify-between cursor-pointer transition-colors",
-                                      statusOption.bgClass,
-                                      statusOption.textClass
-                                    )}
-                                  >
-                                    <span className="flex items-center gap-1.5">
-                                      <span className={cn("w-2 h-2 rounded-full", statusOption.dotClass)} />
-                                      {statusOption.label}
-                                    </span>
-                                    <ChevronDown className="h-3 w-3" />
-                                  </button>
+                              >
+                                <span className={cn("w-1.5 h-1.5 rounded-full", statusOption.dotClass)} />
+                                {statusOption.label}
+                                <ChevronDown className="h-2.5 w-2.5" />
+                              </button>
 
-                                  {isDropdownOpen && (
-                                    <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                                      {STATUS_OPTIONS.map((option) => (
-                                        <button
-                                          key={option.value}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setTaskStatus(task.id, option.value);
-                                          }}
-                                          className={cn(
-                                            "flex items-center gap-2 px-3 py-2 text-xs font-medium w-full text-left hover:bg-gray-50 cursor-pointer transition-colors",
-                                            status === option.value && "bg-gray-50"
-                                          )}
-                                        >
-                                          <span className={cn("w-2 h-2 rounded-full", option.dotClass)} />
-                                          <span className={option.textClass}>{option.label}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
+                              {isDropdownOpen && (
+                                <div className="absolute top-full right-0 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                                  {STATUS_OPTIONS.map((option) => (
+                                    <button
+                                      key={option.value}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setTaskStatus(task.id, option.value);
+                                      }}
+                                      className={cn(
+                                        "flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-medium w-full text-left hover:bg-gray-50 cursor-pointer transition-colors",
+                                        status === option.value && "bg-gray-50"
+                                      )}
+                                    >
+                                      <span className={cn("w-1.5 h-1.5 rounded-full", option.dotClass)} />
+                                      <span className={option.textClass}>{option.label}</span>
+                                    </button>
+                                  ))}
                                 </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
 
                     {stage.callout && (
-                      <div className="px-4 py-2.5 bg-red-600 text-white text-center text-xs font-bold uppercase tracking-wider">
+                      <div className="px-3 py-2 bg-red-600 text-white text-center text-[10px] font-bold uppercase tracking-wider">
                         {stage.callout}
                       </div>
                     )}
