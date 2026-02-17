@@ -208,7 +208,7 @@ const aiToolkitItems: SidebarItem[] = [
 // USDrop AI Workspace items - All Pro features except home and onboarding
 const aiWorkspaceItems: SidebarItem[] = [
   {
-    title: "Home",
+    title: "Dashboard",
     icon: Home,
     url: "/home",
     isPro: false,

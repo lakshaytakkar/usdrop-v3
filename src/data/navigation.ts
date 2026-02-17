@@ -51,7 +51,7 @@ export const externalNavGroups: NavGroup[] = [
     label: "Framework",
     icon: Compass,
     items: [
-      { title: "Home", icon: Home, url: "/home", isPro: false },
+      { title: "Dashboard", icon: Home, url: "/home", isPro: false },
       { title: "My Products", icon: Bookmark, url: "/my-products", isPro: false },
       { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/my-roadmap", isPro: false },
