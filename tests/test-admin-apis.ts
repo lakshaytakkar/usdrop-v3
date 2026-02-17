@@ -1,6 +1,8 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const BASE_URL = 'http://localhost:5000'
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:5000'
+const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'admin@usdrop.ai'
+const TEST_ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || 'Admin123!'
 
 interface TestResult {
   endpoint: string
@@ -21,8 +23,8 @@ async function getAdminSession(): Promise<string> {
       'apikey': SUPABASE_ANON_KEY,
     },
     body: JSON.stringify({
-      email: 'admin@usdrop.ai',
-      password: 'Admin123!',
+      email: TEST_ADMIN_EMAIL,
+      password: TEST_ADMIN_PASSWORD,
     }),
   })
 
@@ -34,7 +36,8 @@ async function getAdminSession(): Promise<string> {
   const accessToken = data.access_token
   const refreshToken = data.refresh_token
 
-  const cookieName = `sb-wecbybtxmkdkvqqahyuu-auth-token`
+  const projectRef = new URL(SUPABASE_URL).hostname.split('.')[0]
+  const cookieName = `sb-${projectRef}-auth-token`
   const cookieValue = encodeURIComponent(JSON.stringify({
     access_token: accessToken,
     refresh_token: refreshToken,
@@ -120,7 +123,7 @@ function summarizeData(data: any): string {
 
 async function runAllTests() {
   console.log('=== Admin API Endpoint Tests ===\n')
-  console.log('Signing in as admin@usdrop.ai...')
+  console.log(`Signing in as ${TEST_ADMIN_EMAIL}...`)
   
   let cookie: string
   try {
