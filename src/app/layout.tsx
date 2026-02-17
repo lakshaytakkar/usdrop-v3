@@ -9,7 +9,7 @@ import { OnboardingProvider } from "@/contexts/onboarding-context";
 import { Toaster } from "@/components/ui/toast";
 import { ReactQueryProvider } from "@/contexts/react-query-provider";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { AdminRouteGuard } from "@/components/auth/admin-route-guard";
+
 import { AuthLoadingGate } from "@/components/auth/auth-loading-gate";
 
 const geistSans = Geist({
@@ -56,9 +56,7 @@ export default function RootLayout({
                 <OnboardingProvider>
                   <ErrorBoundary>
                     <AuthLoadingGate>
-                      <AdminRouteGuard>
-                        {children}
-                      </AdminRouteGuard>
+                      {children}
                     </AuthLoadingGate>
                   </ErrorBoundary>
                   <Toaster />
