@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
 import { OnboardingStatus } from "@/types/onboarding"
+import { useUserPlanContext } from "@/contexts/user-plan-context"
+import { useAuth } from "@/contexts/auth-context"
 
 interface OnboardingContextType {
   isComplete: boolean
@@ -29,29 +31,27 @@ interface OnboardingProviderProps {
   children: ReactNode
 }
 
-const ADMIN_ROLES = ["admin", "super_admin", "editor", "moderator"]
-
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [status, setStatus] = useState<OnboardingStatus | null>(null)
-  const [plan, setPlan] = useState<string | null>(null)
-  const [internalRole, setInternalRole] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user, loading: authLoading } = useAuth()
+  const { plan, isFree, isPro, isAdmin, internalRole, isLoading: planLoading } = useUserPlanContext()
 
-  const fetchData = useCallback(async () => {
+  const fetchOnboardingStatus = useCallback(async () => {
+    if (!user) {
+      setStatus(null)
+      setIsLoadingOnboarding(false)
+      return
+    }
+
     try {
-      setIsLoading(true)
+      setIsLoadingOnboarding(true)
       setError(null)
 
-      // Fetch both in parallel
-      const [statusResponse, userResponse] = await Promise.all([
-        fetch("/api/onboarding/status"),
-        fetch("/api/auth/user")
-      ])
+      const statusResponse = await fetch("/api/onboarding/status")
 
-      // Handle onboarding status
       if (statusResponse.ok) {
-        // Check if response is JSON before parsing
         const statusContentType = statusResponse.headers.get("content-type")
         if (statusContentType && statusContentType.includes("application/json")) {
           try {
@@ -59,7 +59,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
             setStatus(statusData)
           } catch (parseError) {
             console.warn("Failed to parse onboarding status JSON:", parseError)
-            // Set defaults on parse error
             setStatus({
               onboarding_completed: false,
               onboarding_completed_at: null,
@@ -71,7 +70,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
             })
           }
         } else {
-          // Not JSON, set defaults
           setStatus({
             onboarding_completed: false,
             onboarding_completed_at: null,
@@ -83,7 +81,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
           })
         }
       } else {
-        // Default values if API fails
         setStatus({
           onboarding_completed: false,
           onboarding_completed_at: null,
@@ -94,32 +91,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
           total_modules: 6,
         })
       }
-
-      // Handle user plan
-      if (userResponse.ok) {
-        // Check if response is JSON before parsing
-        const userContentType = userResponse.headers.get("content-type")
-        if (userContentType && userContentType.includes("application/json")) {
-          try {
-            const userData = await userResponse.json()
-            setPlan(userData.plan || "free")
-            setInternalRole(userData.user?.internal_role || null)
-          } catch (parseError) {
-            console.warn("Failed to parse user data JSON:", parseError)
-            setPlan("free")
-            setInternalRole(null)
-          }
-        } else {
-          setPlan("free")
-        }
-      } else {
-        setPlan("free")
-      }
     } catch (err) {
       console.error("Error fetching onboarding data:", err)
       setError(err instanceof Error ? err.message : "Failed to load data")
-      // Set defaults on error
-      setPlan("free")
       setStatus({
         onboarding_completed: false,
         onboarding_completed_at: null,
@@ -130,32 +104,30 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         total_modules: 6,
       })
     } finally {
-      setIsLoading(false)
+      setIsLoadingOnboarding(false)
     }
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  const isAdminUser = internalRole != null && ADMIN_ROLES.includes(internalRole)
-  const isFreeUser = !isAdminUser && (plan === "free" || plan === null)
+    if (authLoading) return
+    fetchOnboardingStatus()
+  }, [authLoading, fetchOnboardingStatus])
 
   const value: OnboardingContextType = {
-    isComplete: isFreeUser ? false : (status?.onboarding_completed || false),
+    isComplete: isFree ? false : (status?.onboarding_completed || false),
     progressPercentage: status?.onboarding_progress || 0,
     completedVideos: status?.completed_videos || 0,
     totalVideos: status?.total_videos || 6,
     completedModules: status?.completed_modules || 0,
     totalModules: status?.total_modules || 6,
     plan,
-    isFree: isFreeUser,
-    isPro: isAdminUser || plan === "pro",
-    isAdmin: isAdminUser,
+    isFree,
+    isPro,
+    isAdmin,
     internalRole,
-    isLoading,
+    isLoading: authLoading || planLoading || isLoadingOnboarding,
     error,
-    refetch: fetchData,
+    refetch: fetchOnboardingStatus,
   }
 
   return (

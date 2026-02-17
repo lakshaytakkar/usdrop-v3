@@ -23,8 +23,8 @@ export function useUserMetadata() {
     // Plan/subscription
     plan: metadata?.plan || 'free',
     planName: metadata?.planName || 'Free',
-    isPro: metadata?.plan === 'pro',
-    isFree: metadata?.plan === 'free' || !metadata?.plan,
+    isPro: metadata?.isInternal || metadata?.plan === 'pro',
+    isFree: !metadata?.isInternal && (metadata?.plan === 'free' || !metadata?.plan),
 
     // Status
     status: metadata?.status || 'active',
