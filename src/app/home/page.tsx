@@ -2,39 +2,139 @@
 
 import { useState, useEffect, Suspense } from "react"
 import { ExternalLayout } from "@/components/layout/external-layout"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
-import { Flame, ChevronRight, BookOpen, Play, CheckCircle2, Lock, Clock, Book, Star } from "lucide-react"
-import { BannerCarousel, ChristmasBanner } from "@/components/feedback/banners/banner-carousel"
-import { MotionCard } from "@/components/motion/MotionCard"
-import { MotionStagger } from "@/components/motion/MotionStagger"
-import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
-import { motion } from "motion/react"
+import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
+import { useAuth } from "@/contexts/auth-context"
+import { useUserPlan } from "@/contexts/user-plan-context"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
+import {
+  ChevronRight,
+  Bookmark,
+  ShoppingBag,
+  Map,
+  UserCircle,
+  KeyRound,
+  GraduationCap,
+  Search,
+  Trophy,
+  Video,
+  Wrench,
+  Newspaper,
+  Truck,
+  Store,
+  Palette,
+  Calculator,
+  Globe,
+  User,
+  Mail,
+  Phone,
+  Building2,
+  BookOpen,
+  Clock,
+  Star,
+  TrendingUp,
+} from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { journeyStages } from "@/data/journey-stages"
 
 interface CourseData {
   id: string
   title: string
-  description: string | null
   thumbnail: string | null
   category: string | null
   level: string | null
   lessons_count: number
   duration_minutes: number | null
   rating: number | null
-  students_count: number
-  featured: boolean
 }
 
-function QuickStatsGrid() {
+interface UserDetails {
+  full_name: string
+  email: string
+  contact_number: string
+  website_name: string
+  llc_name: string
+  batch_id: string
+}
+
+const ROADMAP_STORAGE_KEY = "usdrop-journey-task-status"
+
+function ProfileSummaryCard() {
+  const { user } = useAuth()
+  const { plan, isPro } = useUserPlan()
+  const [details, setDetails] = useState<UserDetails | null>(null)
+
+  useEffect(() => {
+    fetch("/api/user-details")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setDetails({
+            full_name: data.full_name || "",
+            email: data.email || "",
+            contact_number: data.contact_number || "",
+            website_name: data.website_name || "",
+            llc_name: data.llc_name || "",
+            batch_id: data.batch_id || "",
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const displayName = details?.full_name || user?.full_name || user?.email?.split("@")[0] || "User"
+  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+
+  const infoItems = [
+    { icon: Mail, value: user?.email },
+    { icon: Phone, value: details?.contact_number },
+    { icon: Globe, value: details?.website_name },
+    { icon: Building2, value: details?.llc_name },
+  ].filter((item) => item.value)
+
+  return (
+    <Card className="p-5 bg-gradient-to-br from-indigo-900 via-purple-950 to-indigo-800 text-white overflow-hidden relative">
+      <div className="absolute inset-0 z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`, opacity: 0.5, mixBlendMode: "overlay" as const }}></div>
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold shrink-0">
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h2 className="text-lg font-bold truncate">{displayName}</h2>
+            <Badge className={cn("text-[10px] px-1.5 py-0 h-4 border-0 shrink-0", isPro ? "bg-amber-500 text-white" : "bg-white/20 text-white/80")}>
+              {plan || "Free"}
+            </Badge>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/70">
+            {infoItems.map((item, i) => (
+              <span key={i} className="flex items-center gap-1">
+                <item.icon className="h-3 w-3" />
+                <span className="truncate max-w-[160px]">{item.value}</span>
+              </span>
+            ))}
+          </div>
+          {details?.batch_id && (
+            <span className="text-[10px] text-white/50 mt-1 block">Batch: {details.batch_id}</span>
+          )}
+        </div>
+        <Link href="/my-profile" className="shrink-0 text-white/60 hover:text-white transition-colors">
+          <ChevronRight className="h-5 w-5" />
+        </Link>
+      </div>
+    </Card>
+  )
+}
+
+function QuickStatsRow() {
   const { stats, isLoading } = useDashboardStats()
   const [courseCount, setCourseCount] = useState(0)
+  const [roadmapProgress, setRoadmapProgress] = useState({ completed: 0, total: 0 })
 
   useEffect(() => {
     fetch("/api/courses?published=true&pageSize=100")
@@ -43,42 +143,34 @@ function QuickStatsGrid() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(ROADMAP_STORAGE_KEY)
+        const statuses = stored ? JSON.parse(stored) : {}
+        const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
+        const completed = Object.values(statuses).filter((s) => s === "completed").length
+        setRoadmapProgress({ completed, total })
+      } catch {}
+    }
+  }, [])
+
   const statItems = [
-    {
-      title: "Courses Available",
-      value: courseCount,
-      iconSrc: "/3d-icons/courses.png",
-      link: "/mentorship",
-      highlighted: true,
-    },
-    {
-      title: "Products Saved",
-      value: stats?.products?.inPicklist || 0,
-      iconSrc: "/3d-icons/products-saved.png",
-      link: "/my-products",
-    },
-    {
-      title: "Connected Stores",
-      value: stats?.stores?.connected || 0,
-      iconSrc: "/3d-icons/store.png",
-      link: "/my-store",
-    },
-    {
-      title: "Day Streak",
-      value: stats?.activity?.streakDays || 0,
-      iconSrc: "/3d-icons/streak.png",
-      suffix: stats?.activity?.streakDays === 1 ? " day" : " days",
-    },
+    { label: "Products Saved", value: stats?.products?.inPicklist || 0, icon: Bookmark, link: "/my-products", color: "text-blue-600 bg-blue-50" },
+    { label: "Connected Stores", value: stats?.stores?.connected || 0, icon: ShoppingBag, link: "/my-store", color: "text-emerald-600 bg-emerald-50" },
+    { label: "Courses", value: courseCount, icon: GraduationCap, link: "/mentorship", color: "text-amber-600 bg-amber-50" },
+    { label: "Roadmap", value: `${roadmapProgress.completed}/${roadmapProgress.total}`, icon: Map, link: "/my-roadmap", color: "text-purple-600 bg-purple-50" },
+    { label: "Day Streak", value: stats?.activity?.streakDays || 0, icon: TrendingUp, color: "text-orange-600 bg-orange-50" },
   ]
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="p-4">
-            <Skeleton className="h-10 w-10 rounded-lg mb-3" />
-            <Skeleton className="h-4 w-20 mb-2" />
-            <Skeleton className="h-8 w-16" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="p-3">
+            <Skeleton className="h-8 w-8 rounded-lg mb-2" />
+            <Skeleton className="h-3 w-16 mb-1" />
+            <Skeleton className="h-5 w-10" />
           </Card>
         ))}
       </div>
@@ -86,36 +178,135 @@ function QuickStatsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {statItems.map((item, index) => (
-        <Card
-          key={index}
-          className={cn(
-            "p-4 cursor-pointer group",
-            item.link && "hover:border-gray-300",
-            item.highlighted && "border-2 border-purple-500 bg-purple-50/50 shadow-md"
-          )}
-          onClick={() => item.link && (window.location.href = item.link)}
-        >
-          <Image
-            src={item.iconSrc}
-            alt={item.title}
-            width={40}
-            height={40}
-            className="object-contain mb-3"
-          />
-          <p className="text-xs text-gray-500 mb-1">{item.title}</p>
-          <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold text-gray-900">
-              {item.value}
-              {item.suffix || ""}
-            </p>
-            {item.link && (
-              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
-            )}
-          </div>
-        </Card>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {statItems.map((item, i) => (
+        <Link key={i} href={item.link || "#"} className="block">
+          <Card className="p-3 hover:border-gray-300 transition-colors cursor-pointer group">
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-2", item.color)}>
+              <item.icon className="h-4 w-4" />
+            </div>
+            <p className="text-[11px] text-gray-500 mb-0.5">{item.label}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-lg font-bold text-gray-900">{item.value}</p>
+              {item.link && <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />}
+            </div>
+          </Card>
+        </Link>
       ))}
+    </div>
+  )
+}
+
+const frameworkCards = [
+  {
+    title: "My Products",
+    description: "Your saved and bookmarked products from Product Hunt",
+    icon: Bookmark,
+    href: "/my-products",
+    color: "text-blue-600 bg-blue-50 border-blue-100",
+    iconSrc: "/3d-ecom-icons-blue/My_Products.png",
+  },
+  {
+    title: "My Store",
+    description: "Manage your connected Shopify stores",
+    icon: ShoppingBag,
+    href: "/my-store",
+    color: "text-emerald-600 bg-emerald-50 border-emerald-100",
+    iconSrc: "/3d-ecom-icons-blue/My_Store.png",
+    isPro: true,
+  },
+  {
+    title: "My Roadmap",
+    description: "Track your dropshipping journey progress",
+    icon: Map,
+    href: "/my-roadmap",
+    color: "text-purple-600 bg-purple-50 border-purple-100",
+    iconSrc: "/3d-ecom-icons-blue/Rocket_Launch.png",
+  },
+  {
+    title: "My Profile",
+    description: "Your business details and personal information",
+    icon: UserCircle,
+    href: "/my-profile",
+    color: "text-gray-600 bg-gray-50 border-gray-100",
+  },
+  {
+    title: "My Credentials",
+    description: "Securely stored tool logins and API keys",
+    icon: KeyRound,
+    href: "/my-credentials",
+    color: "text-rose-600 bg-rose-50 border-rose-100",
+  },
+]
+
+function FrameworkCardsGrid() {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">Your Framework</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+        {frameworkCards.map((card) => (
+          <Link key={card.href} href={card.href} className="block group">
+            <Card className="p-4 h-full hover:border-gray-300 transition-colors cursor-pointer">
+              <div className="flex items-start gap-3">
+                {card.iconSrc ? (
+                  <img src={card.iconSrc} alt={card.title} width={40} height={40} decoding="async" className="w-10 h-10 object-contain shrink-0" />
+                ) : (
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", card.color)}>
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-sm font-semibold text-gray-900 truncate">{card.title}</h4>
+                    {card.isPro && (
+                      <Badge className="text-[9px] px-1 py-0 h-3.5 bg-amber-500 text-white border-0">PRO</Badge>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{card.description}</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const exploreLinks = [
+  { title: "Product Hunt", description: "Discover trending products", icon: Search, href: "/product-hunt", color: "text-indigo-600 bg-indigo-50" },
+  { title: "Winning Products", description: "Curated top sellers", icon: Trophy, href: "/winning-products", color: "text-amber-600 bg-amber-50" },
+  { title: "Mentorship", description: "Courses & learning", icon: GraduationCap, href: "/mentorship", color: "text-violet-600 bg-violet-50" },
+  { title: "Meta Ads", description: "Ad creatives library", icon: Video, href: "/meta-ads", color: "text-pink-600 bg-pink-50" },
+  { title: "Competitor Stores", description: "Analyze competitors", icon: Store, href: "/competitor-stores", color: "text-teal-600 bg-teal-50" },
+  { title: "Suppliers", description: "Private supplier network", icon: Truck, href: "/suppliers", color: "text-cyan-600 bg-cyan-50" },
+  { title: "Studio", description: "Whitelabelling & models", icon: Palette, href: "/studio/whitelabelling", color: "text-fuchsia-600 bg-fuchsia-50" },
+  { title: "Tools", description: "Descriptions, invoices & more", icon: Wrench, href: "/tools", color: "text-slate-600 bg-slate-50" },
+  { title: "Shipping Calculator", description: "Estimate shipping costs", icon: Calculator, href: "/shipping-calculator", color: "text-green-600 bg-green-50" },
+  { title: "Blogs", description: "Articles & intelligence", icon: Newspaper, href: "/blogs", color: "text-orange-600 bg-orange-50" },
+]
+
+function ExploreGrid() {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">Explore & Tools</h3>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        {exploreLinks.map((item) => (
+          <Link key={item.href} href={item.href} className="block group">
+            <Card className="px-3 py-2.5 hover:border-gray-300 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2.5">
+                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", item.color)}>
+                  <item.icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xs font-semibold text-gray-900 truncate">{item.title}</h4>
+                  <p className="text-[10px] text-gray-400 truncate">{item.description}</p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
@@ -129,31 +320,30 @@ function formatDuration(minutes: number | null): string {
   return `${hours}h ${mins}m`
 }
 
-function CoursesWidget() {
+function RecentCoursesCard() {
   const [courses, setCourses] = useState<CourseData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetch("/api/courses?published=true&pageSize=6&sortBy=created_at&sortOrder=desc")
-      .then((r) => {
-        if (!r.ok) throw new Error()
-        return r.json()
+    fetch("/api/courses?published=true&pageSize=4&sortBy=created_at&sortOrder=desc")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) setCourses(d.courses || [])
       })
-      .then((d) => setCourses(d.courses || []))
       .catch(() => {})
       .finally(() => setIsLoading(false))
   }, [])
 
   if (isLoading) {
     return (
-      <Card className="p-6">
-        <Skeleton className="h-6 w-48 mb-4" />
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-3 rounded-lg border">
-              <Skeleton className="w-28 h-16 rounded-lg flex-shrink-0" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
+      <Card className="p-4">
+        <Skeleton className="h-4 w-32 mb-3" />
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex gap-3 p-2 rounded border">
+              <Skeleton className="w-20 h-12 rounded flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
@@ -166,254 +356,145 @@ function CoursesWidget() {
   if (courses.length === 0) return null
 
   return (
-    <Card className="p-6 overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-            <BookOpen className="h-5 w-5 text-amber-600" />
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
+            <BookOpen className="h-3.5 w-3.5 text-amber-600" />
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Your Learning Journey</h3>
-            <p className="text-sm text-gray-500">
-              {courses.length} courses available from your mentor
-            </p>
-          </div>
+          <h3 className="text-sm font-semibold text-gray-900">Latest Courses</h3>
         </div>
+        <Link href="/mentorship" className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors">
+          View all
+        </Link>
       </div>
-
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {courses.map((course) => (
           <Link key={course.id} href={`/mentorship/${course.id}`} className="block group">
-            <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-colors hover:border-gray-200">
-              <div className="relative w-28 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+            <div className="flex items-center gap-3 p-2 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-colors">
+              <div className="relative w-20 h-12 flex-shrink-0 rounded overflow-hidden bg-gray-100">
                 {course.thumbnail ? (
-                  <Image
-                    src={course.thumbnail}
-                    alt={course.title}
-                    fill
-                    className="object-cover"
-                    sizes="112px"
-                  />
+                  <Image src={course.thumbnail} alt={course.title} fill className="object-cover" sizes="80px" />
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <BookOpen className="h-5 w-5 text-gray-300" />
-                  </div>
+                  <div className="flex items-center justify-center h-full"><BookOpen className="h-4 w-4 text-gray-300" /></div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h4 className="font-medium text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                    {course.title}
-                  </h4>
-                  {course.level && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 bg-amber-50 text-amber-700 border-amber-200">
-                      {course.level}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500">
+                <h4 className="text-xs font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">{course.title}</h4>
+                <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-0.5">
                   {course.lessons_count > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Book className="h-3 w-3" />
-                      <span>{course.lessons_count} lessons</span>
-                    </div>
+                    <span className="flex items-center gap-0.5"><BookOpen className="h-2.5 w-2.5" />{course.lessons_count} lessons</span>
                   )}
                   {course.duration_minutes && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatDuration(course.duration_minutes)}</span>
-                    </div>
+                    <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{formatDuration(course.duration_minutes)}</span>
                   )}
                   {course.rating && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span>{course.rating.toFixed(1)}</span>
-                    </div>
+                    <span className="flex items-center gap-0.5"><Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />{course.rating.toFixed(1)}</span>
                   )}
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0 transition-colors" />
+              <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-gray-500 shrink-0 transition-colors" />
             </div>
           </Link>
         ))}
       </div>
-
-      <Link href="/mentorship" className="block mt-4">
-        <div className="text-center py-2 text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors">
-          View All Courses
-        </div>
-      </Link>
     </Card>
   )
 }
 
-function HomePageContent() {
+function RoadmapProgressCard() {
+  const [progress, setProgress] = useState({ completed: 0, inProgress: 0, total: 0, percent: 0 })
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(ROADMAP_STORAGE_KEY)
+        const statuses: Record<string, string> = stored ? JSON.parse(stored) : {}
+        const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
+        const completed = Object.values(statuses).filter((s) => s === "completed").length
+        const inProgress = Object.values(statuses).filter((s) => s === "in_progress").length
+        setProgress({ completed, inProgress, total, percent: total > 0 ? Math.round((completed / total) * 100) : 0 })
+      } catch {}
+    }
+  }, [])
+
   return (
-    <>
-      <ExternalLayout>
-          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-100/50">
-            <main className="flex flex-1 flex-col gap-6">
-              <MotionFadeIn direction="none" delay={0.1}>
-                <BannerCarousel autoRotateInterval={6000}>
-                  <ChristmasBanner />
-                </BannerCarousel>
-              </MotionFadeIn>
-
-              <MotionFadeIn delay={0.15}>
-                <QuickStatsGrid />
-              </MotionFadeIn>
-
-              <MotionFadeIn delay={0.2}>
-                <CoursesWidget />
-              </MotionFadeIn>
-
-              <div>
-                <MotionFadeIn delay={0.25}>
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">
-                    USDrop AI Studio Tools
-                  </h3>
-                </MotionFadeIn>
-                <MotionStagger staggerDelay={0.1}>
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <MotionCard
-                      className="rounded-xl border bg-card p-6 cursor-pointer"
-                      delay={0.1}
-                    >
-                      <img
-                        src="/3d-ecom-icons-blue/Shopping_Sale.png"
-                        alt="Model Studio"
-                        width={64}
-                        height={64}
-                        decoding="async"
-                        className="object-contain mb-4 w-16 h-16"
-                      />
-                      <h4 className="font-semibold mb-2 text-lg">Model Studio</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Generate professional model advertisements for your apparel
-                        products with AI-generated models
-                      </p>
-                    </MotionCard>
-
-                    <MotionCard
-                      className="rounded-xl border bg-card p-6 cursor-pointer"
-                      delay={0.15}
-                    >
-                      <div className="mb-4 flex items-center justify-between">
-                        <img
-                          src="/3d-ecom-icons-blue/Open_Board.png"
-                          alt="Whitelabelling"
-                          width={64}
-                          height={64}
-                          decoding="async"
-                          className="object-contain w-16 h-16"
-                        />
-                        <motion.div
-                          className="flex items-center gap-1"
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.4, duration: 0.3 }}
-                        >
-                          <Badge
-                            variant="outline"
-                            className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 text-xs"
-                          >
-                            Nano
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 text-xs"
-                          >
-                            Banana
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20 text-xs"
-                          >
-                            Pro
-                          </Badge>
-                          <motion.div
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{
-                              duration: 2,
-                              repeat: Infinity,
-                              repeatDelay: 3,
-                            }}
-                          >
-                            <Flame className="h-4 w-4 text-orange-500" />
-                          </motion.div>
-                        </motion.div>
-                      </div>
-                      <h4 className="font-semibold mb-2 text-lg">Whitelabelling</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Apply your logo to multiple images in bulk. Customize placement,
-                        size, and opacity
-                      </p>
-                    </MotionCard>
-
-                    <MotionCard
-                      className="rounded-xl border bg-card p-6 cursor-pointer"
-                      delay={0.2}
-                    >
-                      <img
-                        src="/3d-ecom-icons-blue/Click_On_Buy_Now.png"
-                        alt="Brand Studio"
-                        width={64}
-                        height={64}
-                        decoding="async"
-                        className="object-contain mb-4 w-16 h-16"
-                      />
-                      <h4 className="font-semibold mb-2 text-lg">Brand Studio</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Automatically place your brand logo on product images with
-                        customizable placement and size
-                      </p>
-                    </MotionCard>
-
-                    <MotionCard
-                      className="rounded-xl border bg-card p-6 cursor-pointer"
-                      delay={0.25}
-                    >
-                      <img
-                        src="/3d-ecom-icons-blue/Megaphone_Ads.png"
-                        alt="Campaign Studio"
-                        width={64}
-                        height={64}
-                        decoding="async"
-                        className="object-contain mb-4 w-16 h-16"
-                      />
-                      <h4 className="font-semibold mb-2 text-lg">Campaign Studio</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Strategize and plan your Meta advertising campaigns. Set
-                        budgets, define audiences, and track performance
-                      </p>
-                    </MotionCard>
-                  </div>
-                </MotionStagger>
-              </div>
-            </main>
+    <Card className="p-4">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
+            <Map className="h-3.5 w-3.5 text-purple-600" />
           </div>
-      </ExternalLayout>
-    </>
+          <h3 className="text-sm font-semibold text-gray-900">Roadmap Progress</h3>
+        </div>
+        <Link href="/my-roadmap" className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors">
+          Open
+        </Link>
+      </div>
+      <div className="space-y-3">
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs text-gray-500">{progress.completed} of {progress.total} tasks</span>
+            <span className="text-xs font-bold text-gray-900">{progress.percent}%</span>
+          </div>
+          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+              style={{ width: `${progress.percent}%` }}
+            />
+          </div>
+        </div>
+        <div className="flex gap-3 text-[10px]">
+          <span className="flex items-center gap-1 text-green-600">
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            {progress.completed} Done
+          </span>
+          <span className="flex items-center gap-1 text-yellow-600">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            {progress.inProgress} In Progress
+          </span>
+          <span className="flex items-center gap-1 text-gray-400">
+            <span className="w-2 h-2 rounded-full bg-gray-300" />
+            {progress.total - progress.completed - progress.inProgress} Pending
+          </span>
+        </div>
+      </div>
+    </Card>
   )
 }
 
-export default function HomePage() {
+function DashboardContent() {
+  return (
+    <ExternalLayout>
+      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+        <ProfileSummaryCard />
+        <QuickStatsRow />
+        <FrameworkCardsGrid />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <RecentCoursesCard />
+          <RoadmapProgressCard />
+        </div>
+        <ExploreGrid />
+        <OnboardingProgressOverlay pageName="Dashboard" />
+      </div>
+    </ExternalLayout>
+  )
+}
+
+export default function DashboardPage() {
   return (
     <Suspense
       fallback={
         <ExternalLayout>
-            <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-100/50">
-              <div
-                className="flex justify-center items-center"
-                style={{ minHeight: "calc(100vh - 300px)" }}
-              >
-                <BlueSpinner size="lg" label="Loading dashboard..." />
-              </div>
+          <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
+            <div className="flex justify-center items-center" style={{ minHeight: "calc(100vh - 300px)" }}>
+              <BlueSpinner size="lg" label="Loading dashboard..." />
             </div>
+          </div>
         </ExternalLayout>
       }
     >
-      <HomePageContent />
+      <DashboardContent />
     </Suspense>
   )
 }
