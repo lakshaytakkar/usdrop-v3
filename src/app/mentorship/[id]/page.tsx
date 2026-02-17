@@ -21,14 +21,10 @@ function CourseDetailContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
-  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null)
 
-  // Get module and chapter from URL params
   const moduleIdFromUrl = searchParams.get('module')
-  const chapterIdFromUrl = searchParams.get('chapter')
 
   const fetchCourse = useCallback(async () => {
-    // Prevent fetching if courseId is invalid
     if (!courseId || courseId === 'undefined' || courseId === 'null') {
       setError('Course ID is missing or invalid')
       setLoading(false)
@@ -62,16 +58,10 @@ function CourseDetailContent() {
       
       setCourse(data.course)
       
-      // Set initial module and chapter from URL or default to first
-      if (moduleIdFromUrl && chapterIdFromUrl) {
+      if (moduleIdFromUrl) {
         setSelectedModuleId(moduleIdFromUrl)
-        setSelectedChapterId(chapterIdFromUrl)
       } else if (data.course.modules && data.course.modules.length > 0) {
-        const firstModule = data.course.modules[0]
-        setSelectedModuleId(firstModule.id)
-        if (firstModule.chapters && firstModule.chapters.length > 0) {
-          setSelectedChapterId(firstModule.chapters[0].id)
-        }
+        setSelectedModuleId(data.course.modules[0].id)
       }
     } catch (err) {
       console.error("Error fetching course:", err)
@@ -80,7 +70,7 @@ function CourseDetailContent() {
     } finally {
       setLoading(false)
     }
-  }, [courseId, moduleIdFromUrl, chapterIdFromUrl])
+  }, [courseId, moduleIdFromUrl])
 
   useEffect(() => {
     if (courseId) {
@@ -88,54 +78,29 @@ function CourseDetailContent() {
     }
   }, [courseId, fetchCourse])
 
-  // Update URL when chapter changes
-  const handleChapterSelect = useCallback((moduleId: string, chapterId: string) => {
+  const handleModuleSelect = useCallback((moduleId: string) => {
     setSelectedModuleId(moduleId)
-    setSelectedChapterId(chapterId)
-    router.push(`/mentorship/${courseId}?module=${moduleId}&chapter=${chapterId}`, { scroll: false })
+    router.push(`/mentorship/${courseId}?module=${moduleId}`, { scroll: false })
   }, [courseId, router])
 
-  // Get current chapter data
-  const currentChapter = course?.modules
-    ?.find(m => m.id === selectedModuleId)
-    ?.chapters?.find(c => c.id === selectedChapterId)
+  const currentModule = course?.modules?.find(m => m.id === selectedModuleId)
 
-  // Get next chapter
-  const getNextChapter = useCallback(() => {
-    if (!course?.modules || !selectedModuleId || !selectedChapterId) return null
+  const currentModuleIndex = course?.modules?.findIndex(m => m.id === selectedModuleId) ?? -1
 
-    const currentModule = course.modules.find(m => m.id === selectedModuleId)
-    if (!currentModule?.chapters) return null
-
-    const currentIndex = currentModule.chapters.findIndex(c => c.id === selectedChapterId)
-    if (currentIndex < currentModule.chapters.length - 1) {
-      // Next chapter in same module
-      return {
-        moduleId: selectedModuleId,
-        chapterId: currentModule.chapters[currentIndex + 1].id
-      }
-    } else {
-      // Find next module with chapters
-      const currentModuleIndex = course.modules.findIndex(m => m.id === selectedModuleId)
-      for (let i = currentModuleIndex + 1; i < course.modules.length; i++) {
-        const nextModule = course.modules[i]
-        if (nextModule && nextModule.chapters && nextModule.chapters.length > 0) {
-          return {
-            moduleId: nextModule.id,
-            chapterId: nextModule.chapters[0].id
-          }
-        }
-      }
+  const getNextModule = useCallback(() => {
+    if (!course?.modules || currentModuleIndex < 0) return null
+    if (currentModuleIndex < course.modules.length - 1) {
+      return course.modules[currentModuleIndex + 1]
     }
     return null
-  }, [course, selectedModuleId, selectedChapterId])
+  }, [course, currentModuleIndex])
 
   const handleNextLesson = useCallback(() => {
-    const next = getNextChapter()
+    const next = getNextModule()
     if (next) {
-      handleChapterSelect(next.moduleId, next.chapterId)
+      handleModuleSelect(next.id)
     }
-  }, [getNextChapter, handleChapterSelect])
+  }, [getNextModule, handleModuleSelect])
 
   const handleClose = useCallback(() => {
     router.push('/mentorship')
@@ -167,7 +132,6 @@ function CourseDetailContent() {
   return (
     <ExternalLayout>
         <div className="flex flex-1 flex-col h-[calc(100vh-4rem)] overflow-hidden">
-          {/* Header with Close and Next Lesson buttons */}
           <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
             <button
               onClick={handleClose}
@@ -176,53 +140,43 @@ function CourseDetailContent() {
               Close
             </button>
             <div className="text-sm text-muted-foreground">
-              Lesson {((course.modules?.flatMap(m => m.chapters || []) ?? []).findIndex(c => c.id === selectedChapterId) + 1) || 0} of {course.lessons_count}
+              Module {currentModuleIndex + 1} of {course.modules?.length || 0}
             </div>
             <button
               onClick={handleNextLesson}
-              disabled={!getNextChapter()}
+              disabled={!getNextModule()}
               className="text-sm text-primary hover:text-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next Lesson
+              Next Module
             </button>
           </div>
 
-          {/* Main Content: Sidebar + Video/Content */}
           <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-            {/* Left Sidebar - Course Navigation */}
             <div className="w-full lg:w-[400px] border-r bg-background overflow-hidden flex-shrink-0">
               <CourseSidebar
                 course={course}
                 selectedModuleId={selectedModuleId}
-                selectedChapterId={selectedChapterId}
-                onChapterSelect={handleChapterSelect}
+                onModuleSelect={handleModuleSelect}
               />
             </div>
 
-            {/* Right Main Content */}
             <div className="flex-1 overflow-y-auto bg-gray-50/50">
-              {currentChapter ? (
+              {currentModule ? (
                 <div className="p-6 space-y-6">
-                  {/* Video Player - Only show for video content */}
-                  {currentChapter.content_type === 'video' && (
-                    <CourseVideoPlayer
-                      chapter={currentChapter}
-                      courseId={courseId}
-                      moduleId={selectedModuleId!}
-                      chapterId={selectedChapterId!}
-                    />
-                  )}
+                  <CourseVideoPlayer
+                    module={currentModule}
+                    courseId={courseId}
+                    moduleId={selectedModuleId!}
+                  />
 
-                  {/* Content Tabs */}
                   <CourseContentTabs
                     course={course}
-                    chapter={currentChapter}
-                    moduleId={selectedModuleId!}
+                    module={currentModule}
                   />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full p-8">
-                  <p className="text-muted-foreground">Select a chapter to view content</p>
+                  <p className="text-muted-foreground">Select a module to view content</p>
                 </div>
               )}
             </div>

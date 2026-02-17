@@ -1,35 +1,32 @@
 "use client"
 
-import { Course, CourseChapter } from "@/types/courses"
+import { Course, CourseModule } from "@/types/courses"
 import { Flag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface OverviewTabProps {
   course: Course
-  chapter: CourseChapter
+  module: CourseModule
 }
 
-export function OverviewTab({ course, chapter }: OverviewTabProps) {
+export function OverviewTab({ course, module }: OverviewTabProps) {
   return (
     <div className="space-y-8">
-      {/* Chapter Title and Report Button */}
       <div className="flex items-start justify-between">
-        <h2 className="text-2xl font-semibold">{chapter.title}</h2>
+        <h2 className="text-2xl font-semibold">{module.title}</h2>
         <Button variant="ghost" size="sm" className="text-muted-foreground">
           <Flag className="h-4 w-4 mr-2" />
           Report
         </Button>
       </div>
 
-      {/* Description */}
-      {chapter.description && (
+      {module.description && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Description</h3>
-          <p className="text-muted-foreground whitespace-pre-wrap">{chapter.description}</p>
+          <p className="text-muted-foreground whitespace-pre-wrap">{module.description}</p>
         </div>
       )}
 
-      {/* Requirements */}
       {course.prerequisites && course.prerequisites.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Requirements</h3>
@@ -41,7 +38,6 @@ export function OverviewTab({ course, chapter }: OverviewTabProps) {
         </div>
       )}
 
-      {/* Learning Outcomes */}
       {course.learning_objectives && course.learning_objectives.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Learning Outcomes</h3>
@@ -53,7 +49,6 @@ export function OverviewTab({ course, chapter }: OverviewTabProps) {
         </div>
       )}
 
-      {/* Certificate Info */}
       <div className="flex gap-6">
         <div className="w-44 h-32 bg-muted rounded-lg flex items-center justify-center">
           <span className="text-sm text-muted-foreground">Certificate</span>
@@ -71,10 +66,3 @@ export function OverviewTab({ course, chapter }: OverviewTabProps) {
     </div>
   )
 }
-
-
-
-
-
-
-

@@ -22,28 +22,26 @@ interface Note {
 }
 
 interface NotesTabProps {
-  chapterId: string
+  moduleId: string
 }
 
-export function NotesTab({ chapterId }: NotesTabProps) {
+export function NotesTab({ moduleId }: NotesTabProps) {
   const [notes, setNotes] = useState<Note[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [noteText, setNoteText] = useState("")
   const [timestamp, setTimestamp] = useState(0)
 
-  // Load notes from localStorage
   useEffect(() => {
-    const savedNotes = localStorage.getItem(`notes-${chapterId}`)
+    const savedNotes = localStorage.getItem(`notes-${moduleId}`)
     if (savedNotes) {
       setNotes(JSON.parse(savedNotes))
     }
-  }, [chapterId])
+  }, [moduleId])
 
-  // Save notes to localStorage
   const saveNotes = (newNotes: Note[]) => {
     setNotes(newNotes)
-    localStorage.setItem(`notes-${chapterId}`, JSON.stringify(newNotes))
+    localStorage.setItem(`notes-${moduleId}`, JSON.stringify(newNotes))
   }
 
   const handleCreateNote = () => {

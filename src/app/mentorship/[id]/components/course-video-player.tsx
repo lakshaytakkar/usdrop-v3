@@ -1,24 +1,35 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { CourseChapter } from "@/types/courses"
+import { useState, useRef, useEffect, useMemo } from "react"
+import { CourseModule } from "@/types/courses"
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize, Minimize } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 
+const PLACEHOLDER_YOUTUBE_VIDEOS = [
+  "dQw4w9WgXcQ",
+  "jNQXAC9IVRw",
+  "ZXsQAXx_ao0",
+  "9bZkp7q19f0",
+  "kJQP7kiw5Fk",
+  "JGwWNGJdvx8",
+  "RgKAFK5djSk",
+  "OPf0YbXqDm0",
+  "fRh_vgS2dFE",
+  "CevxZvSJLk8",
+]
+
 interface CourseVideoPlayerProps {
-  chapter: CourseChapter
+  module: CourseModule
   courseId: string
   moduleId: string
-  chapterId: string
 }
 
 export function CourseVideoPlayer({
-  chapter,
+  module,
   courseId,
   moduleId,
-  chapterId,
 }: CourseVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -31,62 +42,72 @@ export function CourseVideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const [isYouTubeEmbed, setIsYouTubeEmbed] = useState(false)
 
-  // Get video URL from chapter content
+  const placeholderVideoId = useMemo(() => {
+    let hash = 0
+    const str = moduleId || module.id
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash |= 0
+    }
+    return PLACEHOLDER_YOUTUBE_VIDEOS[Math.abs(hash) % PLACEHOLDER_YOUTUBE_VIDEOS.length]
+  }, [moduleId, module.id])
+
   useEffect(() => {
     const loadVideoUrl = async () => {
-      if (chapter.content_type === 'video') {
-        // Check for video_storage_path first (preferred for Supabase Storage)
-        const storagePath = (chapter.content as any).video_storage_path || chapter.content.video_url
-        
-        if (!storagePath) {
-          setVideoUrl(null)
-          return
-        }
-        
-        // Check if it's a storage path (contains 'course-videos' or starts with 'courses/')
-        const isStoragePath = storagePath.includes('course-videos') || storagePath.startsWith('courses/')
-        
-        if (isStoragePath) {
-          try {
-            // Extract path from URL or use storage path directly
-            let path = storagePath
-            if (storagePath.includes('course-videos/')) {
-              path = storagePath.split('course-videos/')[1]
-            } else if (storagePath.startsWith('courses/')) {
-              // Already a path
-              path = storagePath
-            }
-            
-            const response = await fetch(`/api/courses/${courseId}/modules/${moduleId}/chapters/${chapterId}/video-url?path=${encodeURIComponent(path)}`)
-            if (response.ok) {
-              const data = await response.json()
-              setVideoUrl(data.url)
-            } else {
-              // Fallback to original URL if it exists
-              setVideoUrl(chapter.content.video_url || null)
-            }
-          } catch (error) {
-            console.error('Error fetching video URL:', error)
-            // Fallback to original URL if it exists
-            setVideoUrl(chapter.content.video_url || null)
+      const content = module.content
+      const directVideoUrl = module.video_url
+      const storagePath = content?.video_storage_path || content?.video_url || directVideoUrl
+
+      if (!storagePath) {
+        setVideoUrl(null)
+        setIsYouTubeEmbed(true)
+        return
+      }
+
+      if (storagePath.includes('youtube.com') || storagePath.includes('youtu.be')) {
+        setVideoUrl(storagePath)
+        setIsYouTubeEmbed(true)
+        return
+      }
+
+      const isStoragePath = storagePath.includes('course-videos') || storagePath.startsWith('courses/')
+
+      if (isStoragePath) {
+        try {
+          let path = storagePath
+          if (storagePath.includes('course-videos/')) {
+            path = storagePath.split('course-videos/')[1]
           }
-        } else {
-          // Already a full URL
-          setVideoUrl(storagePath)
+
+          const response = await fetch(`/api/courses/${courseId}/modules/${moduleId}/video-url?path=${encodeURIComponent(path)}`)
+          if (response.ok) {
+            const data = await response.json()
+            setVideoUrl(data.url)
+            setIsYouTubeEmbed(false)
+          } else {
+            setVideoUrl(content?.video_url || directVideoUrl || null)
+            setIsYouTubeEmbed(false)
+          }
+        } catch (error) {
+          console.error('Error fetching video URL:', error)
+          setVideoUrl(content?.video_url || directVideoUrl || null)
+          setIsYouTubeEmbed(false)
         }
       } else {
-        setVideoUrl(null)
+        setVideoUrl(storagePath)
+        setIsYouTubeEmbed(false)
       }
     }
 
     loadVideoUrl()
-  }, [chapter, courseId, moduleId, chapterId])
+  }, [module, courseId, moduleId])
 
-  // Update current time
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || isYouTubeEmbed) return
 
     const updateTime = () => setCurrentTime(video.currentTime)
     const updateDuration = () => setDuration(video.duration)
@@ -107,9 +128,8 @@ export function CourseVideoPlayer({
       video.removeEventListener('pause', handlePause)
       video.removeEventListener('ended', handleEnded)
     }
-  }, [videoUrl])
+  }, [videoUrl, isYouTubeEmbed])
 
-  // Handle fullscreen
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -195,13 +215,50 @@ export function CourseVideoPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const getYouTubeEmbedUrl = (url: string | null): string => {
+    if (!url) {
+      return `https://www.youtube.com/embed/${placeholderVideoId}?rel=0`
+    }
+
+    let videoId = ''
+    try {
+      const urlObj = new URL(url)
+      if (urlObj.hostname.includes('youtu.be')) {
+        videoId = urlObj.pathname.slice(1)
+      } else if (urlObj.hostname.includes('youtube.com')) {
+        videoId = urlObj.searchParams.get('v') || ''
+      }
+    } catch {
+      videoId = placeholderVideoId
+    }
+
+    return `https://www.youtube.com/embed/${videoId || placeholderVideoId}?rel=0`
+  }
+
+  if (isYouTubeEmbed) {
+    return (
+      <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <iframe
+          src={getYouTubeEmbedUrl(videoUrl)}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title={module.title}
+        />
+      </div>
+    )
+  }
+
   if (!videoUrl) {
     return (
-      <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-white mb-2">No video available</p>
-          <p className="text-white/70 text-sm">This chapter does not have video content</p>
-        </div>
+      <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <iframe
+          src={`https://www.youtube.com/embed/${placeholderVideoId}?rel=0`}
+          className="w-full h-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title={module.title}
+        />
       </div>
     )
   }
@@ -221,10 +278,8 @@ export function CourseVideoPlayer({
         onClick={togglePlay}
       />
 
-      {/* Controls Overlay */}
       {showControls && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end">
-          {/* Progress Bar */}
           <div className="px-4 pb-2">
             <Slider
               value={[currentTime]}
@@ -235,14 +290,11 @@ export function CourseVideoPlayer({
             />
           </div>
 
-          {/* Controls */}
           <div className="px-4 pb-4 space-y-2">
-            {/* Timer */}
             <div className="text-white text-sm font-medium">
               {formatTime(currentTime)} / {formatTime(duration)}
             </div>
 
-            {/* Control Buttons */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Button
@@ -317,4 +369,3 @@ export function CourseVideoPlayer({
     </div>
   )
 }
-

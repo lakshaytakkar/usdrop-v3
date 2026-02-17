@@ -28,10 +28,10 @@ interface Question {
 
 interface QATabProps {
   courseId: string
-  chapterId: string
+  moduleId: string
 }
 
-export function QATab({ courseId, chapterId }: QATabProps) {
+export function QATab({ courseId, moduleId }: QATabProps) {
   const [questions, setQuestions] = useState<Question[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [questionText, setQuestionText] = useState("")

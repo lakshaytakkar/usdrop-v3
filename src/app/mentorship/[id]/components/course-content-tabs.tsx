@@ -1,6 +1,6 @@
 "use client"
 
-import { Course, CourseChapter } from "@/types/courses"
+import { Course, CourseModule } from "@/types/courses"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { OverviewTab } from "./overview-tab"
 import { FilesTab } from "./files-tab"
@@ -10,14 +10,12 @@ import { ReviewsTab } from "./reviews-tab"
 
 interface CourseContentTabsProps {
   course: Course
-  chapter: CourseChapter
-  moduleId: string
+  module: CourseModule
 }
 
 export function CourseContentTabs({
   course,
-  chapter,
-  moduleId,
+  module,
 }: CourseContentTabsProps) {
   return (
     <Tabs defaultValue="overview" className="w-full">
@@ -30,19 +28,19 @@ export function CourseContentTabs({
       </TabsList>
 
       <TabsContent value="overview" className="mt-6">
-        <OverviewTab course={course} chapter={chapter} />
+        <OverviewTab course={course} module={module} />
       </TabsContent>
 
       <TabsContent value="files" className="mt-6">
-        <FilesTab chapter={chapter} />
+        <FilesTab module={module} />
       </TabsContent>
 
       <TabsContent value="notes" className="mt-6">
-        <NotesTab chapterId={chapter.id} />
+        <NotesTab moduleId={module.id} />
       </TabsContent>
 
       <TabsContent value="qa" className="mt-6">
-        <QATab courseId={course.id} chapterId={chapter.id} />
+        <QATab courseId={course.id} moduleId={module.id} />
       </TabsContent>
 
       <TabsContent value="reviews" className="mt-6">
@@ -51,10 +49,3 @@ export function CourseContentTabs({
     </Tabs>
   )
 }
-
-
-
-
-
-
-
