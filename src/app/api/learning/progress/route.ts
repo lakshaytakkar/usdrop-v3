@@ -10,7 +10,7 @@ export async function GET() {
     }
 
     const { data: progress } = await supabaseAdmin
-      .from('video_progress')
+      .from('onboarding_progress')
       .select('video_id, completed, completed_at')
       .eq('user_id', user.id)
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const isCompleted = completed !== false
 
     const { error } = await supabaseAdmin
-      .from('video_progress')
+      .from('onboarding_progress')
       .upsert({
         user_id: user.id,
         video_id: videoId,

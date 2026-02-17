@@ -26,7 +26,7 @@ export async function GET() {
       .order('order_index')
 
     const { data: progress } = await supabaseAdmin
-      .from('video_progress')
+      .from('onboarding_progress')
       .select('video_id, completed, completed_at')
       .eq('user_id', user.id)
 

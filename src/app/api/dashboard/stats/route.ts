@@ -76,12 +76,10 @@ export async function GET() {
         }
       })(),
       
-      // Enrolled courses count
       supabase
-        .from('course_enrollments')
+        .from('user_picklist')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .then(res => res.count !== null ? res : { count: 0 }),
+        .eq('user_id', user.id),
       
       // Winning products count
       supabase
@@ -112,20 +110,13 @@ export async function GET() {
           total_modules: 0
         }
 
-    const coursesCount = coursesResult.status === 'fulfilled'
+    const picklistCount = coursesResult.status === 'fulfilled'
       ? (coursesResult.value?.count || 0)
       : 0
-
-    // Handle case where course_enrollments might not exist
-    const finalCoursesCount = typeof coursesCount === 'number' ? coursesCount : 0
 
     const winningProductsCount = winningProductsResult.status === 'fulfilled'
       ? (winningProductsResult.value?.count || 0)
       : 0
-
-    // For picklist, we'll use a placeholder for now since it's stored locally
-    // In the future, this could be a user_product_picks table
-    const picklistCount = 0 // TODO: Implement when picklist is stored in DB
 
     const stats = {
       products: {
@@ -142,7 +133,7 @@ export async function GET() {
         progress: onboardingData.onboarding_progress || 0,
         completedVideos: onboardingData.completed_videos || 0,
         totalVideos: onboardingData.total_videos || 0,
-        enrolledCourses: finalCoursesCount
+        enrolledCourses: 0
       },
       activity: {
         lastActivityDate: null, // TODO: Track user activity

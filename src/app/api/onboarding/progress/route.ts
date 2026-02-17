@@ -17,18 +17,15 @@ export async function GET() {
       )
     }
 
-    // Get all progress records for this user
     const { data: progress, error: progressError } = await supabase
       .from('onboarding_progress')
       .select(`
         id,
         user_id,
         video_id,
-        module_id,
         completed,
         completed_at,
-        watch_duration,
-        last_position,
+        watch_time,
         created_at,
         updated_at,
         onboarding_videos (
@@ -107,7 +104,8 @@ export async function POST(request: Request) {
     }
 
     const body: UpdateProgressRequest = await request.json()
-    const { video_id, watch_duration, last_position, completed } = body
+    const { video_id, completed } = body
+    const watch_time = (body as any).watch_duration || (body as any).watch_time
 
     if (!video_id) {
       return NextResponse.json(
@@ -130,10 +128,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if progress record exists
     const { data: existingProgress } = await supabase
       .from('onboarding_progress')
-      .select('id, completed, watch_duration, last_position')
+      .select('id, completed, watch_time')
       .eq('user_id', user.id)
       .eq('video_id', video_id)
       .single()
@@ -141,19 +138,14 @@ export async function POST(request: Request) {
     const updateData: any = {
       user_id: user.id,
       video_id,
-      module_id: video.module_id,
       updated_at: new Date().toISOString(),
     }
 
-    if (watch_duration !== undefined) {
-      updateData.watch_duration = Math.max(
-        existingProgress?.watch_duration || 0,
-        watch_duration
+    if (watch_time !== undefined) {
+      updateData.watch_time = Math.max(
+        existingProgress?.watch_time || 0,
+        watch_time
       )
-    }
-
-    if (last_position !== undefined) {
-      updateData.last_position = last_position
     }
 
     if (completed !== undefined) {

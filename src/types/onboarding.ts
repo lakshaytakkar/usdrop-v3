@@ -32,14 +32,13 @@ export interface OnboardingProgress {
   id: string
   user_id: string
   video_id: string
-  module_id: string | null
   completed: boolean
   completed_at: string | null
-  watch_duration: number // Total seconds watched
-  last_position: number // Last position in seconds (for resume)
+  watch_time: number | null
   created_at: string
   updated_at: string
   video?: OnboardingVideo
+  onboarding_videos?: Pick<OnboardingVideo, 'id' | 'title' | 'video_url' | 'video_duration'>
 }
 
 export interface OnboardingStatus {
@@ -65,8 +64,8 @@ export interface OnboardingProgressResponse {
 
 export interface UpdateProgressRequest {
   video_id: string
+  watch_time?: number
   watch_duration?: number
-  last_position?: number
   completed?: boolean
 }
 
