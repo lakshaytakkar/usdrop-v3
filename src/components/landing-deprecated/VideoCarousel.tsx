@@ -100,7 +100,7 @@ export const VideoCarousel: React.FC<VideoCarouselProps> = ({
               className="flex-shrink-0 relative group"
             >
               {/* Video card - no borders, seamless design */}
-              <div className="relative w-[280px] aspect-[9/16] overflow-hidden transform transition-all duration-300 hover:scale-[1.02]"
+              <div className="relative w-[280px] aspect-[9/16] overflow-hidden transform"
                    style={{
                      borderRadius: '1.5rem',
                    }}

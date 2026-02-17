@@ -362,7 +362,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
                 {/* Results display - no scrolling, fits viewport */}
                 <div className="flex-1 overflow-hidden p-4">
                     <div className="max-w-7xl mx-auto h-full">
-                        <Card className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md h-full">
+                        <Card className="bg-card border-border h-full">
                             <CardContent className="p-4 h-full flex items-center justify-center">
                                 <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center relative">
                                     <img src={processedImage.url} alt="Processed product" className="w-full h-full object-contain rounded-lg" />
@@ -380,7 +380,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
         <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
                 {/* Section 1 (40%): Logo Upload & Controls */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="space-y-4">
                             {/* Logo Upload */}
@@ -454,7 +454,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
                 </Card>
                 
                 {/* Section 2 (40%): Product Upload & Preview */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <Package className="h-4 w-4 text-foreground" />
@@ -522,7 +522,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
                 </Card>
 
                 {/* Section 3 (20%): Generate Button */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="space-y-4">
                             {/* Generate Button */}

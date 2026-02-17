@@ -96,23 +96,9 @@ export function MotionIcon({
     }
   }
 
-  const getHoverProps = (): TargetAndTransition | undefined => {
-    if (reducedMotion) return undefined
-
-    return {
-      rotate: hoverRotate,
-      scale: hoverScale,
-      transition: {
-        duration: DURATION.fast,
-        ease: EASING.springGentle,
-      },
-    }
-  }
-
   return (
     <motion.div
       animate={getAnimateProps()}
-      whileHover={getHoverProps()}
       className={cn("inline-flex items-center justify-center", className)}
       {...props}
     >

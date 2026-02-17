@@ -35,8 +35,8 @@ export const FeaturesBento: React.FC = () => {
             
             {/* 1. Product Discovery (Large Hero) */}
             <MotionCard
-              hoverLift
-              hoverShadow
+              hoverLift={false}
+              hoverShadow={false}
               delay={0}
               className="md:col-span-2 md:row-span-2 bg-white rounded-[2.5rem] p-6 md:p-8 border border-slate-200 shadow-sm relative overflow-hidden"
             >
@@ -89,8 +89,8 @@ export const FeaturesBento: React.FC = () => {
 
             {/* 2. AI Studio (Tall Vertical) */}
             <MotionCard
-              hoverLift
-              hoverShadow
+              hoverLift={false}
+              hoverShadow={false}
               delay={0.1}
               className="md:col-span-1 md:row-span-2 bg-slate-900 rounded-[2.5rem] p-6 border border-slate-800 relative overflow-hidden"
             >
@@ -124,8 +124,8 @@ export const FeaturesBento: React.FC = () => {
 
             {/* 3. Fast Shipping (Small Card) */}
             <MotionCard
-              hoverLift
-              hoverShadow
+              hoverLift={false}
+              hoverShadow={false}
               delay={0.15}
               className="md:col-span-1 md:row-span-1 bg-blue-600 rounded-[2.5rem] p-6 text-white relative overflow-hidden cursor-pointer"
             >
@@ -156,8 +156,8 @@ export const FeaturesBento: React.FC = () => {
 
             {/* 4. Profit Calc (Small Card) */}
             <MotionCard
-              hoverLift
-              hoverShadow
+              hoverLift={false}
+              hoverShadow={false}
               delay={0.2}
               className="md:col-span-1 md:row-span-1 bg-white rounded-[2.5rem] p-6 border border-slate-200"
             >
@@ -197,13 +197,13 @@ export const FeaturesBento: React.FC = () => {
           </div>
 
           {/* 6. Global (Wide) */}
-          <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-200 rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden group hover:border-blue-300 transition-all">
+          <div className="md:col-span-2 md:row-span-1 bg-white border border-slate-200 rounded-[2.5rem] p-6 flex items-center justify-between relative overflow-hidden group hover:border-blue-300 transition-colors">
              <div className="relative z-10 max-w-sm">
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Sell Globally</h3>
                 <p className="text-slate-500 text-sm mb-4">We handle VAT, customs, and currency automatically.</p>
                 <Button variant="outline" size="sm" className="rounded-full text-xs font-bold">Explore Markets</Button>
              </div>
-             <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+             <div className="w-32 h-32 bg-blue-50 rounded-full flex items-center justify-center">
                 <Globe className="w-16 h-16 text-blue-500" strokeWidth={1.5} />
              </div>
           </div>

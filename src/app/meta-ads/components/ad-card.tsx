@@ -38,7 +38,7 @@ export function AdCard({ ad, onClick }: AdCardProps) {
   }
 
   return (
-    <Card className="flex h-full flex-col transition-transform hover:scale-[1.02]">
+    <Card className="flex h-full flex-col">
       <div className="relative w-full h-48 overflow-hidden rounded-t-xl">
         <Image
           src={ad.image}

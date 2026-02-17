@@ -80,7 +80,7 @@ export default function DevPortalPage() {
           </>
         ) : (
           <>
-            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-all group">
+            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-colors group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -94,7 +94,7 @@ export default function DevPortalPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-all group">
+            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-colors group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -108,7 +108,7 @@ export default function DevPortalPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-all group">
+            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-colors group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -122,7 +122,7 @@ export default function DevPortalPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-all group">
+            <Card className="bg-secondary/30 border-border/50 hover:bg-secondary/50 transition-colors group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -145,9 +145,9 @@ export default function DevPortalPage() {
         <div className="grid gap-4 md:grid-cols-4">
           {quickLinks.map((link) => (
             <Link key={link.href} href={link.href}>
-              <Card className="bg-secondary/20 border-border/40 hover:border-primary/50 hover:bg-secondary/40 transition-all cursor-pointer h-full group">
+              <Card className="bg-secondary/20 border-border/40 hover:border-primary/50 hover:bg-secondary/40 transition-colors cursor-pointer h-full group">
                 <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
-                  <div className="bg-secondary p-4 rounded-2xl group-hover:scale-110 transition-transform shadow-lg border border-border/50">
+                  <div className="bg-secondary p-4 rounded-2xl shadow-lg border border-border/50">
                     <link.icon className="h-6 w-6 text-primary" />
                   </div>
                   <div className="space-y-1">

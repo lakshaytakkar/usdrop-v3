@@ -46,7 +46,7 @@ export function SocialMediaStudio() {
 
   return (
     <div className="w-full max-w-7xl mx-auto">
-      <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md">
+      <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-6">
             <Share2 className="h-5 w-5 text-foreground" />

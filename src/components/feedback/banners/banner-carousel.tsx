@@ -113,7 +113,7 @@ export function ChristmasBanner() {
         <div className="relative w-full h-full flex items-center justify-end pr-4">
           {/* Christmas icons */}
           <div className="flex items-center gap-2">
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+            <div className="relative w-24 h-24 cursor-pointer">
               <Image
                 src="/christmas-icons/Object 01.png"
                 alt="Christmas icon 1"
@@ -128,7 +128,7 @@ export function ChristmasBanner() {
                 quality={85}
               />
             </div>
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+            <div className="relative w-24 h-24 cursor-pointer">
               <Image
                 src="/christmas-icons/Object 02.png"
                 alt="Christmas icon 2"
@@ -143,7 +143,7 @@ export function ChristmasBanner() {
                 quality={85}
               />
             </div>
-            <div className="relative w-24 h-24 transition-all duration-300 ease-out hover:scale-110 hover:-translate-y-3 hover:rotate-[20deg] cursor-pointer">
+            <div className="relative w-24 h-24 cursor-pointer">
               <Image
                 src="/christmas-icons/Object 03.png"
                 alt="Christmas icon 3"

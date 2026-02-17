@@ -61,7 +61,7 @@ export const SupplierNetwork: React.FC = () => {
                src="/images/landing/supplier-fulfillment.png"
                alt="USDrop Logistics Network"
                fill
-               className="object-cover group-hover:scale-105 transition-transform duration-[2s]"
+               className="object-cover"
              />
              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent pointer-events-none" />
              

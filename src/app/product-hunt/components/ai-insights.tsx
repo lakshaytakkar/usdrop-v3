@@ -159,8 +159,8 @@ export function AIInsights({ product }: AIInsightsProps) {
           >
             <Card
               className={cn(
-                "relative overflow-hidden border-2 transition-all duration-300 h-full",
-                "hover:shadow-lg hover:shadow-primary/10",
+                "relative overflow-hidden border-2 h-full",
+                "",
                 styles.border
               )}
             >

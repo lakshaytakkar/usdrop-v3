@@ -92,10 +92,10 @@ export const Pricing: React.FC = () => {
            {plans.map((plan, idx) => (
              <div 
                key={idx} 
-               className={`relative p-8 rounded-[2rem] transition-all duration-300 ${
+               className={`relative p-8 rounded-[2rem] transition-colors ${
                  plan.popular 
                    ? 'bg-slate-900 text-white shadow-2xl scale-105 border-2 border-blue-500 z-10' 
-                   : 'bg-white border border-slate-200 hover:border-blue-200 hover:shadow-xl text-slate-900'
+                   : 'bg-white border border-slate-200 hover:border-blue-200 text-slate-900'
                }`}
              >
                {plan.popular && (

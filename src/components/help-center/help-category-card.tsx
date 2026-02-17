@@ -22,7 +22,7 @@ export function HelpCategoryCard({
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-colors hover:bg-accent/50 border-border bg-card shadow-sm hover:shadow-md",
+        "cursor-pointer transition-colors hover:bg-accent/50 border-border bg-card shadow-sm",
         className
       )}
       onClick={onClick}

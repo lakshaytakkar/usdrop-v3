@@ -49,12 +49,12 @@ export default function IntelligenceHubPage() {
 
             {/* Featured Article Slab */}
             <div className="mt-16">
-              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl transition-all hover:shadow-2xl">
+              <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                 <div className="grid md:grid-cols-2 gap-0">
                   <div className="relative h-64 md:h-auto overflow-hidden">
                     <GeneratedImage 
                       prompt="futuristic ecommerce analytics dashboard glowing on a desk, cinematic lighting, blue and purple tones" 
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                     <div className="absolute bottom-4 left-4">
@@ -102,7 +102,7 @@ export default function IntelligenceHubPage() {
           <Container>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex items-start gap-4 p-6 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors group cursor-pointer">
-                <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                   <Target className="h-6 w-6" />
                 </div>
                 <div>
@@ -111,7 +111,7 @@ export default function IntelligenceHubPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4 p-6 rounded-xl bg-slate-50 border border-slate-100 hover:border-purple-200 transition-colors group cursor-pointer">
-                <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600">
                   <TrendingUp className="h-6 w-6" />
                 </div>
                 <div>
@@ -120,7 +120,7 @@ export default function IntelligenceHubPage() {
                 </div>
               </div>
               <div className="flex items-start gap-4 p-6 rounded-xl bg-slate-50 border border-slate-100 hover:border-green-200 transition-colors group cursor-pointer">
-                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600 group-hover:scale-110 transition-transform">
+                <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
                   <Zap className="h-6 w-6" />
                 </div>
                 <div>

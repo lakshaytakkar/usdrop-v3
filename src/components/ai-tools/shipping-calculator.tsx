@@ -68,7 +68,7 @@ export function ShippingCalculator() {
   return (
     <div className="w-full max-w-7xl mx-auto">
       {/* Input Form Card - Light Theme with Fixed Height */}
-      <Card className="bg-white border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)] flex flex-col">
+      <Card className="bg-white border-border h-[calc(100vh-200px)] flex flex-col">
         <CardContent className="p-6 flex flex-col h-full overflow-hidden">
           <div className="flex items-center gap-2 mb-4 shrink-0">
             <Truck className="h-5 w-5 text-foreground" />

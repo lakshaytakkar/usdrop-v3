@@ -107,7 +107,7 @@ export default function HelpCenterPage() {
                     <div 
                       key={card.id}
                       onClick={() => handleCategoryClick(card.id)}
-                      className="group p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-lg transition-all cursor-pointer bg-white"
+                      className="group p-6 rounded-xl border border-slate-200 hover:border-blue-200 transition-colors cursor-pointer bg-white"
                     >
                       <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center mb-4 group-hover:bg-blue-50 transition-colors">
                         <card.icon className="h-6 w-6 text-slate-600 group-hover:text-blue-600 transition-colors" />

@@ -110,7 +110,7 @@ export const DropshippingTimeline: React.FC = () => {
 
                   {/* Content Card */}
                   <div className={`flex-1 w-full md:w-5/12 ${isLeft ? 'md:text-right md:pr-8' : 'md:text-left md:pl-8'}`}>
-                    <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-lg">
                       {/* 3D Character Image */}
                       <div className={`flex ${isLeft ? 'md:justify-end' : 'md:justify-start'} mb-4`}>
                         <img

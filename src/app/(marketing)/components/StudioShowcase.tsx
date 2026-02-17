@@ -63,7 +63,7 @@ function ImageCard({ image, index }: { image: (typeof showcaseImages)[0]; index:
       className={`${image.gridPosition} col-span-1 row-span-1`}
     >
       <div
-        className="relative rounded-[16px] overflow-hidden bg-white shadow-lg hover:shadow-xl transition-shadow h-full w-full"
+        className="relative rounded-[16px] overflow-hidden bg-white shadow-lg h-full w-full"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >

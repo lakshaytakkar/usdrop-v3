@@ -45,7 +45,6 @@ export const DeepDiveFeatures: React.FC = () => {
             </MotionFadeIn>
             <MotionFadeIn direction="left" delay={0.3} className="w-full lg:w-1/2 relative">
               <motion.div
-                whileHover={{ rotate: 0, scale: 1.02 }}
                 initial={{ rotate: 2 }}
                 className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-2"
               >

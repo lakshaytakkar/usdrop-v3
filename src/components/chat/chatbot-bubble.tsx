@@ -22,7 +22,7 @@ export function ChatbotBubble() {
         className={cn(
           "fixed bottom-6 right-6 z-50 flex items-center gap-2.5",
           "bg-background border border-border rounded-full shadow-lg",
-          "px-3 py-2.5 hover:shadow-xl transition-shadow duration-200",
+          "px-3 py-2.5",
           "cursor-pointer"
         )}
         aria-label="Open chatbot"

@@ -42,7 +42,7 @@ export const WhyChoose: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16">
           {benefits.map((benefit, idx) => (
-            <div key={idx} className="flex flex-col md:flex-row gap-8 p-8 md:p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-sm hover:shadow-xl hover:bg-white hover:border-blue-100 transition-all duration-300">
+            <div key={idx} className="flex flex-col md:flex-row gap-8 p-8 md:p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-sm hover:bg-white hover:border-blue-100 transition-colors">
               <div className="shrink-0">
                 <div className="w-16 h-16 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/20">
                   <benefit.icon className="w-8 h-8" />

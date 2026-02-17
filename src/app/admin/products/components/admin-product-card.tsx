@@ -84,7 +84,7 @@ export function AdminProductCard({
 
   return (
     <Card 
-      className="flex h-full flex-col cursor-pointer hover:shadow-md transition-shadow"
+      className="flex h-full flex-col cursor-pointer"
       onClick={handleCardClick}
     >
       <div className="relative w-full aspect-square overflow-hidden rounded-t-xl">

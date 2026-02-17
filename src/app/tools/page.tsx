@@ -36,8 +36,8 @@ export default function ToolsPage() {
           <Container>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* Shipping Calculator */}
-              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all hover:shadow-lg bg-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors bg-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8"></div>
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
                     <Truck className="h-7 w-7" />
@@ -55,8 +55,8 @@ export default function ToolsPage() {
               </div>
 
               {/* Profit Calculator */}
-              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-green-300 transition-all hover:shadow-lg bg-white relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-green-300 transition-colors bg-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-bl-full -mr-8 -mt-8"></div>
                 <div className="relative z-10">
                   <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-green-600 mb-6">
                     <Calculator className="h-7 w-7" />

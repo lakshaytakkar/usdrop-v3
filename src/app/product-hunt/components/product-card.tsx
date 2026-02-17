@@ -118,7 +118,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
   }, [tags.length])
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 p-0">
+    <Card className="group overflow-hidden border-border/50 p-0">
       {/* Image Section */}
       <div 
         className="relative aspect-square overflow-hidden bg-muted cursor-pointer"

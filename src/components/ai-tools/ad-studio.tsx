@@ -234,7 +234,7 @@ export function AdStudio() {
                     <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {adResults.map((result, index) => (
-                                <Card key={result.id} className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
+                                <Card key={result.id} className="bg-card border-border">
                                     <CardContent className="p-4">
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
@@ -278,7 +278,7 @@ export function AdStudio() {
         <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
                 {/* Section 1 (40%): Product & Content */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <Package className="h-4 w-4 text-foreground" />
@@ -340,7 +340,7 @@ export function AdStudio() {
                 </Card>
 
                 {/* Section 2 (40%): Ad Configuration */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <Sparkles className="h-4 w-4 text-foreground" />
@@ -395,7 +395,7 @@ export function AdStudio() {
                 </Card>
 
                 {/* Section 3 (20%): Settings & Generate */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="space-y-4">
                             {/* Generate Button */}

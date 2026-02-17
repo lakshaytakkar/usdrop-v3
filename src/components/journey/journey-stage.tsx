@@ -25,7 +25,7 @@ export function JourneyStage({ stage, completedTasks, onTaskToggle, isLast = fal
   return (
     <div className="relative">
       <Card className={cn(
-        "transition-all duration-300 hover:shadow-sm h-full",
+        "h-full",
         isCompleted && "border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/10",
         isInProgress && "border-blue-500/10 bg-blue-50/30 dark:bg-blue-950/5"
       )}>

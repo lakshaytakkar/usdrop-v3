@@ -36,7 +36,7 @@ export function ExperienceStep({ experience, onSelect }: ExperienceStepProps) {
             onClick={() => onSelect(option.value)}
             className={cn(
               "p-4 rounded-lg border-2 text-left transition-all",
-              "hover:border-ring hover:bg-accent/50 hover:shadow-sm",
+              "hover:border-ring hover:bg-accent/50",
               experience === option.value
                 ? "border-primary bg-primary/10 shadow-sm"
                 : "border-input bg-card"

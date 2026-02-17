@@ -172,7 +172,7 @@ export default function WebinarsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Calendar Section - 2/3 width on large screens */}
             <div className="lg:col-span-2 flex flex-col min-h-0">
-              <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md flex-shrink-0">
+              <Card className="bg-card border-border flex-shrink-0">
                 <CardContent className="p-4 md:p-5">
                   <Calendar
                     mode="single"
@@ -186,7 +186,7 @@ export default function WebinarsPage() {
               </Card>
 
               {/* Enhanced Legend */}
-              <Card className="mt-3 bg-card border-border transition-all duration-200 ease-in-out hover:shadow-sm flex-shrink-0">
+              <Card className="mt-3 bg-card border-border flex-shrink-0">
                 <CardContent className="p-3">
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">

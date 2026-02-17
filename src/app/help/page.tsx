@@ -104,7 +104,7 @@ export default function HelpPage() {
                 {filteredCategoryCards.map((card) => (
                   <Card
                     key={card.id}
-                    className="cursor-pointer transition-all hover:shadow-md border-gray-200/80 bg-white hover:border-primary/30 group"
+                    className="cursor-pointer transition-colors border-gray-200/80 bg-white hover:border-primary/30 group"
                     onClick={() => handleCategoryClick(card.id)}
                   >
                     <CardContent className="p-4">

@@ -106,7 +106,7 @@ export const ProfitCalculator: React.FC = () => {
 
             {/* Right: Results Card */}
             <div className="lg:col-span-5">
-                <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20 group hover:-translate-y-1 transition-transform duration-500">
+                <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-900/20 group">
                    {/* Background Decor */}
                    <div className="absolute top-0 right-0 p-12 opacity-5 transform rotate-12 scale-150">
                       <Calculator className="w-64 h-64" />

@@ -230,7 +230,7 @@ export function CampaignStudio() {
                     <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {campaignResults.map((result, index) => (
-                                <Card key={result.id} className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
+                                <Card key={result.id} className="bg-card border-border">
                                     <CardContent className="p-4">
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
@@ -265,7 +265,7 @@ export function CampaignStudio() {
         <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
                 {/* Section 1 (40%): Campaign Details */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <Target className="h-4 w-4 text-foreground" />
@@ -325,7 +325,7 @@ export function CampaignStudio() {
                 </Card>
 
                 {/* Section 2 (40%): Ad Creative & Assets */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <ImageIcon className="h-4 w-4 text-foreground" />
@@ -377,7 +377,7 @@ export function CampaignStudio() {
                 </Card>
 
                 {/* Section 3 (20%): Settings & Generate */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="space-y-4">
                             {/* Generate Button */}

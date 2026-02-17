@@ -59,7 +59,7 @@ export function WinningProductCard({ product, onLockedClick }: ProductCardProps)
   const [imageError, setImageError] = useState(false)
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-border/50 p-0">
+    <Card className="group overflow-hidden border-border/50 p-0">
       {/* Image Section */}
       <div className="relative aspect-square overflow-hidden bg-muted">
         {imageError ? (

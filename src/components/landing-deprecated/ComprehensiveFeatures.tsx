@@ -20,13 +20,13 @@ export const ComprehensiveFeatures: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 grid-rows-auto gap-6 h-auto">
           
           {/* Item 1: Product Discovery (Large) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 bg-slate-50 border border-slate-200 rounded-[2rem] overflow-hidden relative group hover:shadow-2xl transition-all duration-500 cursor-pointer">
+          <div className="col-span-1 md:col-span-2 lg:col-span-2 row-span-2 bg-slate-50 border border-slate-200 rounded-[2rem] overflow-hidden relative group cursor-pointer">
              <div className="absolute inset-0">
                 <Image 
                    src="/images/landing/comprehensive-products.png"
                    alt="Product Grid"
                    fill
-                   className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-1000"
+                   className="object-cover opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-90" />
              </div>
@@ -45,7 +45,7 @@ export const ComprehensiveFeatures: React.FC = () => {
           </div>
 
           {/* Item 2: AI Studio (Tall) */}
-          <div className="col-span-1 md:col-span-1 row-span-2 bg-white border border-slate-200 rounded-[2rem] p-6 flex flex-col justify-between hover:border-blue-300 hover:shadow-xl transition-all duration-300 group cursor-pointer">
+          <div className="col-span-1 md:col-span-1 row-span-2 bg-white border border-slate-200 rounded-[2rem] p-6 flex flex-col justify-between hover:border-blue-300 transition-colors group cursor-pointer">
              <div>
                 <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 border border-indigo-100">
                    <ImageIcon className="w-6 h-6" />
@@ -58,7 +58,7 @@ export const ComprehensiveFeatures: React.FC = () => {
                    src="/images/landing/comprehensive-model.png"
                    alt="AI Model"
                    fill
-                   className="object-cover group-hover:scale-105 transition-transform duration-700"
+                   className="object-cover"
                 />
                 <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold tracking-wide border border-slate-200 uppercase z-10">
                    AI Generated
@@ -68,7 +68,7 @@ export const ComprehensiveFeatures: React.FC = () => {
 
           {/* Item 3: Fast Shipping (Small) */}
           <div className="col-span-1 md:col-span-1 bg-blue-600 rounded-[2rem] p-8 flex flex-col justify-center relative overflow-hidden group cursor-pointer hover:bg-blue-700 transition-colors">
-             <div className="absolute top-0 right-0 p-6 opacity-10 transform rotate-12 group-hover:rotate-0 transition-transform duration-500">
+             <div className="absolute top-0 right-0 p-6 opacity-10 transform rotate-12">
                 <Truck className="w-28 h-28 text-white" />
              </div>
              <h3 className="text-2xl font-bold text-white mb-1 relative z-10">Fast US Shipping</h3>
@@ -81,7 +81,7 @@ export const ComprehensiveFeatures: React.FC = () => {
           </div>
 
           {/* Item 4: Analytics (Small) */}
-          <div className="col-span-1 md:col-span-1 bg-white border border-slate-200 rounded-[2rem] p-8 hover:shadow-lg transition-all cursor-pointer group">
+          <div className="col-span-1 md:col-span-1 bg-white border border-slate-200 rounded-[2rem] p-8 cursor-pointer group">
              <div className="flex items-center justify-between mb-6">
                 <div className="w-12 h-12 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center border border-green-100">
                    <TrendingUp className="w-6 h-6" />
@@ -115,7 +115,7 @@ export const ComprehensiveFeatures: React.FC = () => {
           </div>
           
           {/* Item 6: Global (Wide) */}
-          <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-[2rem] p-8 md:p-10 relative overflow-hidden group hover:border-blue-300 transition-all cursor-pointer">
+          <div className="col-span-1 md:col-span-2 bg-white border border-slate-200 rounded-[2rem] p-8 md:p-10 relative overflow-hidden group hover:border-blue-300 transition-colors cursor-pointer">
              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
                 <div className="flex-1">
                    <div className="flex items-center gap-2 mb-2">
@@ -126,7 +126,7 @@ export const ComprehensiveFeatures: React.FC = () => {
                    <p className="text-slate-600 mb-6 max-w-md">We handle VAT, customs, and currency conversion automatically. Expand to 50+ countries.</p>
                    <Button variant="outline" className="font-bold border-slate-300">Explore Markets</Button>
                 </div>
-                <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center text-blue-500 shrink-0 shadow-xl shadow-blue-100 group-hover:scale-110 transition-transform duration-500">
+                <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center text-blue-500 shrink-0 shadow-xl shadow-blue-100">
                    <Globe className="w-20 h-20 text-blue-600" strokeWidth={1.5} />
                 </div>
              </div>
@@ -135,7 +135,7 @@ export const ComprehensiveFeatures: React.FC = () => {
         </div>
 
         <div className="mt-16 text-center">
-           <Button size="lg" className="px-12 h-16 text-lg rounded-full shadow-lg shadow-blue-500/20 font-bold hover:scale-105 transition-transform">
+           <Button size="lg" className="px-12 h-16 text-lg rounded-full shadow-lg shadow-blue-500/20 font-bold">
               Get Started for Free
            </Button>
            <p className="mt-4 text-slate-500 text-sm font-medium">No credit card required. Cancel anytime.</p>

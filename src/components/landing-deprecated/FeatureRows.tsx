@@ -47,7 +47,7 @@ export const FeatureRows: React.FC = () => {
 
             {/* Image Right (Grid of products) */}
             <div className="w-full md:w-1/2">
-               <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-3xl shadow-2xl border border-slate-100 transform rotate-1 hover:rotate-0 transition-transform duration-500">
+               <div className="grid grid-cols-2 gap-4 p-4 bg-white rounded-3xl shadow-2xl border border-slate-100 transform rotate-1">
                   <div className="col-span-2 bg-slate-900 text-white p-4 rounded-xl flex justify-between items-center mb-2">
                      <span className="font-bold">Top Winners Today</span>
                      <span className="text-green-400 text-xs font-mono">LIVE UPDATES</span>
@@ -58,7 +58,7 @@ export const FeatureRows: React.FC = () => {
                            src={`/images/landing/featurerows-product-${i+1}.png`}
                            alt={category}
                            fill
-                           className="object-cover group-hover:scale-105 transition-transform duration-700"
+                           className="object-cover"
                         />
                         <div className="absolute bottom-2 left-2 right-2 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg text-xs font-bold text-slate-900 flex justify-between z-10">
                            <span>${(20 + i * 15).toFixed(2)}</span>

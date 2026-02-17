@@ -520,7 +520,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                     <div className="max-w-7xl mx-auto">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {generatedImages.map((image, index) => (
-                                <Card key={index} className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
+                                <Card key={index} className="bg-card border-border">
                                     <CardContent className="p-4">
                                         <div className={`${getAspectRatioClass()} w-full bg-muted rounded-lg flex items-center justify-center relative`}>
                                             {image.status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-foreground" />}
@@ -564,7 +564,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
         <div className="w-full max-w-7xl mx-auto transition-all duration-300 ease-in-out">
             <div className="grid grid-cols-[2fr_2fr_1fr] gap-4">
                 {/* Section 1 (40%): Select Model */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-center justify-between mb-3 flex-shrink-0">
                             <div className="flex items-center gap-2">
@@ -655,7 +655,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                 </Card>
 
                 {/* Section 2 (40%): Upload Apparel */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                             <Shirt className="h-4 w-4 text-foreground" />
@@ -697,7 +697,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                 </Card>
 
                 {/* Section 3 (20%): Generate Button + Configuration Settings */}
-                <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-[calc(100vh-200px)]">
+                <Card className="bg-card border-border h-[calc(100vh-200px)]">
                     <CardContent className="p-4 h-full flex flex-col overflow-y-auto">
                         <div className="space-y-4">
                             {/* Generate Button */}

@@ -30,7 +30,7 @@ export function SeasonalBanner({
 }: SeasonalBannerProps) {
   return (
     <div 
-      className="overflow-hidden hover:shadow-xl transition-all duration-300 relative rounded-xl"
+      className="overflow-hidden relative rounded-xl"
     >
       <div className={`relative bg-gradient-to-r ${gradient} rounded-xl`}>
         {/* Grainy texture overlay - more pronounced */}

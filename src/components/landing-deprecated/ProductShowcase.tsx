@@ -62,7 +62,7 @@ export const ProductShowcase: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product) => (
-            <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden hover:shadow-2xl hover:border-blue-300 transition-all duration-300 group hover:-translate-y-2">
+            <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden hover:border-blue-300 transition-colors group">
               {/* Generated Product Image */}
               <div className="aspect-[4/5] w-full relative bg-slate-100">  
                 {product.image && (

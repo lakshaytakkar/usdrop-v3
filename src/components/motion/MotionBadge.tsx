@@ -105,14 +105,6 @@ export function MotionBadge({
           repeatDelay: 2,
         }),
       }}
-      whileHover={
-        reducedMotion
-          ? {}
-          : {
-              scale: 1.1,
-              transition: { duration: DURATION.fast },
-            }
-      }
       className={cn(className)}
       {...props}
     >

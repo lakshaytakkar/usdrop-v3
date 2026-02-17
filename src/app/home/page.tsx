@@ -91,7 +91,7 @@ function QuickStatsGrid() {
         <Card
           key={index}
           className={cn(
-            "p-4 hover:shadow-md transition-all duration-200 cursor-pointer group",
+            "p-4 cursor-pointer group",
             item.link && "hover:border-gray-300",
             item.highlighted && "border-2 border-purple-500 bg-purple-50/50 shadow-md"
           )}
@@ -184,14 +184,14 @@ function CoursesWidget() {
       <div className="space-y-2">
         {courses.map((course) => (
           <Link key={course.id} href={`/mentorship/${course.id}`} className="block group">
-            <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-all hover:shadow-sm hover:border-gray-200">
+            <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-colors hover:border-gray-200">
               <div className="relative w-28 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 {course.thumbnail ? (
                   <Image
                     src={course.thumbnail}
                     alt={course.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover"
                     sizes="112px"
                   />
                 ) : (
@@ -277,8 +277,6 @@ function HomePageContent() {
                   <div className="grid gap-4 md:grid-cols-3">
                     <MotionCard
                       className="rounded-xl border bg-card p-6 cursor-pointer"
-                      hoverLift
-                      hoverShadow
                       delay={0.1}
                     >
                       <img
@@ -298,8 +296,6 @@ function HomePageContent() {
 
                     <MotionCard
                       className="rounded-xl border bg-card p-6 cursor-pointer"
-                      hoverLift
-                      hoverShadow
                       delay={0.15}
                     >
                       <div className="mb-4 flex items-center justify-between">
@@ -356,8 +352,6 @@ function HomePageContent() {
 
                     <MotionCard
                       className="rounded-xl border bg-card p-6 cursor-pointer"
-                      hoverLift
-                      hoverShadow
                       delay={0.2}
                     >
                       <img
@@ -377,8 +371,6 @@ function HomePageContent() {
 
                     <MotionCard
                       className="rounded-xl border bg-card p-6 cursor-pointer"
-                      hoverLift
-                      hoverShadow
                       delay={0.25}
                     >
                       <img

@@ -210,7 +210,7 @@ export default function MyCredentialsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {credentials.map((cred) => (
-              <Card key={cred.id} className="p-4 hover:shadow-md transition-shadow">
+              <Card key={cred.id} className="p-4">
                 <CardHeader className="p-0 pb-3">
                   <div className="flex items-start justify-between">
                     <CardTitle className="text-base font-semibold text-gray-900 truncate pr-2">

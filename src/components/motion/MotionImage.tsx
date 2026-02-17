@@ -48,34 +48,9 @@ export function MotionImage({
     return () => mediaQuery.removeEventListener("change", handleChange)
   }, [reducedMotionProp])
 
-  const hoverProps = reducedMotion
-    ? {}
-    : {
-        scale: scaleValue,
-        ...(hoverOpacity && { opacity: 0.9 }),
-        transition: {
-          duration: DURATION.normal,
-          ease: EASING.easeOut,
-        },
-      }
-
-  const restProps = reducedMotion
-    ? {}
-    : {
-        scale: 1,
-        opacity: 1,
-        transition: {
-          duration: DURATION.normal,
-          ease: EASING.easeOut,
-        },
-      }
-
   return (
     <motion.div
       className={cn("relative overflow-hidden", containerClassName)}
-      whileHover={hoverProps}
-      initial={restProps}
-      animate={restProps}
     >
       <Image
         className={cn(className)}

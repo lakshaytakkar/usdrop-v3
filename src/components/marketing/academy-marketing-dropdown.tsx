@@ -76,14 +76,14 @@ function CoursePreviewCard({ course }: CoursePreviewCardProps) {
   return (
     <Link 
       href="/mentorship"
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-primary/50"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
         <Image
           src={course.thumbnail}
           alt={course.title}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover"
           sizes="(max-width: 768px) 100vw, 300px"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />

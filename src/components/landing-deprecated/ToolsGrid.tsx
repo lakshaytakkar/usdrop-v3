@@ -56,7 +56,7 @@ export const ToolsGrid: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {tools.map((tool, idx) => (
-            <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col">
+            <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden group flex flex-col">
               
               {/* Tool Visual Area */}
               <div className="h-48 bg-slate-50 border-b border-slate-100 p-6 flex items-center justify-center relative overflow-hidden">

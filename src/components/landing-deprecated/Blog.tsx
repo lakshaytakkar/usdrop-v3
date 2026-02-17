@@ -57,8 +57,8 @@ export const Blog: React.FC = () => {
             {articles.map((article, idx) => (
               <MotionCard
                 key={idx}
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={idx * 0.1}
                 className="cursor-pointer"
               >

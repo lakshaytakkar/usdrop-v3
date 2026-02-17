@@ -49,8 +49,8 @@ export const AutomationFlow: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
               {/* Step 1 */}
               <MotionCard
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={0}
                 className="flex flex-col items-center text-center"
               >
@@ -80,8 +80,8 @@ export const AutomationFlow: React.FC = () => {
 
               {/* Step 2 */}
               <MotionCard
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={0.15}
                 className="flex flex-col items-center text-center"
               >
@@ -102,8 +102,8 @@ export const AutomationFlow: React.FC = () => {
 
               {/* Step 3 */}
               <MotionCard
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={0.3}
                 className="flex flex-col items-center text-center"
               >
@@ -122,8 +122,8 @@ export const AutomationFlow: React.FC = () => {
 
               {/* Step 4 */}
               <MotionCard
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={0.45}
                 className="flex flex-col items-center text-center"
               >

@@ -78,8 +78,8 @@ export const AdvancedToolsGrid: React.FC = () => {
             {tools.map((tool, idx) => (
               <MotionCard
                 key={idx}
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 delay={idx * 0.1}
                 className="bg-white p-6 rounded-3xl border border-slate-200 flex flex-col h-full"
               >

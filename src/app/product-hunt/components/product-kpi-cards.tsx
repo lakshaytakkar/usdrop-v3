@@ -94,7 +94,7 @@ export function ProductKPICards({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {kpis.map((kpi, index) => (
-        <Card key={index} className="p-4 hover:shadow-md transition-shadow">
+        <Card key={index} className="p-4">
           <div className="flex items-start justify-between mb-3">
             <div className={cn("p-2 rounded-lg", kpi.iconBg)}>
               <kpi.icon className={cn("h-4 w-4", kpi.iconColor)} />

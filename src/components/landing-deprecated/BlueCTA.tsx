@@ -89,7 +89,6 @@ export const BlueCTA: React.FC = () => {
 
           <MotionFadeIn direction="left" delay={0.4} className="w-full md:w-1/2">
             <motion.div
-              whileHover={{ rotate: 0, scale: 1.02 }}
               initial={{ rotate: 2 }}
               className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-blue-800 h-80 md:h-96"
             >

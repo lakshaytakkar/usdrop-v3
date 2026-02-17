@@ -85,7 +85,7 @@ interface ResultCardProps {
 
 const ResultCard: React.FC<ResultCardProps> = ({ title, imageUrl, status, error, onRetry, onDownload }) => {
     return (
-        <Card className="bg-card border-border transition-all duration-300 ease-in-out hover:shadow-md">
+        <Card className="bg-card border-border">
             <CardContent className="p-4">
                 <h3 className="font-semibold text-sm mb-2 text-center text-foreground">{title}</h3>
                 <div className="aspect-[4/5] w-full bg-muted rounded-lg border border-border flex items-center justify-center text-muted-foreground text-center relative overflow-hidden group">
@@ -410,7 +410,7 @@ export function ProductSceneGenerator() {
     // Idle view - Main layout
     const renderConfigView = () => (
         <div className="w-full grid md:grid-cols-2 gap-4 h-[calc(100vh-280px)] max-h-[calc(100vh-280px)]">
-            <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-full flex flex-col max-h-full overflow-hidden">
+            <Card className="bg-card border-border h-full flex flex-col max-h-full overflow-hidden">
                 <CardContent className="p-4 h-full flex flex-col overflow-hidden">
                     <h3 className="font-bold text-sm mb-3 text-foreground flex-shrink-0">1. Upload Your Product</h3>
                     <div className="flex-1 flex flex-col items-center justify-center min-h-0 overflow-hidden">
@@ -437,7 +437,7 @@ export function ProductSceneGenerator() {
                     </div>
                 </CardContent>
             </Card>
-            <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md h-full flex flex-col max-h-full overflow-hidden">
+            <Card className="bg-card border-border h-full flex flex-col max-h-full overflow-hidden">
                 <CardContent className="p-4 h-full flex flex-col overflow-hidden">
                     <h3 className="font-bold text-sm mb-2 text-foreground flex-shrink-0">2. Select Angles</h3>
                     <p className="text-muted-foreground text-xs mb-2 flex-shrink-0">Choose one or more angles to generate.</p>

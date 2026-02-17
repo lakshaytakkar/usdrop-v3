@@ -23,7 +23,7 @@ export function ProductsGrid({ products }: ProductsGridProps) {
       <h3 className="text-lg font-semibold mb-4">Recently Added Products</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {products.map((product) => (
-          <Card key={product.id} className="h-full hover:shadow-md transition-shadow">
+          <Card key={product.id} className="h-full">
             <div className="relative w-full h-48 overflow-hidden rounded-t-xl">
               <Image
                 src={product.image}

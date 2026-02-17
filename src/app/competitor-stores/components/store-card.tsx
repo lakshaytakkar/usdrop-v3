@@ -52,7 +52,7 @@ const formatNumber = (num: number) => {
 
 export function StoreCard({ store }: StoreCardProps) {
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 p-5">
+    <Card className="group overflow-hidden p-5">
       {/* Header */}
       <div className="flex items-start gap-3 mb-4">
         <div className="relative h-12 w-12 flex-shrink-0 border-2 border-border rounded-full overflow-hidden bg-background">

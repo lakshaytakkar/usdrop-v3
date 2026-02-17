@@ -207,13 +207,13 @@ export default function ArticleDetailPage() {
                       href={`/blogs/${related.slug || related.id}`}
                       className="group"
                     >
-                      <Card className="h-full transition-all hover:shadow-lg">
+                      <Card className="h-full">
                         <div className="relative w-full h-48 overflow-hidden rounded-t-xl">
                           <Image
                             src={related.image}
                             alt={related.title}
                             fill
-                            className="object-cover transition-transform group-hover:scale-105"
+                            className="object-cover"
                           />
                         </div>
                         <CardContent className="p-4">

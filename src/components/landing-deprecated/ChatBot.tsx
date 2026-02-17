@@ -131,7 +131,6 @@ export const ChatBot: React.FC = () => {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <motion.div
-                    whileHover={{ scale: 1.02 }}
                     className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       msg.role === 'user'
                         ? 'bg-blue-600 text-white rounded-br-none shadow-sm'

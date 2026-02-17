@@ -84,8 +84,8 @@ export const AIStudio: React.FC = () => {
               return (
                 <MotionCard
                   key={idx}
-                  hoverLift
-                  hoverShadow
+                  hoverLift={false}
+                  hoverShadow={false}
                   delay={idx * 0.1}
                   className="relative bg-white border border-slate-200 rounded-xl overflow-hidden"
                 >

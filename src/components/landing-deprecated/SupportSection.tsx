@@ -72,8 +72,8 @@ export const SupportSection: React.FC = () => {
 
             <MotionFadeIn direction="left" delay={0.4} className="w-full lg:w-1/2 relative">
               <MotionCard
-                hoverLift
-                hoverShadow
+                hoverLift={false}
+                hoverShadow={false}
                 className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-md mx-auto relative z-10"
               >
                     <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-4">

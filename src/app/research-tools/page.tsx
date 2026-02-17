@@ -54,8 +54,8 @@ export default function ResearchToolsPage() {
           <Container>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Product Database */}
-              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-all hover:shadow-lg bg-white">
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-indigo-300 transition-colors bg-white">
+                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
                   <ShoppingBag className="h-6 w-6" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">50M+ Product Database</h3>
@@ -69,8 +69,8 @@ export default function ResearchToolsPage() {
               </div>
 
               {/* Competitor Spy */}
-              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-purple-300 transition-all hover:shadow-lg bg-white">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-purple-300 transition-colors bg-white">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 mb-6">
                   <Eye className="h-6 w-6" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">Competitor Spy</h3>
@@ -84,8 +84,8 @@ export default function ResearchToolsPage() {
               </div>
 
               {/* Ad Library */}
-              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all hover:shadow-lg bg-white">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="group p-8 rounded-2xl border border-slate-200 hover:border-blue-300 transition-colors bg-white">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
                   <Globe className="h-6 w-6" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-3">Ad Intelligence</h3>

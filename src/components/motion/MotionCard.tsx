@@ -53,32 +53,6 @@ export function MotionCard({
     return () => mediaQuery.removeEventListener("change", handleChange)
   }, [reducedMotionProp])
 
-  const hoverProps = reducedMotion
-    ? {}
-    : {
-        ...(hoverLift && { y: -4 }),
-        ...(hoverShadow && {
-          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.15)",
-        }),
-        scale: scaleValue,
-        transition: {
-          duration: DURATION.fast,
-          ease: EASING.easeOut,
-        },
-      }
-
-  const restProps = reducedMotion
-    ? {}
-    : {
-        y: 0,
-        scale: 1,
-        boxShadow: "0 0 0 rgba(0, 0, 0, 0)",
-        transition: {
-          duration: DURATION.fast,
-          ease: EASING.easeOut,
-        },
-      }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -88,8 +62,6 @@ export function MotionCard({
         delay: reducedMotion ? 0 : delay,
         ease: EASING.easeOutExpo,
       }}
-      whileHover={hoverProps}
-      whileTap={reducedMotion ? {} : { scale: 0.98 }}
       className={cn(className)}
       {...props}
     >

@@ -49,7 +49,7 @@ export function WebinarEventList({
     <div className="space-y-4">
       {/* Upcoming Webinars */}
       {displayUpcoming.length > 0 && (
-        <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md" data-upcoming-webinars>
+        <Card className="bg-card border-border" data-upcoming-webinars>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2 text-foreground">
               <Video className="h-4 w-4 text-primary" />
@@ -96,7 +96,7 @@ export function WebinarEventList({
 
       {/* Past Webinars */}
       {displayPast.length > 0 && (
-        <Card className="bg-card border-border transition-all duration-200 ease-in-out hover:shadow-md" data-past-webinars>
+        <Card className="bg-card border-border" data-past-webinars>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2 text-foreground">
               <Video className="h-4 w-4 text-muted-foreground" />

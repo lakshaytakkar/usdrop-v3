@@ -99,7 +99,7 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
             return (
               <Card
                 key={product.id}
-                className="min-w-[200px] overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                className="min-w-[200px] overflow-hidden cursor-pointer"
                 onClick={() => router.push(`/product-hunt/${product.id}`)}
               >
                 <div className="relative aspect-square w-full bg-muted">

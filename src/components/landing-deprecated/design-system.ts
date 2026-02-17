@@ -71,8 +71,8 @@ export const TRANSITIONS = {
 
 // Hover Effects
 export const HOVER_EFFECTS = {
-  LIFT: "hover:-translate-y-1 hover:shadow-xl",
-  SCALE: "hover:scale-105",
+  LIFT: "",
+  SCALE: "",
   BRIGHTEN: "hover:brightness-110",
 } as const;
 
