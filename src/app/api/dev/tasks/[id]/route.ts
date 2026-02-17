@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 import { getTaskById } from '@/lib/dev-tasks/queries'
 import { updateTask, deleteTask } from '@/lib/dev-tasks/mutations'
 import type { DevTaskFormData } from '@/types/dev-tasks'
@@ -10,16 +10,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const task = await getTaskById(id)
@@ -47,16 +40,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json() as Partial<DevTaskFormData>
@@ -78,16 +64,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     await deleteTask(id)
@@ -101,7 +80,3 @@ export async function DELETE(
     )
   }
 }
-
-
-
-

@@ -1,23 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { OnboardingProgressResponse, UpdateProgressRequest, OnboardingStatus } from '@/types/onboarding'
 
 // GET - Fetch user's progress
 export async function GET() {
   try {
-    const supabase = await createClient()
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: progress, error: progressError } = await supabase
+    const { data: progress, error: progressError } = await supabaseAdmin
       .from('onboarding_progress')
       .select(`
         id,
@@ -47,17 +41,17 @@ export async function GET() {
     }
 
     // Get status information
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
       .eq('id', user.id)
       .single()
 
-    const { count: totalVideos } = await supabase
+    const { count: totalVideos } = await supabaseAdmin
       .from('onboarding_videos')
       .select('*', { count: 'exact', head: true })
 
-    const { count: totalModules } = await supabase
+    const { count: totalModules } = await supabaseAdmin
       .from('onboarding_modules')
       .select('*', { count: 'exact', head: true })
 
@@ -91,16 +85,9 @@ export async function GET() {
 // POST - Update video progress
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body: UpdateProgressRequest = await request.json()
@@ -115,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     // Verify video exists
-    const { data: video, error: videoError } = await supabase
+    const { data: video, error: videoError } = await supabaseAdmin
       .from('onboarding_videos')
       .select('id, module_id')
       .eq('id', video_id)
@@ -128,7 +115,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: existingProgress } = await supabase
+    const { data: existingProgress } = await supabaseAdmin
       .from('onboarding_progress')
       .select('id, completed, watch_time')
       .eq('user_id', user.id)
@@ -158,7 +145,7 @@ export async function POST(request: Request) {
     let result
     if (existingProgress) {
       // Update existing progress
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('onboarding_progress')
         .update(updateData)
         .eq('id', existingProgress.id)
@@ -176,7 +163,7 @@ export async function POST(request: Request) {
       result = data
     } else {
       // Create new progress record
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('onboarding_progress')
         .insert({
           ...updateData,
@@ -197,7 +184,7 @@ export async function POST(request: Request) {
     }
 
     // Update overall progress percentage in profile
-    await updateUserProgressPercentage(supabase, user.id)
+    await updateUserProgressPercentage(user.id)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -210,10 +197,10 @@ export async function POST(request: Request) {
 }
 
 // Helper function to update user's overall progress percentage
-async function updateUserProgressPercentage(supabase: any, userId: string) {
+async function updateUserProgressPercentage(userId: string) {
   try {
     // Get total videos count
-    const { count: totalVideos } = await supabase
+    const { count: totalVideos } = await supabaseAdmin
       .from('onboarding_videos')
       .select('*', { count: 'exact', head: true })
 
@@ -222,7 +209,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     }
 
     // Get completed videos count
-    const { count: completedVideos } = await supabase
+    const { count: completedVideos } = await supabaseAdmin
       .from('onboarding_progress')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -244,7 +231,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     if (allCompleted) {
       updateData.onboarding_completed = true
       // Only set completed_at if not already set
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('onboarding_completed_at')
         .eq('id', userId)
@@ -255,7 +242,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
       }
     }
 
-    await supabase
+    await supabaseAdmin
       .from('profiles')
       .update(updateData)
       .eq('id', userId)
@@ -263,4 +250,3 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     console.error('Error updating progress percentage:', error)
   }
 }
-

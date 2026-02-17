@@ -1,19 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { CompleteVideoRequest } from '@/types/onboarding'
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body: CompleteVideoRequest = await request.json()
@@ -27,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     // Verify video exists and get module_id
-    const { data: video, error: videoError } = await supabase
+    const { data: video, error: videoError } = await supabaseAdmin
       .from('onboarding_videos')
       .select('id, module_id')
       .eq('id', video_id)
@@ -41,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     // Check if progress record exists
-    const { data: existingProgress } = await supabase
+    const { data: existingProgress } = await supabaseAdmin
       .from('onboarding_progress')
       .select('id, completed')
       .eq('user_id', user.id)
@@ -61,7 +55,7 @@ export async function POST(request: Request) {
     let result
     if (existingProgress) {
       // Update existing progress
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('onboarding_progress')
         .update(progressData)
         .eq('id', existingProgress.id)
@@ -79,7 +73,7 @@ export async function POST(request: Request) {
       result = data
     } else {
       // Create new progress record
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('onboarding_progress')
         .insert({
           ...progressData,
@@ -100,7 +94,7 @@ export async function POST(request: Request) {
     }
 
     // Update overall progress percentage and check if all videos are completed
-    await updateUserProgressPercentage(supabase, user.id)
+    await updateUserProgressPercentage(user.id)
 
     return NextResponse.json(result)
   } catch (error) {
@@ -113,10 +107,10 @@ export async function POST(request: Request) {
 }
 
 // Helper function to update user's overall progress percentage
-async function updateUserProgressPercentage(supabase: any, userId: string) {
+async function updateUserProgressPercentage(userId: string) {
   try {
     // Get total videos count
-    const { count: totalVideos } = await supabase
+    const { count: totalVideos } = await supabaseAdmin
       .from('onboarding_videos')
       .select('*', { count: 'exact', head: true })
 
@@ -125,7 +119,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     }
 
     // Get completed videos count
-    const { count: completedVideos } = await supabase
+    const { count: completedVideos } = await supabaseAdmin
       .from('onboarding_progress')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -147,7 +141,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     if (allCompleted) {
       updateData.onboarding_completed = true
       // Only set completed_at if not already set
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('onboarding_completed_at')
         .eq('id', userId)
@@ -158,7 +152,7 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
       }
     }
 
-    await supabase
+    await supabaseAdmin
       .from('profiles')
       .update(updateData)
       .eq('id', userId)
@@ -166,4 +160,3 @@ async function updateUserProgressPercentage(supabase: any, userId: string) {
     console.error('Error updating progress percentage:', error)
   }
 }
-

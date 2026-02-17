@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 import { getTasks } from '@/lib/dev-tasks/queries'
 import { createTask } from '@/lib/dev-tasks/mutations'
 import type { TaskFilters, DevTaskFormData } from '@/types/dev-tasks'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Parse query params for filters
@@ -59,16 +52,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-
-    // Check authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json() as DevTaskFormData
@@ -83,7 +69,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
-
-
-

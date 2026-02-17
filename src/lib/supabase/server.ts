@@ -1,42 +1,25 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { db } from '@/lib/db/query'
+import { sql } from '@/lib/db/index'
+
+export { db as supabaseAdmin }
 
 export async function createClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-          }
-        },
-      },
-    }
-  )
+  return {
+    auth: {
+      getUser: async () => ({ data: { user: null }, error: null }),
+      signInWithPassword: async () => ({ data: null, error: { message: 'Use /api/auth/signin' } }),
+      signUp: async () => ({ data: null, error: { message: 'Use /api/auth/signup' } }),
+      signOut: async () => ({ error: null }),
+      updateUser: async () => ({ data: null, error: null }),
+      resetPasswordForEmail: async () => ({ data: null, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    from: (table: string) => db.from(table),
+  }
 }
 
 export function createAdminClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  )
+  return db
 }
 
-export const supabaseAdmin = createAdminClient()
+export { sql }

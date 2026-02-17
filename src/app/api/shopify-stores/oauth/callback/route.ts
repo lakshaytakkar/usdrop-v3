@@ -1,26 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { exchangeCodeForToken, fetchShopifyStoreInfo, mapShopifyPlan } from '@/lib/utils/shopify-oauth'
 import { normalizeShopifyStoreUrl } from '@/lib/utils/shopify-store-helpers'
 import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
 
-// Helper to get authenticated user
-async function getAuthenticatedUser() {
-  const supabase = await createClient()
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
-  if (error || !user) {
-    return null
-  }
-  
-  return user
-}
-
 // GET /api/shopify-stores/oauth/callback - Handle Shopify OAuth callback
 export async function GET(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       // Redirect to login if not authenticated
@@ -61,10 +49,8 @@ export async function GET(request: NextRequest) {
       // Normalize store URL
       const normalizedUrl = normalizeShopifyStoreUrl(storeInfo.myshopify_domain)
 
-      const supabaseClient = await createClient()
-
       // Check if store already exists for this user
-      const { data: existingStore } = await supabaseClient
+      const { data: existingStore } = await supabaseAdmin
         .from('shopify_stores')
         .select('id')
         .eq('user_id', user.id)
@@ -76,7 +62,7 @@ export async function GET(request: NextRequest) {
 
       if (existingStore) {
         // Update existing store
-        const { data: updatedStore, error: updateError } = await supabaseClient
+        const { data: updatedStore, error: updateError } = await supabaseAdmin
           .from('shopify_stores')
           .update({
             name: storeInfo.name,
@@ -111,7 +97,7 @@ export async function GET(request: NextRequest) {
         )
       } else {
         // Create new store
-        const { data: newStore, error: createError } = await supabaseClient
+        const { data: newStore, error: createError } = await supabaseAdmin
           .from('shopify_stores')
           .insert({
             user_id: user.id,
@@ -168,4 +154,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

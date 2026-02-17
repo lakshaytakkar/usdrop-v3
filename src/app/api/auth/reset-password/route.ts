@@ -1,55 +1,48 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import bcrypt from 'bcryptjs'
 import { validatePassword } from '@/lib/utils/validation'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { sql } from '@/lib/db/index'
 
 export async function POST(request: Request) {
   try {
     const { password } = await request.json()
 
     if (!password) {
-      return NextResponse.json(
-        { error: 'Password is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Password is required' }, { status: 400 })
     }
 
     const passwordValidation = validatePassword(password)
     if (!passwordValidation.valid) {
-      return NextResponse.json(
-        { 
-          error: passwordValidation.errors[0] || 'Invalid password',
-          errors: passwordValidation.errors
-        },
-        { status: 400 }
-      )
+      return NextResponse.json({
+        error: passwordValidation.errors[0] || 'Invalid password',
+        errors: passwordValidation.errors,
+      }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    const { error } = await supabase.auth.updateUser({ password })
-
-    if (error) {
-      if (error.message?.includes('session') || error.message?.includes('not authenticated')) {
-        return NextResponse.json(
-          { error: 'No active session found. Please click the password reset link from your email again.' },
-          { status: 401 }
-        )
-      }
-      return NextResponse.json(
-        { error: error.message || 'Failed to reset password' },
-        { status: 400 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'You must be signed in to reset your password.' }, { status: 401 })
     }
 
-    await supabase.auth.signOut()
+    const passwordHash = await bcrypt.hash(password, 12)
+    await sql`UPDATE profiles SET password_hash = ${passwordHash}, updated_at = NOW() WHERE id = ${user.id}`
+
+    const cookieStore = await cookies()
+    cookieStore.set('session_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0,
+    })
 
     return NextResponse.json({
       message: 'Password reset successfully. Please sign in with your new password.',
     })
   } catch (error) {
     console.error('Reset password error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error. Please try again later.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error. Please try again later.' }, { status: 500 })
   }
 }

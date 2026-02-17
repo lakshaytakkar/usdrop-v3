@@ -1,15 +1,13 @@
-import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { OnboardingCourseResponse, OnboardingModule, OnboardingVideo } from '@/types/onboarding'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-
     // Get the onboarding course modules directly from course_modules
     // The onboarding course has ID '00000000-0000-0000-0000-000000000001'
     // These are now flattened - 6 videos directly (not nested under modules)
-    const { data: modules, error: modulesError } = await supabase
+    const { data: modules, error: modulesError } = await supabaseAdmin
       .from('course_modules')
       .select(`
         id,
@@ -93,4 +91,3 @@ export async function GET() {
     )
   }
 }
-

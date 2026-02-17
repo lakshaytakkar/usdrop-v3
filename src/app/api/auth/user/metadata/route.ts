@@ -1,40 +1,33 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import { supabaseAdmin } from '@/lib/supabase/server'
+import { sql } from '@/lib/db/index'
 import { UserMetadataApiResponse } from '@/types/user-metadata'
 
 export async function GET() {
   try {
     const user = await getCurrentUser()
-
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: profile, error } = await supabaseAdmin
-      .from('profiles')
-      .select(`
-        id, email, full_name, username, avatar_url,
-        internal_role, subscription_plan_id, account_type,
-        status, onboarding_completed, subscription_status,
-        subscription_plans!profiles_subscription_plan_id_fkey (slug, name)
-      `)
-      .eq('id', user.id)
-      .single()
+    const result = await sql`
+      SELECT p.id, p.email, p.full_name, p.username, p.avatar_url,
+             p.internal_role, p.subscription_plan_id, p.account_type,
+             p.status, p.onboarding_completed, p.subscription_status,
+             sp.slug as plan_slug, sp.name as plan_name
+      FROM profiles p
+      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
+      WHERE p.id = ${user.id}
+      LIMIT 1
+    `
 
-    if (error || !profile) {
-      return NextResponse.json(
-        { error: 'Failed to fetch profile' },
-        { status: 500 }
-      )
+    if (result.length === 0) {
+      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
     }
 
-    const planData = (profile as any).subscription_plans
-    const plan = planData?.slug || profile.account_type || 'free'
-    const planName = planData?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
+    const profile = result[0]
+    const plan = profile.plan_slug || profile.account_type || 'free'
+    const planName = profile.plan_name || (profile.account_type === 'pro' ? 'Pro' : 'Free')
 
     const isInternal = profile.internal_role !== null && profile.internal_role !== undefined
     const isExternal = !isInternal
@@ -58,9 +51,6 @@ export async function GET() {
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error fetching user metadata:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,18 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
-    const supabase = await createClient()
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Fetch all stats in parallel
@@ -25,18 +19,18 @@ export async function GET() {
       winningProductsResult
     ] = await Promise.allSettled([
       // Products count - get total products available (not user-specific for now)
-      supabase
+      supabaseAdmin
         .from('products')
         .select('*', { count: 'exact', head: true }),
       
       // Shopify stores count
-      supabase
+      supabaseAdmin
         .from('shopify_stores')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id),
       
       // Active stores count
-      supabase
+      supabaseAdmin
         .from('shopify_stores')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
@@ -44,23 +38,23 @@ export async function GET() {
       
       // Onboarding status - replicate logic from onboarding/status route
       (async () => {
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseAdmin
           .from('profiles')
           .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
           .eq('id', user.id)
           .single()
 
-        const { count: totalVideos } = await supabase
+        const { count: totalVideos } = await supabaseAdmin
           .from('onboarding_videos')
           .select('*', { count: 'exact', head: true })
           .then(res => res.count !== null ? res : { count: 0 })
 
-        const { count: totalModules } = await supabase
+        const { count: totalModules } = await supabaseAdmin
           .from('onboarding_modules')
           .select('*', { count: 'exact', head: true })
           .then(res => res.count !== null ? res : { count: 0 })
 
-        const { count: completedVideos } = await supabase
+        const { count: completedVideos } = await supabaseAdmin
           .from('onboarding_progress')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
@@ -76,13 +70,13 @@ export async function GET() {
         }
       })(),
       
-      supabase
+      supabaseAdmin
         .from('user_picklist')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id),
       
       // Winning products count
-      supabase
+      supabaseAdmin
         .from('product_metadata')
         .select('product_id', { count: 'exact', head: true })
         .eq('is_winning', true)
@@ -150,4 +144,3 @@ export async function GET() {
     )
   }
 }
-

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 import { deleteAttachment } from '@/lib/dev-tasks/mutations'
 
 export async function DELETE(
@@ -8,11 +8,8 @@ export async function DELETE(
 ) {
   try {
     const { attachmentId } = await params
-    const supabase = await createClient()
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-    if (userError || !user) {
+    const user = await getCurrentUser()
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,7 +20,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Failed to delete attachment' }, { status: 500 })
   }
 }
-
-
-
-
