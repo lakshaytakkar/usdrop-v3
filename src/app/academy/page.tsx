@@ -173,20 +173,16 @@ export default function AcademyPage() {
           {/* All Courses */}
           <div>
             {loading && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div key={index} className="rounded-xl border bg-card overflow-hidden">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {Array.from({ length: 10 }).map((_, index) => (
+                  <div key={index} className="rounded-lg border bg-card overflow-hidden">
                     <Skeleton className="aspect-video w-full" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <Skeleton className="h-4 w-24" />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-4 w-16" />
-                        <Skeleton className="h-4 w-20" />
+                    <div className="p-2.5 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-full" />
+                      <div className="flex items-center gap-1.5">
+                        <Skeleton className="h-5 w-5 rounded-full" />
+                        <Skeleton className="h-3 w-16" />
                       </div>
                     </div>
                   </div>
@@ -208,7 +204,7 @@ export default function AcademyPage() {
             )}
             
             {!loading && !error && courses.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                 {courses.map((course, index) => {
                   const { isLocked } = getTeaserLockState(index, isFree, {
                     freeVisibleCount: 3,

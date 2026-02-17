@@ -56,49 +56,49 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
           </div>
         )}
       </div>
-      <CardContent className="flex flex-1 flex-col gap-3 p-4">
+      <CardContent className="flex flex-1 flex-col gap-2 p-2.5">
         <div>
-          <h3 className="text-base font-semibold mb-1 line-clamp-2">{course.title}</h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+          <h3 className="text-sm font-semibold mb-0.5 line-clamp-2 leading-tight">{course.title}</h3>
+          <p className="text-xs text-muted-foreground line-clamp-1">{course.description}</p>
         </div>
 
-        <div className="flex items-center justify-between text-xs pt-2 border-t">
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{course.duration}</span>
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-0.5">
+            <Clock className="h-2.5 w-2.5" />
+            <span>{course.duration}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Book className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{course.lessons} lessons</span>
+          <div className="flex items-center gap-0.5">
+            <Book className="h-2.5 w-2.5" />
+            <span>{course.lessons}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3 text-muted-foreground" />
-            <span className="text-muted-foreground">{numberFormatter.format(course.students)}</span>
+          <div className="flex items-center gap-0.5">
+            <Users className="h-2.5 w-2.5" />
+            <span>{numberFormatter.format(course.students)}</span>
           </div>
         </div>
 
         {progress > 0 && (
           <div>
-            <div className="flex items-center justify-between text-xs mb-1">
+            <div className="flex items-center justify-between text-[10px] mb-0.5">
               <span className="text-muted-foreground">Progress</span>
               <span className="font-medium">{Math.round(progress)}%</span>
             </div>
-            <div className="w-full bg-muted rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-1.5">
               <div
-                className="bg-primary h-2 rounded-full"
+                className="bg-primary h-1.5 rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-2 border-t">
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-semibold">{course.rating}</span>
+        <div className="flex items-center justify-between mt-auto pt-1.5 border-t">
+          <div className="flex items-center gap-0.5">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-xs font-semibold">{course.rating}</span>
           </div>
           <span
-            className="inline-flex items-center justify-center rounded-full font-semibold px-2 py-0.5 text-xs"
+            className="inline-flex items-center justify-center rounded-full font-semibold px-1.5 py-0.5 text-[10px]"
             style={{
               background: "linear-gradient(135deg, #facc15 0%, #fbbf24 25%, #f59e0b 50%, #fbbf24 75%, #facc15 100%)",
               color: "#fef9c3",
@@ -111,8 +111,9 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
 
         <div className="relative">
           <Button 
+            size="sm"
             className={cn(
-              "w-full mt-2 font-mono uppercase cursor-pointer relative",
+              "w-full text-xs h-7 font-mono uppercase cursor-pointer relative",
               isLocked && "opacity-60"
             )}
             onClick={handleStartCourse}
@@ -120,23 +121,23 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
           >
             {progress > 0 ? (
               <>
-                <PlayCircle className="h-4 w-4" />
-                Continue Session
+                <PlayCircle className="h-3 w-3" />
+                Continue
               </>
             ) : (
               <>
-                <Play className="h-4 w-4" />
-                Start Session
+                <Play className="h-3 w-3" />
+                Start
               </>
             )}
           </Button>
           {isLocked && (
             <div 
-              className="absolute inset-0 z-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center gap-2 cursor-pointer font-mono uppercase text-sm font-medium"
+              className="absolute inset-0 z-10 rounded-md bg-primary text-primary-foreground flex items-center justify-center gap-1.5 cursor-pointer font-mono uppercase text-xs font-medium"
               style={{ fontFamily: 'var(--font-geist-mono), monospace' }}
               onClick={handleStartCourse}
             >
-              <Lock className="h-4 w-4" />
+              <Lock className="h-3 w-3" />
               Locked
             </div>
           )}

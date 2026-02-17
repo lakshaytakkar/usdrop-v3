@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { HotProductsModal } from "@/components/feedback/modals/hot-products-modal"
@@ -21,7 +22,6 @@ import {
   HelpCircle,
   Flame,
   Crown,
-  ChevronDown,
   Menu,
   X,
 } from "lucide-react"
@@ -42,7 +42,6 @@ export function AppTopNavigation() {
   const [mounted, setMounted] = useState(false)
   const [isHotProductsOpen, setIsHotProductsOpen] = useState(false)
   const [userData, setUserData] = useState<UserData | null>(null)
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { signOut, user } = useAuth()
   const { isInternal, internalRole, isPro, isFree, fullName, avatarUrl, loading: isMetadataLoading } = useUserMetadata()
@@ -133,72 +132,30 @@ export function AppTopNavigation() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link href="/home" className="flex items-baseline gap-1 mr-6 shrink-0">
-            <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
-            <span className="text-xl font-bold text-blue-600">AI</span>
+          <Link href="/home" className="flex items-baseline gap-1.5 mr-6 shrink-0">
+            <span className="text-lg font-bold tracking-tight text-foreground">USDrop</span>
+            <span className="text-lg font-bold text-blue-600">AI</span>
+            <Separator orientation="vertical" className="h-4 mx-1" />
+            <span className="text-sm font-medium text-gray-400">Platform</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-0.5 flex-1 min-w-0">
             {externalNavGroups.map((group) => {
               const isActive = isGroupActive(group.label)
-              if (group.items.length === 1) {
-                const item = group.items[0]
-                return (
-                  <Link
-                    key={group.label}
-                    href={item.url}
-                    className={cn(
-                      "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
-                      isActive
-                        ? "text-blue-600 bg-blue-50"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    )}
-                  >
-                    {group.label}
-                  </Link>
-                )
-              }
-
+              const firstItem = group.items[0]
               return (
-                <DropdownMenu
+                <Link
                   key={group.label}
-                  open={openDropdown === group.label}
-                  onOpenChange={(open) => setOpenDropdown(open ? group.label : null)}
+                  href={firstItem.url}
+                  className={cn(
+                    "px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap",
+                    isActive
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  )}
                 >
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer",
-                        isActive
-                          ? "text-blue-600 bg-blue-50"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                      )}
-                    >
-                      {group.label}
-                      <ChevronDown className="h-3 w-3" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-52">
-                    {group.items.map((item) => {
-                      const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
-                      return (
-                        <DropdownMenuItem key={item.url} asChild className="cursor-pointer">
-                          <Link
-                            href={item.url}
-                            className={cn(
-                              "flex items-center gap-2 w-full",
-                              isItemActive && "text-blue-600 font-medium"
-                            )}
-                            onClick={() => setOpenDropdown(null)}
-                          >
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  {group.label}
+                </Link>
               )
             })}
           </nav>
