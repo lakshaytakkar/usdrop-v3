@@ -109,65 +109,9 @@ export default function AcademyPage() {
   return (
     <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
-          {/* Mentor Introduction Banner */}
-          <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 h-[154px] flex-shrink-0">
-            {/* Subtle blue gradient background */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl opacity-60 -mr-20 -mt-20 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-amber-50 rounded-full blur-2xl opacity-40 -ml-10 -mb-10 pointer-events-none" />
-
-            {/* Content */}
-            <div className="relative z-10 flex items-center gap-4 h-full">
-              {/* Mentor Portrait */}
-              <div className="relative w-28 h-28 md:w-32 md:h-32 flex-shrink-0 -my-2">
-                <div className="relative w-full h-full rounded-xl overflow-hidden border-2 border-blue-100 shadow-md">
-                  <Image
-                    src="/images/mentor-portrait.png"
-                    alt="Mr. Suprans - Your Mentor"
-                    fill
-                    className="object-cover object-top"
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-0">
-                {/* Badge */}
-                <Badge
-                  variant="outline"
-                  className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-700 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wide mb-2"
-                >
-                  <Users className="h-3 w-3" />
-                  <span>HEAD MENTOR & STRATEGIST</span>
-                </Badge>
-
-                <h2 className="text-lg md:text-xl font-bold text-slate-900 leading-tight">
-                  Learn from <span className="text-blue-600">Mr. Suprans</span>
-                </h2>
-                <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5 line-clamp-1">
-                  14+ years of e-commerce expertise and 25k+ students mentored
-                </p>
-
-                {/* Quick Features */}
-                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
-                  {mentorFeatures.slice(0, 4).map((feature, index) => (
-                    <div key={index} className="flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />
-                      <span className="text-[11px] text-slate-600">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action button */}
-              <div className="flex-shrink-0 hidden sm:flex items-center">
-                <Button
-                  size="sm"
-                  className="bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                >
-                  <Play className="h-3 w-3" />
-                  <span className="text-xs">Watch Intro</span>
-                </Button>
-              </div>
-            </div>
+          <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
+            <h1 className="text-2xl font-bold">Mentorship</h1>
+            <p className="text-sm text-blue-100 mt-1">Learn from Mr. Suprans - 14+ years of e-commerce expertise and 25k+ students mentored</p>
           </div>
 
           {/* All Courses */}

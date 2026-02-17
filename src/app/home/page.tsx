@@ -98,9 +98,8 @@ function ProfileSummaryCard() {
   ].filter((item) => item.value)
 
   return (
-    <Card className="p-5 bg-gradient-to-br from-indigo-900 via-purple-950 to-indigo-800 text-white overflow-hidden relative">
-      <div className="absolute inset-0 z-0" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`, opacity: 0.5, mixBlendMode: "overlay" as const }}></div>
-      <div className="relative z-10 flex items-center gap-4">
+    <Card className="p-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white overflow-hidden border-0">
+      <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold shrink-0">
           {initials}
         </div>
