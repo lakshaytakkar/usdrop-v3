@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Course, CourseModule } from "@/types/courses"
 import { Book, FileText, CheckCircle2, Clock, PlayCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -92,12 +93,25 @@ export function CourseSidebar({
                 )}
               >
                 <div className={cn(
-                  "flex items-center justify-center w-7 h-7 rounded-full text-xs font-semibold flex-shrink-0",
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                  "relative w-20 h-12 rounded-md overflow-hidden flex-shrink-0 bg-muted",
+                  isSelected && "ring-2 ring-primary"
                 )}>
-                  {index + 1}
+                  {(module.thumbnail || course.thumbnail) ? (
+                    <Image
+                      src={module.thumbnail || course.thumbnail!}
+                      alt={module.title}
+                      fill
+                      className="object-cover"
+                      sizes="80px"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-200 to-gray-300">
+                      <PlayCircle className="h-5 w-5 text-gray-500" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <PlayCircle className="h-4 w-4 text-white drop-shadow" />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className={cn(
