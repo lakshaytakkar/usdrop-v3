@@ -230,12 +230,31 @@ export default function ProductHuntPage() {
   const [hasMore, setHasMore] = useState(true)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [savedProductIds, setSavedProductIds] = useState<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const categoriesRef = useRef<Category[]>([])
   const { isFree } = useOnboarding()
 
   categoriesRef.current = categories
+
+  useEffect(() => {
+    const fetchSavedProducts = async () => {
+      try {
+        const res = await fetch('/api/picklist', { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          const ids = new Set<string>((data.items || []).map((item: any) => item.productId))
+          setSavedProductIds(ids)
+        }
+      } catch {}
+    }
+    fetchSavedProducts()
+
+    const handlePicklistUpdate = () => fetchSavedProducts()
+    window.addEventListener('picklist-updated', handlePicklistUpdate)
+    return () => window.removeEventListener('picklist-updated', handlePicklistUpdate)
+  }, [])
   
   useEffect(() => {
     const fetchProducts = async () => {
@@ -504,6 +523,7 @@ export default function ProductHuntPage() {
                             product={product} 
                             isLocked={isLocked}
                             onLockedClick={() => setIsUpsellOpen(true)}
+                            isSaved={savedProductIds.has(String(product.id))}
                           />
                         </div>
                       )

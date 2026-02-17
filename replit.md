@@ -118,7 +118,8 @@ public/
 - Search: `.ilike('column', '%search%')` or `.or('col1.ilike.%s%,col2.ilike.%s%')`
 - Upsert: `.upsert({...}, { onConflict: 'col1,col2' })`
 
-## Navigation System
+## Navigation System & Framework Concept
+- **Framework = Personal Hub**: Framework is the user's personal space. Everything related to the user (saved items, store, roadmap, profile, credentials) lives here. Other pages work as libraries, tools, and resources that users browse and interact with. Saved/collected items always go back to Framework.
 - **External Users**: Top bar navigation (no sidebar) with `ExternalLayout` wrapper
   - `AppTopNavigation` (src/components/layout/app-top-navigation.tsx): Logo + 10 group links + user actions
   - `SubNavTabs` (src/components/layout/sub-nav-tabs.tsx): Horizontal tab strip showing child pages of active group
@@ -126,18 +127,18 @@ public/
   - Navigation config: `src/data/navigation.ts` (externalNavGroups array, findActiveGroup/findActiveItem helpers)
   - Mobile: Hamburger menu slides out full-screen nav overlay
   - **10 Top-Level Groups**:
-    1. Framework → Home, My Roadmap, My Profile, My Credentials
+    1. Framework → Home, My Products (saved), My Store, My Roadmap, My Profile, My Credentials
     2. Mentorship → /mentorship (courses)
     3. Product → Product Hunt, Winning Products, Categories, Seasonal Collections, Competitor Stores
     4. Videos & Ads → Meta Ads
     5. Order Fulfilment → Private Supplier, Selling Channels, Shipping Calculator
-    6. Shopify → My Store, My Products
+    6. Shopify → Shopify Integration
     7. Studio → Whitelabelling, Model Studio
     8. Important Tools → Description Generator, Email Templates, Policy Generator, Invoice Generator, Profit Calculator
     9. Blogs → /blogs (articles)
     10. Webinars → /webinars
 - **Admin/Dev Users**: Original sidebar navigation (`AppSidebar` + `SidebarProvider`) preserved in `src/app/admin/layout.tsx` and `src/app/dev/layout.tsx`
-- **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle
+- **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle. Product cards have a save button that adds to user's My Products (in Framework).
 
 ## Recent Changes (Feb 2026)
 - **Navigation restructured to 10 groups**: Framework, Mentorship, Product, Videos & Ads, Order Fulfilment, Shopify, Studio, Important Tools, Blogs, Webinars
@@ -159,4 +160,9 @@ public/
 - **Routes**: `/mentorship` (course list with mentor banner), `/mentorship/[id]` (course viewer with video player)
 - **API**: `/api/courses` (GET - returns published courses from `courses` table)
 - **Home Page Widget**: CoursesWidget fetches latest 6 courses from `/api/courses` and displays them as cards linking to `/mentorship/[id]`
-- **Framework group**: includes Home, My Roadmap, My Profile, My Credentials (all free access)
+- **Framework group**: Personal hub with Home, My Products (saved items), My Store, My Roadmap, My Profile, My Credentials. All saved/collected items from other pages live here.
+
+## User Preferences
+- **Framework Concept**: Framework is the personal hub (everything related to the user). Other pages are libraries/tools. All saved things live inside Framework.
+- **Supabase Only**: Must use Supabase for auth, database, storage, and edge functions. Do NOT migrate to any other system.
+- **Image Optimization**: Keep images compressed and loading fast.

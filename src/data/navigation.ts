@@ -52,6 +52,8 @@ export const externalNavGroups: NavGroup[] = [
     icon: Compass,
     items: [
       { title: "Home", icon: Home, url: "/home", isPro: false },
+      { title: "My Products", icon: Bookmark, url: "/my-products", isPro: false },
+      { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/my-roadmap", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/my-credentials", isPro: false },
@@ -95,8 +97,7 @@ export const externalNavGroups: NavGroup[] = [
     label: "Shopify",
     icon: ShoppingBag,
     items: [
-      { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
-      { title: "My Products", icon: Bookmark, url: "/my-products", isPro: true },
+      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify-integration", isPro: true },
     ],
   },
   {

@@ -10,7 +10,10 @@ import {
   Star, 
   Eye,
   Flame,
-  Lock
+  Lock,
+  Bookmark,
+  Check,
+  Loader2,
 } from "lucide-react"
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
@@ -19,6 +22,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useToast } from "@/hooks/use-toast"
 
 interface ProductCardProps {
   product: {
@@ -36,12 +40,52 @@ interface ProductCardProps {
   }
   isLocked?: boolean
   onLockedClick?: () => void
+  isSaved?: boolean
 }
 
-export function ProductCard({ product, isLocked = false, onLockedClick }: ProductCardProps) {
+export function ProductCard({ product, isLocked = false, onLockedClick, isSaved: initialSaved = false }: ProductCardProps) {
   const router = useRouter()
   const [imageError, setImageError] = useState(false)
   const [currentTagIndex, setCurrentTagIndex] = useState(0)
+  const [isSaved, setIsSaved] = useState(initialSaved)
+  const [isSaving, setIsSaving] = useState(false)
+  const { showSuccess, showError } = useToast()
+
+  const handleSaveProduct = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isSaved || isSaving || isLocked) return
+
+    setIsSaving(true)
+    try {
+      const response = await fetch('/api/picklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id, source: 'product-hunt' }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setIsSaved(true)
+          return
+        }
+        if (response.status === 401) {
+          showError('Please sign in to save products')
+          return
+        }
+        const data = await response.json()
+        showError(data.error || 'Failed to save product')
+        return
+      }
+
+      setIsSaved(true)
+      showSuccess('Product saved')
+      window.dispatchEvent(new CustomEvent("picklist-updated"))
+    } catch {
+      showError('Failed to save product')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   const safeTrendData = Array.isArray(product.trendData) ? product.trendData : []
 
@@ -98,8 +142,10 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
             src={product.image || "/demo-products/product-1.png"}
             alt={product.title}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            quality={65}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
+            quality={60}
+            loading="lazy"
+            placeholder="empty"
             className={`object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}
           />
@@ -306,11 +352,11 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           <span>({product.reviews})</span>
         </div>
 
-        {/* Action Button */}
-        <div className="pt-1">
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-1">
           <Button
             variant="default"
-            className="w-full cursor-pointer"
+            className="flex-1 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation()
               router.push(`/product-hunt/${product.id}`)
@@ -318,6 +364,22 @@ export function ProductCard({ product, isLocked = false, onLockedClick }: Produc
           >
             <Eye className="h-4 w-4 mr-2" />
             View
+          </Button>
+          <Button
+            variant={isSaved ? "default" : "outline"}
+            size="icon"
+            className={`h-9 w-9 shrink-0 cursor-pointer ${isSaved ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}`}
+            onClick={handleSaveProduct}
+            disabled={isSaved || isSaving}
+            title={isSaved ? "Saved" : "Save to My Products"}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isSaved ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Bookmark className="h-4 w-4" />
+            )}
           </Button>
         </div>
 

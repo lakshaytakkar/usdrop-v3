@@ -1,12 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['*.replit.dev', '*.replit.app'],
+  allowedDevOrigins: ['*.replit.dev', '*.replit.app', '*.janeway.replit.dev'],
+  experimental: {
+    optimizeCss: false,
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 64, 128, 256],
-    qualities: [65, 75],
+    qualities: [60, 75],
     minimumCacheTTL: 31536000,
     // Remote patterns for external images
     remotePatterns: [
