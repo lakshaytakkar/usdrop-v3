@@ -1,0 +1,59 @@
+Onboarding	1	Onboarding Email Sent & Confirmed	Not started	FALSE		Training	11	Framework Training Completed	Not started	FALSE
+	2	Contract Sent & Confirmed	Not started	FALSE			12	Shopify Training Videos	Not started	FALSE
+	3	Point of Contact (POC) Assigned & Introduction Done	Not started	FALSE			13	Basic Meta Advertising Training	Not started	FALSE
+	4	Mentee Experience & Knowledge Discussion	Not started	FALSE			14	Review Facebook Ad Library	Not started	FALSE
+	5	Access to Mentorship Resources	Not started	FALSE			15	Minea Tools Research Training	Not started	FALSE
+	6	Mentorship Meaning & Process Brief	Not started	FALSE			16	Check Tools Niche Scraper	Not started	FALSE
+	7	Attendance Process Training	Not started	FALSE			17	Meta Ads - Meeting 1	Not started	FALSE
+	8	Framework Assigned & Training	Not started	FALSE			18	Meta Ads - Meeting 2	Not started	FALSE
+	9	Tools Login Sent & Confirmed	Not started	FALSE			19	Meta Ads - Meeting 3	Not started	FALSE
+	10	Tools Granted	Not started	FALSE			20	Meta Ads - Meeting 4	Not started	FALSE
+CALL WITH YOUR MR.SUPRANS							21	Meta Ads - Meeting 5	Not started	FALSE
+						CALL WITH YOUR MR.SUPRANS				
+Stage 3 (Research)						Stage 4 (Products, Category, Shopify, Legal)                                				
+	22	Conduct research with Niche Scraper Tool	Not started	FALSE			33	Create Your Shopify Account	Not started	FALSE
+	23	Conduct research with Minea Tool	Not started	FALSE			34	Get Ready Your Store Policy Pages	Not started	FALSE
+	24	Finalize your brand name	Not started	FALSE			35	Upload 100+ Products to your Website	Not started	FALSE
+	25	Finalize your brand logo	Not started	FALSE			36	Create Facebook Page	Not started	FALSE
+	26	Finalize your domain name	Not started	FALSE			37	Create Instagram Page	Not started	FALSE
+	27	Hunt 100 profitable products by mentee	Not started	FALSE			38	Update your USA Address In Shopify	Not started	FALSE
+	28	Create your store banner	Not started	FALSE						
+	29	Create your social media logo	Not started	FALSE						
+	30	Create 5 products by yourself	Not started	FALSE						
+	31	Create 5 collections by yourself	Not started	FALSE						
+	32	20 profitable products by mentor	Not started	FALSE						
+										
+Meta Ads										
+Stage 5 ( CRO CheckPoint | Budget & Time Buffers)                                						Stage 6 (Setup Meta Account)				
+	39	First 30 Days Budget Plan for Meta Ads	Not started	FALSE			51	Create Meta account	Not started	FALSE
+	40	First 15 Days Meta Ads Strategy	Not started	FALSE			52	Connect Google Analytics (by yourself)	Not started	FALSE
+	41	Testing Periods: 7 Days, 15 Days, 30 Days	Not started	FALSE			53	Connect Facebook Pixel (by yourself)	Not started	FALSE
+	42	Plan Age Group	Not started	FALSE			54	Set up conversion events – Checkout	Not started	FALSE
+	43	Plan Gender	Not started	FALSE						
+	44	Prepare Your Final Store Landing Page	Not started	FALSE						
+	45	Prepare Your Final Store Collection Page	Not started	FALSE						
+	46	Prepare Your Final Store Product Page	Not started	FALSE						
+	47	Prepare Your Final Store Checkout Page	Not started	FALSE						
+	48	Prepare Your Store Policy Pages	Not started	FALSE						
+	49	Prepare Your Store Header	Not started	FALSE						
+	50	Prepare Your Store Footer	Not started	FALSE						
+										
+Stage 7 (Setup Campaign | Audience )         						Stage 8 ( Start First Meta Ads)				
+	55	Start Dummy C1, C2, C3 campaigns	Not started	FALSE			61	Start your first Meta Ads campaign	Not started	FALSE
+	56	Learn ABO steps	Not started	FALSE			62	Test your Meta Ads metrics (ROAS, CTR)	Not started	FALSE
+	57	Create the first ABO campaign	Not started	FALSE			63	SOP for Meta Ads control	Not started	FALSE
+	58	Create 4 audiences in Meta Ads	Not started	FALSE			64	SOP for Meta Ads budget scaling	Not started	FALSE
+	59	Create 1 video creative	Not started	FALSE			65	SOP for Meta Ads metrics	Not started	FALSE
+	60	Create 5 image creatives	Not started	FALSE			66	SOP for persona of buyer	Not started	FALSE
+										
+Stage 9 (Meta Ads 24Hrs & 48 Hrs Testing )                            						Stage 10 ( Meta Ads 7 Days | 15 DaysHrs Custom Audiance)				
+	67	Test Your Meta Ads Matrix (RAOS,CTR)	Not started	FALSE			69	Working on C1+C2+C3+C4+C5	Not started	FALSE
+	68	Working on ABO	Not started	FALSE			70	Working on Creative Testing	Not started	FALSE
+										
+										
+Stage 11 (Meta Ads Advance )                            						Stage 12 ( Future Scope & Closing)				
+	71	Heatmaps in Meta Ads	Not started	FALSE			75	Never stop regular resting	Not started	FALSE
+	72	CBO campaign	Not started	FALSE			76	Never stop regular learning	Not started	FALSE
+	73	Custom audience	Not started	FALSE			77	Never stop regular ads practice	Not started	FALSE
+	74	Lookalike audience	Not started	FALSE		Future Scope	78	Next stage: White label	Not started	FALSE
+						Future Scope	79	Next stage: Private label	Not started	FALSE
