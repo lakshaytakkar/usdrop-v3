@@ -169,8 +169,14 @@ function CourseDetailContent() {
                     moduleId={selectedModuleId!}
                   />
 
+                  <div>
+                    <h2 className="text-xl font-semibold">{currentModule.title}</h2>
+                    {currentModule.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{currentModule.description}</p>
+                    )}
+                  </div>
+
                   <CourseContentTabs
-                    course={course}
                     module={currentModule}
                   />
                 </div>
