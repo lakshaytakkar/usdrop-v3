@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
-import { useUserPlan } from "@/contexts/user-plan-context"
+import { useUserPlanContext } from "@/contexts/user-plan-context"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
 import {
   ChevronRight,
@@ -66,7 +66,7 @@ const ROADMAP_STORAGE_KEY = "usdrop-journey-task-status"
 
 function ProfileSummaryCard() {
   const { user } = useAuth()
-  const { plan, isPro } = useUserPlan()
+  const { plan, isPro } = useUserPlanContext()
   const [details, setDetails] = useState<UserDetails | null>(null)
 
   useEffect(() => {
