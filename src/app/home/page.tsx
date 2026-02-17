@@ -274,16 +274,16 @@ function FrameworkCardsGrid() {
 }
 
 const exploreLinks = [
-  { title: "Product Hunt", description: "Discover trending products", icon: Search, href: "/product-hunt", color: "text-indigo-600 bg-indigo-50" },
-  { title: "Winning Products", description: "Curated top sellers", icon: Trophy, href: "/winning-products", color: "text-amber-600 bg-amber-50" },
-  { title: "Mentorship", description: "Courses & learning", icon: GraduationCap, href: "/mentorship", color: "text-violet-600 bg-violet-50" },
-  { title: "Meta Ads", description: "Ad creatives library", icon: Video, href: "/meta-ads", color: "text-pink-600 bg-pink-50" },
-  { title: "Competitor Stores", description: "Analyze competitors", icon: Store, href: "/competitor-stores", color: "text-teal-600 bg-teal-50" },
-  { title: "Suppliers", description: "Private supplier network", icon: Truck, href: "/suppliers", color: "text-cyan-600 bg-cyan-50" },
-  { title: "Studio", description: "Whitelabelling & models", icon: Palette, href: "/studio/whitelabelling", color: "text-fuchsia-600 bg-fuchsia-50" },
-  { title: "Tools", description: "Descriptions, invoices & more", icon: Wrench, href: "/tools", color: "text-slate-600 bg-slate-50" },
-  { title: "Shipping Calculator", description: "Estimate shipping costs", icon: Calculator, href: "/shipping-calculator", color: "text-green-600 bg-green-50" },
-  { title: "Blogs", description: "Articles & intelligence", icon: Newspaper, href: "/blogs", color: "text-orange-600 bg-orange-50" },
+  { title: "Product Hunt", description: "Discover trending products", icon: Search, href: "/product-hunt", iconSrc: "/3d-ecom-icons-blue/Search_Product.png" },
+  { title: "Winning Products", description: "Curated top sellers", icon: Trophy, href: "/winning-products", iconSrc: "/3d-ecom-icons-blue/Trophy_Star.png" },
+  { title: "Mentorship", description: "Courses & learning", icon: GraduationCap, href: "/mentorship", iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png" },
+  { title: "Meta Ads", description: "Ad creatives library", icon: Video, href: "/meta-ads", iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png" },
+  { title: "Competitor Stores", description: "Analyze competitors", icon: Store, href: "/competitor-stores", iconSrc: "/3d-ecom-icons-blue/Competitor_Search.png" },
+  { title: "Suppliers", description: "Private supplier network", icon: Truck, href: "/suppliers", iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png" },
+  { title: "Studio", description: "Whitelabelling & models", icon: Palette, href: "/studio/whitelabelling", iconSrc: "/3d-ecom-icons-blue/Paint_Palette.png" },
+  { title: "Tools", description: "Descriptions, invoices & more", icon: Wrench, href: "/tools", iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png" },
+  { title: "Shipping Calculator", description: "Estimate shipping costs", icon: Calculator, href: "/shipping-calculator", iconSrc: "/3d-ecom-icons-blue/Calculator_Ship.png" },
+  { title: "Blogs", description: "Articles & intelligence", icon: Newspaper, href: "/blogs", iconSrc: "/3d-ecom-icons-blue/Open_Board.png" },
 ]
 
 function ExploreGrid() {
@@ -295,9 +295,7 @@ function ExploreGrid() {
           <Link key={item.href} href={item.href} className="block group">
             <Card className="px-3 py-2.5 hover:border-gray-300 transition-colors cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", item.color)}>
-                  <item.icon className="h-4 w-4" />
-                </div>
+                <img src={item.iconSrc} alt={item.title} width={32} height={32} decoding="async" className="w-8 h-8 object-contain shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h4 className="text-xs font-semibold text-gray-900 truncate">{item.title}</h4>
                   <p className="text-[10px] text-gray-400 truncate">{item.description}</p>
@@ -359,9 +357,7 @@ function RecentCoursesCard() {
     <Card className="p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
-            <BookOpen className="h-3.5 w-3.5 text-amber-600" />
-          </div>
+          <img src="/3d-ecom-icons-blue/Course_Book.png" alt="Courses" width={28} height={28} decoding="async" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-semibold text-gray-900">Latest Courses</h3>
         </div>
         <Link href="/mentorship" className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors">
@@ -422,9 +418,7 @@ function RoadmapProgressCard() {
     <Card className="p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Map className="h-3.5 w-3.5 text-purple-600" />
-          </div>
+          <img src="/3d-ecom-icons-blue/Rocket_Launch.png" alt="Roadmap" width={28} height={28} decoding="async" className="w-7 h-7 object-contain" />
           <h3 className="text-sm font-semibold text-gray-900">Roadmap Progress</h3>
         </div>
         <Link href="/my-roadmap" className="text-xs text-indigo-600 hover:text-indigo-700 transition-colors">
