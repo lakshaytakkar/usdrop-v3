@@ -148,13 +148,13 @@ function CoursesWidget() {
     return (
       <Card className="p-6">
         <Skeleton className="h-6 w-48 mb-4" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card overflow-hidden">
-              <Skeleton className="aspect-video w-full" />
-              <div className="p-3 space-y-2">
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4 p-3 rounded-lg border">
+              <Skeleton className="w-28 h-16 rounded-lg flex-shrink-0" />
+              <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
           ))}
@@ -181,41 +181,36 @@ function CoursesWidget() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {courses.map((course) => (
           <Link key={course.id} href={`/mentorship/${course.id}`} className="block group">
-            <div className="rounded-xl border bg-white hover:bg-gray-50 overflow-hidden transition-all hover:shadow-md">
-              <div className="relative w-full aspect-video overflow-hidden bg-gray-100">
+            <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:bg-gray-50 transition-all hover:shadow-sm hover:border-gray-200">
+              <div className="relative w-28 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 {course.thumbnail ? (
                   <Image
                     src={course.thumbnail}
                     alt={course.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    sizes="112px"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <BookOpen className="h-8 w-8 text-gray-300" />
-                  </div>
-                )}
-                {course.featured && (
-                  <div className="absolute top-2 left-2">
-                    <Badge className="text-[10px] px-1.5 py-0.5">Featured</Badge>
-                  </div>
-                )}
-                {course.level && (
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 bg-white/90">
-                      {course.level}
-                    </Badge>
+                    <BookOpen className="h-5 w-5 text-gray-300" />
                   </div>
                 )}
               </div>
-              <div className="p-3">
-                <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-1.5 group-hover:text-blue-600 transition-colors">
-                  {course.title}
-                </h4>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h4 className="font-medium text-sm text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                    {course.title}
+                  </h4>
+                  {course.level && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 bg-amber-50 text-amber-700 border-amber-200">
+                      {course.level}
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex items-center gap-3 text-xs text-gray-500">
                   {course.lessons_count > 0 && (
                     <div className="flex items-center gap-1">
@@ -237,6 +232,7 @@ function CoursesWidget() {
                   )}
                 </div>
               </div>
+              <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0 transition-colors" />
             </div>
           </Link>
         ))}
