@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { CourseChapter, ChapterContentType } from '@/types/courses'
 import { moveVideoFromTemp } from '@/lib/storage/course-storage'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
@@ -41,10 +41,14 @@ export async function POST(
 
     let finalOrderIndex = order_index
     if (finalOrderIndex === undefined) {
-      const maxResult = await sql`
-        SELECT COALESCE(MAX(order_index), -1) as max_order FROM course_chapters WHERE module_id = ${moduleId}
-      `
-      finalOrderIndex = maxResult[0].max_order + 1
+      const { data: maxResult } = await supabaseAdmin
+        .from('course_chapters')
+        .select('order_index')
+        .eq('module_id', moduleId)
+        .order('order_index', { ascending: false })
+        .limit(1)
+
+      finalOrderIndex = (maxResult && maxResult.length > 0 ? maxResult[0].order_index : -1) + 1
     }
 
     let finalContent = content
@@ -52,17 +56,24 @@ export async function POST(
       const tempPath = content.video_storage_path
       if (tempPath.includes('/temp/')) {
         try {
-          const tempResult = await sql`
-            INSERT INTO course_chapters (module_id, title, description, content_type, content, order_index, duration_minutes, is_preview)
-            VALUES (${moduleId}, ${title}, ${description || null}, ${content_type}, ${JSON.stringify({ ...content, video_storage_path: tempPath })}, ${finalOrderIndex}, ${duration_minutes || null}, ${is_preview || false})
-            RETURNING *
-          `
+          const { data: tempChapter, error: tempError } = await supabaseAdmin
+            .from('course_chapters')
+            .insert({
+              module_id: moduleId,
+              title,
+              description: description || null,
+              content_type,
+              content: { ...content, video_storage_path: tempPath },
+              order_index: finalOrderIndex,
+              duration_minutes: duration_minutes || null,
+              is_preview: is_preview || false,
+            })
+            .select()
+            .single()
 
-          if (!tempResult || tempResult.length === 0) {
+          if (tempError || !tempChapter) {
             throw new Error('Failed to create chapter for video move')
           }
-
-          const tempChapter = tempResult[0]
 
           const movedVideo = await moveVideoFromTemp(
             tempPath,
@@ -77,16 +88,19 @@ export async function POST(
             video_storage_path: movedVideo.path,
           }
 
-          const updateResult = await sql`
-            UPDATE course_chapters SET content = ${JSON.stringify(finalContent)} WHERE id = ${tempChapter.id} RETURNING *
-          `
+          const { data: updateResult, error: updateError } = await supabaseAdmin
+            .from('course_chapters')
+            .update({ content: finalContent })
+            .eq('id', tempChapter.id)
+            .select()
+            .single()
 
-          if (!updateResult || updateResult.length === 0) {
-            await sql`DELETE FROM course_chapters WHERE id = ${tempChapter.id}`
+          if (updateError || !updateResult) {
+            await supabaseAdmin.from('course_chapters').delete().eq('id', tempChapter.id)
             throw new Error('Failed to update chapter with final video path')
           }
 
-          return NextResponse.json({ chapter: updateResult[0] }, { status: 201 })
+          return NextResponse.json({ chapter: updateResult }, { status: 201 })
         } catch (moveError) {
           console.error('Error moving temp video:', moveError)
           return NextResponse.json(
@@ -97,20 +111,30 @@ export async function POST(
       }
     }
 
-    const result = await sql`
-      INSERT INTO course_chapters (module_id, title, description, content_type, content, order_index, duration_minutes, is_preview)
-      VALUES (${moduleId}, ${title}, ${description || null}, ${content_type}, ${JSON.stringify(finalContent)}, ${finalOrderIndex}, ${duration_minutes || null}, ${is_preview || false})
-      RETURNING *
-    `
+    const { data: result, error } = await supabaseAdmin
+      .from('course_chapters')
+      .insert({
+        module_id: moduleId,
+        title,
+        description: description || null,
+        content_type,
+        content: finalContent,
+        order_index: finalOrderIndex,
+        duration_minutes: duration_minutes || null,
+        is_preview: is_preview || false,
+      })
+      .select()
+      .single()
 
-    if (!result || result.length === 0) {
+    if (error || !result) {
+      console.error('Error creating chapter:', error)
       return NextResponse.json(
         { error: 'Failed to create chapter' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ chapter: result[0] }, { status: 201 })
+    return NextResponse.json({ chapter: result }, { status: 201 })
   } catch (error) {
     console.error('Unexpected error creating chapter:', error)
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import crypto from 'crypto'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -9,11 +9,16 @@ export async function GET() {
     const authResult = await requireAdmin()
     if (isAdminResponse(authResult)) return authResult
 
-    const data = await sql`
-      SELECT * FROM profiles
-      WHERE internal_role IS NOT NULL
-      ORDER BY created_at DESC
-    `
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .not('internal_role', 'is', null)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching internal users:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
 
     if (!data || data.length === 0) {
       return NextResponse.json([])
@@ -65,8 +70,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const existing = await sql`SELECT id FROM profiles WHERE email = ${email} LIMIT 1`
-    if (existing.length > 0) {
+    const { data: existing } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
       return NextResponse.json(
         { error: 'A user with this email already exists' },
         { status: 409 }
@@ -77,35 +87,40 @@ export async function POST(request: NextRequest) {
     const userId = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    const result = await sql`
-      INSERT INTO profiles (
-        id, email, full_name, password_hash, internal_role,
-        status, phone_number, username, avatar_url,
-        created_at, updated_at
-      ) VALUES (
-        ${userId}, ${email}, ${name}, ${passwordHash}, ${role},
-        ${status}, ${phoneNumber || null}, ${username || null}, ${avatarUrl || null},
-        ${now}, ${now}
-      )
-      RETURNING *
-    `
+    const { data: result, error } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: userId,
+        email,
+        full_name: name,
+        password_hash: passwordHash,
+        internal_role: role,
+        status,
+        phone_number: phoneNumber || null,
+        username: username || null,
+        avatar_url: avatarUrl || null,
+        created_at: now,
+        updated_at: now,
+      })
+      .select()
+      .single()
 
-    if (result.length === 0) {
+    if (error || !result) {
+      console.error('Error creating internal user:', error)
       return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
     }
 
-    const data = result[0]
     const user = {
-      id: data.id,
-      name: data.full_name || '',
-      email: data.email,
-      role: data.internal_role,
-      status: data.status || 'active',
-      phoneNumber: data.phone_number || null,
-      username: data.username || null,
-      avatarUrl: data.avatar_url || null,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      id: result.id,
+      name: result.full_name || '',
+      email: result.email,
+      role: result.internal_role,
+      status: result.status || 'active',
+      phoneNumber: result.phone_number || null,
+      username: result.username || null,
+      avatarUrl: result.avatar_url || null,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
     }
 
     return NextResponse.json(user, { status: 201 })

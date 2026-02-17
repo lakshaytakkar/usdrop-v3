@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { uploadCourseVideo, getVideoSignedUrl } from '@/lib/storage/course-storage'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
@@ -13,18 +12,27 @@ export async function POST(
     if (isAdminResponse(authResult)) return authResult
     const { id: courseId, moduleId, chapterId } = await params
 
-    const courseResult = await sql`SELECT id FROM courses WHERE id = ${courseId} LIMIT 1`
+    const { data: courseResult, error: courseError } = await supabaseAdmin
+      .from('courses')
+      .select('id')
+      .eq('id', courseId)
+      .single()
 
-    if (courseResult.length === 0) {
+    if (courseError || !courseResult) {
       return NextResponse.json(
         { error: 'Course not found' },
         { status: 404 }
       )
     }
 
-    const moduleResult = await sql`SELECT id, course_id FROM course_modules WHERE id = ${moduleId} AND course_id = ${courseId} LIMIT 1`
+    const { data: moduleResult, error: moduleError } = await supabaseAdmin
+      .from('course_modules')
+      .select('id, course_id')
+      .eq('id', moduleId)
+      .eq('course_id', courseId)
+      .single()
 
-    if (moduleResult.length === 0) {
+    if (moduleError || !moduleResult) {
       return NextResponse.json(
         { error: 'Module not found' },
         { status: 404 }
@@ -35,9 +43,14 @@ export async function POST(
     let chapterExists = false
 
     if (!isTempUpload) {
-      const chapterResult = await sql`SELECT id, module_id FROM course_chapters WHERE id = ${chapterId} AND module_id = ${moduleId} LIMIT 1`
+      const { data: chapterResult, error: chapterError } = await supabaseAdmin
+        .from('course_chapters')
+        .select('id, module_id')
+        .eq('id', chapterId)
+        .eq('module_id', moduleId)
+        .single()
 
-      if (chapterResult.length === 0) {
+      if (chapterError || !chapterResult) {
         return NextResponse.json(
           { error: 'Chapter not found' },
           { status: 404 }
@@ -83,9 +96,13 @@ export async function POST(
     const signedUrl = await getVideoSignedUrl(uploadResult.path, 3600)
 
     if (chapterExists) {
-      const currentChapter = await sql`SELECT content FROM course_chapters WHERE id = ${chapterId} LIMIT 1`
+      const { data: currentChapter } = await supabaseAdmin
+        .from('course_chapters')
+        .select('content')
+        .eq('id', chapterId)
+        .single()
 
-      const content = currentChapter[0]?.content || {}
+      const content = currentChapter?.content || {}
       const updatedContent = {
         ...content,
         video_url: uploadResult.url,
@@ -93,12 +110,12 @@ export async function POST(
         video_duration: null,
       }
 
-      const updateResult = await sql`
-        UPDATE course_chapters SET content = ${JSON.stringify(updatedContent)}, updated_at = now()
-        WHERE id = ${chapterId}
-      `
+      const { error: updateError } = await supabaseAdmin
+        .from('course_chapters')
+        .update({ content: updatedContent, updated_at: new Date().toISOString() })
+        .eq('id', chapterId)
 
-      if (updateResult.count === 0) {
+      if (updateError) {
         await supabaseAdmin.storage
           .from('course-videos')
           .remove([uploadResult.path])

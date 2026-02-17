@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { CompetitorStore } from '@/types/competitor-stores'
 
 export async function GET(request: NextRequest) {
@@ -13,91 +13,82 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const sortBy = searchParams.get('sortBy') || 'monthly_revenue'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
-
-    const whereClauses: string[] = []
-    const values: any[] = []
-    let paramIndex = 0
+    const offset = (page - 1) * pageSize
 
     const isVerified = verified === null ? true : verified === 'true'
-    paramIndex++
-    whereClauses.push(`cs.verified = $${paramIndex}`)
-    values.push(isVerified)
+
+    let countQuery = supabaseAdmin
+      .from('competitor_stores')
+      .select('id', { count: 'exact', head: true })
+      .eq('verified', isVerified)
+
+    let dataQuery = supabaseAdmin
+      .from('competitor_stores')
+      .select('*, categories(id, name, slug)', { count: 'exact' })
+      .eq('verified', isVerified)
 
     if (categoryId) {
-      paramIndex++
-      whereClauses.push(`cs.category_id = $${paramIndex}`)
-      values.push(categoryId)
+      countQuery = countQuery.eq('category_id', categoryId)
+      dataQuery = dataQuery.eq('category_id', categoryId)
     }
 
     if (country) {
-      paramIndex++
-      whereClauses.push(`cs.country = $${paramIndex}`)
-      values.push(country)
+      countQuery = countQuery.eq('country', country)
+      dataQuery = dataQuery.eq('country', country)
     }
 
     if (search) {
-      paramIndex++
-      const searchParam = `%${search}%`
-      whereClauses.push(`(cs.name ILIKE $${paramIndex} OR cs.url ILIKE $${paramIndex})`)
-      values.push(searchParam)
+      countQuery = countQuery.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
+      dataQuery = dataQuery.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
     }
 
-    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    const sortColumn = sortBy === 'name' ? 'name' :
+                       sortBy === 'monthly_revenue' ? 'monthly_revenue' :
+                       sortBy === 'monthly_traffic' ? 'monthly_traffic' :
+                       sortBy === 'growth' ? 'growth' :
+                       sortBy === 'rating' ? 'rating' :
+                       'created_at'
 
-    const orderColumn = sortBy === 'name' ? 'cs.name' :
-                       sortBy === 'monthly_revenue' ? 'cs.monthly_revenue' :
-                       sortBy === 'monthly_traffic' ? 'cs.monthly_traffic' :
-                       sortBy === 'growth' ? 'cs.growth' :
-                       sortBy === 'rating' ? 'cs.rating' :
-                       'cs.created_at'
-    const orderDir = sortOrder === 'asc' ? 'ASC' : 'DESC'
+    dataQuery = dataQuery
+      .order(sortColumn, { ascending: sortOrder === 'asc', nullsFirst: false })
+      .range(offset, offset + pageSize - 1)
 
-    const countQuery = `
-      SELECT COUNT(*) as count
-      FROM competitor_stores cs
-      ${whereSQL}
-    `
-    const countResult = await sql.unsafe(countQuery, values)
-    const totalCount = parseInt(countResult[0]?.count || '0')
+    const [countResult, dataResult] = await Promise.all([countQuery, dataQuery])
 
-    const offset = (page - 1) * pageSize
+    const totalCount = countResult.count || 0
 
-    const dataQuery = `
-      SELECT
-        cs.id, cs.name, cs.url, cs.logo, cs.category_id, cs.country,
-        cs.monthly_traffic, cs.monthly_revenue, cs.growth, cs.products_count,
-        cs.rating, cs.verified, cs.created_at, cs.updated_at,
-        c.id as cat_id, c.name as cat_name, c.slug as cat_slug
-      FROM competitor_stores cs
-      LEFT JOIN categories c ON cs.category_id = c.id
-      ${whereSQL}
-      ORDER BY ${orderColumn} ${orderDir} NULLS LAST
-      LIMIT $${paramIndex + 1} OFFSET $${paramIndex + 2}
-    `
+    if (dataResult.error) {
+      console.error('Error fetching competitor stores:', dataResult.error)
+      return NextResponse.json(
+        { error: 'Failed to fetch competitor stores' },
+        { status: 500 }
+      )
+    }
 
-    const data = await sql.unsafe(dataQuery, [...values, pageSize, offset])
-
-    const stores: CompetitorStore[] = data.map((item: any) => ({
-      id: item.id,
-      name: item.name,
-      url: item.url,
-      logo: item.logo,
-      category_id: item.category_id,
-      category: item.cat_id ? {
-        id: item.cat_id,
-        name: item.cat_name,
-        slug: item.cat_slug,
-      } : null,
-      country: item.country,
-      monthly_traffic: item.monthly_traffic,
-      monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
-      growth: parseFloat(item.growth),
-      products_count: item.products_count,
-      rating: item.rating ? parseFloat(item.rating) : null,
-      verified: item.verified,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-    }))
+    const stores: CompetitorStore[] = (dataResult.data || []).map((item: any) => {
+      const cat = item.categories
+      return {
+        id: item.id,
+        name: item.name,
+        url: item.url,
+        logo: item.logo,
+        category_id: item.category_id,
+        category: cat ? {
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+        } : null,
+        country: item.country,
+        monthly_traffic: item.monthly_traffic,
+        monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
+        growth: parseFloat(item.growth),
+        products_count: item.products_count,
+        rating: item.rating ? parseFloat(item.rating) : null,
+        verified: item.verified,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      }
+    })
 
     return NextResponse.json({ stores, totalCount }, { status: 200 })
   } catch (error: any) {

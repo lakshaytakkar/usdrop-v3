@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 function mapProduct(item: any) {
+  const prod = item.products
   return {
     id: item.id,
     competitor_store_id: item.competitor_store_id,
     product_id: item.product_id,
     discovered_at: item.discovered_at,
     last_seen_at: item.last_seen_at,
-    product: item.product_id_ref ? { id: item.product_id_ref, title: item.product_title, image: item.product_image } : null,
+    product: prod ? { id: prod.id, title: prod.title, image: prod.image } : null,
   }
 }
 
@@ -22,15 +23,20 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const result = await sql.unsafe(
-      `SELECT csp.*, p.id as product_id_ref, p.title as product_title, p.image as product_image
-       FROM competitor_store_products csp
-       LEFT JOIN products p ON csp.product_id = p.id
-       WHERE csp.competitor_store_id = $1`,
-      [id]
-    )
+    const { data, error } = await supabaseAdmin
+      .from('competitor_store_products')
+      .select('*, products(id, title, image)')
+      .eq('competitor_store_id', id)
 
-    const products = result.map(mapProduct)
+    if (error) {
+      console.error('Error fetching competitor store products:', error)
+      return NextResponse.json(
+        { error: 'An unexpected error occurred', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    const products = (data || []).map(mapProduct)
 
     return NextResponse.json({ products }, { status: 200 })
   } catch (error: any) {
@@ -60,35 +66,27 @@ export async function POST(
       )
     }
 
-    let insertResult
-    try {
-      insertResult = await sql.unsafe(
-        `INSERT INTO competitor_store_products (competitor_store_id, product_id)
-         VALUES ($1, $2)
-         RETURNING id`,
-        [id, product_id]
-      )
-    } catch (err: any) {
-      if (err.code === '23505') {
+    const { data: inserted, error: insertError } = await supabaseAdmin
+      .from('competitor_store_products')
+      .insert({ competitor_store_id: id, product_id })
+      .select('*, products(id, title, image)')
+      .single()
+
+    if (insertError) {
+      if (insertError.code === '23505') {
         return NextResponse.json(
           { error: 'Product is already linked to this store' },
           { status: 409 }
         )
       }
-      throw err
+      console.error('Error linking product:', insertError)
+      return NextResponse.json(
+        { error: 'An unexpected error occurred', details: insertError.message },
+        { status: 500 }
+      )
     }
 
-    const newId = insertResult[0].id
-
-    const result = await sql.unsafe(
-      `SELECT csp.*, p.id as product_id_ref, p.title as product_title, p.image as product_image
-       FROM competitor_store_products csp
-       LEFT JOIN products p ON csp.product_id = p.id
-       WHERE csp.id = $1`,
-      [newId]
-    )
-
-    const product = mapProduct(result[0])
+    const product = mapProduct(inserted)
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error: any) {
@@ -118,10 +116,11 @@ export async function DELETE(
       )
     }
 
-    await sql.unsafe(
-      `DELETE FROM competitor_store_products WHERE competitor_store_id = $1 AND product_id = $2`,
-      [id, productId]
-    )
+    await supabaseAdmin
+      .from('competitor_store_products')
+      .delete()
+      .eq('competitor_store_id', id)
+      .eq('product_id', productId)
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error: any) {

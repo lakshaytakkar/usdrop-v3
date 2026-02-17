@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import type { DevTask, DevTaskComment, DevTaskAttachment, DevTaskHistory, TaskFilters, TaskStats } from '@/types/dev-tasks'
-import sql from '@/lib/db'
 
 export async function getTasks(filters?: TaskFilters): Promise<DevTask[]> {
   const supabase = await createClient()
@@ -52,19 +52,18 @@ export async function getTasks(filters?: TaskFilters): Promise<DevTask[]> {
 
   const tasks = (data || []) as DevTask[]
   
-  const taskIds = tasks.map(t => t.id)
-  
-  let assignedUsers: Record<string, unknown>[] = []
-  let createdUsers: Record<string, unknown>[] = []
-  
-  if (taskIds.length > 0) {
+  if (tasks.length > 0) {
     const assignedToIds = [...new Set(tasks.map(t => t.assigned_to).filter(Boolean))]
     const createdByIds = [...new Set(tasks.map(t => t.created_by).filter(Boolean))]
     const allUserIds = [...new Set([...assignedToIds, ...createdByIds])]
     
     if (allUserIds.length > 0) {
-      const users = await sql`SELECT id, full_name, email, avatar_url, username FROM profiles WHERE id = ANY(${allUserIds as string[]})`
-      const userMap = new Map(users.map((u: Record<string, unknown>) => [u.id, u]))
+      const { data: users } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name, email, avatar_url, username')
+        .in('id', allUserIds as string[])
+
+      const userMap = new Map((users || []).map((u: Record<string, unknown>) => [u.id, u]))
       
       tasks.forEach((task: DevTask) => {
         if (task.assigned_to && userMap.has(task.assigned_to)) {
@@ -116,8 +115,12 @@ export async function getTaskById(id: string): Promise<DevTask | null> {
   
   if (task.assigned_to || task.created_by) {
     const userIds = [task.assigned_to, task.created_by].filter(Boolean) as string[]
-    const users = await sql`SELECT id, full_name, email, avatar_url, username FROM profiles WHERE id = ANY(${userIds})`
-    const userMap = new Map(users.map((u: Record<string, unknown>) => [u.id, u]))
+    const { data: users } = await supabaseAdmin
+      .from('profiles')
+      .select('id, full_name, email, avatar_url, username')
+      .in('id', userIds)
+
+    const userMap = new Map((users || []).map((u: Record<string, unknown>) => [u.id, u]))
     
     if (task.assigned_to) (task as unknown as Record<string, unknown>).assigned_user = userMap.get(task.assigned_to)
     if (task.created_by) (task as unknown as Record<string, unknown>).created_user = userMap.get(task.created_by)
@@ -127,42 +130,60 @@ export async function getTaskById(id: string): Promise<DevTask | null> {
 }
 
 export async function getTaskComments(taskId: string): Promise<DevTaskComment[]> {
-  const comments = await sql`
-    SELECT c.*, 
-      json_build_object('id', p.id, 'full_name', p.full_name, 'email', p.email, 'avatar_url', p.avatar_url, 'username', p.username) as user
-    FROM dev_task_comments c
-    LEFT JOIN profiles p ON c.user_id = p.id
-    WHERE c.task_id = ${taskId}
-    ORDER BY c.created_at ASC
-  `
+  const { data, error } = await supabaseAdmin
+    .from('dev_task_comments')
+    .select('*, profiles!dev_task_comments_user_id_fkey(id, full_name, email, avatar_url, username)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: true })
 
-  return comments as unknown as DevTaskComment[]
+  if (error) {
+    console.error('Error fetching comments:', error)
+    throw error
+  }
+
+  return (data || []).map((c: any) => ({
+    ...c,
+    user: c.profiles || null,
+    profiles: undefined,
+  })) as unknown as DevTaskComment[]
 }
 
 export async function getTaskAttachments(taskId: string): Promise<DevTaskAttachment[]> {
-  const attachments = await sql`
-    SELECT a.*,
-      json_build_object('id', p.id, 'full_name', p.full_name, 'email', p.email, 'avatar_url', p.avatar_url, 'username', p.username) as uploader
-    FROM dev_task_attachments a
-    LEFT JOIN profiles p ON a.uploaded_by = p.id
-    WHERE a.task_id = ${taskId}
-    ORDER BY a.created_at DESC
-  `
+  const { data, error } = await supabaseAdmin
+    .from('dev_task_attachments')
+    .select('*, profiles!dev_task_attachments_uploaded_by_fkey(id, full_name, email, avatar_url, username)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false })
 
-  return attachments as unknown as DevTaskAttachment[]
+  if (error) {
+    console.error('Error fetching attachments:', error)
+    throw error
+  }
+
+  return (data || []).map((a: any) => ({
+    ...a,
+    uploader: a.profiles || null,
+    profiles: undefined,
+  })) as unknown as DevTaskAttachment[]
 }
 
 export async function getTaskHistory(taskId: string): Promise<DevTaskHistory[]> {
-  const history = await sql`
-    SELECT h.*,
-      json_build_object('id', p.id, 'full_name', p.full_name, 'email', p.email, 'avatar_url', p.avatar_url, 'username', p.username) as changed_user
-    FROM dev_task_history h
-    LEFT JOIN profiles p ON h.changed_by = p.id
-    WHERE h.task_id = ${taskId}
-    ORDER BY h.created_at DESC
-  `
+  const { data, error } = await supabaseAdmin
+    .from('dev_task_history')
+    .select('*, profiles!dev_task_history_changed_by_fkey(id, full_name, email, avatar_url, username)')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false })
 
-  return history as unknown as DevTaskHistory[]
+  if (error) {
+    console.error('Error fetching history:', error)
+    throw error
+  }
+
+  return (data || []).map((h: any) => ({
+    ...h,
+    changed_user: h.profiles || null,
+    profiles: undefined,
+  })) as unknown as DevTaskHistory[]
 }
 
 export async function getTaskStats(): Promise<TaskStats> {

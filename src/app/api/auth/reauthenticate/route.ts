@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getCurrentUser, verifyPassword } from '@/lib/auth'
-import sql from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   try {
-    const { password, email } = await request.json()
+    const { password } = await request.json()
 
     const user = await getCurrentUser()
 
@@ -15,33 +15,30 @@ export async function POST(request: Request) {
       )
     }
 
-    if (password) {
-      const result = await sql`SELECT password_hash FROM profiles WHERE id = ${user.id} LIMIT 1`
-      if (result.length === 0 || !result[0].password_hash) {
-        return NextResponse.json(
-          { error: 'Invalid password. Please try again.' },
-          { status: 401 }
-        )
-      }
-
-      const isValid = await verifyPassword(password, result[0].password_hash)
-      if (!isValid) {
-        return NextResponse.json(
-          { error: 'Invalid password. Please try again.' },
-          { status: 401 }
-        )
-      }
-
-      return NextResponse.json({
-        message: 'Reauthentication successful',
-        authenticated: true,
-      })
+    if (!password) {
+      return NextResponse.json(
+        { error: 'Password is required for reauthentication.' },
+        { status: 400 }
+      )
     }
 
-    return NextResponse.json(
-      { error: 'Password is required for reauthentication.' },
-      { status: 400 }
-    )
+    const supabase = await createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password,
+    })
+
+    if (error) {
+      return NextResponse.json(
+        { error: 'Invalid password. Please try again.' },
+        { status: 401 }
+      )
+    }
+
+    return NextResponse.json({
+      message: 'Reauthentication successful',
+      authenticated: true,
+    })
   } catch (error) {
     console.error('Reauthentication error:', error)
     return NextResponse.json(

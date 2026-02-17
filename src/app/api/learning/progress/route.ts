@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
-import sql from "@/lib/db"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
@@ -9,24 +9,23 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const progress = await sql`
-      SELECT vp.video_id, vp.completed, vp.completed_at
-      FROM video_progress vp
-      WHERE vp.user_id = ${user.id}
-    `
+    const { data: progress } = await supabaseAdmin
+      .from('video_progress')
+      .select('video_id, completed, completed_at')
+      .eq('user_id', user.id)
 
-    const totalVideos = await sql`
-      SELECT COUNT(*) as count FROM onboarding_videos
-    `
+    const { count: totalCount } = await supabaseAdmin
+      .from('onboarding_videos')
+      .select('*', { count: 'exact', head: true })
 
-    const completedCount = progress.filter((p: any) => p.completed).length
-    const totalCount = parseInt(totalVideos[0]?.count || "0")
+    const completedCount = (progress || []).filter((p: any) => p.completed).length
+    const total = totalCount || 0
 
     return NextResponse.json({
-      progress,
+      progress: progress || [],
       completedCount,
-      totalCount,
-      percentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+      totalCount: total,
+      percentage: total > 0 ? Math.round((completedCount / total) * 100) : 0,
     })
   } catch (error: any) {
     console.error("Error fetching learning progress:", error)
@@ -50,26 +49,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "videoId is required" }, { status: 400 })
     }
 
-    const videoExists = await sql`
-      SELECT id FROM onboarding_videos WHERE id = ${videoId}
-    `
-    if (videoExists.length === 0) {
+    const { data: video } = await supabaseAdmin
+      .from('onboarding_videos')
+      .select('id')
+      .eq('id', videoId)
+      .single()
+
+    if (!video) {
       return NextResponse.json({ error: "Video not found" }, { status: 404 })
     }
 
     const completedAt = completed !== false ? new Date().toISOString() : null
+    const isCompleted = completed !== false
 
-    await sql`
-      INSERT INTO video_progress (user_id, video_id, completed, completed_at)
-      VALUES (${user.id}, ${videoId}, ${completed !== false}, ${completedAt})
-      ON CONFLICT (user_id, video_id)
-      DO UPDATE SET 
-        completed = ${completed !== false},
-        completed_at = ${completedAt},
-        updated_at = now()
-    `
+    const { error } = await supabaseAdmin
+      .from('video_progress')
+      .upsert({
+        user_id: user.id,
+        video_id: videoId,
+        completed: isCompleted,
+        completed_at: completedAt,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,video_id' })
 
-    return NextResponse.json({ success: true, videoId, completed: completed !== false })
+    if (error) {
+      console.error("Error upserting progress:", error)
+      return NextResponse.json({ error: "Failed to update progress" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, videoId, completed: isCompleted })
   } catch (error: any) {
     console.error("Error updating learning progress:", error)
     return NextResponse.json(

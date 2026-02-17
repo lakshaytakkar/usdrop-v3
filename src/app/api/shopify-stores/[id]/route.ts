@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 function mapStoreFromDB(row: any) {
+  const profile = row.profiles
   return {
     id: row.id,
     user_id: row.user_id,
@@ -22,10 +23,10 @@ function mapStoreFromDB(row: any) {
     country: null,
     currency: 'USD',
     plan: row.plan || 'basic',
-    user: row.user_email ? {
+    user: profile ? {
       id: row.user_id,
-      email: row.user_email,
-      full_name: row.user_full_name,
+      email: profile.email,
+      full_name: profile.full_name,
     } : undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -45,19 +46,18 @@ export async function GET(
 
     const { id: storeId } = await params
 
-    const data = await sql`
-      SELECT s.*, p.email as user_email, p.full_name as user_full_name
-      FROM shopify_stores s
-      LEFT JOIN profiles p ON s.user_id = p.id
-      WHERE s.id = ${storeId} AND s.user_id = ${user.id}
-      LIMIT 1
-    `
+    const { data, error } = await supabaseAdmin
+      .from('shopify_stores')
+      .select('*, profiles(email, full_name)')
+      .eq('id', storeId)
+      .eq('user_id', user.id)
+      .single()
 
-    if (data.length === 0) {
+    if (error || !data) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    return NextResponse.json(mapStoreFromDB(data[0]))
+    return NextResponse.json(mapStoreFromDB(data))
   } catch (error) {
     console.error('Error in GET /api/shopify-stores/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -78,34 +78,37 @@ export async function PATCH(
     const { id: storeId } = await params
     const body = await request.json()
 
-    const existing = await sql`
-      SELECT id FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
-    `
-    if (existing.length === 0) {
+    const { data: existing } = await supabaseAdmin
+      .from('shopify_stores')
+      .select('id')
+      .eq('id', storeId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!existing) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
 
-    const storeName = body.name !== undefined ? body.name : null
-    const shopDomain = body.url !== undefined ? body.url : null
-    const isActive = body.status !== undefined ? (body.status === 'connected') : null
-    const planVal = body.plan !== undefined ? body.plan : null
+    const updateFields: Record<string, any> = { updated_at: new Date().toISOString() }
 
-    const result = await sql`
-      UPDATE shopify_stores SET
-        updated_at = NOW(),
-        store_name = COALESCE(${storeName}, store_name),
-        shop_domain = COALESCE(${shopDomain}, shop_domain),
-        is_active = COALESCE(${isActive}, is_active),
-        plan = COALESCE(${planVal}, plan)
-      WHERE id = ${storeId} AND user_id = ${user.id}
-      RETURNING *
-    `
+    if (body.name !== undefined) updateFields.store_name = body.name
+    if (body.url !== undefined) updateFields.shop_domain = body.url
+    if (body.status !== undefined) updateFields.is_active = body.status === 'connected'
+    if (body.plan !== undefined) updateFields.plan = body.plan
 
-    if (result.length === 0) {
+    const { data: result, error } = await supabaseAdmin
+      .from('shopify_stores')
+      .update(updateFields)
+      .eq('id', storeId)
+      .eq('user_id', user.id)
+      .select('*, profiles(email, full_name)')
+      .single()
+
+    if (error || !result) {
       return NextResponse.json({ error: 'Store not found' }, { status: 404 })
     }
 
-    return NextResponse.json(mapStoreFromDB(result[0]))
+    return NextResponse.json(mapStoreFromDB(result))
   } catch (error) {
     console.error('Error in PATCH /api/shopify-stores/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -125,16 +128,22 @@ export async function DELETE(
 
     const { id: storeId } = await params
 
-    const existing = await sql`
-      SELECT id FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
-    `
-    if (existing.length === 0) {
+    const { data: existing } = await supabaseAdmin
+      .from('shopify_stores')
+      .select('id')
+      .eq('id', storeId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!existing) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
 
-    await sql`
-      DELETE FROM shopify_stores WHERE id = ${storeId} AND user_id = ${user.id}
-    `
+    await supabaseAdmin
+      .from('shopify_stores')
+      .delete()
+      .eq('id', storeId)
+      .eq('user_id', user.id)
 
     return NextResponse.json({ success: true, message: 'Store deleted successfully' })
   } catch (error) {

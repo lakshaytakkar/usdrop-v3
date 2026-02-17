@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
@@ -12,40 +12,43 @@ export async function GET(request: NextRequest) {
     const trending = searchParams.get('trending')
     const search = searchParams.get('search')
 
-    const whereClauses: string[] = []
-    const values: any[] = []
-    let paramIndex = 0
+    let query = supabaseAdmin.from('categories').select('*')
 
     if (parentCategoryId === 'null' || parentCategoryId === '') {
-      whereClauses.push(`c.parent_category_id IS NULL`)
+      query = query.is('parent_category_id', null)
     } else if (parentCategoryId) {
-      paramIndex++
-      whereClauses.push(`c.parent_category_id = $${paramIndex}`)
-      values.push(parentCategoryId)
+      query = query.eq('parent_category_id', parentCategoryId)
     }
 
     if (trending === 'true') {
-      whereClauses.push(`c.trending = true`)
+      query = query.eq('trending', true)
     }
 
     if (search) {
-      paramIndex++
-      const searchParam = `%${search}%`
-      whereClauses.push(`(c.name ILIKE $${paramIndex} OR c.slug ILIKE $${paramIndex} OR c.description ILIKE $${paramIndex})`)
-      values.push(searchParam)
+      query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%,description.ilike.%${search}%`)
     }
 
-    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    query = query.order('growth_percentage', { ascending: false, nullsFirst: false }).order('name', { ascending: true })
 
-    const query = `
-      SELECT c.*,
-        (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) as actual_product_count
-      FROM categories c
-      ${whereSQL}
-      ORDER BY c.growth_percentage DESC NULLS LAST, c.name ASC
-    `
+    const { data, error } = await query
 
-    const data = await sql.unsafe(query, values)
+    if (error) {
+      console.error('Error fetching categories:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    const { data: productCounts } = await supabaseAdmin
+      .from('products')
+      .select('category_id')
+
+    const countMap: Record<string, number> = {}
+    if (productCounts) {
+      for (const p of productCounts) {
+        if (p.category_id) {
+          countMap[p.category_id] = (countMap[p.category_id] || 0) + 1
+        }
+      }
+    }
 
     const categories = (data || []).map((cat: any) => ({
       id: cat.id,
@@ -56,7 +59,7 @@ export async function GET(request: NextRequest) {
       thumbnail: cat.thumbnail,
       parent_category_id: cat.parent_category_id,
       trending: cat.trending || false,
-      product_count: parseInt(cat.actual_product_count) || cat.product_count || 0,
+      product_count: countMap[cat.id] || cat.product_count || 0,
       avg_profit_margin: cat.avg_profit_margin ? parseFloat(cat.avg_profit_margin) : null,
       growth_percentage: cat.growth_percentage ? parseFloat(cat.growth_percentage) : null,
       created_at: cat.created_at,
@@ -102,21 +105,36 @@ export async function POST(request: NextRequest) {
 
     const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
-    const existing = await sql`SELECT id FROM categories WHERE slug = ${generatedSlug} LIMIT 1`
-    if (existing.length > 0) {
+    const { data: existing } = await supabaseAdmin
+      .from('categories')
+      .select('id')
+      .eq('slug', generatedSlug)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
       return NextResponse.json(
         { error: 'Category with this slug already exists' },
         { status: 400 }
       )
     }
 
-    const result = await sql`
-      INSERT INTO categories (name, slug, description, image, thumbnail, parent_category_id, trending, growth_percentage)
-      VALUES (${name}, ${generatedSlug}, ${description || null}, ${image || null}, ${thumbnail || null}, ${parent_category_id || null}, ${trending || false}, ${growth_percentage || null})
-      RETURNING *
-    `
+    const { data: result, error } = await supabaseAdmin
+      .from('categories')
+      .insert({
+        name,
+        slug: generatedSlug,
+        description: description || null,
+        image: image || null,
+        thumbnail: thumbnail || null,
+        parent_category_id: parent_category_id || null,
+        trending: trending || false,
+        growth_percentage: growth_percentage || null,
+      })
+      .select()
+      .single()
 
-    if (!result.length) {
+    if (error || !result) {
+      console.error('Error creating category:', error)
       return NextResponse.json(
         { error: 'Failed to create category' },
         { status: 500 }
@@ -124,7 +142,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { category: result[0] },
+      { category: result },
       { status: 201 }
     )
   } catch (error) {

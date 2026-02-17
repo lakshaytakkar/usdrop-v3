@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapPlanFromDB } from '@/lib/utils/plan-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -12,15 +12,17 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const data = await sql`
-      SELECT * FROM subscription_plans WHERE id = ${id} LIMIT 1
-    `
+    const { data, error } = await supabaseAdmin
+      .from('subscription_plans')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (!data || data.length === 0) {
+    if (error || !data) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 
-    const plan = mapPlanFromDB(data[0])
+    const plan = mapPlanFromDB(data)
     return NextResponse.json(plan)
   } catch (error) {
     console.error('Error in GET /api/admin/plans/[id]:', error)
@@ -38,11 +40,11 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    const updates: Record<string, unknown> = {
+    const updateData: Record<string, any> = {
       updated_at: new Date().toISOString(),
     }
 
-    if (body.name !== undefined) updates.name = body.name
+    if (body.name !== undefined) updateData.name = body.name
     if (body.slug !== undefined) {
       const { validatePlanSlug } = await import('@/lib/utils/plan-helpers')
       if (!validatePlanSlug(body.slug)) {
@@ -51,9 +53,9 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.slug = body.slug
+      updateData.slug = body.slug
     }
-    if (body.description !== undefined) updates.description = body.description || null
+    if (body.description !== undefined) updateData.description = body.description || null
     if (body.priceMonthly !== undefined) {
       if (body.priceMonthly < 0) {
         return NextResponse.json(
@@ -61,7 +63,7 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.price_monthly = body.priceMonthly
+      updateData.price_monthly = body.priceMonthly
     }
     if (body.priceAnnual !== undefined) {
       if (body.priceAnnual !== null && body.priceAnnual < 0) {
@@ -70,7 +72,7 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.price_annual = body.priceAnnual ?? null
+      updateData.price_annual = body.priceAnnual ?? null
     }
     if (body.priceYearly !== undefined) {
       if (body.priceYearly !== null && body.priceYearly < 0) {
@@ -79,7 +81,7 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.price_yearly = body.priceYearly ?? null
+      updateData.price_yearly = body.priceYearly ?? null
     }
     if (body.features !== undefined) {
       if (!Array.isArray(body.features)) {
@@ -88,13 +90,13 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.features = JSON.stringify(body.features)
+      updateData.features = body.features
     }
-    if (body.popular !== undefined) updates.popular = body.popular
-    if (body.active !== undefined) updates.active = body.active
-    if (body.isPublic !== undefined) updates.is_public = body.isPublic
-    if (body.displayOrder !== undefined) updates.display_order = body.displayOrder
-    if (body.keyPointers !== undefined) updates.key_pointers = body.keyPointers || null
+    if (body.popular !== undefined) updateData.popular = body.popular
+    if (body.active !== undefined) updateData.active = body.active
+    if (body.isPublic !== undefined) updateData.is_public = body.isPublic
+    if (body.displayOrder !== undefined) updateData.display_order = body.displayOrder
+    if (body.keyPointers !== undefined) updateData.key_pointers = body.keyPointers || null
     if (body.trialDays !== undefined) {
       if (body.trialDays < 0) {
         return NextResponse.json(
@@ -102,14 +104,18 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      updates.trial_days = body.trialDays
+      updateData.trial_days = body.trialDays
     }
 
-    if (updates.slug) {
-      const existingPlan = await sql`
-        SELECT id FROM subscription_plans WHERE slug = ${updates.slug as string} AND id != ${id} LIMIT 1
-      `
-      if (existingPlan.length > 0) {
+    if (updateData.slug) {
+      const { data: existingPlan } = await supabaseAdmin
+        .from('subscription_plans')
+        .select('id')
+        .eq('slug', updateData.slug)
+        .neq('id', id)
+        .limit(1)
+
+      if (existingPlan && existingPlan.length > 0) {
         return NextResponse.json(
           { error: 'A plan with this slug already exists' },
           { status: 409 }
@@ -117,42 +123,29 @@ export async function PATCH(
       }
     }
 
-    const setClauses: string[] = []
-    const values: unknown[] = []
-    let paramIndex = 1
+    const { data: result, error: updateError } = await supabaseAdmin
+      .from('subscription_plans')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
 
-    for (const [key, value] of Object.entries(updates)) {
-      if (key === 'features') {
-        setClauses.push(`${key} = $${paramIndex++}::jsonb`)
-      } else {
-        setClauses.push(`${key} = $${paramIndex++}`)
-      }
-      values.push(value)
-    }
-
-    values.push(id)
-
-    try {
-      const result = await sql.unsafe(
-        `UPDATE subscription_plans SET ${setClauses.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
-        values
-      )
-
-      if (!result || result.length === 0) {
-        return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-      }
-
-      const plan = mapPlanFromDB(result[0])
-      return NextResponse.json(plan)
-    } catch (err: any) {
-      if (err?.code === '23505') {
+    if (updateError) {
+      if (updateError.code === '23505') {
         return NextResponse.json(
           { error: 'A plan with this name or slug already exists' },
           { status: 409 }
         )
       }
-      throw err
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
+
+    if (!result) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+    }
+
+    const plan = mapPlanFromDB(result)
+    return NextResponse.json(plan)
   } catch (error) {
     console.error('Error in PATCH /api/admin/plans/[id]:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -168,32 +161,39 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const profiles = await sql`
-      SELECT id FROM profiles WHERE subscription_plan_id = ${id} LIMIT 1
-    `
+    const { data: profiles } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('subscription_plan_id', id)
+      .limit(1)
 
     if (profiles && profiles.length > 0) {
       const now = new Date().toISOString()
-      const result = await sql`
-        UPDATE subscription_plans SET active = false, updated_at = ${now}
-        WHERE id = ${id}
-        RETURNING *
-      `
+      const { data: result, error } = await supabaseAdmin
+        .from('subscription_plans')
+        .update({ active: false, updated_at: now })
+        .eq('id', id)
+        .select()
+        .single()
 
-      if (!result || result.length === 0) {
+      if (error || !result) {
         return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
       }
 
       return NextResponse.json({
         success: true,
         message: 'Plan deactivated (in use by users)',
-        plan: mapPlanFromDB(result[0]),
+        plan: mapPlanFromDB(result),
       })
     }
 
-    const deleteResult = await sql`DELETE FROM subscription_plans WHERE id = ${id} RETURNING id`
+    const { data: deleteResult, error: deleteError } = await supabaseAdmin
+      .from('subscription_plans')
+      .delete()
+      .eq('id', id)
+      .select('id')
 
-    if (!deleteResult || deleteResult.length === 0) {
+    if (deleteError || !deleteResult || deleteResult.length === 0) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
     }
 

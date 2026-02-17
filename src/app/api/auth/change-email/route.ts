@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { validateEmail } from '@/lib/utils/validation'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   try {
@@ -38,15 +39,26 @@ export async function POST(request: Request) {
       )
     }
 
-    const existing = await sql`SELECT id FROM profiles WHERE LOWER(email) = LOWER(${newEmail}) LIMIT 1`
-    if (existing.length > 0) {
+    const supabase = await createClient()
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+
+    if (error) {
+      if (error.message?.includes('already') || error.message?.includes('exists')) {
+        return NextResponse.json(
+          { error: 'An account with this email address already exists.' },
+          { status: 409 }
+        )
+      }
       return NextResponse.json(
-        { error: 'An account with this email address already exists.' },
-        { status: 409 }
+        { error: error.message || 'Failed to update email' },
+        { status: 400 }
       )
     }
 
-    await sql`UPDATE profiles SET email = ${newEmail.toLowerCase()}, updated_at = NOW() WHERE id = ${user.id}`
+    await supabaseAdmin
+      .from('profiles')
+      .update({ email: newEmail.toLowerCase() })
+      .eq('id', user.id)
 
     return NextResponse.json({
       message: 'Email address updated successfully.',

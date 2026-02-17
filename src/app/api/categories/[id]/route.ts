@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
@@ -8,30 +8,41 @@ export async function GET(
   try {
     const { id } = await params
 
-    const result = await sql`SELECT * FROM categories WHERE id = ${id} LIMIT 1`
+    const { data, error } = await supabaseAdmin
+      .from('categories')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (result.length === 0) {
+    if (error || !data) {
       return NextResponse.json(
         { error: 'Category not found' },
         { status: 404 }
       )
     }
 
-    const data = result[0]
-
     let parentCategory = null
     if (data.parent_category_id) {
-      const parentResult = await sql`SELECT id, name, slug FROM categories WHERE id = ${data.parent_category_id} LIMIT 1`
-      if (parentResult.length > 0) {
+      const { data: parentResult } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .eq('id', data.parent_category_id)
+        .single()
+
+      if (parentResult) {
         parentCategory = {
-          id: parentResult[0].id,
-          name: parentResult[0].name,
-          slug: parentResult[0].slug,
+          id: parentResult.id,
+          name: parentResult.name,
+          slug: parentResult.slug,
         }
       }
     }
 
-    const subcategories = await sql`SELECT * FROM categories WHERE parent_category_id = ${id} ORDER BY name ASC`
+    const { data: subcategories } = await supabaseAdmin
+      .from('categories')
+      .select('*')
+      .eq('parent_category_id', id)
+      .order('name', { ascending: true })
 
     const category = {
       id: data.id,
@@ -48,7 +59,7 @@ export async function GET(
       growth_percentage: data.growth_percentage ? parseFloat(data.growth_percentage) : null,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      subcategories: subcategories.map((sub: any) => ({
+      subcategories: (subcategories || []).map((sub: any) => ({
         id: sub.id,
         name: sub.name,
         slug: sub.slug,
@@ -95,8 +106,14 @@ export async function PATCH(
     } = body
 
     if (slug) {
-      const existing = await sql`SELECT id FROM categories WHERE slug = ${slug} AND id != ${id} LIMIT 1`
-      if (existing.length > 0) {
+      const { data: existing } = await supabaseAdmin
+        .from('categories')
+        .select('id')
+        .eq('slug', slug)
+        .neq('id', id)
+        .limit(1)
+
+      if (existing && existing.length > 0) {
         return NextResponse.json(
           { error: 'Category with this slug already exists' },
           { status: 400 }
@@ -104,38 +121,38 @@ export async function PATCH(
       }
     }
 
-    const setClauses: string[] = []
-    const params_arr: unknown[] = []
-    let paramIndex = 1
+    const updateFields: Record<string, any> = {}
 
-    if (name !== undefined) { setClauses.push(`name = $${paramIndex++}`); params_arr.push(name) }
-    if (slug !== undefined) { setClauses.push(`slug = $${paramIndex++}`); params_arr.push(slug) }
-    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
-    if (image !== undefined) { setClauses.push(`image = $${paramIndex++}`); params_arr.push(image) }
-    if (thumbnail !== undefined) { setClauses.push(`thumbnail = $${paramIndex++}`); params_arr.push(thumbnail) }
-    if (parent_category_id !== undefined) { setClauses.push(`parent_category_id = $${paramIndex++}`); params_arr.push(parent_category_id || null) }
-    if (trending !== undefined) { setClauses.push(`trending = $${paramIndex++}`); params_arr.push(trending) }
-    if (growth_percentage !== undefined) { setClauses.push(`growth_percentage = $${paramIndex++}`); params_arr.push(growth_percentage) }
+    if (name !== undefined) updateFields.name = name
+    if (slug !== undefined) updateFields.slug = slug
+    if (description !== undefined) updateFields.description = description
+    if (image !== undefined) updateFields.image = image
+    if (thumbnail !== undefined) updateFields.thumbnail = thumbnail
+    if (parent_category_id !== undefined) updateFields.parent_category_id = parent_category_id || null
+    if (trending !== undefined) updateFields.trending = trending
+    if (growth_percentage !== undefined) updateFields.growth_percentage = growth_percentage
 
-    if (setClauses.length === 0) {
+    if (Object.keys(updateFields).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    setClauses.push(`updated_at = now()`)
+    updateFields.updated_at = new Date().toISOString()
 
-    const query = `UPDATE categories SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
-    params_arr.push(id)
+    const { data: result, error } = await supabaseAdmin
+      .from('categories')
+      .update(updateFields)
+      .eq('id', id)
+      .select()
+      .single()
 
-    const result = await sql.unsafe(query, params_arr)
-
-    if (!result || result.length === 0) {
+    if (error || !result) {
       return NextResponse.json(
         { error: 'Failed to update category' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ category: result[0] })
+    return NextResponse.json({ category: result })
   } catch (error) {
     console.error('Unexpected error updating category:', error)
     return NextResponse.json(
@@ -152,23 +169,33 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    const subcategories = await sql`SELECT id FROM categories WHERE parent_category_id = ${id} LIMIT 1`
-    if (subcategories.length > 0) {
+    const { data: subcategories } = await supabaseAdmin
+      .from('categories')
+      .select('id')
+      .eq('parent_category_id', id)
+      .limit(1)
+
+    if (subcategories && subcategories.length > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category with subcategories. Please delete or reassign subcategories first.' },
         { status: 400 }
       )
     }
 
-    const products = await sql`SELECT id FROM products WHERE category_id = ${id} LIMIT 1`
-    if (products.length > 0) {
+    const { data: products } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('category_id', id)
+      .limit(1)
+
+    if (products && products.length > 0) {
       return NextResponse.json(
         { error: 'Cannot delete category with products. Please reassign or delete products first.' },
         { status: 400 }
       )
     }
 
-    await sql`DELETE FROM categories WHERE id = ${id}`
+    await supabaseAdmin.from('categories').delete().eq('id', id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

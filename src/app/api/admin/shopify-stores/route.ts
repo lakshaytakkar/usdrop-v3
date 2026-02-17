@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapShopifyStoreFromDB } from '@/lib/utils/shopify-store-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -16,53 +16,40 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
-    const conditions: string[] = []
-    const params: unknown[] = []
-    let paramIndex = 1
+    let countQuery = supabaseAdmin.from('shopify_stores').select('*', { count: 'exact', head: true })
+    let dataQuery = supabaseAdmin.from('shopify_stores').select('*, profiles(id, email, full_name)')
 
     if (status) {
-      conditions.push(`s.status = $${paramIndex++}`)
-      params.push(status)
+      countQuery = countQuery.eq('status', status)
+      dataQuery = dataQuery.eq('status', status)
     }
-
     if (userId) {
-      conditions.push(`s.user_id = $${paramIndex++}`)
-      params.push(userId)
+      countQuery = countQuery.eq('user_id', userId)
+      dataQuery = dataQuery.eq('user_id', userId)
     }
-
     if (search) {
-      conditions.push(`(s.name ILIKE $${paramIndex} OR s.url ILIKE $${paramIndex})`)
-      params.push(`%${search}%`)
-      paramIndex++
+      countQuery = countQuery.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
+      dataQuery = dataQuery.or(`name.ilike.%${search}%,url.ilike.%${search}%`)
     }
-
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
     const allowedSortColumns = ['created_at', 'updated_at', 'name', 'url', 'status', 'products_count']
-    const safeSortBy = allowedSortColumns.includes(sortBy) ? `s.${sortBy}` : 's.created_at'
-    const safeSortOrder = sortOrder === 'asc' ? 'ASC' : 'DESC'
+    const safeSortBy = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at'
+
+    dataQuery = dataQuery.order(safeSortBy, { ascending: sortOrder === 'asc' })
 
     const offset = (page - 1) * pageSize
+    dataQuery = dataQuery.range(offset, offset + pageSize - 1)
 
-    const dataQuery = `
-      SELECT s.*, 
-        p.id as profile_id, p.email as profile_email, p.full_name as profile_full_name
-      FROM shopify_stores s
-      LEFT JOIN profiles p ON s.user_id = p.id
-      ${whereClause}
-      ORDER BY ${safeSortBy} ${safeSortOrder}
-      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
-    `
-    params.push(pageSize, offset)
+    const [{ count: totalCount }, { data, error }] = await Promise.all([countQuery, dataQuery])
 
-    const data = await sql.unsafe(dataQuery, params)
+    if (error) {
+      console.error('Error fetching shopify stores:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    const total = totalCount || 0
 
     if (!data || data.length === 0) {
-      const countParams = params.slice(0, params.length - 2)
-      const countQuery = `SELECT COUNT(*) as total FROM shopify_stores s ${whereClause}`
-      const countResult = await sql.unsafe(countQuery, countParams)
-      const total = parseInt(countResult[0]?.total || '0')
-
       return NextResponse.json({
         stores: [],
         total,
@@ -72,32 +59,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const stores = data.map((row: any) => {
-      const store = {
-        ...row,
-        profiles: row.profile_id ? {
-          id: row.profile_id,
-          email: row.profile_email,
-          full_name: row.profile_full_name,
-        } : null,
-      }
-      delete store.profile_id
-      delete store.profile_email
-      delete store.profile_full_name
-      return mapShopifyStoreFromDB(store)
-    })
-
-    const countParams = params.slice(0, params.length - 2)
-    const countQuery = `SELECT COUNT(*) as total FROM shopify_stores s ${whereClause}`
-    const countResult = await sql.unsafe(countQuery, countParams)
-    const totalCount = parseInt(countResult[0]?.total || '0')
+    const stores = data.map((row: any) => mapShopifyStoreFromDB(row))
 
     return NextResponse.json({
       stores,
-      total: totalCount,
+      total,
       page,
       pageSize,
-      totalPages: Math.ceil(totalCount / pageSize)
+      totalPages: Math.ceil(total / pageSize)
     })
   } catch (error) {
     console.error('Error in GET /api/admin/shopify-stores:', error)

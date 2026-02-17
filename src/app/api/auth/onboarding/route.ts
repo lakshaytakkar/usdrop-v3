@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { validatePhoneNumber } from '@/lib/utils/onboarding'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   try {
@@ -62,22 +62,21 @@ export async function POST(request: Request) {
       )
     }
 
-    const existingProfile = await sql`SELECT id FROM profiles WHERE id = ${user.id} LIMIT 1`
+    const { error } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        phone_number,
+        ecommerce_experience,
+        preferred_niche,
+      })
+      .eq('id', user.id)
 
-    if (existingProfile.length === 0) {
-      await sql`
-        INSERT INTO profiles (id, email, status, account_type, phone_number, ecommerce_experience, preferred_niche, created_at, updated_at)
-        VALUES (${user.id}, ${user.email}, 'active', 'free', ${phone_number}, ${ecommerce_experience}, ${preferred_niche}, NOW(), NOW())
-      `
-    } else {
-      await sql`
-        UPDATE profiles
-        SET phone_number = ${phone_number},
-            ecommerce_experience = ${ecommerce_experience},
-            preferred_niche = ${preferred_niche},
-            updated_at = NOW()
-        WHERE id = ${user.id}
-      `
+    if (error) {
+      console.error('Profile update error:', error)
+      return NextResponse.json(
+        { error: 'Failed to update profile' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({

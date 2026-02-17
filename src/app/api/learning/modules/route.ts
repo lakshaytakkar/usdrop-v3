@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
-import sql from "@/lib/db"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 const PREVIEW_VIDEO_COUNT = 5
 
@@ -15,40 +15,36 @@ export async function GET() {
       user.account_type === "pro" ||
       ["admin", "super_admin", "editor", "moderator"].includes(user.internal_role || "")
 
-    const modules = await sql`
-      SELECT 
-        m.id, m.title, m.description, m.order_index, m.thumbnail,
-        json_agg(
-          json_build_object(
-            'id', v.id,
-            'title', v.title,
-            'description', v.description,
-            'video_url', v.video_url,
-            'video_duration', v.video_duration,
-            'order_index', v.order_index,
-            'thumbnail', v.thumbnail
-          ) ORDER BY v.order_index
-        ) as videos
-      FROM onboarding_modules m
-      LEFT JOIN onboarding_videos v ON v.module_id = m.id
-      GROUP BY m.id, m.title, m.description, m.order_index, m.thumbnail
-      ORDER BY m.order_index
-    `
+    const { data: modules } = await supabaseAdmin
+      .from('onboarding_modules')
+      .select('id, title, description, order_index, thumbnail')
+      .order('order_index')
 
-    const progress = await sql`
-      SELECT video_id, completed, completed_at
-      FROM video_progress
-      WHERE user_id = ${user.id}
-    `
+    const { data: videos } = await supabaseAdmin
+      .from('onboarding_videos')
+      .select('id, title, description, video_url, video_duration, order_index, thumbnail, module_id')
+      .order('order_index')
+
+    const { data: progress } = await supabaseAdmin
+      .from('video_progress')
+      .select('video_id, completed, completed_at')
+      .eq('user_id', user.id)
 
     const progressMap = new Map(
-      progress.map((p: any) => [p.video_id, { completed: p.completed, completed_at: p.completed_at }])
+      (progress || []).map((p: any) => [p.video_id, { completed: p.completed, completed_at: p.completed_at }])
     )
 
+    const videosByModule = new Map<string, any[]>()
+    ;(videos || []).forEach((v: any) => {
+      if (!videosByModule.has(v.module_id)) {
+        videosByModule.set(v.module_id, [])
+      }
+      videosByModule.get(v.module_id)!.push(v)
+    })
+
     let globalVideoIndex = 0
-    const enrichedModules = modules.map((mod: any) => {
-      const videos = (mod.videos || [])
-        .filter((v: any) => v.id !== null)
+    const enrichedModules = (modules || []).map((mod: any) => {
+      const moduleVideos = (videosByModule.get(mod.id) || [])
         .map((video: any) => {
           globalVideoIndex++
           const isPreview = globalVideoIndex <= PREVIEW_VIDEO_COUNT
@@ -57,6 +53,7 @@ export async function GET() {
 
           return {
             ...video,
+            module_id: undefined,
             globalIndex: globalVideoIndex,
             isPreview,
             isAccessible,
@@ -65,8 +62,8 @@ export async function GET() {
           }
         })
 
-      const completedInModule = videos.filter((v: any) => v.completed).length
-      const totalInModule = videos.length
+      const completedInModule = moduleVideos.filter((v: any) => v.completed).length
+      const totalInModule = moduleVideos.length
 
       return {
         id: mod.id,
@@ -74,7 +71,7 @@ export async function GET() {
         description: mod.description,
         order_index: mod.order_index,
         thumbnail: mod.thumbnail,
-        videos,
+        videos: moduleVideos,
         completedCount: completedInModule,
         totalCount: totalInModule,
         isFullyCompleted: totalInModule > 0 && completedInModule === totalInModule,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { ChapterContentType } from '@/types/courses'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
@@ -23,12 +23,10 @@ export async function PATCH(
       is_preview,
     } = body
 
-    const setClauses: string[] = []
-    const params_arr: unknown[] = []
-    let paramIndex = 1
+    const updateData: Record<string, any> = {}
 
-    if (title !== undefined) { setClauses.push(`title = $${paramIndex++}`); params_arr.push(title) }
-    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description
     if (content_type !== undefined) {
       const validContentTypes: ChapterContentType[] = ['video', 'text', 'quiz', 'assignment', 'resource']
       if (!validContentTypes.includes(content_type)) {
@@ -37,33 +35,34 @@ export async function PATCH(
           { status: 400 }
         )
       }
-      setClauses.push(`content_type = $${paramIndex++}`)
-      params_arr.push(content_type)
+      updateData.content_type = content_type
     }
-    if (content !== undefined) { setClauses.push(`content = $${paramIndex++}`); params_arr.push(JSON.stringify(content)) }
-    if (order_index !== undefined) { setClauses.push(`order_index = $${paramIndex++}`); params_arr.push(order_index) }
-    if (duration_minutes !== undefined) { setClauses.push(`duration_minutes = $${paramIndex++}`); params_arr.push(duration_minutes) }
-    if (is_preview !== undefined) { setClauses.push(`is_preview = $${paramIndex++}`); params_arr.push(is_preview) }
+    if (content !== undefined) updateData.content = content
+    if (order_index !== undefined) updateData.order_index = order_index
+    if (duration_minutes !== undefined) updateData.duration_minutes = duration_minutes
+    if (is_preview !== undefined) updateData.is_preview = is_preview
 
-    if (setClauses.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    setClauses.push(`updated_at = now()`)
+    updateData.updated_at = new Date().toISOString()
 
-    const query = `UPDATE course_chapters SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
-    params_arr.push(chapterId)
+    const { data: result, error } = await supabaseAdmin
+      .from('course_chapters')
+      .update(updateData)
+      .eq('id', chapterId)
+      .select()
+      .single()
 
-    const result = await sql.unsafe(query, params_arr)
-
-    if (!result || result.length === 0) {
+    if (error || !result) {
       return NextResponse.json(
         { error: 'Failed to update chapter' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ chapter: result[0] })
+    return NextResponse.json({ chapter: result })
   } catch (error) {
     console.error('Unexpected error updating chapter:', error)
     return NextResponse.json(
@@ -82,7 +81,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { chapterId } = await params
 
-    await sql`DELETE FROM course_chapters WHERE id = ${chapterId}`
+    await supabaseAdmin.from('course_chapters').delete().eq('id', chapterId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function POST(
   request: NextRequest,
@@ -15,18 +15,16 @@ export async function POST(
 
     const { id: storeId } = await params
 
-    const stores = await sql`
-      SELECT id, user_id, shop_domain, access_token, is_active
-      FROM shopify_stores
-      WHERE id = ${storeId} AND user_id = ${user.id}
-      LIMIT 1
-    `
+    const { data: store, error: storeError } = await supabaseAdmin
+      .from('shopify_stores')
+      .select('id, user_id, shop_domain, access_token, is_active')
+      .eq('id', storeId)
+      .eq('user_id', user.id)
+      .single()
 
-    if (stores.length === 0) {
+    if (storeError || !store) {
       return NextResponse.json({ error: 'Store not found or access denied' }, { status: 404 })
     }
-
-    const store = stores[0]
 
     if (!store.is_active) {
       return NextResponse.json(
@@ -42,21 +40,19 @@ export async function POST(
       )
     }
 
-    await sql`
-      UPDATE shopify_stores
-      SET last_synced_at = NOW(), updated_at = NOW()
-      WHERE id = ${storeId} AND user_id = ${user.id}
-    `
+    await supabaseAdmin
+      .from('shopify_stores')
+      .update({ last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', storeId)
+      .eq('user_id', user.id)
 
-    const updated = await sql`
-      SELECT s.*, p.email as user_email, p.full_name as user_full_name
-      FROM shopify_stores s
-      LEFT JOIN profiles p ON s.user_id = p.id
-      WHERE s.id = ${storeId}
-      LIMIT 1
-    `
+    const { data: updated } = await supabaseAdmin
+      .from('shopify_stores')
+      .select('*, profiles(email, full_name)')
+      .eq('id', storeId)
+      .single()
 
-    const row = updated[0]
+    const row = updated
     const mappedStore = {
       id: row.id,
       user_id: row.user_id,

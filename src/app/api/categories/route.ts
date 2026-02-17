@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { CategoriesResponse } from '@/types/categories'
 
 export async function GET(request: NextRequest) {
@@ -10,38 +10,31 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const includeSubcategories = searchParams.get('include_subcategories') === 'true'
 
-    const whereClauses: string[] = []
-    const values: any[] = []
-    let paramIndex = 0
+    let query = supabaseAdmin.from('categories').select('*')
 
     if (parentCategoryId === 'null' || parentCategoryId === '') {
-      whereClauses.push('parent_category_id IS NULL')
+      query = query.is('parent_category_id', null)
     } else if (parentCategoryId) {
-      paramIndex++
-      whereClauses.push(`parent_category_id = $${paramIndex}`)
-      values.push(parentCategoryId)
+      query = query.eq('parent_category_id', parentCategoryId)
     }
 
     if (trending === 'true') {
-      whereClauses.push('trending = true')
+      query = query.eq('trending', true)
     }
 
     if (search) {
-      paramIndex++
-      const searchParam = `%${search}%`
-      whereClauses.push(`(name ILIKE $${paramIndex} OR slug ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`)
-      values.push(searchParam)
+      query = query.or(`name.ilike.%${search}%,slug.ilike.%${search}%,description.ilike.%${search}%`)
     }
 
-    const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    query = query.order('growth_percentage', { ascending: false, nullsFirst: false })
+      .order('name', { ascending: true })
 
-    const query = `
-      SELECT * FROM categories
-      ${whereSQL}
-      ORDER BY growth_percentage DESC NULLS LAST, name ASC
-    `
+    const { data, error } = await query
 
-    const data = await sql.unsafe(query, values)
+    if (error) {
+      console.error('Error fetching categories:', error)
+      return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
+    }
 
     let categories = (data || []).map((cat: any) => ({
       id: cat.id,
@@ -62,11 +55,11 @@ export async function GET(request: NextRequest) {
     if (includeSubcategories) {
       const parentIds = categories.map((c: any) => c.id)
       if (parentIds.length > 0) {
-        const placeholders = parentIds.map((_: any, i: number) => `$${i + 1}`).join(', ')
-        const subcategories = await sql.unsafe(
-          `SELECT * FROM categories WHERE parent_category_id IN (${placeholders}) ORDER BY name ASC`,
-          parentIds
-        )
+        const { data: subcategories } = await supabaseAdmin
+          .from('categories')
+          .select('*')
+          .in('parent_category_id', parentIds)
+          .order('name', { ascending: true })
 
         if (subcategories) {
           categories = categories.map((cat: any) => ({
@@ -98,11 +91,10 @@ export async function GET(request: NextRequest) {
       .map((c: any) => c.parent_category_id!))]
 
     if (parentIds.length > 0) {
-      const placeholders = parentIds.map((_: any, i: number) => `$${i + 1}`).join(', ')
-      const parents = await sql.unsafe(
-        `SELECT id, name, slug FROM categories WHERE id IN (${placeholders})`,
-        parentIds
-      )
+      const { data: parents } = await supabaseAdmin
+        .from('categories')
+        .select('id, name, slug')
+        .in('id', parentIds)
 
       if (parents) {
         categories = categories.map((cat: any) => ({

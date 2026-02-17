@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 function mapStoreFromDB(row: any) {
+  const profile = row.profiles
   return {
     id: row.id,
     user_id: row.user_id,
@@ -22,10 +23,10 @@ function mapStoreFromDB(row: any) {
     country: null,
     currency: 'USD',
     plan: row.plan || 'basic',
-    user: row.user_email ? {
+    user: profile ? {
       id: row.user_id,
-      email: row.user_email,
-      full_name: row.user_full_name,
+      email: profile.email,
+      full_name: profile.full_name,
     } : undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -47,115 +48,34 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '50')
     const offset = (page - 1) * pageSize
 
-    let data
+    let query = supabaseAdmin
+      .from('shopify_stores')
+      .select('*, profiles(email, full_name)', { count: 'exact' })
+      .eq('user_id', user.id)
+
     if (status === 'connected') {
-      if (search) {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id} AND s.is_active = true
-            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      } else {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id} AND s.is_active = true
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      }
+      query = query.eq('is_active', true)
     } else if (status === 'disconnected') {
-      if (search) {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id} AND s.is_active = false
-            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      } else {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id} AND s.is_active = false
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      }
-    } else {
-      if (search) {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id}
-            AND (s.store_name ILIKE ${'%' + search + '%'} OR s.shop_domain ILIKE ${'%' + search + '%'})
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      } else {
-        data = await sql`
-          SELECT s.*, p.email as user_email, p.full_name as user_full_name
-          FROM shopify_stores s
-          LEFT JOIN profiles p ON s.user_id = p.id
-          WHERE s.user_id = ${user.id}
-          ORDER BY s.created_at DESC
-          LIMIT ${pageSize} OFFSET ${offset}
-        `
-      }
+      query = query.eq('is_active', false)
     }
 
-    const stores = data.map(mapStoreFromDB)
-
-    let countResult
-    if (status === 'connected') {
-      if (search) {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores
-          WHERE user_id = ${user.id} AND is_active = true
-            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
-        `
-      } else {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores
-          WHERE user_id = ${user.id} AND is_active = true
-        `
-      }
-    } else if (status === 'disconnected') {
-      if (search) {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores
-          WHERE user_id = ${user.id} AND is_active = false
-            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
-        `
-      } else {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores
-          WHERE user_id = ${user.id} AND is_active = false
-        `
-      }
-    } else {
-      if (search) {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores
-          WHERE user_id = ${user.id}
-            AND (store_name ILIKE ${'%' + search + '%'} OR shop_domain ILIKE ${'%' + search + '%'})
-        `
-      } else {
-        countResult = await sql`
-          SELECT COUNT(*) as count FROM shopify_stores WHERE user_id = ${user.id}
-        `
-      }
+    if (search) {
+      query = query.or(`store_name.ilike.%${search}%,shop_domain.ilike.%${search}%`)
     }
-    const totalCount = parseInt(countResult[0]?.count || '0')
+
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1)
+
+    const { data, error, count } = await query
+
+    if (error) {
+      console.error('Error fetching shopify stores:', error)
+      return NextResponse.json({ error: 'Failed to fetch stores' }, { status: 500 })
+    }
+
+    const stores = (data || []).map(mapStoreFromDB)
+    const totalCount = count || 0
 
     return NextResponse.json({
       stores,

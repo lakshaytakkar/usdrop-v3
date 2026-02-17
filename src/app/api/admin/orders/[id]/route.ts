@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(
@@ -11,19 +11,26 @@ export async function GET(
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
 
-    const result = await sql`
-      SELECT o.*, 
-        p.full_name as user_name, p.email as user_email, p.avatar_url as user_avatar
-      FROM orders o
-      LEFT JOIN profiles p ON o.user_id = p.id
-      WHERE o.id = ${id} LIMIT 1
-    `
+    const { data, error } = await supabaseAdmin
+      .from('orders')
+      .select('*, profiles(full_name, email, avatar_url)')
+      .eq('id', id)
+      .single()
 
-    if (result.length === 0) {
+    if (error || !data) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ order: result[0] })
+    const profile = data.profiles
+    const { profiles: _, ...orderFields } = data
+    const order = {
+      ...orderFields,
+      user_name: profile?.full_name || null,
+      user_email: profile?.email || null,
+      user_avatar: profile?.avatar_url || null,
+    }
+
+    return NextResponse.json({ order })
   } catch (error) {
     console.error('Error fetching order:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -42,31 +49,31 @@ export async function PATCH(
 
     const { status, tracking_number, tracking_url, notes } = body
 
-    const setClauses: string[] = []
-    const params_arr: unknown[] = []
-    let paramIndex = 1
+    const updateData: Record<string, any> = {}
 
-    if (status !== undefined) { setClauses.push(`status = $${paramIndex++}`); params_arr.push(status) }
-    if (tracking_number !== undefined) { setClauses.push(`tracking_number = $${paramIndex++}`); params_arr.push(tracking_number) }
-    if (tracking_url !== undefined) { setClauses.push(`tracking_url = $${paramIndex++}`); params_arr.push(tracking_url) }
-    if (notes !== undefined) { setClauses.push(`notes = $${paramIndex++}`); params_arr.push(notes) }
+    if (status !== undefined) updateData.status = status
+    if (tracking_number !== undefined) updateData.tracking_number = tracking_number
+    if (tracking_url !== undefined) updateData.tracking_url = tracking_url
+    if (notes !== undefined) updateData.notes = notes
 
-    if (setClauses.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    setClauses.push(`updated_at = now()`)
+    updateData.updated_at = new Date().toISOString()
 
-    const query = `UPDATE orders SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
-    params_arr.push(id)
+    const { data: result, error } = await supabaseAdmin
+      .from('orders')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
 
-    const result = await sql.unsafe(query, params_arr)
-
-    if (!result || result.length === 0) {
+    if (error || !result) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ order: result[0] })
+    return NextResponse.json({ order: result })
   } catch (error) {
     console.error('Error updating order:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

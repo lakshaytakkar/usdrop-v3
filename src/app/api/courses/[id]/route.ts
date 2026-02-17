@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { CourseDetailResponse } from '@/types/courses'
 
 export async function GET(
@@ -9,35 +9,42 @@ export async function GET(
   try {
     const { id } = await params
 
-    const courseResult = await sql`SELECT * FROM courses WHERE id = ${id} LIMIT 1`
+    const { data: courseData, error: courseError } = await supabaseAdmin
+      .from('courses')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    if (courseResult.length === 0) {
+    if (courseError || !courseData) {
       return NextResponse.json(
         { error: 'Course not found' },
         { status: 404 }
       )
     }
 
-    const courseData = courseResult[0]
-
     let instructorProfile: { full_name: string | null; avatar_url: string | null } | null = null
     if (courseData.instructor_id) {
-      const profileResult = await sql`
-        SELECT id, full_name, avatar_url FROM profiles WHERE id = ${courseData.instructor_id} LIMIT 1
-      `
-      if (profileResult.length > 0) {
+      const { data: profileData } = await supabaseAdmin
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', courseData.instructor_id)
+        .single()
+
+      if (profileData) {
         instructorProfile = {
-          full_name: profileResult[0].full_name,
-          avatar_url: profileResult[0].avatar_url,
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
         }
       }
     }
 
-    const modulesData = await sql`
-      SELECT * FROM course_modules WHERE course_id = ${id} ORDER BY order_index ASC
-    `
+    const { data: modulesData } = await supabaseAdmin
+      .from('course_modules')
+      .select('*')
+      .eq('course_id', id)
+      .order('order_index', { ascending: true })
 
-    const modules = modulesData.map((module: any) => ({
+    const modules = (modulesData || []).map((module: any) => ({
       ...module,
       chapters: [],
     }))

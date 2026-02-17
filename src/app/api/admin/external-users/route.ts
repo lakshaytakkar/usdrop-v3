@@ -1,49 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hashPassword } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 import crypto from 'crypto'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
-
-function mapRowToUserWithPlan(row: any) {
-  return {
-    ...row,
-    subscription_plans: row.plan_id ? {
-      id: row.plan_id,
-      name: row.plan_name,
-      slug: row.plan_slug,
-      price_monthly: row.plan_price_monthly,
-      features: row.plan_features,
-      trial_days: row.plan_trial_days,
-    } : null
-  }
-}
 
 export async function GET() {
   try {
     const authResult = await requireAdmin()
     if (isAdminResponse(authResult)) return authResult
 
-    const rows = await sql`
-      SELECT
-        p.*,
-        sp.id AS plan_id,
-        sp.name AS plan_name,
-        sp.slug AS plan_slug,
-        sp.price_monthly AS plan_price_monthly,
-        sp.features AS plan_features,
-        sp.trial_days AS plan_trial_days
-      FROM profiles p
-      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
-      WHERE p.internal_role IS NULL
-      ORDER BY p.created_at DESC
-    `
+    const { data: rows, error } = await supabaseAdmin
+      .from('profiles')
+      .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
+      .is('internal_role', null)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching external users:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
 
     if (!rows || rows.length === 0) {
       return NextResponse.json([])
     }
 
-    const users = rows.map((row: any) => mapExternalUserFromDB(mapRowToUserWithPlan(row)))
+    const users = rows.map((row: any) => mapExternalUserFromDB(row))
 
     return NextResponse.json(users)
   } catch (error) {
@@ -80,8 +62,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const existing = await sql`SELECT id FROM profiles WHERE email = ${email} LIMIT 1`
-    if (existing.length > 0) {
+    const { data: existing } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
+      .limit(1)
+
+    if (existing && existing.length > 0) {
       return NextResponse.json(
         { error: 'A user with this email already exists' },
         { status: 409 }
@@ -91,11 +78,13 @@ export async function POST(request: NextRequest) {
     const passwordHash = await hashPassword(password)
     const userId = crypto.randomUUID()
 
-    const planResult = await sql`
-      SELECT id, trial_days FROM subscription_plans WHERE slug = ${plan} LIMIT 1
-    `
+    const { data: planResult } = await supabaseAdmin
+      .from('subscription_plans')
+      .select('id, trial_days')
+      .eq('slug', plan)
+      .limit(1)
 
-    if (planResult.length === 0) {
+    if (!planResult || planResult.length === 0) {
       return NextResponse.json(
         { error: `Plan "${plan}" not found` },
         { status: 400 }
@@ -125,40 +114,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    await sql`
-      INSERT INTO profiles (
-        id, email, full_name, password_hash, internal_role,
-        subscription_plan_id, subscription_status, subscription_started_at, subscription_ends_at,
-        status, credits, phone_number, username, avatar_url,
-        is_trial, trial_ends_at, created_at, updated_at
-      ) VALUES (
-        ${userId}, ${email}, ${name}, ${passwordHash}, ${null},
-        ${planData.id}, ${isTrial ? 'trial' : 'active'}, ${startDate.toISOString()}, ${endDate.toISOString()},
-        ${status}, ${credits}, ${phoneNumber || null}, ${username || null}, ${avatarUrl || null},
-        ${isTrial}, ${calculatedTrialEndsAt ? calculatedTrialEndsAt.toISOString() : null},
-        ${new Date().toISOString()}, ${new Date().toISOString()}
-      )
-    `
+    const now = new Date().toISOString()
 
-    const rows = await sql`
-      SELECT
-        p.*,
-        sp.id AS plan_id,
-        sp.name AS plan_name,
-        sp.slug AS plan_slug,
-        sp.price_monthly AS plan_price_monthly,
-        sp.features AS plan_features,
-        sp.trial_days AS plan_trial_days
-      FROM profiles p
-      LEFT JOIN subscription_plans sp ON p.subscription_plan_id = sp.id
-      WHERE p.id = ${userId}
-    `
+    await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: userId,
+        email,
+        full_name: name,
+        password_hash: passwordHash,
+        internal_role: null,
+        subscription_plan_id: planData.id,
+        subscription_status: isTrial ? 'trial' : 'active',
+        subscription_started_at: startDate.toISOString(),
+        subscription_ends_at: endDate.toISOString(),
+        status,
+        credits,
+        phone_number: phoneNumber || null,
+        username: username || null,
+        avatar_url: avatarUrl || null,
+        is_trial: isTrial,
+        trial_ends_at: calculatedTrialEndsAt ? calculatedTrialEndsAt.toISOString() : null,
+        created_at: now,
+        updated_at: now,
+      })
+
+    const { data: rows } = await supabaseAdmin
+      .from('profiles')
+      .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
+      .eq('id', userId)
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({ error: 'Failed to fetch created user' }, { status: 500 })
     }
 
-    const user = mapExternalUserFromDB(mapRowToUserWithPlan(rows[0]))
+    const user = mapExternalUserFromDB(rows[0])
 
     return NextResponse.json(user, { status: 201 })
   } catch (error) {

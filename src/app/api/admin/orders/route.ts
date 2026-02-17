@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
@@ -14,44 +14,47 @@ export async function GET(request: NextRequest) {
     const pageSize = Math.min(parseInt(searchParams.get('pageSize') || '50'), 100)
     const offset = (page - 1) * pageSize
 
-    const conditions: string[] = []
-    const params_arr: any[] = []
-    let paramIndex = 1
+    let countQuery = supabaseAdmin.from('orders').select('*', { count: 'exact', head: true })
+    let dataQuery = supabaseAdmin.from('orders').select('*, profiles(full_name, email, avatar_url)')
 
     if (status && status !== 'all') {
-      conditions.push(`o.status = $${paramIndex++}`)
-      params_arr.push(status)
+      countQuery = countQuery.eq('status', status)
+      dataQuery = dataQuery.eq('status', status)
     }
     if (search) {
-      conditions.push(`(o.order_number ILIKE $${paramIndex} OR o.customer_name ILIKE $${paramIndex} OR o.customer_email ILIKE $${paramIndex})`)
-      params_arr.push(`%${search}%`)
-      paramIndex++
+      countQuery = countQuery.or(`order_number.ilike.%${search}%,customer_name.ilike.%${search}%,customer_email.ilike.%${search}%`)
+      dataQuery = dataQuery.or(`order_number.ilike.%${search}%,customer_name.ilike.%${search}%,customer_email.ilike.%${search}%`)
     }
 
-    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+    dataQuery = dataQuery.order('created_at', { ascending: false })
+    dataQuery = dataQuery.range(offset, offset + pageSize - 1)
 
-    const countQuery = `SELECT COUNT(*) as total FROM orders o ${whereClause}`
-    const countResult = await sql.unsafe(countQuery, params_arr)
-    const total = parseInt(countResult[0]?.total || '0')
+    const [{ count: total }, { data: ordersData, error }] = await Promise.all([countQuery, dataQuery])
 
-    const dataParams = [...params_arr, pageSize, offset]
-    const query = `
-      SELECT o.*, 
-        p.full_name as user_name, p.email as user_email, p.avatar_url as user_avatar
-      FROM orders o
-      LEFT JOIN profiles p ON o.user_id = p.id
-      ${whereClause}
-      ORDER BY o.created_at DESC
-      LIMIT $${paramIndex++} OFFSET $${paramIndex++}
-    `
-    const orders = await sql.unsafe(query, dataParams)
+    if (error) {
+      console.error('Error fetching orders:', error)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+
+    const orders = (ordersData || []).map((o: any) => {
+      const profile = o.profiles
+      const { profiles: _, ...orderFields } = o
+      return {
+        ...orderFields,
+        user_name: profile?.full_name || null,
+        user_email: profile?.email || null,
+        user_avatar: profile?.avatar_url || null,
+      }
+    })
+
+    const totalCount = total || 0
 
     return NextResponse.json({
       orders,
-      total,
+      total: totalCount,
       page,
       pageSize,
-      pageCount: Math.ceil(total / pageSize),
+      pageCount: Math.ceil(totalCount / pageSize),
     })
   } catch (error) {
     console.error('Error fetching orders:', error)

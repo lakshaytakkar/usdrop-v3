@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
@@ -13,19 +13,14 @@ export async function GET() {
       )
     }
 
-    const result = await sql`
-      SELECT onboarding_completed FROM profiles WHERE id = ${user.id} LIMIT 1
-    `
-
-    if (result.length === 0) {
-      return NextResponse.json(
-        { onboarding_completed: false },
-        { status: 200 }
-      )
-    }
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
 
     return NextResponse.json({
-      onboarding_completed: result[0]?.onboarding_completed || false,
+      onboarding_completed: profile?.onboarding_completed || false,
     })
   } catch (error) {
     console.error('Onboarding status check error:', error)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { getCurrentUser } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
@@ -13,41 +13,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const picklistItems = await sql`
-      SELECT
-        up.id,
-        up.product_id,
-        up.notes,
-        up.created_at,
-        p.id as prod_id,
-        p.title as prod_title,
-        p.image as prod_image,
-        p.buy_price as prod_buy_price,
-        p.sell_price as prod_sell_price,
-        p.profit_per_order as prod_profit_per_order,
-        p.category_id as prod_category_id,
-        c.id as cat_id,
-        c.name as cat_name,
-        c.slug as cat_slug
-      FROM user_picklist up
-      LEFT JOIN products p ON up.product_id = p.id
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE up.user_id = ${user.id}
-      ORDER BY up.created_at DESC
-    `
+    const { data: picklistItems, error } = await supabaseAdmin
+      .from('user_picklist')
+      .select('id, product_id, notes, created_at, products(id, title, image, buy_price, sell_price, profit_per_order, category_id, categories(id, name, slug))')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
 
-    const transformedItems = picklistItems.map((item: any) => ({
-      id: item.id,
-      productId: item.product_id,
-      title: item.prod_title || 'Unknown Product',
-      image: item.prod_image || '/demo-products/Screenshot 2024-07-24 185228.png',
-      price: item.prod_sell_price || 0,
-      buyPrice: item.prod_buy_price || 0,
-      profitPerOrder: item.prod_profit_per_order || 0,
-      category: item.cat_name || item.cat_slug || 'Uncategorized',
-      addedDate: item.created_at,
-      source: 'product-hunt',
-    }))
+    if (error) {
+      console.error('Error fetching picklist:', error)
+      return NextResponse.json({ error: 'Failed to fetch picklist' }, { status: 500 })
+    }
+
+    const transformedItems = (picklistItems || []).map((item: any) => {
+      const p = item.products
+      const cat = p?.categories
+      return {
+        id: item.id,
+        productId: item.product_id,
+        title: p?.title || 'Unknown Product',
+        image: p?.image || '/demo-products/Screenshot 2024-07-24 185228.png',
+        price: p?.sell_price || 0,
+        buyPrice: p?.buy_price || 0,
+        profitPerOrder: p?.profit_per_order || 0,
+        category: cat?.name || cat?.slug || 'Uncategorized',
+        addedDate: item.created_at,
+        source: 'product-hunt',
+      }
+    })
 
     return NextResponse.json({ items: transformedItems })
   } catch (error) {
@@ -80,45 +72,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const product = await sql`
-      SELECT id FROM products WHERE id = ${productId} LIMIT 1
-    `
+    const { data: product } = await supabaseAdmin
+      .from('products')
+      .select('id')
+      .eq('id', productId)
+      .single()
 
-    if (product.length === 0) {
+    if (!product) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
       )
     }
 
-    try {
-      const result = await sql`
-        INSERT INTO user_picklist (user_id, product_id)
-        VALUES (${user.id}, ${productId})
-        RETURNING *
-      `
+    const { data: result, error: insertError } = await supabaseAdmin
+      .from('user_picklist')
+      .insert({ user_id: user.id, product_id: productId })
+      .select()
+      .single()
 
-      return NextResponse.json(
-        {
-          message: 'Product added to picklist',
-          item: result[0]
-        },
-        { status: 201 }
-      )
-    } catch (insertErr: any) {
-      if (insertErr.code === '23505') {
+    if (insertError) {
+      if (insertError.code === '23505') {
         return NextResponse.json(
           { error: 'Product already in picklist', alreadyExists: true },
           { status: 409 }
         )
       }
 
-      console.error('Error adding to picklist:', insertErr)
+      console.error('Error adding to picklist:', insertError)
       return NextResponse.json(
         { error: 'Failed to add product to picklist' },
         { status: 500 }
       )
     }
+
+    return NextResponse.json(
+      {
+        message: 'Product added to picklist',
+        item: result
+      },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Error in POST /api/picklist:', error)
     return NextResponse.json(

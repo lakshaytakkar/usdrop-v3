@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function PATCH(
@@ -21,36 +21,36 @@ export async function PATCH(
       is_preview,
     } = body
 
-    const setClauses: string[] = []
-    const params_arr: unknown[] = []
-    let paramIndex = 1
+    const updateData: Record<string, any> = {}
 
-    if (title !== undefined) { setClauses.push(`title = $${paramIndex++}`); params_arr.push(title) }
-    if (description !== undefined) { setClauses.push(`description = $${paramIndex++}`); params_arr.push(description) }
-    if (thumbnail !== undefined) { setClauses.push(`thumbnail = $${paramIndex++}`); params_arr.push(thumbnail) }
-    if (order_index !== undefined) { setClauses.push(`order_index = $${paramIndex++}`); params_arr.push(order_index) }
-    if (duration_minutes !== undefined) { setClauses.push(`duration_minutes = $${paramIndex++}`); params_arr.push(duration_minutes) }
-    if (is_preview !== undefined) { setClauses.push(`is_preview = $${paramIndex++}`); params_arr.push(is_preview) }
+    if (title !== undefined) updateData.title = title
+    if (description !== undefined) updateData.description = description
+    if (thumbnail !== undefined) updateData.thumbnail = thumbnail
+    if (order_index !== undefined) updateData.order_index = order_index
+    if (duration_minutes !== undefined) updateData.duration_minutes = duration_minutes
+    if (is_preview !== undefined) updateData.is_preview = is_preview
 
-    if (setClauses.length === 0) {
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    setClauses.push(`updated_at = now()`)
+    updateData.updated_at = new Date().toISOString()
 
-    const query = `UPDATE course_modules SET ${setClauses.join(', ')} WHERE id = $${paramIndex++} RETURNING *`
-    params_arr.push(moduleId)
+    const { data: result, error } = await supabaseAdmin
+      .from('course_modules')
+      .update(updateData)
+      .eq('id', moduleId)
+      .select()
+      .single()
 
-    const result = await sql.unsafe(query, params_arr)
-
-    if (!result || result.length === 0) {
+    if (error || !result) {
       return NextResponse.json(
         { error: 'Failed to update module' },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({ module: result[0] })
+    return NextResponse.json({ module: result })
   } catch (error) {
     console.error('Unexpected error updating module:', error)
     return NextResponse.json(
@@ -69,7 +69,7 @@ export async function DELETE(
     if (isAdminResponse(authResult)) return authResult
     const { moduleId } = await params
 
-    await sql`DELETE FROM course_modules WHERE id = ${moduleId}`
+    await supabaseAdmin.from('course_modules').delete().eq('id', moduleId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

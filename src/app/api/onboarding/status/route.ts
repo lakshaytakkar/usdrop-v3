@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
@@ -10,47 +10,64 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profiles = await sql`
-      SELECT onboarding_completed, onboarding_completed_at, onboarding_progress
-      FROM profiles WHERE id = ${user.id} LIMIT 1
-    `
-    const profile = profiles[0] || null
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
+      .eq('id', user.id)
+      .single()
 
-    const videosCount = await sql`SELECT COUNT(*)::int as count FROM onboarding_videos`
-    const totalVideos = videosCount[0]?.count || 0
+    const { count: totalVideos } = await supabaseAdmin
+      .from('onboarding_videos')
+      .select('id', { count: 'exact', head: true })
 
-    const modulesCount = await sql`SELECT COUNT(*)::int as count FROM onboarding_modules`
-    const totalModules = modulesCount[0]?.count || 0
+    const { count: totalModules } = await supabaseAdmin
+      .from('onboarding_modules')
+      .select('id', { count: 'exact', head: true })
 
-    const completedCount = await sql`
-      SELECT COUNT(*)::int as count FROM onboarding_progress
-      WHERE user_id = ${user.id} AND completed = true
-    `
-    const completedVideos = completedCount[0]?.count || 0
+    const { count: completedVideos } = await supabaseAdmin
+      .from('onboarding_progress')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('completed', true)
 
-    const completedModulesResult = await sql`
-      SELECT COUNT(DISTINCT om.id)::int as count
-      FROM onboarding_modules om
-      WHERE NOT EXISTS (
-        SELECT 1 FROM onboarding_videos ov
-        WHERE ov.module_id = om.id
-        AND NOT EXISTS (
-          SELECT 1 FROM onboarding_progress op
-          WHERE op.video_id = ov.id AND op.user_id = ${user.id} AND op.completed = true
-        )
-      )
-      AND EXISTS (SELECT 1 FROM onboarding_videos ov2 WHERE ov2.module_id = om.id)
-    `
-    const completedModules = completedModulesResult[0]?.count || 0
+    const { data: allModules } = await supabaseAdmin
+      .from('onboarding_modules')
+      .select('id')
+
+    const { data: allVideos } = await supabaseAdmin
+      .from('onboarding_videos')
+      .select('id, module_id')
+
+    const { data: completedProgress } = await supabaseAdmin
+      .from('onboarding_progress')
+      .select('video_id')
+      .eq('user_id', user.id)
+      .eq('completed', true)
+
+    const completedVideoIds = new Set((completedProgress || []).map((p: any) => p.video_id))
+    const videosByModule = new Map<string, string[]>()
+    for (const video of (allVideos || [])) {
+      const moduleVideos = videosByModule.get(video.module_id) || []
+      moduleVideos.push(video.id)
+      videosByModule.set(video.module_id, moduleVideos)
+    }
+
+    let completedModules = 0
+    for (const module of (allModules || [])) {
+      const moduleVideos = videosByModule.get(module.id) || []
+      if (moduleVideos.length > 0 && moduleVideos.every(vid => completedVideoIds.has(vid))) {
+        completedModules++
+      }
+    }
 
     return NextResponse.json({
       onboarding_completed: profile?.onboarding_completed || false,
       onboarding_completed_at: profile?.onboarding_completed_at || null,
       onboarding_progress: profile?.onboarding_progress || 0,
-      completed_videos: completedVideos,
-      total_videos: totalVideos,
+      completed_videos: completedVideos || 0,
+      total_videos: totalVideos || 0,
       completed_modules: completedModules,
-      total_modules: totalModules,
+      total_modules: totalModules || 0,
     })
   } catch (error) {
     console.error('Onboarding status check error:', error)

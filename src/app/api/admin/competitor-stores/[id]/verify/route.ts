@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 function mapStore(item: any) {
+  const cat = item.categories
   return {
     id: item.id,
     name: item.name,
     url: item.url,
     logo: item.logo,
     category_id: item.category_id,
-    category: item.category_name ? { id: item.category_id_ref, name: item.category_name, slug: item.category_slug } : null,
+    category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : null,
     country: item.country,
     monthly_traffic: item.monthly_traffic,
     monthly_revenue: item.monthly_revenue ? parseFloat(item.monthly_revenue) : null,
@@ -40,27 +41,21 @@ export async function PATCH(
       )
     }
 
-    const updateResult = await sql.unsafe(
-      `UPDATE competitor_stores SET verified = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
-      [verified, id]
-    )
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('competitor_stores')
+      .update({ verified, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*, categories(id, name, slug)')
+      .single()
 
-    if (updateResult.length === 0) {
+    if (updateError || !updated) {
       return NextResponse.json(
         { error: 'Competitor store not found' },
         { status: 404 }
       )
     }
 
-    const result = await sql.unsafe(
-      `SELECT cs.*, c.id as category_id_ref, c.name as category_name, c.slug as category_slug
-       FROM competitor_stores cs
-       LEFT JOIN categories c ON cs.category_id = c.id
-       WHERE cs.id = $1`,
-      [id]
-    )
-
-    const store = mapStore(result[0])
+    const store = mapStore(updated)
 
     return NextResponse.json({ store }, { status: 200 })
   } catch (error: any) {

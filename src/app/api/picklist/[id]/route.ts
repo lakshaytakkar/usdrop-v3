@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import sql from '@/lib/db'
+import { supabaseAdmin } from '@/lib/supabase/server'
 
 export async function DELETE(
   request: NextRequest,
@@ -18,10 +18,11 @@ export async function DELETE(
 
     const { id } = await params
 
-    const result = await sql`
-      DELETE FROM user_picklist
-      WHERE id = ${id} AND user_id = ${user.id}
-    `
+    await supabaseAdmin
+      .from('user_picklist')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id)
 
     return NextResponse.json(
       { message: 'Product removed from picklist' },

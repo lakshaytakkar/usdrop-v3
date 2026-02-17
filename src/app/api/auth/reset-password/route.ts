@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { validatePassword } from '@/lib/utils/validation'
-import { getCurrentUser, hashPassword, getSessionToken, invalidateSession, clearSessionCookie } from '@/lib/auth'
-import sql from '@/lib/db'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   try {
@@ -25,23 +24,23 @@ export async function POST(request: Request) {
       )
     }
 
-    const user = await getCurrentUser()
+    const supabase = await createClient()
+    const { error } = await supabase.auth.updateUser({ password })
 
-    if (!user) {
+    if (error) {
+      if (error.message?.includes('session') || error.message?.includes('not authenticated')) {
+        return NextResponse.json(
+          { error: 'No active session found. Please click the password reset link from your email again.' },
+          { status: 401 }
+        )
+      }
       return NextResponse.json(
-        { error: 'No active session found. Please click the password reset link from your email again.' },
-        { status: 401 }
+        { error: error.message || 'Failed to reset password' },
+        { status: 400 }
       )
     }
 
-    const password_hash = await hashPassword(password)
-    await sql`UPDATE profiles SET password_hash = ${password_hash}, updated_at = NOW() WHERE id = ${user.id}`
-
-    const token = await getSessionToken()
-    if (token) {
-      await invalidateSession(token)
-    }
-    await clearSessionCookie()
+    await supabase.auth.signOut()
 
     return NextResponse.json({
       message: 'Password reset successfully. Please sign in with your new password.',
