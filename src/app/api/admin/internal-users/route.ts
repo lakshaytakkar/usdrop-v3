@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { hashPassword } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/server'
-import crypto from 'crypto'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET() {
@@ -83,17 +81,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const passwordHash = await hashPassword(password)
-    const userId = crypto.randomUUID()
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: name },
+    })
+
+    if (authError || !authData.user) {
+      console.error('Error creating auth user:', authError)
+      return NextResponse.json(
+        { error: authError?.message || 'Failed to create user' },
+        { status: 500 }
+      )
+    }
+
     const now = new Date().toISOString()
 
     const { data: result, error } = await supabaseAdmin
       .from('profiles')
-      .insert({
-        id: userId,
+      .upsert({
+        id: authData.user.id,
         email,
         full_name: name,
-        password_hash: passwordHash,
         internal_role: role,
         status,
         phone_number: phoneNumber || null,
@@ -101,13 +111,13 @@ export async function POST(request: NextRequest) {
         avatar_url: avatarUrl || null,
         created_at: now,
         updated_at: now,
-      })
+      }, { onConflict: 'id' })
       .select()
       .single()
 
     if (error || !result) {
-      console.error('Error creating internal user:', error)
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
+      console.error('Error creating internal user profile:', error)
+      return NextResponse.json({ error: 'Failed to create user profile' }, { status: 500 })
     }
 
     const user = {

@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { hashPassword } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
@@ -99,11 +98,22 @@ export async function PATCH(
     }
 
     if (password !== undefined && password.trim() !== '') {
-      const passwordHash = await hashPassword(password)
-      await supabaseAdmin
-        .from('profiles')
-        .update({ password_hash: passwordHash })
-        .eq('id', id)
+      const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        password,
+      })
+      if (pwError) {
+        console.error('Error updating password:', pwError)
+        return NextResponse.json({ error: 'Failed to update password' }, { status: 500 })
+      }
+    }
+
+    if (email !== undefined) {
+      const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        email,
+      })
+      if (emailError) {
+        console.error('Error updating email in auth:', emailError)
+      }
     }
 
     if (updateData.subscription_started_at && updateData.subscription_ends_at) {
@@ -194,6 +204,11 @@ export async function DELETE(
     const authResult = await requireAdmin()
     if (isAdminResponse(authResult)) return authResult
     const { id } = await params
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id)
+    if (authError) {
+      console.error('Error deleting auth user:', authError)
+    }
 
     await supabaseAdmin
       .from('profiles')

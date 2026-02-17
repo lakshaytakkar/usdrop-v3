@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { hashPassword } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/server'
 import { mapExternalUserFromDB } from '@/lib/utils/user-helpers'
-import crypto from 'crypto'
 import { requireAdmin, isAdminResponse } from '@/lib/admin-auth'
 
 export async function GET() {
@@ -75,9 +73,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const passwordHash = await hashPassword(password)
-    const userId = crypto.randomUUID()
-
     const { data: planResult } = await supabaseAdmin
       .from('subscription_plans')
       .select('id, trial_days')
@@ -114,15 +109,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: name },
+    })
+
+    if (authError || !authData.user) {
+      console.error('Error creating auth user:', authError)
+      return NextResponse.json(
+        { error: authError?.message || 'Failed to create user' },
+        { status: 500 }
+      )
+    }
+
     const now = new Date().toISOString()
 
     await supabaseAdmin
       .from('profiles')
-      .insert({
-        id: userId,
+      .upsert({
+        id: authData.user.id,
         email,
         full_name: name,
-        password_hash: passwordHash,
         internal_role: null,
         subscription_plan_id: planData.id,
         subscription_status: isTrial ? 'trial' : 'active',
@@ -137,12 +146,12 @@ export async function POST(request: NextRequest) {
         trial_ends_at: calculatedTrialEndsAt ? calculatedTrialEndsAt.toISOString() : null,
         created_at: now,
         updated_at: now,
-      })
+      }, { onConflict: 'id' })
 
     const { data: rows } = await supabaseAdmin
       .from('profiles')
       .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
-      .eq('id', userId)
+      .eq('id', authData.user.id)
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({ error: 'Failed to fetch created user' }, { status: 500 })
