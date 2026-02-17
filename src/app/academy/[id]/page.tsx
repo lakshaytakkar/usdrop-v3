@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Course } from "@/types/courses"
 import { Loader } from "@/components/ui/loader"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -145,40 +143,29 @@ function CourseDetailContent() {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 items-center justify-center p-8">
             <Loader />
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     )
   }
 
   if (error || !course) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col items-center justify-center p-8">
             <Alert variant="destructive" className="max-w-md">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error || 'Course not found'}</AlertDescription>
             </Alert>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     )
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col h-[calc(100vh-4rem)] overflow-hidden">
           {/* Header with Close and Next Lesson buttons */}
           <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
@@ -241,23 +228,18 @@ function CourseDetailContent() {
             </div>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 
 export default function CourseDetailPage() {
   return (
     <Suspense fallback={
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 items-center justify-center p-8">
             <Loader />
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     }>
       <CourseDetailContent />
     </Suspense>

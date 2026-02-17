@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -31,10 +29,7 @@ export default function ShopifyStoresPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-800 p-3 text-white h-[154px] flex-shrink-0">
@@ -151,8 +146,7 @@ export default function ShopifyStoresPage() {
             onStoreAdded={handleStoreAdded}
           />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

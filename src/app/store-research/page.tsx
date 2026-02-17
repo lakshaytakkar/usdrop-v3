@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Loader2, Search as SearchIcon } from "lucide-react"
 import { StoreSearch } from "./components/store-search"
@@ -40,10 +38,7 @@ export default function StoreResearchPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -95,8 +90,7 @@ export default function StoreResearchPage() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Store Research" />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

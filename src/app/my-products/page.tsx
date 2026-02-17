@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
 import { Card } from "@/components/ui/card"
@@ -151,10 +149,7 @@ export default function MyProductsPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-slate-950 to-blue-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -349,7 +344,6 @@ export default function MyProductsPage() {
             {/* Onboarding Progress Overlay */}
             <OnboardingProgressOverlay pageName="My Products" />
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+    </ExternalLayout>
   )
 }

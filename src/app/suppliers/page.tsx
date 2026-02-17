@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -62,10 +60,7 @@ export default function SuppliersPage() {
   }, [searchQuery, selectedCategory, sortBy])
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-indigo-950 to-blue-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -192,13 +187,12 @@ export default function SuppliersPage() {
           )}
           <OnboardingProgressOverlay pageName="Private Suppliers" />
         </div>
-      </SidebarInset>
 
       <UpsellDialog 
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

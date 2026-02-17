@@ -2,9 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { format, startOfDay, isSameDay } from "date-fns"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar } from "@/components/ui/calendar"
 import { Play, Clock } from "lucide-react"
@@ -85,10 +83,7 @@ export default function WebinarsPage() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-purple-600 to-blue-500 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -218,7 +213,6 @@ export default function WebinarsPage() {
             </div>
           </div>
         </div>
-      </SidebarInset>
 
       {/* Webinar Modal */}
       <WebinarModal
@@ -226,7 +220,7 @@ export default function WebinarsPage() {
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
       />
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

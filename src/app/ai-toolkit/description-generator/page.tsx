@@ -1,8 +1,6 @@
 "use client"
 
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { DescriptionGenerator } from "@/components/ai-tools/description-generator"
@@ -78,16 +76,12 @@ export default function DescriptionGeneratorPage() {
   )
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {toolContent}
 
           <OnboardingProgressOverlay pageName="Description Generator" />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }

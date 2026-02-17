@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -278,10 +276,7 @@ export default function CompetitorStoresPage() {
 
   return (
     <>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-900 via-red-950 to-orange-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -773,8 +768,7 @@ export default function CompetitorStoresPage() {
 
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Competitor Stores" />
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
 
       {/* Upsell Dialog */}
       <UpsellDialog 

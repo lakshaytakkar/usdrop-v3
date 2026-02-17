@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -256,10 +254,7 @@ function CoursesWidget() {
 function HomePageContent() {
   return (
     <>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-100/50">
             <main className="flex flex-1 flex-col gap-6">
               <MotionFadeIn direction="none" delay={0.1}>
@@ -405,8 +400,7 @@ function HomePageContent() {
               </div>
             </main>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     </>
   )
 }
@@ -415,10 +409,7 @@ export default function HomePage() {
   return (
     <Suspense
       fallback={
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <Topbar />
+        <ExternalLayout>
             <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-100/50">
               <div
                 className="flex justify-center items-center"
@@ -427,8 +418,7 @@ export default function HomePage() {
                 <BlueSpinner size="lg" label="Loading dashboard..." />
               </div>
             </div>
-          </SidebarInset>
-        </SidebarProvider>
+        </ExternalLayout>
       }
     >
       <HomePageContent />

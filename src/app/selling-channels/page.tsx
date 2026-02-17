@@ -1,9 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"
@@ -15,10 +13,7 @@ export default function SellingChannelsPage() {
   const { isFree } = useOnboarding()
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-900 via-blue-950 to-blue-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -97,14 +92,13 @@ export default function SellingChannelsPage() {
             </div>
           </div>
         </div>
-      </SidebarInset>
       
       {/* Upsell Dialog */}
       <UpsellDialog 
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

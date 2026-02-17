@@ -106,7 +106,18 @@ public/
 - Search: `.ilike('column', '%search%')` or `.or('col1.ilike.%s%,col2.ilike.%s%')`
 - Upsert: `.upsert({...}, { onConflict: 'col1,col2' })`
 
+## Navigation System
+- **External Users**: Top bar navigation (no sidebar) with `ExternalLayout` wrapper
+  - `AppTopNavigation` (src/components/layout/app-top-navigation.tsx): Logo + group dropdowns (My DS Framework, Research, Learn, Fulfilment, Studio, Toolkit) + user actions
+  - `SubNavTabs` (src/components/layout/sub-nav-tabs.tsx): Horizontal tab strip showing child pages of active group
+  - `ExternalLayout` (src/components/layout/external-layout.tsx): Combines both above + content area
+  - Navigation config: `src/data/navigation.ts` (externalNavGroups array, findActiveGroup/findActiveItem helpers)
+  - Mobile: Hamburger menu slides out full-screen nav overlay
+- **Admin/Dev Users**: Original sidebar navigation (`AppSidebar` + `SidebarProvider`) preserved in `src/app/admin/layout.tsx` and `src/app/dev/layout.tsx`
+- **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle
+
 ## Recent Changes (Feb 2026)
+- **Navigation refactored**: Replaced sidebar with top bar navigation for all 31 external user pages; admin/dev routes keep sidebar
 - **Migrated to Supabase**: Full migration from Replit PostgreSQL + custom JWT auth to Supabase (database, auth, storage)
 - **Supabase Auth**: Replaced bcrypt + JWT cookies with Supabase Auth email/password sign-in
 - **Supabase SSR**: Using `@supabase/ssr` for cookie-based session management with middleware token refresh

@@ -1,9 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { ProBadge } from "@/components/ui/pro-badge"
 import { Button } from "@/components/ui/button"
@@ -74,10 +72,7 @@ const toolkitTools = [
 
 export default function AIToolkitPage() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
           {/* Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary via-primary/90 to-purple-600 p-4 md:p-5 text-white h-[280px]">
@@ -201,8 +196,7 @@ export default function AIToolkitPage() {
             </div>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

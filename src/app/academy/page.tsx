@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Play, CheckCircle2, Users } from "lucide-react"
@@ -109,10 +107,7 @@ export default function AcademyPage() {
   }, [fetchCourses])
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Mentor Introduction Banner */}
           <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 h-[154px] flex-shrink-0">
@@ -269,13 +264,12 @@ export default function AcademyPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </SidebarInset>
 
       <UpsellDialog 
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

@@ -1,9 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { Topbar } from "@/components/layout/topbar";
+import { ExternalLayout } from "@/components/layout/external-layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -75,10 +73,7 @@ export default function MyJourneyPage() {
   });
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-900 via-purple-950 to-indigo-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -283,7 +278,6 @@ export default function MyJourneyPage() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="My Roadmap" />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   );
 }

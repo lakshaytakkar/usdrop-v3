@@ -1,9 +1,7 @@
 "use client"
 
 import { useMemo, useEffect, useState } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { CategoryCard } from "./components/category-card"
@@ -83,10 +81,7 @@ function CategoriesPageContent() {
 
   return (
     <>
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
             {/* Premium Banner with grainy gradient */}
             <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-900 via-indigo-950 to-purple-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -200,8 +195,7 @@ function CategoriesPageContent() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Categories" />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </ExternalLayout>
     
     {/* Upsell Dialog */}
     <UpsellDialog 

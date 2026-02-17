@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -62,26 +60,19 @@ export default function ArticleDetailPage() {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
             <div className="flex items-center justify-center h-96">
               <p className="text-muted-foreground">Loading article...</p>
             </div>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     )
   }
 
   if (!article) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
             <div className="flex flex-col items-center justify-center h-96 gap-4">
               <h1 className="text-2xl font-bold">Article Not Found</h1>
@@ -94,16 +85,12 @@ export default function ArticleDetailPage() {
               </Button>
             </div>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     )
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           {/* Back Button */}
           <Button
@@ -248,8 +235,7 @@ export default function ArticleDetailPage() {
             )}
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 

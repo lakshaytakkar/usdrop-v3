@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Topbar } from "@/components/layout/topbar"
+import { ExternalLayout } from "@/components/layout/external-layout"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -94,10 +92,7 @@ function ShopifyStoresContent() {
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <Topbar />
+    <ExternalLayout>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {/* Premium Banner with grainy gradient */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-800 p-5 md:p-6 text-white h-[154px] flex-shrink-0">
@@ -203,18 +198,14 @@ function ShopifyStoresContent() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="My Shopify Stores" />
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+    </ExternalLayout>
   )
 }
 
 export default function ShopifyStoresPage() {
   return (
     <Suspense fallback={
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <Topbar />
+      <ExternalLayout>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
               <Loader
@@ -224,8 +215,7 @@ export default function ShopifyStoresPage() {
               />
             </div>
           </div>
-        </SidebarInset>
-      </SidebarProvider>
+      </ExternalLayout>
     }>
       <ShopifyStoresContent />
     </Suspense>
