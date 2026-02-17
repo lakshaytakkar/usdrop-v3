@@ -46,7 +46,7 @@ export default function ToolsPage() {
                   <p className="text-slate-600 mb-8 leading-relaxed">
                     Get instant shipping estimates for any product weight and destination. Compare shipping lines and delivery times.
                   </p>
-                  <Link href="/ai-toolkit/shipping-calculator">
+                  <Link href="/shipping-calculator">
                     <Button className="bg-blue-600 text-white hover:bg-blue-700 w-full h-12 font-semibold">
                       Calculate Shipping <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -65,7 +65,7 @@ export default function ToolsPage() {
                   <p className="text-slate-600 mb-8 leading-relaxed">
                     Input your product cost, selling price, and ad spend to see your real net profit. Don't sell blindly.
                   </p>
-                  <Link href="/ai-toolkit/profit-calculator">
+                  <Link href="/tools/profit-calculator">
                     <Button className="bg-green-600 text-white hover:bg-green-700 w-full h-12 font-semibold">
                       Calculate Profit <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>

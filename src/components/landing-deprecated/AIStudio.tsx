@@ -3,7 +3,7 @@
 import React from 'react';
 import { Container, Section, Button } from './ui';
 import { Feature } from '@/types/landing';
-import { Camera, User, PenTool, BarChart, Badge, Calculator, Sparkles } from 'lucide-react';
+import { Camera, User, PenTool, Badge, Calculator, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import { MotionFadeIn } from '@/components/motion/MotionFadeIn';
@@ -35,12 +35,6 @@ const features: Feature[] = [
     cta: "Create Ads"
   },
   {
-    title: "Campaign Studio",
-    description: "Plan and manage multi-channel campaigns automatically.",
-    image: "/images/landing/ai-campaign-studio.png",
-    cta: "Launch Campaign"
-  },
-  {
     title: "Whitelabelling",
     description: "Create and design your brand logo with AI-powered tools.",
     image: "/images/landing/ai-studio-logo.png",
@@ -59,7 +53,6 @@ export const AIStudio: React.FC = () => {
     Camera,
     User,
     PenTool,
-    BarChart,
     Badge,
     Calculator
   ];

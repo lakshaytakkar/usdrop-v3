@@ -48,7 +48,7 @@ function QuickStatsGrid() {
       title: "Courses Available",
       value: courseCount,
       iconSrc: "/3d-icons/1_0003.png",
-      link: "/academy",
+      link: "/mentorship",
       highlighted: true,
     },
     {
@@ -61,7 +61,7 @@ function QuickStatsGrid() {
       title: "Connected Stores",
       value: stats?.stores?.connected || 0,
       iconSrc: "/3d-icons/1_0002.png",
-      link: "/my-shopify-stores",
+      link: "/my-store",
     },
     {
       title: "Day Streak",
@@ -183,7 +183,7 @@ function CoursesWidget() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {courses.map((course) => (
-          <Link key={course.id} href={`/academy/${course.id}`} className="block group">
+          <Link key={course.id} href={`/mentorship/${course.id}`} className="block group">
             <div className="rounded-xl border bg-white hover:bg-gray-50 overflow-hidden transition-all hover:shadow-md">
               <div className="relative w-full aspect-video overflow-hidden bg-gray-100">
                 {course.thumbnail ? (
@@ -242,7 +242,7 @@ function CoursesWidget() {
         ))}
       </div>
 
-      <Link href="/academy" className="block mt-4">
+      <Link href="/mentorship" className="block mt-4">
         <div className="text-center py-2 text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors">
           View All Courses
         </div>

@@ -13,7 +13,7 @@ const footerLinks = {
     { name: "Blog", href: "/blog" },
     { name: "Guides", href: "/#features" },
     { name: "Help Center", href: "/help-center" },
-    { name: "Academy", href: "/academy" },
+    { name: "Academy", href: "/mentorship" },
   ],
   Company: [
     { name: "About Us", href: "/#about" },

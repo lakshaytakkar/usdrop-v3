@@ -20,16 +20,27 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. Built with
 src/
   app/              - Next.js App Router pages and API routes
     (marketing)/    - Marketing/landing page components
-      components/   - Hero, BentoFeatures, Workflow, StudioShowcase, etc.
     api/auth/       - Auth endpoints (signin, signup, signout, user, etc.)
     api/admin/      - Admin API routes
     api/courses/    - Course management routes
+    api/user-details/ - User profile details API
+    api/user-credentials/ - User credentials vault API
+    mentorship/     - Course learning pages (was /academy)
+    my-roadmap/     - Journey progress tracker (was /my-journey)
+    my-profile/     - User profile & business details
+    my-credentials/ - Secure credentials vault
+    my-store/       - Shopify store management (was /my-shopify-stores)
+    my-products/    - User product management
+    blogs/          - Articles & intelligence (was /intelligence)
+    studio/         - Creative tools (whitelabelling, model-studio)
+    tools/          - Utility tools (description-generator, email-templates, etc.)
+    shipping-calculator/ - Shipping cost calculator
   components/       - Reusable React components
     auth/           - Auth forms (login, signup, reset password)
     motion/         - Animation primitives (MotionFadeIn, MotionCard, MotionMarquee)
     ui/             - shadcn/ui components
   contexts/         - React context providers (auth-context, user-plan-context)
-  data/             - Static data/constants
+  data/             - Static data/constants (navigation.ts, journey-stages.ts)
   hooks/            - Custom React hooks
   lib/
     auth.ts         - Auth utilities (getCurrentUser via Supabase Auth, getUserWithPlan)
@@ -42,10 +53,11 @@ src/
   types/            - TypeScript type definitions
 public/
   images/
-    hero/           - Hero section background assets (ellipses, overlays)
-    landing/        - Landing page feature images, showcase photos
+    hero/           - Hero section background assets
+    landing/        - Landing page feature images
     logos/          - Brand/partner logos
   3d-characters-ecom/ - 3D character illustrations
+  3d-ecom-icons-blue/ - Banner icons (blue/white 3D style)
 ```
 
 ## Authentication System
@@ -67,7 +79,7 @@ public/
 - **Client**: `supabaseAdmin` from `src/lib/supabase/server.ts` (service role, bypasses RLS)
 - **Server client**: `createClient()` from `src/lib/supabase/server.ts` (user-scoped, respects RLS)
 - **Browser client**: `createClient()` from `src/lib/supabase/client.ts`
-- **Tables**: profiles, products, product_metadata, product_source, product_research, categories, courses, course_modules, subscription_plans, competitor_stores, onboarding_modules, onboarding_videos, orders, suppliers, user_picklist, shopify_stores, onboarding_progress (18+ tables)
+- **Tables**: profiles, products, product_metadata, product_source, product_research, categories, courses, course_modules, subscription_plans, competitor_stores, onboarding_modules, onboarding_videos, orders, suppliers, user_picklist, shopify_stores, onboarding_progress, user_details, user_credentials (20+ tables)
 - **All API routes use supabaseAdmin** for database queries (service role client)
 
 ## Environment Variables Required
@@ -108,32 +120,43 @@ public/
 
 ## Navigation System
 - **External Users**: Top bar navigation (no sidebar) with `ExternalLayout` wrapper
-  - `AppTopNavigation` (src/components/layout/app-top-navigation.tsx): Logo + group dropdowns (My DS Framework, Research, Learn, Fulfilment, Studio, Toolkit) + user actions
+  - `AppTopNavigation` (src/components/layout/app-top-navigation.tsx): Logo + 10 group links + user actions
   - `SubNavTabs` (src/components/layout/sub-nav-tabs.tsx): Horizontal tab strip showing child pages of active group
   - `ExternalLayout` (src/components/layout/external-layout.tsx): Combines both above + content area
   - Navigation config: `src/data/navigation.ts` (externalNavGroups array, findActiveGroup/findActiveItem helpers)
   - Mobile: Hamburger menu slides out full-screen nav overlay
+  - **10 Top-Level Groups**:
+    1. Framework → Home, My Roadmap, My Profile, My Credentials
+    2. Mentorship → /mentorship (courses)
+    3. Product → Product Hunt, Winning Products, Categories, Seasonal Collections, Competitor Stores
+    4. Videos & Ads → Meta Ads
+    5. Order Fulfilment → Private Supplier, Selling Channels, Shipping Calculator
+    6. Shopify → My Store, My Products
+    7. Studio → Whitelabelling, Model Studio
+    8. Important Tools → Description Generator, Email Templates, Policy Generator, Invoice Generator, Profit Calculator
+    9. Blogs → /blogs (articles)
+    10. Webinars → /webinars
 - **Admin/Dev Users**: Original sidebar navigation (`AppSidebar` + `SidebarProvider`) preserved in `src/app/admin/layout.tsx` and `src/app/dev/layout.tsx`
 - **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle
 
 ## Recent Changes (Feb 2026)
-- **Navigation refactored**: Replaced sidebar with top bar navigation for all 31 external user pages; admin/dev routes keep sidebar
+- **Navigation restructured to 10 groups**: Framework, Mentorship, Product, Videos & Ads, Order Fulfilment, Shopify, Studio, Important Tools, Blogs, Webinars
+- **Slug renames**: /academy→/mentorship, /my-journey→/my-roadmap, /intelligence→/blogs, /my-shopify-stores→/my-store, /ai-toolkit/*→/tools/*, /studio/*
+- **New pages**: My Profile (/my-profile) for user business details, My Credentials (/my-credentials) for secure credential vault
+- **New Supabase tables**: user_details (profile/business info), user_credentials (secure tool credential storage)
+- **Campaign Studio deleted**: Removed from codebase
+- **Navigation refactored**: Replaced sidebar with top bar navigation for all external user pages; admin/dev routes keep sidebar
 - **Migrated to Supabase**: Full migration from Replit PostgreSQL + custom JWT auth to Supabase (database, auth, storage)
-- **Supabase Auth**: Replaced bcrypt + JWT cookies with Supabase Auth email/password sign-in
-- **Supabase SSR**: Using `@supabase/ssr` for cookie-based session management with middleware token refresh
-- **All API routes migrated**: 50+ API routes converted from raw SQL (`postgres` package) to Supabase client queries
-- **Auth context updated**: Client-side auth now uses `supabase.auth.onAuthStateChange()` for real-time session tracking
-- **Admin panel preserved**: All admin auth, role checks, and API routes working with Supabase
 - **Data preserved**: 225 products, 11 categories, 2 subscription plans, 10 courses, 23 competitor stores, 4 test users (all in Supabase)
 
 ## Banner System
 - **Consistent Format**: All sidebar pages use h-[154px] banners with 4-layer grainy texture, dark gradient background, 3D icon left, title/description center
 - **Icon Set**: All banners use unique `/3d-ecom-icons-blue/` icons (no background, blue/white 3D style)
-- **Icon Mapping**: winning-products=Trophy_Star, categories=Category_Grid, suppliers=Delivery_Truck, competitor-stores=Competitor_Search, intelligence=Open_Board, selling-channels=Shopping_Cart, my-products=My_Products, my-shopify-stores=My_Store, my-journey=Rocket_Launch, meta-ads=Megaphone_Ads, webinars=Webinar_Video
-- **Exceptions**: product-hunt (no banner, uses tab layout), seasonal-collections (per-item banners), fulfillment (marketing page with Header/Footer), academy (white mentor portrait banner)
+- **Icon Mapping**: winning-products=Trophy_Star, categories=Category_Grid, suppliers=Delivery_Truck, competitor-stores=Competitor_Search, blogs=Open_Board, selling-channels=Shopping_Cart, my-products=My_Products, my-store=My_Store, my-roadmap=Rocket_Launch, meta-ads=Megaphone_Ads, webinars=Webinar_Video
+- **Exceptions**: product-hunt (no banner, uses tab layout), seasonal-collections (per-item banners), fulfillment (marketing page with Header/Footer), mentorship (white mentor portrait banner)
 
 ## Learning System
-- **Routes**: `/academy` (course list with mentor banner), `/academy/[id]` (course viewer with video player)
+- **Routes**: `/mentorship` (course list with mentor banner), `/mentorship/[id]` (course viewer with video player)
 - **API**: `/api/courses` (GET - returns published courses from `courses` table)
-- **Home Page Widget**: CoursesWidget fetches latest 6 courses from `/api/courses` and displays them as cards linking to `/academy/[id]`
-- **Sidebar**: "My Mentor" links to `/academy` (free access for all users)
+- **Home Page Widget**: CoursesWidget fetches latest 6 courses from `/api/courses` and displays them as cards linking to `/mentorship/[id]`
+- **Framework group**: includes Home, My Roadmap, My Profile, My Credentials (all free access)

@@ -5,8 +5,8 @@ import { Footer } from '@/components/landing-deprecated/Footer';
 import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArticleCard } from "@/app/intelligence/components/article-card"
-import { sampleArticles } from "@/app/intelligence/data/articles"
+import { ArticleCard } from "@/app/blogs/components/article-card"
+import { sampleArticles } from "@/app/blogs/data/articles"
 import { ArrowRight, TrendingUp, Target, Zap } from "lucide-react"
 import Link from "next/link"
 

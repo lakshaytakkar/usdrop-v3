@@ -38,9 +38,12 @@ export function useFeatureAccess(): UseFeatureAccessReturn {
  */
 export const FREE_ACCESS_PATHS = [
   "/home",
-  "/academy",
+  "/mentorship",
   "/settings",
   "/profile",
+  "/my-roadmap",
+  "/my-profile",
+  "/my-credentials",
 ]
 
 /**

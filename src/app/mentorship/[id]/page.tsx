@@ -92,7 +92,7 @@ function CourseDetailContent() {
   const handleChapterSelect = useCallback((moduleId: string, chapterId: string) => {
     setSelectedModuleId(moduleId)
     setSelectedChapterId(chapterId)
-    router.push(`/academy/${courseId}?module=${moduleId}&chapter=${chapterId}`, { scroll: false })
+    router.push(`/mentorship/${courseId}?module=${moduleId}&chapter=${chapterId}`, { scroll: false })
   }, [courseId, router])
 
   // Get current chapter data
@@ -138,7 +138,7 @@ function CourseDetailContent() {
   }, [getNextChapter, handleChapterSelect])
 
   const handleClose = useCallback(() => {
-    router.push('/academy')
+    router.push('/mentorship')
   }, [router])
 
   if (loading) {

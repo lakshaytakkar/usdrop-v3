@@ -181,7 +181,7 @@ export default function HelpCenterPage() {
                     <h3 className="text-white font-bold mb-2">Live Chat</h3>
                     <p className="text-slate-300 text-sm">Available 9am - 5pm EST</p>
                   </div>
-                  <Link href="/academy" className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
+                  <Link href="/mentorship" className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
                     <BookOpen className="h-8 w-8 text-purple-400 mx-auto mb-4" />
                     <h3 className="text-white font-bold mb-2">Academy</h3>
                     <p className="text-slate-300 text-sm">Video tutorials & courses</p>

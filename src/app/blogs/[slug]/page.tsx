@@ -79,9 +79,9 @@ export default function ArticleDetailPage() {
               <p className="text-muted-foreground">
                 The article you&apos;re looking for doesn&apos;t exist.
               </p>
-              <Button onClick={() => router.push("/intelligence")}>
+              <Button onClick={() => router.push("/blogs")}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Intelligence
+                Back to Blogs
               </Button>
             </div>
           </div>
@@ -95,11 +95,11 @@ export default function ArticleDetailPage() {
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => router.push("/intelligence")}
+            onClick={() => router.push("/blogs")}
             className="w-fit mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Intelligence
+            Back to Blogs
           </Button>
 
           {/* Article Header */}
@@ -204,7 +204,7 @@ export default function ArticleDetailPage() {
                   {relatedArticles.map((related) => (
                     <Link
                       key={related.id}
-                      href={`/intelligence/${related.slug || related.id}`}
+                      href={`/blogs/${related.slug || related.id}`}
                       className="group"
                     >
                       <Card className="h-full transition-all hover:shadow-lg">

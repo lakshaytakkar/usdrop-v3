@@ -282,7 +282,7 @@ export default function ProductDetailPage() {
   }
 
   const handleGenerateAI = () => {
-    router.push(`/ai-toolkit?productId=${productId}`)
+    router.push(`/tools?productId=${productId}`)
   }
 
   const productSlug = createProductSlug(product.title)

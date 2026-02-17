@@ -96,7 +96,7 @@ export function ArticleCard({ article, featured = false, isLocked = false, onLoc
             </span>
           ) : (
             <a
-              href={`/intelligence/${article.slug || article.id}`}
+              href={`/blogs/${article.slug || article.id}`}
               className="text-sm font-medium text-primary hover:underline"
             >
               Read more →

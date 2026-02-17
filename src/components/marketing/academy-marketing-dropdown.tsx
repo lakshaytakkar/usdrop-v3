@@ -18,7 +18,7 @@ import {
   TrendingUp,
   CheckCircle2
 } from "lucide-react"
-import { Course } from "@/app/academy/data/courses"
+import { Course } from "@/app/mentorship/data/courses"
 import { Course as APICourse } from "@/types/courses"
 import { cn } from "@/lib/utils"
 
@@ -75,7 +75,7 @@ interface CoursePreviewCardProps {
 function CoursePreviewCard({ course }: CoursePreviewCardProps) {
   return (
     <Link 
-      href="/academy"
+      href="/mentorship"
       className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg"
     >
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
@@ -233,7 +233,7 @@ export function AcademyMarketingDropdown() {
               </div>
             </div>
 
-            <Link href="/academy">
+            <Link href="/mentorship">
               <Button className="mt-2 bg-primary text-primary-foreground hover:bg-primary/90">
                 Learn More About the Mentor
                 <ArrowRight className="h-4 w-4" />
@@ -250,7 +250,7 @@ export function AcademyMarketingDropdown() {
             <h3 className="text-lg font-bold text-foreground">Featured Courses</h3>
             <p className="text-sm text-muted-foreground">Start your dropshipping journey today</p>
           </div>
-          <Link href="/academy">
+          <Link href="/mentorship">
             <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
               View All Courses
               <ArrowRight className="h-4 w-4" />
@@ -280,7 +280,7 @@ export function AcademyMarketingDropdown() {
               <p className="text-xs text-muted-foreground">Already learning with USDrop Academy</p>
             </div>
           </div>
-          <Link href="/academy" className="w-full sm:w-auto">
+          <Link href="/mentorship" className="w-full sm:w-auto">
             <Button className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg transition-shadow">
               Explore Academy
               <ArrowRight className="h-4 w-4" />

@@ -154,7 +154,7 @@ export function Topbar() {
                 className="flex items-center gap-2 cursor-pointer"
                 asChild
               >
-                <Link href="/academy">
+                <Link href="/mentorship">
                   <GraduationCap className="h-4 w-4" />
                   <span className="hidden lg:inline">Academy</span>
                   <span className="sr-only">Academy</span>

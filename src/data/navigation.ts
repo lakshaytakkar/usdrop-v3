@@ -23,6 +23,8 @@ import {
   Shield,
   Receipt,
   Calendar,
+  UserCircle,
+  KeyRound,
 } from "lucide-react"
 
 export interface NavItem {
@@ -39,56 +41,78 @@ export interface NavGroup {
 
 export const externalNavGroups: NavGroup[] = [
   {
-    label: "My DS Framework",
+    label: "Framework",
     items: [
       { title: "Home", icon: Home, url: "/home", isPro: false },
-      { title: "My Mentor", icon: GraduationCap, url: "/academy", isPro: false },
-      { title: "My Roadmap", icon: Map, url: "/my-journey", isPro: true },
-      { title: "My Products", icon: Bookmark, url: "/my-products", isPro: true },
-      { title: "My Shopify Store", icon: ShoppingBag, url: "/my-shopify-stores", isPro: true },
+      { title: "My Roadmap", icon: Map, url: "/my-roadmap", isPro: false },
+      { title: "My Profile", icon: UserCircle, url: "/my-profile", isPro: false },
+      { title: "My Credentials", icon: KeyRound, url: "/my-credentials", isPro: false },
     ],
   },
   {
-    label: "Research",
+    label: "Mentorship",
+    items: [
+      { title: "Mentorship", icon: GraduationCap, url: "/mentorship", isPro: false },
+    ],
+  },
+  {
+    label: "Product",
     items: [
       { title: "Product Hunt", icon: TrendingUp, url: "/product-hunt", isPro: true },
       { title: "Winning Products", icon: Trophy, url: "/winning-products", isPro: true },
-      { title: "Competitor Stores", icon: Store, url: "/competitor-stores", isPro: true },
       { title: "Categories", icon: Grid3x3, url: "/categories", isPro: true },
       { title: "Seasonal Collections", icon: Calendar, url: "/seasonal-collections", isPro: true },
+      { title: "Competitor Stores", icon: Store, url: "/competitor-stores", isPro: true },
+    ],
+  },
+  {
+    label: "Videos & Ads",
+    items: [
       { title: "Meta Ads", icon: BarChart3, url: "/meta-ads", isPro: true },
     ],
   },
   {
-    label: "Learn",
-    items: [
-      { title: "Intelligence", icon: Newspaper, url: "/intelligence", isPro: true },
-      { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
-    ],
-  },
-  {
-    label: "Fulfilment",
+    label: "Order Fulfilment",
     items: [
       { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: true },
       { title: "Selling Channels", icon: ExternalLink, url: "/selling-channels", isPro: true },
-      { title: "Shipping Calculator", icon: Truck, url: "/ai-toolkit/shipping-calculator", isPro: true },
+      { title: "Shipping Calculator", icon: Truck, url: "/shipping-calculator", isPro: true },
+    ],
+  },
+  {
+    label: "Shopify",
+    items: [
+      { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
+      { title: "My Products", icon: Bookmark, url: "/my-products", isPro: true },
     ],
   },
   {
     label: "Studio",
     items: [
-      { title: "Whitelabelling", icon: Badge, url: "/ai-toolkit/logo-studio", isPro: true },
-      { title: "Model Studio", icon: User, url: "/ai-toolkit/model-studio", isPro: true },
+      { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
+      { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
     ],
   },
   {
-    label: "Toolkit",
+    label: "Important Tools",
     items: [
-      { title: "Description Generator", icon: PenTool, url: "/ai-toolkit/description-generator", isPro: true },
-      { title: "Email Templates", icon: Mail, url: "/ai-toolkit/email-templates", isPro: true },
-      { title: "Policy Generator", icon: Shield, url: "/ai-toolkit/policy-generator", isPro: true },
-      { title: "Invoice Generator", icon: Receipt, url: "/ai-toolkit/invoice-generator", isPro: true },
-      { title: "Profit Calculator", icon: Calculator, url: "/ai-toolkit/profit-calculator", isPro: true },
+      { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
+      { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
+      { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
+      { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
+      { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
+    ],
+  },
+  {
+    label: "Blogs",
+    items: [
+      { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
+    ],
+  },
+  {
+    label: "Webinars",
+    items: [
+      { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
     ],
   },
 ]

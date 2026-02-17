@@ -57,7 +57,7 @@ export const Header: React.FC = () => {
       label: "Resources",
       children: [
         { href: "/intelligence-hub", label: "Intelligence Hub" },
-        { href: "/academy", label: "Learn", icon: GraduationCap },
+        { href: "/mentorship", label: "Learn", icon: GraduationCap },
         { href: "/what-is-dropshipping", label: "What is Dropshipping" },
       ]
     },

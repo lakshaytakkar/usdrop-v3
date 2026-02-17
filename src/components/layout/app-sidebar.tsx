@@ -122,7 +122,7 @@ const aiLearnItems: SidebarItem[] = [
   {
     title: "Intelligence",
     icon: Newspaper,
-    url: "/intelligence",
+    url: "/blogs",
     isPro: true,
   },
   {
@@ -150,7 +150,7 @@ const aiFulfilmentItems: SidebarItem[] = [
   {
     title: "Shipping Calculator",
     icon: Truck,
-    url: "/ai-toolkit/shipping-calculator",
+    url: "/shipping-calculator",
     isPro: true,
   },
 ]
@@ -160,13 +160,13 @@ const aiStudioItems: SidebarItem[] = [
   {
     title: "Whitelabelling",
     icon: Badge,
-    url: "/ai-toolkit/logo-studio",
+    url: "/studio/whitelabelling",
     isPro: true,
   },
   {
     title: "Model Studio",
     icon: User,
-    url: "/ai-toolkit/model-studio",
+    url: "/studio/model-studio",
     isPro: true,
   },
 ]
@@ -176,31 +176,31 @@ const aiToolkitItems: SidebarItem[] = [
   {
     title: "Description Generator",
     icon: PenTool,
-    url: "/ai-toolkit/description-generator",
+    url: "/tools/description-generator",
     isPro: true,
   },
   {
     title: "Email Templates",
     icon: Mail,
-    url: "/ai-toolkit/email-templates",
+    url: "/tools/email-templates",
     isPro: true,
   },
   {
     title: "Policy Generator",
     icon: Shield,
-    url: "/ai-toolkit/policy-generator",
+    url: "/tools/policy-generator",
     isPro: true,
   },
   {
     title: "Invoice Generator",
     icon: Receipt,
-    url: "/ai-toolkit/invoice-generator",
+    url: "/tools/invoice-generator",
     isPro: true,
   },
   {
     title: "Profit Calculator",
     icon: Calculator,
-    url: "/ai-toolkit/profit-calculator",
+    url: "/tools/profit-calculator",
     isPro: true,
   },
 ]
@@ -216,13 +216,13 @@ const aiWorkspaceItems: SidebarItem[] = [
   {
     title: "My Mentor",
     icon: GraduationCap,
-    url: "/academy",
+    url: "/mentorship",
     isPro: false,
   },
   {
     title: "My Roadmap",
     icon: Map,
-    url: "/my-journey",
+    url: "/my-roadmap",
     isPro: true,
   },
   {
@@ -234,7 +234,7 @@ const aiWorkspaceItems: SidebarItem[] = [
   {
     title: "My Shopify Store",
     icon: ShoppingBag,
-    url: "/my-shopify-stores",
+    url: "/my-store",
     isPro: true,
   },
 ]

@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Shopify OAuth error:', error)
       return NextResponse.redirect(
-        new URL(`/my-shopify-stores?error=${encodeURIComponent(error)}`, request.url)
+        new URL(`/my-store?error=${encodeURIComponent(error)}`, request.url)
       )
     }
 
     if (!code || !shop) {
       return NextResponse.redirect(
-        new URL('/my-shopify-stores?error=missing_parameters', request.url)
+        new URL('/my-store?error=missing_parameters', request.url)
       )
     }
 
@@ -102,12 +102,12 @@ export async function GET(request: NextRequest) {
         if (updateError) {
           console.error('Error updating store:', updateError)
           return NextResponse.redirect(
-            new URL('/my-shopify-stores?error=update_failed', request.url)
+            new URL('/my-store?error=update_failed', request.url)
           )
         }
 
         return NextResponse.redirect(
-          new URL('/my-shopify-stores?success=store_updated', request.url)
+          new URL('/my-store?success=store_updated', request.url)
         )
       } else {
         // Create new store
@@ -142,29 +142,29 @@ export async function GET(request: NextRequest) {
           console.error('Error creating store:', createError)
           if (createError.code === '23505') {
             return NextResponse.redirect(
-              new URL('/my-shopify-stores?error=store_already_exists', request.url)
+              new URL('/my-store?error=store_already_exists', request.url)
             )
           }
           return NextResponse.redirect(
-            new URL('/my-shopify-stores?error=create_failed', request.url)
+            new URL('/my-store?error=create_failed', request.url)
           )
         }
 
         return NextResponse.redirect(
-          new URL('/my-shopify-stores?success=store_connected', request.url)
+          new URL('/my-store?success=store_connected', request.url)
         )
       }
     } catch (oauthError) {
       console.error('OAuth flow error:', oauthError)
       const errorMessage = oauthError instanceof Error ? oauthError.message : 'Unknown error'
       return NextResponse.redirect(
-        new URL(`/my-shopify-stores?error=${encodeURIComponent(errorMessage)}`, request.url)
+        new URL(`/my-store?error=${encodeURIComponent(errorMessage)}`, request.url)
       )
     }
   } catch (error) {
     console.error('Error in OAuth callback:', error)
     return NextResponse.redirect(
-      new URL('/my-shopify-stores?error=internal_error', request.url)
+      new URL('/my-store?error=internal_error', request.url)
     )
   }
 }

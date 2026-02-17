@@ -37,7 +37,7 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
       onLockedClick?.()
       return
     }
-    router.push(`/academy/${course.id}`)
+    router.push(`/mentorship/${course.id}`)
   }
 
   return (
