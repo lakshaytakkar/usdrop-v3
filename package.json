@@ -45,7 +45,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@scrapeless-ai/sdk": "^1.11.0",
     "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.86.0",
+    "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.16",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-character-count": "^3.11.1",
