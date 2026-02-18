@@ -44,9 +44,11 @@ NEXT_PUBLIC_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
 VITE_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
 VITE_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
+SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "start"]
-build = ["npm", "run", "build"]
+run = ["node", "dist/index.cjs"]
+build = ["npx", "tsx", "script/build.ts"]
 publicDir = "public"
