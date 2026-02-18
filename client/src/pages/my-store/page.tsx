@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "@/hooks/use-router"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -89,7 +88,7 @@ function ShopifyStoresContent() {
   }
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
             <h1 className="text-2xl font-bold">My Shopify Stores</h1>
@@ -146,14 +145,14 @@ function ShopifyStoresContent() {
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="My Shopify Stores" />
         </div>
-    </ExternalLayout>
+    </>
   )
 }
 
 export default function ShopifyStoresPage() {
   return (
     <Suspense fallback={
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
               <Loader
@@ -163,7 +162,7 @@ export default function ShopifyStoresPage() {
               />
             </div>
           </div>
-      </ExternalLayout>
+      </>
     }>
       <ShopifyStoresContent />
     </Suspense>

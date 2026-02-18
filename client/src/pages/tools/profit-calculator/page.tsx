@@ -1,6 +1,5 @@
 
 
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Button } from "@/components/ui/button"
 import { Play, Coins } from "lucide-react"
 import { ProfitCalculator } from "@/components/ai-tools/profit-calculator"
@@ -18,12 +17,12 @@ export default function ProfitCalculatorPage() {
   )
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {toolContent}
 
           <OnboardingProgressOverlay pageName="Profit Calculator" />
         </div>
-    </ExternalLayout>
+    </>
   )
 }

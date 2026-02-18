@@ -1,6 +1,5 @@
 
 
-import { ExternalLayout } from '@/components/layout/external-layout';
 import { Button } from "@/components/ui/button"
 import { Check, ArrowRight, RefreshCw, PackageCheck, BarChart3 } from "lucide-react"
 import { Link } from "wouter"
@@ -24,7 +23,7 @@ function ShopifyIcon({ className = "" }: { className?: string }) {
 
 export default function ShopifyIntegrationPage() {
   return (
-    <ExternalLayout>
+    <>
       <div className="flex flex-1 flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
         {/* Hero Section */}
         <section className="relative py-24 overflow-hidden">
@@ -178,7 +177,7 @@ export default function ShopifyIntegrationPage() {
         </section>
 
       </div>
-    </ExternalLayout>
+    </>
   )
 }
 

@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -277,7 +276,7 @@ export default function CompetitorStoresPage() {
 
   return (
     <>
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
               <h1 className="text-2xl font-bold">Competitor Stores</h1>
@@ -720,7 +719,7 @@ export default function CompetitorStoresPage() {
 
           {/* Onboarding Progress Overlay */}
           <OnboardingProgressOverlay pageName="Competitor Stores" />
-      </ExternalLayout>
+      </>
 
       {/* Upsell Dialog */}
       <UpsellDialog 

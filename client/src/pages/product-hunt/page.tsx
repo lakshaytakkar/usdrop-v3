@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { ProductCard } from "./components/product-card"
 import { Loader2, ChevronDown, ChevronRight, RotateCcw, Filter } from "lucide-react"
 import { Product } from "@/types/products"
@@ -400,7 +399,7 @@ export default function ProductHuntPage() {
   }
 
   return (
-    <ExternalLayout>
+    <>
       <div className="flex flex-1 h-[calc(100vh-110px)]">
         <FilterSidebar
           categories={categories}
@@ -594,6 +593,6 @@ export default function ProductHuntPage() {
           <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
         </div>
       </div>
-    </ExternalLayout>
+    </>
   )
 }

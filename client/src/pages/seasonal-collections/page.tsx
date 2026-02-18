@@ -1,7 +1,6 @@
 
 
 import { useState } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalBanner } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
@@ -48,7 +47,7 @@ function SeasonalCollectionsPageContent() {
   const { isFree } = useOnboarding()
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 relative">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
@@ -87,7 +86,7 @@ function SeasonalCollectionsPageContent() {
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </ExternalLayout>
+    </>
   )
 }
 

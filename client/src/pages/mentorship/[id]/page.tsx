@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "@/hooks/use-router"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Course } from "@/types/courses"
 import { Loader } from "@/components/ui/loader"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -109,29 +108,29 @@ function CourseDetailContent() {
 
   if (loading) {
     return (
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 items-center justify-center p-8">
             <Loader />
           </div>
-      </ExternalLayout>
+      </>
     )
   }
 
   if (error || !course) {
     return (
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 flex-col items-center justify-center p-8">
             <Alert variant="destructive" className="max-w-md">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error || 'Course not found'}</AlertDescription>
             </Alert>
           </div>
-      </ExternalLayout>
+      </>
     )
   }
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col h-[calc(100vh-4rem)] overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
             <button
@@ -189,18 +188,18 @@ function CourseDetailContent() {
             </div>
           </div>
         </div>
-    </ExternalLayout>
+    </>
   )
 }
 
 export default function CourseDetailPage() {
   return (
     <Suspense fallback={
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 items-center justify-center p-8">
             <Loader />
           </div>
-      </ExternalLayout>
+      </>
     }>
       <CourseDetailContent />
     </Suspense>

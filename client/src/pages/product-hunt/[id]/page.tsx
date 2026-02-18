@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "@/hooks/use-router"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -186,7 +185,7 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 flex-col items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
             <Loader 
               title="Loading product details..." 
@@ -194,13 +193,13 @@ export default function ProductDetailPage() {
               size="md"
             />
           </div>
-      </ExternalLayout>
+      </>
     )
   }
 
   if (error || !product) {
     return (
-      <ExternalLayout>
+      <>
           <div className="flex flex-1 flex-col items-center justify-center p-8">
             <h1 className="text-2xl font-bold mb-4">Product not found</h1>
             <p className="text-muted-foreground mb-4">{error || 'The product you are looking for does not exist.'}</p>
@@ -212,7 +211,7 @@ export default function ProductDetailPage() {
               Back to Products
             </Button>
           </div>
-      </ExternalLayout>
+      </>
     )
   }
 
@@ -292,7 +291,7 @@ export default function ProductDetailPage() {
   const facebookAdsUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=US&search_type=keyword_unordered&media_type=all&q=${encodeURIComponent(productSlug)}`
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden min-w-0 w-full max-w-full">
           {/* Sticky Top Actions */}
           <div
@@ -515,6 +514,6 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
-    </ExternalLayout>
+    </>
   )
 }

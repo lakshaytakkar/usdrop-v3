@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, Suspense } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -463,7 +462,7 @@ function RoadmapProgressCard() {
 
 function DashboardContent() {
   return (
-    <ExternalLayout>
+    <>
       <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
         <ProfileSummaryCard />
         <QuickStatsRow />
@@ -475,7 +474,7 @@ function DashboardContent() {
         <ExploreGrid />
         <OnboardingProgressOverlay pageName="Dashboard" />
       </div>
-    </ExternalLayout>
+    </>
   )
 }
 
@@ -483,13 +482,13 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <ExternalLayout>
+        <>
           <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50">
             <div className="flex justify-center items-center" style={{ minHeight: "calc(100vh - 300px)" }}>
               <BlueSpinner size="lg" label="Loading dashboard..." />
             </div>
           </div>
-        </ExternalLayout>
+        </>
       }
     >
       <DashboardContent />

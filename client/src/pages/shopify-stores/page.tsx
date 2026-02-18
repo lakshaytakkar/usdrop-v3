@@ -1,7 +1,6 @@
 
 
 import { useState, useEffect } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -29,7 +28,7 @@ export default function ShopifyStoresPage() {
   }
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
             <h1 className="text-2xl font-bold">USDrop Shopify Stores</h1>
@@ -79,7 +78,7 @@ export default function ShopifyStoresPage() {
             onStoreAdded={handleStoreAdded}
           />
         </div>
-    </ExternalLayout>
+    </>
   )
 }
 

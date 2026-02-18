@@ -1,21 +1,18 @@
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { Topbar } from "@/components/layout/topbar";
+import { AppTopNavigation } from "@/components/layout/app-top-navigation";
+import { SubNavTabs } from "@/components/layout/sub-nav-tabs";
 import { Toaster } from "@/components/ui/toast";
 import { VerifyEmailBanner } from "@/components/feedback/banners/verify-email-banner";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <VerifyEmailBanner />
-        <Topbar />
-        <div className="flex flex-1 flex-col gap-4 p-2 bg-gray-50/50">
-          {children}
-        </div>
-      </SidebarInset>
+    <div className="min-h-screen bg-gray-50/50">
+      <VerifyEmailBanner />
+      <AppTopNavigation />
+      <SubNavTabs />
+      <main className="flex-1 p-2">
+        {children}
+      </main>
       <Toaster />
-    </SidebarProvider>
+    </div>
   );
 }

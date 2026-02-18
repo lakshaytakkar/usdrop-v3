@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
 import { Card } from "@/components/ui/card"
@@ -146,7 +145,7 @@ export default function MyProductsPage() {
   }
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
             <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
               <h1 className="text-2xl font-bold">My Products</h1>
@@ -292,6 +291,6 @@ export default function MyProductsPage() {
             {/* Onboarding Progress Overlay */}
             <OnboardingProgressOverlay pageName="My Products" />
           </div>
-    </ExternalLayout>
+    </>
   )
 }

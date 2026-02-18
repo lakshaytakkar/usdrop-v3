@@ -1,7 +1,6 @@
 
 
 import { useState, useMemo } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { HelpCategoryCard } from "@/components/help-center/help-category-card"
 import {
   Accordion,
@@ -72,7 +71,7 @@ export default function HelpPage() {
   }
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-4 p-2 bg-gray-50/50">
           <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 flex-shrink-0 w-full">
             <div className="flex items-center justify-between">
@@ -206,6 +205,6 @@ export default function HelpPage() {
             </Card>
           </section>
         </div>
-    </ExternalLayout>
+    </>
   )
 }

@@ -1,7 +1,6 @@
 
 
 import { useState, useMemo } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
@@ -41,7 +40,7 @@ export default function IntelligencePage() {
   }, [searchQuery, selectedCategory])
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
           <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
             <h1 className="text-2xl font-bold">Intelligence</h1>
@@ -114,6 +113,6 @@ export default function IntelligencePage() {
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </ExternalLayout>
+    </>
   )
 }

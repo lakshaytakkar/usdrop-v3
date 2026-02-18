@@ -1,13 +1,12 @@
 
 
-import { ExternalLayout } from '@/components/layout/external-layout';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
 import { Link } from "wouter"
 export default function FulfillmentPage() {
   return (
-    <ExternalLayout>
+    <>
       <div className="flex flex-1 flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
@@ -204,7 +203,7 @@ export default function FulfillmentPage() {
         </section>
 
       </div>
-    </ExternalLayout>
+    </>
   )
 }
 

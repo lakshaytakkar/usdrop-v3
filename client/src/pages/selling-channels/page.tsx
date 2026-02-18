@@ -1,7 +1,6 @@
 
 
 import { useState } from "react"
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"
@@ -13,7 +12,7 @@ export default function SellingChannelsPage() {
   const { isFree } = useOnboarding()
 
   return (
-    <ExternalLayout>
+    <>
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
             <h1 className="text-2xl font-bold">Selling Channels</h1>
@@ -49,7 +48,7 @@ export default function SellingChannelsPage() {
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 
       />
-    </ExternalLayout>
+    </>
   )
 }
 
