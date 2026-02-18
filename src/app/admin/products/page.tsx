@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, MoreHorizontal, Eye, Package, Edit, Download, RefreshCw, Search, Upload, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Plus, Trash2, MoreHorizontal, Eye, Package, Edit, Download, RefreshCw, Search, Upload, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Folder } from "lucide-react"
 import Image from "next/image"
 import { ProductFormModal } from "./components/product-form-modal"
 import { Input } from "@/components/ui/input"
@@ -279,13 +279,54 @@ export default function AdminProductsPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-white">Products</h1>
-            <p className="text-xs text-white/90 mt-0.5">
-              Manage your product catalog
-            </p>
+      <div className="flex items-center justify-between mb-1">
+        <div>
+          <h1 className="text-[20px] font-semibold text-foreground leading-[1.35]">Products</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your product catalog</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">Total Products</span>
+            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+              <Package className="w-4 h-4 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-semibold">{total}</span>
+          </div>
+          <div className="mt-2">
+            <span className="text-xs text-muted-foreground">All products in catalog</span>
+          </div>
+        </div>
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">Categories</span>
+            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+              <Folder className="w-4 h-4 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-semibold">{categories.length}</span>
+          </div>
+          <div className="mt-2">
+            <span className="text-xs text-muted-foreground">Product categories</span>
+          </div>
+        </div>
+        <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">On This Page</span>
+            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+              <Eye className="w-4 h-4 text-blue-600" />
+            </div>
+          </div>
+          <div className="mt-1">
+            <span className="text-2xl font-semibold">{products.length}</span>
+          </div>
+          <div className="mt-2">
+            <span className="text-xs text-muted-foreground">Products on current page</span>
           </div>
         </div>
       </div>

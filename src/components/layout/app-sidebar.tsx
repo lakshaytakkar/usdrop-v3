@@ -243,12 +243,12 @@ const adminDashboardItems = [
 
 const adminUserItems = [
   {
-    title: "Internal Users (Team)",
+    title: "Team",
     icon: Users,
     url: "/admin/internal-users",
   },
   {
-    title: "External Users",
+    title: "Clients",
     icon: UserCog,
     url: "/admin/external-users",
   },
@@ -276,7 +276,7 @@ const adminContentItems = [
     url: "/admin/courses",
   },
   {
-    title: "Competitor Stores",
+    title: "Competitors",
     icon: Store,
     url: "/admin/competitor-stores",
   },
@@ -622,7 +622,7 @@ export function AppSidebar() {
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT & DATA</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">MANAGE</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminContentItems.map((item) => (
@@ -680,7 +680,7 @@ export function AppSidebar() {
             </SidebarGroup>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT & DATA</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">MANAGE</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminContentItems.map((item) => (

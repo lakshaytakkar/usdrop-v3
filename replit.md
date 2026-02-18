@@ -106,9 +106,12 @@ public/
 - **Admin Auth**: All admin API routes protected via `requireAdmin()` helper from `src/lib/admin-auth.ts`
 - **Admin Roles**: admin, super_admin, editor, moderator
 - **Admin API Routes**: All use supabaseAdmin for database queries
-- **Working Admin APIs**: products, categories, courses, competitor-stores, internal-users, external-users, plans, shopify-stores, orders, suppliers
-- **Admin Pages with Real Data**: products, categories, courses, competitor stores, users, plans
-- **Admin Pages with Mock Data**: orders, suppliers, intelligence, email-automation, knowledge-base, store-research, permissions (use local sample data files)
+- **Working Admin APIs**: products, categories, courses, competitor-stores, internal-users, external-users, plans, shopify-stores, orders, suppliers, dashboard
+- **All Admin Pages use Real Data** from Supabase APIs (no mock data pages remain)
+- **Sidebar Groups**: Dashboard | Users & Plans (Team, Clients, Plans) | Manage (Products, Categories, Courses, Competitors, Suppliers, Orders, Shopify Stores)
+- **Page Layout Pattern**: Clean text header (text-[20px] font-semibold) + subtitle + action buttons → stat cards row (3 metric cards) → search/filter bar → data table/cards
+- **Stat Cards Pattern**: All admin list pages have 3 summary stat cards at top showing key metrics with icons in bordered boxes
+- **Deleted Dead Directories**: intelligence, knowledge-base, email-automation, permissions, store-research, user-shopify-stores (all removed)
 - **Known Limitation**: course_chapters and course_resources tables don't exist yet; chapter-related course operations will fail until tables are created
 
 ## Supabase Query Patterns
@@ -141,6 +144,14 @@ public/
 - **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle. Product cards have a save button that adds to user's My Products (in Framework).
 
 ## Recent Changes (Feb 2026)
+- **Admin panel revamp (Feb 18)**: Inspired by suprans-team-portal-repl reference project:
+  - Cleaned sidebar names: "Team" (was Internal Users), "Clients" (was External Users), "Competitors" (was Competitor Stores)
+  - Sidebar groups: Dashboard → Users & Plans → Manage (was Content & Data)
+  - All admin pages: replaced blue bg-primary/85 banners with clean text headers (text-[20px] font-semibold)
+  - All admin list pages: added 3 stat cards with icons in bordered boxes showing key metrics
+  - Dashboard: revamped with 4 stat cards, user breakdown chart, platform summary links
+  - Dashboard API: now returns totalOrders, totalSuppliers, totalShopifyStores in addition to previous stats
+  - Deleted 6 dead admin directories: intelligence, knowledge-base, email-automation, permissions, store-research, user-shopify-stores
 - **Bug fix audit (Feb 18)**: Comprehensive end-to-end audit and fixes:
   - Fixed user-details API crash on first visit (`.single()` → `.maybeSingle()`)
   - Removed artificial 1500ms delay in My Store page

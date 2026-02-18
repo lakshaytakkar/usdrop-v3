@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Trash2, Check, Lock, Search, X, Copy, Eye, EyeOff, RefreshCw, Download, Edit, MoreVertical, UserPlus, Upload, AlertCircle } from "lucide-react"
+import { Plus, Trash2, Check, Lock, Search, X, Copy, Eye, EyeOff, RefreshCw, Download, Edit, MoreVertical, UserPlus, Upload, AlertCircle, Users, Shield, CheckCircle2 } from "lucide-react"
 import { DataTable } from "@/components/data-table/data-table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createInternalUsersColumns } from "./components/internal-users-columns"
@@ -898,75 +898,59 @@ export default function AdminInternalUsersPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-white">Internal Users</h1>
-            <p className="text-xs text-white/90 mt-0.5">
-              Manage internal users and their roles. Internal users have role-based access (admin, manager, executive).
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {assignedOwner || assignedMembers.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <div className="flex items-center -space-x-2">
-                  {assignedOwner && (() => {
-                    const owner = internalUsersForAssignee.find(u => u.id === assignedOwner)
-                    return (
-                      <Avatar className="h-8 w-8 border-2 border-white/20">
-                        <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                        <AvatarFallback className="text-xs bg-white/20 text-white">
-                          {owner?.name.charAt(0) || "O"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })()}
-                  {assignedMembers.slice(0, 3).map((memberId) => {
-                    const member = internalUsersForAssignee.find(u => u.id === memberId)
-                    return (
-                      <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
-                        <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                        <AvatarFallback className="text-xs bg-white/20 text-white">
-                          {member?.name.charAt(0) || "M"}
-                        </AvatarFallback>
-                      </Avatar>
-                    )
-                  })}
-                  {assignedMembers.length > 3 && (
-                    <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
-                      <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
-                    </div>
-                  )}
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleOpenAssigneeModal}
-                  className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Assignee
-                </Button>
-              </div>
-            ) : (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleOpenAssigneeModal}
-                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Assignee
-              </Button>
-            )}
-            {selectedUsers.length > 0 && (
-              <span className="text-sm font-medium text-white">
-                {selectedUsers.length} user{selectedUsers.length !== 1 ? "s" : ""} selected
-              </span>
-            )}
-          </div>
+      <div className="flex items-center justify-between mb-1">
+        <div>
+          <h1 className="text-[20px] font-semibold text-foreground leading-[1.35]">Team</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage team members and roles</p>
         </div>
       </div>
+
+      {!initialLoading && users.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Team Members</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{users.length.toLocaleString()}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Total team members</span>
+            </div>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Admins</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <Shield className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{users.filter(u => u.role === 'admin' || u.role === 'superadmin').length.toLocaleString()}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Admin & superadmin users</span>
+            </div>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Active</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{users.filter(u => u.status === 'active').length.toLocaleString()}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Currently active users</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">

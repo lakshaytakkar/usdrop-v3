@@ -664,70 +664,59 @@ export default function AdminCoursesPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-white">Courses</h1>
-            <p className="text-xs text-white/90 mt-0.5">
-              Manage courses and curriculum
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-          {assignedOwner || assignedMembers.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center -space-x-2">
-                {assignedOwner && (() => {
-                  const owner = internalUsers.find(u => u.id === assignedOwner)
-                  return (
-                    <Avatar className="h-8 w-8 border-2 border-white/20">
-                      <AvatarImage src={getAvatarUrl(assignedOwner, owner?.email)} />
-                      <AvatarFallback className="text-xs bg-white/20 text-white">
-                        {owner?.name.charAt(0) || "O"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })()}
-                {assignedMembers.slice(0, 3).map((memberId) => {
-                  const member = internalUsers.find(u => u.id === memberId)
-                  return (
-                    <Avatar key={memberId} className="h-8 w-8 border-2 border-white/20">
-                      <AvatarImage src={getAvatarUrl(memberId, member?.email)} />
-                      <AvatarFallback className="text-xs bg-white/20 text-white">
-                        {member?.name.charAt(0) || "M"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )
-                })}
-                {assignedMembers.length > 3 && (
-                  <div className="h-8 w-8 rounded-full border-2 border-white/20 bg-white/20 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white">+{assignedMembers.length - 3}</span>
-                  </div>
-                )}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setAssigneeModalOpen(true)}
-                className="whitespace-nowrap cursor-pointer bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Assignee
-              </Button>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setAssigneeModalOpen(true)}
-              className="whitespace-nowrap"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Assignee
-            </Button>
-          )}
-          </div>
+      <div className="flex items-center justify-between mb-1">
+        <div>
+          <h1 className="text-[20px] font-semibold text-foreground leading-[1.35]">Courses</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage mentorship courses</p>
         </div>
       </div>
+
+      {!initialLoading && courses.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Total Courses</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{courses.length}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">All courses in catalog</span>
+            </div>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Published</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{courses.filter(c => c.published).length}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Published courses</span>
+            </div>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Draft</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <Edit className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{courses.filter(c => !c.published).length}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Draft courses</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">

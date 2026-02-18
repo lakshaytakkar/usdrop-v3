@@ -20,6 +20,9 @@ export async function GET() {
       recentSignupsResult,
       freeUsersResult,
       proUsersResult,
+      ordersResult,
+      suppliersResult,
+      shopifyStoresResult,
     ] = await Promise.all([
       supabaseAdmin
         .from('profiles')
@@ -60,6 +63,18 @@ export async function GET() {
         .select('id', { count: 'exact', head: true })
         .is('internal_role', null)
         .eq('account_type', 'pro'),
+
+      supabaseAdmin
+        .from('orders')
+        .select('id', { count: 'exact', head: true }),
+
+      supabaseAdmin
+        .from('suppliers')
+        .select('id', { count: 'exact', head: true }),
+
+      supabaseAdmin
+        .from('shopify_stores')
+        .select('id', { count: 'exact', head: true }),
     ])
 
     return NextResponse.json({
@@ -73,6 +88,9 @@ export async function GET() {
         free: freeUsersResult.count ?? 0,
         pro: proUsersResult.count ?? 0,
       },
+      totalOrders: ordersResult.count ?? 0,
+      totalSuppliers: suppliersResult.count ?? 0,
+      totalShopifyStores: shopifyStoresResult.count ?? 0,
     })
   } catch (error) {
     console.error('Error in GET /api/admin/dashboard:', error)

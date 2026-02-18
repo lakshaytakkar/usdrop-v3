@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Users, RefreshCw, Link2, Trash2, Download, Copy, Check, ShoppingBag, Filter, X } from "lucide-react"
+import { Plus, Users, RefreshCw, Link2, Trash2, Download, Copy, Check, ShoppingBag, Filter, X, CheckCircle2 } from "lucide-react"
 import { AdminShopifyStoreCard } from "./components/admin-shopify-store-card"
 import { Input } from "@/components/ui/input"
 import {
@@ -443,35 +443,45 @@ export default function AdminShopifyStoresPage() {
 
   return (
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 mb-3 flex-shrink-0 w-full">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <div className="relative w-8 h-8 flex-shrink-0">
-              <Image
-                src="/shopify_glyph.svg"
-                alt="Shopify"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold tracking-tight text-white">Shopify Stores</h1>
-              <p className="text-xs text-white/90 mt-0.5">
-                Manage connected Shopify stores
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAssigneeModalOpen(true)}
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-          >
-            <Users className="h-4 w-4 mr-2" />
-            Add Assignee
-          </Button>
+      <div className="flex items-center justify-between mb-1">
+        <div>
+          <h1 className="text-[20px] font-semibold text-foreground leading-[1.35]">Shopify Stores</h1>
+          <p className="text-sm text-muted-foreground mt-1">Monitor client Shopify stores</p>
         </div>
       </div>
+
+      {!initialLoading && stores.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Total Stores</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{stores.length.toLocaleString()}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">All Shopify stores</span>
+            </div>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Connected</span>
+              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="mt-1">
+              <span className="text-2xl font-semibold">{stores.filter(s => s.status === 'connected').length.toLocaleString()}</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-xs text-muted-foreground">Currently connected stores</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Tabs */}
       <div className="mb-4 flex-shrink-0">
