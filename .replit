@@ -42,6 +42,8 @@ NEXT_PUBLIC_APP_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13gr
 NEXT_PUBLIC_SITE_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13grs470.kirk.replit.dev"
 NEXT_PUBLIC_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
+VITE_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
+VITE_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
 
 [deployment]
 deploymentTarget = "autoscale"
