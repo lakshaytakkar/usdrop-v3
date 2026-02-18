@@ -20,7 +20,7 @@ export async function GET() {
       recentSignupsResult,
       freeUsersResult,
       proUsersResult,
-      ordersResult,
+      leadsResult,
       suppliersResult,
       shopifyStoresResult,
     ] = await Promise.all([
@@ -65,7 +65,7 @@ export async function GET() {
         .eq('account_type', 'pro'),
 
       supabaseAdmin
-        .from('orders')
+        .from('leads')
         .select('id', { count: 'exact', head: true }),
 
       supabaseAdmin
@@ -88,7 +88,7 @@ export async function GET() {
         free: freeUsersResult.count ?? 0,
         pro: proUsersResult.count ?? 0,
       },
-      totalOrders: ordersResult.count ?? 0,
+      totalLeads: leadsResult.count ?? 0,
       totalSuppliers: suppliersResult.count ?? 0,
       totalShopifyStores: shopifyStoresResult.count ?? 0,
     })

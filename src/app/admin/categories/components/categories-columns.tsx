@@ -94,7 +94,8 @@ export function createCategoriesColumns({
           </div>
         )
       },
-      size: 220,
+      size: 280,
+      minSize: 200,
     },
     {
       id: "parent_category",

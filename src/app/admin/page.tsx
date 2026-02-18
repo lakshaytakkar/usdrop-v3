@@ -13,7 +13,7 @@ import {
   Store,
   CreditCard,
   TrendingUp,
-  ShoppingCart,
+  Target,
   Building,
   ShoppingBag,
   ArrowRight,
@@ -32,7 +32,7 @@ interface DashboardStats {
     free: number
     pro: number
   }
-  totalOrders: number
+  totalLeads: number
   totalSuppliers: number
   totalShopifyStores: number
 }
@@ -291,15 +291,15 @@ export default function AdminPage() {
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </Link>
-                  <Link href="/admin/orders" className="flex items-center justify-between py-2.5 px-2 rounded-md hover:bg-muted/50 transition-colors group">
+                  <Link href="/admin/leads" className="flex items-center justify-between py-2.5 px-2 rounded-md hover:bg-muted/50 transition-colors group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                        <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+                        <Target className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <span className="text-sm">Orders</span>
+                      <span className="text-sm">Leads</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{stats.totalOrders}</span>
+                      <span className="text-sm font-medium">{stats.totalLeads}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </Link>

@@ -264,6 +264,7 @@ export function DataTable<TData, TValue>({
                 )}
                 {headerGroup.headers.map((header) => {
                   const isSticky = header.column.columnDef.meta?.sticky
+                  const colSize = header.column.columnDef.size
                   return (
                     <TableHead 
                       key={header.id} 
@@ -271,6 +272,7 @@ export function DataTable<TData, TValue>({
                         "py-2 px-2 sm:px-3",
                         isSticky && "sticky right-0 bg-background z-20"
                       )}
+                      style={colSize ? { width: colSize, minWidth: colSize } : undefined}
                     >
                       {header.isPlaceholder
                         ? null
@@ -312,13 +314,15 @@ export function DataTable<TData, TValue>({
                   )}
                   {row.getVisibleCells().map((cell) => {
                     const isSticky = cell.column.columnDef.meta?.sticky
+                    const colSize = cell.column.columnDef.size
                     return (
                       <TableCell 
                         key={cell.id} 
                         className={cn(
-                          "py-2 px-2 sm:px-3 max-w-0",
+                          "py-2 px-2 sm:px-3",
                           isSticky && "sticky right-0 bg-background z-10"
                         )}
+                        style={colSize ? { width: colSize, minWidth: colSize } : undefined}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

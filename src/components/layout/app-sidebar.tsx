@@ -286,9 +286,9 @@ const adminContentItems = [
     url: "/admin/suppliers",
   },
   {
-    title: "Orders",
-    icon: ShoppingCart,
-    url: "/admin/orders",
+    title: "Leads",
+    icon: Receipt,
+    url: "/admin/leads",
   },
   {
     title: "Shopify Stores",

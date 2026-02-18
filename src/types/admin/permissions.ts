@@ -107,6 +107,8 @@ export type PermissionKey =
   | "products.create"
   | "products.delete"
   | "products.lock_unlock"
+  | "leads.view"
+  | "leads.edit"
 
 export type ViewScope = 'all' | 'assigned' | null
 
