@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { ExternalLayout } from "@/components/layout/external-layout"
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
@@ -21,7 +21,6 @@ import {
   Eye,
   Search,
   MoreVertical,
-  Loader2
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -51,12 +50,9 @@ export default function MyProductsPage() {
   const [items, setItems] = useState<PicklistItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const hasFetched = useRef(false)
 
   useEffect(() => {
     if (authLoading) return
-    if (hasFetched.current) return
-    hasFetched.current = true
 
     if (!user) {
       setItems([])
@@ -65,10 +61,10 @@ export default function MyProductsPage() {
     }
 
     let cancelled = false
+    setIsLoading(true)
 
     const fetchPicklist = async () => {
       try {
-        setIsLoading(true)
         const response = await fetch('/api/picklist', {
           credentials: 'include',
         })
