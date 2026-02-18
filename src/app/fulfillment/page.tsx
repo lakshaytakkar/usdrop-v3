@@ -1,7 +1,6 @@
 "use client"
 
 import { ExternalLayout } from '@/components/layout/external-layout';
-import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
@@ -13,7 +12,7 @@ export default function FulfillmentPage() {
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white" />
-          <Container className="relative z-10">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="max-w-2xl">
                 <Badge className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200 px-4 py-1 text-sm">
@@ -42,10 +41,12 @@ export default function FulfillmentPage() {
               <div className="relative">
                 <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl opacity-20 blur-2xl"></div>
                 <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-2xl bg-white">
-                   <GeneratedImage 
-                     prompt="modern automated logistics warehouse interior with packages moving on conveyor belts, clean bright lighting, blue and white theme"
-                     className="w-full aspect-[4/3] object-cover"
-                   />
+                   <div className="w-full aspect-[4/3] bg-gradient-to-br from-blue-100 via-blue-50 to-white flex items-center justify-center">
+                     <div className="text-center">
+                       <Package className="h-16 w-16 text-blue-300 mx-auto mb-3" />
+                       <p className="text-blue-400 font-medium">US Warehouse Fulfillment</p>
+                     </div>
+                   </div>
                    
                    {/* Floating Stats Card */}
                    <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur p-4 rounded-xl border border-white shadow-lg">
@@ -74,12 +75,12 @@ export default function FulfillmentPage() {
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* How It Works Steps */}
         <section className="py-20 bg-white">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">How USDrop Fulfillment Works</h2>
               <p className="text-slate-600">We handle the logistics so you can focus on marketing.</p>
@@ -119,12 +120,12 @@ export default function FulfillmentPage() {
                 <p className="text-slate-600 text-sm">We pick, pack, and ship from the US. Tracking updates instantly.</p>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* Comparison Table */}
         <section className="py-20 bg-slate-50 border-y border-slate-100">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="text-center max-w-3xl mx-auto mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">USDrop vs. The Old Way</h2>
               <p className="text-slate-600">Why top dropshippers are switching to US fulfillment.</p>
@@ -177,12 +178,12 @@ export default function FulfillmentPage() {
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* Mid-page CTA */}
         <section className="py-20 bg-white">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="bg-blue-600 rounded-3xl p-12 text-center text-white relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('/grid.svg')]"></div>
               <div className="relative z-10 max-w-2xl mx-auto">
@@ -199,7 +200,7 @@ export default function FulfillmentPage() {
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
       </div>

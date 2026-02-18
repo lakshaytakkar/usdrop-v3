@@ -1,7 +1,6 @@
 export interface Marketplace {
   id: string
   name: string
-  logo: string
   brandColor: string
   sellerPanelUrl: string
   requirements: string[]
@@ -12,7 +11,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "amazon",
     name: "Amazon",
-    logo: "",
     brandColor: "#FF9900",
     sellerPanelUrl: "https://sellercentral.amazon.com/",
     requirements: [
@@ -28,7 +26,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "chairish",
     name: "Chairish",
-    logo: "",
     brandColor: "#1A1A1A",
     sellerPanelUrl: "https://www.chairish.com/sell",
     requirements: [
@@ -42,7 +39,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "ebay",
     name: "eBay",
-    logo: "",
     brandColor: "#E53238",
     sellerPanelUrl: "https://www.ebay.com/sh/landing",
     requirements: [
@@ -56,7 +52,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "creoate",
     name: "Creoate",
-    logo: "",
     brandColor: "#6366F1",
     sellerPanelUrl: "https://creoate.com/sell",
     requirements: [
@@ -70,7 +65,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "fashiongo",
     name: "FashionGo",
-    logo: "",
     brandColor: "#E91E63",
     sellerPanelUrl: "https://www.fashiongo.net/",
     requirements: [
@@ -84,7 +78,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "walmart",
     name: "Walmart Marketplace",
-    logo: "",
     brandColor: "#0071DC",
     sellerPanelUrl: "https://marketplace.walmart.com/",
     requirements: [
@@ -100,7 +93,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "etsy",
     name: "Etsy",
-    logo: "",
     brandColor: "#F1641E",
     sellerPanelUrl: "https://www.etsy.com/sell",
     requirements: [
@@ -114,7 +106,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "poshmark",
     name: "Poshmark",
-    logo: "",
     brandColor: "#C1272D",
     sellerPanelUrl: "https://poshmark.com/sell",
     requirements: [
@@ -127,7 +118,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "mercari",
     name: "Mercari",
-    logo: "",
     brandColor: "#4DC3FF",
     sellerPanelUrl: "https://www.mercari.com/sell/",
     requirements: [
@@ -140,7 +130,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "bonanza",
     name: "Bonanza",
-    logo: "",
     brandColor: "#2E7D32",
     sellerPanelUrl: "https://www.bonanza.com/sell",
     requirements: [
@@ -153,7 +142,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "newegg",
     name: "Newegg",
-    logo: "",
     brandColor: "#F7931E",
     sellerPanelUrl: "https://www.newegg.com/sell",
     requirements: [
@@ -168,7 +156,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "wayfair",
     name: "Wayfair",
-    logo: "",
     brandColor: "#7B2D8E",
     sellerPanelUrl: "https://partners.wayfair.com/",
     requirements: [
@@ -184,7 +171,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "overstock",
     name: "Overstock",
-    logo: "",
     brandColor: "#D32F2F",
     sellerPanelUrl: "https://www.overstock.com/partners",
     requirements: [
@@ -198,7 +184,6 @@ export const marketplaces: Marketplace[] = [
   {
     id: "reverb",
     name: "Reverb",
-    logo: "",
     brandColor: "#2D4A9E",
     sellerPanelUrl: "https://reverb.com/sell",
     requirements: [

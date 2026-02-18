@@ -1,7 +1,6 @@
 "use client"
 
 import { ExternalLayout } from '@/components/layout/external-layout';
-import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Button } from "@/components/ui/button"
 import { Check, ArrowRight, RefreshCw, PackageCheck, BarChart3 } from "lucide-react"
 import Link from "next/link"
@@ -30,7 +29,7 @@ export default function ShopifyIntegrationPage() {
         {/* Hero Section */}
         <section className="relative py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-green-50/50 to-white" />
-          <Container className="relative z-10 text-center">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6 relative z-10 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-8">
               <ShopifyIcon className="w-5 h-5" />
               <span className="text-sm font-semibold text-slate-700">Official Shopify Integration</span>
@@ -49,10 +48,10 @@ export default function ShopifyIntegrationPage() {
                 </Button>
               </Link>
             </div>
-          </Container>
+          </div>
 
           {/* Hero Visual / Screenshot */}
-          <Container className="relative z-10 mt-16">
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6 relative z-10 mt-16">
             <div className="max-w-5xl mx-auto relative">
               <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#95BF46] rounded-full blur-3xl opacity-20 animate-pulse"></div>
               <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20 animate-pulse delay-700"></div>
@@ -69,20 +68,22 @@ export default function ShopifyIntegrationPage() {
                     <div className="bg-white px-3 py-1 rounded text-xs text-slate-400 inline-block w-64">app.usdrop.com/connect-store</div>
                   </div>
                 </div>
-                <div className="p-0">
-                   <GeneratedImage 
-                     prompt="ui screenshot of a shopify store connection dashboard, success message, syncing products list, clean minimal interface"
-                     className="w-full aspect-[16/9] object-cover"
-                   />
+                <div className="p-8 flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50 aspect-[16/9]">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-2xl mb-4">
+                      <ShopifyIcon className="w-8 h-8" />
+                    </div>
+                    <p className="text-slate-400 font-medium">Store Connection Dashboard</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* Benefits Grid */}
         <section className="py-20 bg-white">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6">
@@ -112,12 +113,12 @@ export default function ShopifyIntegrationPage() {
                 </p>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* Integration Steps */}
         <section className="py-20 bg-slate-50 border-y border-slate-100">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Getting Started is Easy</h2>
               <p className="text-slate-600">No coding required. Be up and running in 2 minutes.</p>
@@ -149,12 +150,12 @@ export default function ShopifyIntegrationPage() {
                 </div>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
         {/* Mid-page CTA */}
         <section className="py-24 bg-white">
-          <Container>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 lg:px-6">
             <div className="bg-[#008060] rounded-3xl p-12 text-center text-white relative overflow-hidden">
               <div className="relative z-10 max-w-2xl mx-auto">
                 <div className="flex justify-center mb-6">
@@ -173,7 +174,7 @@ export default function ShopifyIntegrationPage() {
                 </Link>
               </div>
             </div>
-          </Container>
+          </div>
         </section>
 
       </div>
