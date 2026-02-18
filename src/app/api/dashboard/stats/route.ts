@@ -15,7 +15,7 @@ export async function GET() {
       storesResult,
       activeStoresResult,
       onboardingResult,
-      coursesResult,
+      picklistResult,
       winningProductsResult
     ] = await Promise.allSettled([
       // Products count - get total products available (not user-specific for now)
@@ -104,8 +104,8 @@ export async function GET() {
           total_modules: 0
         }
 
-    const picklistCount = coursesResult.status === 'fulfilled'
-      ? (coursesResult.value?.count || 0)
+    const picklistCount = picklistResult.status === 'fulfilled'
+      ? (picklistResult.value?.count || 0)
       : 0
 
     const winningProductsCount = winningProductsResult.status === 'fulfilled'

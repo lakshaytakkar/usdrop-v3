@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit, Trash2, Plus } from "lucide-react"
+import { Edit, Trash2, Plus, Loader2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -16,9 +16,9 @@ import {
 
 interface Note {
   id: string
-  timestamp: number
+  timestamp_seconds: number
   text: string
-  createdAt: string
+  created_at: string
 }
 
 interface NotesTabProps {
@@ -31,67 +31,108 @@ export function NotesTab({ moduleId }: NotesTabProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const [noteText, setNoteText] = useState("")
   const [timestamp, setTimestamp] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    const savedNotes = localStorage.getItem(`notes-${moduleId}`)
-    if (savedNotes) {
-      setNotes(JSON.parse(savedNotes))
-    }
+    fetchNotes()
   }, [moduleId])
 
-  const saveNotes = (newNotes: Note[]) => {
-    setNotes(newNotes)
-    localStorage.setItem(`notes-${moduleId}`, JSON.stringify(newNotes))
+  const fetchNotes = async () => {
+    try {
+      const res = await fetch(`/api/course-notes?moduleId=${moduleId}`, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setNotes(data.notes || [])
+      }
+    } catch (error) {
+      console.error('Failed to load notes:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleCreateNote = () => {
-    // Get current video timestamp (would come from video player in real implementation)
-    const currentTimestamp = timestamp // TODO: Get from video player
-    
-    const newNote: Note = {
-      id: Date.now().toString(),
-      timestamp: currentTimestamp,
-      text: noteText,
-      createdAt: new Date().toISOString(),
+  const handleCreateNote = async () => {
+    if (!noteText.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/course-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ moduleId, text: noteText, timestamp_seconds: timestamp }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setNotes([...notes, data.note])
+      }
+    } catch (error) {
+      console.error('Failed to create note:', error)
+    } finally {
+      setSaving(false)
+      setNoteText("")
+      setIsDialogOpen(false)
     }
-
-    saveNotes([...notes, newNote])
-    setNoteText("")
-    setIsDialogOpen(false)
   }
 
   const handleEditNote = (note: Note) => {
     setEditingNote(note)
     setNoteText(note.text)
-    setTimestamp(note.timestamp)
+    setTimestamp(note.timestamp_seconds)
     setIsDialogOpen(true)
   }
 
-  const handleUpdateNote = () => {
-    if (!editingNote) return
-
-    const updatedNotes = notes.map((note) =>
-      note.id === editingNote.id
-        ? { ...note, text: noteText, timestamp }
-        : note
-    )
-
-    saveNotes(updatedNotes)
-    setEditingNote(null)
-    setNoteText("")
-    setTimestamp(0)
-    setIsDialogOpen(false)
+  const handleUpdateNote = async () => {
+    if (!editingNote || !noteText.trim()) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/course-notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id: editingNote.id, text: noteText, timestamp_seconds: timestamp }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setNotes(notes.map((n) => n.id === editingNote.id ? data.note : n))
+      }
+    } catch (error) {
+      console.error('Failed to update note:', error)
+    } finally {
+      setSaving(false)
+      setEditingNote(null)
+      setNoteText("")
+      setTimestamp(0)
+      setIsDialogOpen(false)
+    }
   }
 
-  const handleDeleteNote = (noteId: string) => {
-    const updatedNotes = notes.filter((note) => note.id !== noteId)
-    saveNotes(updatedNotes)
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      const res = await fetch(`/api/course-notes?id=${noteId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      if (res.ok) {
+        setNotes(notes.filter((n) => n.id !== noteId))
+      }
+    } catch (error) {
+      console.error('Failed to delete note:', error)
+    }
   }
 
   const formatTimestamp = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -138,8 +179,9 @@ export function NotesTab({ moduleId }: NotesTabProps) {
               </Button>
               <Button
                 onClick={editingNote ? handleUpdateNote : handleCreateNote}
-                disabled={!noteText.trim()}
+                disabled={!noteText.trim() || saving}
               >
+                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {editingNote ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
@@ -160,7 +202,7 @@ export function NotesTab({ moduleId }: NotesTabProps) {
             >
               <div className="flex-shrink-0">
                 <div className="px-3 py-1 bg-primary/10 text-primary rounded text-sm font-medium">
-                  {formatTimestamp(note.timestamp)}
+                  {formatTimestamp(note.timestamp_seconds)}
                 </div>
               </div>
               <div className="flex-1 min-w-0">
@@ -191,10 +233,3 @@ export function NotesTab({ moduleId }: NotesTabProps) {
     </div>
   )
 }
-
-
-
-
-
-
-

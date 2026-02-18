@@ -62,7 +62,6 @@ interface UserDetails {
   batch_id: string
 }
 
-const ROADMAP_STORAGE_KEY = "usdrop-journey-task-status"
 
 function ProfileSummaryCard() {
   const { user } = useAuth()
@@ -143,15 +142,18 @@ function QuickStatsRow() {
   }, [])
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(ROADMAP_STORAGE_KEY)
-        const statuses = stored ? JSON.parse(stored) : {}
-        const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
-        const completed = Object.values(statuses).filter((s) => s === "completed").length
-        setRoadmapProgress({ completed, total })
-      } catch {}
-    }
+    const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
+    fetch('/api/roadmap-progress', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.statuses) {
+          const completed = Object.values(data.statuses).filter((s) => s === "completed").length
+          setRoadmapProgress({ completed, total })
+        } else {
+          setRoadmapProgress({ completed: 0, total })
+        }
+      })
+      .catch(() => setRoadmapProgress({ completed: 0, total }))
   }, [])
 
   const statItems = [
@@ -401,16 +403,18 @@ function RoadmapProgressCard() {
   const [progress, setProgress] = useState({ completed: 0, inProgress: 0, total: 0, percent: 0 })
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem(ROADMAP_STORAGE_KEY)
-        const statuses: Record<string, string> = stored ? JSON.parse(stored) : {}
-        const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
-        const completed = Object.values(statuses).filter((s) => s === "completed").length
-        const inProgress = Object.values(statuses).filter((s) => s === "in_progress").length
-        setProgress({ completed, inProgress, total, percent: total > 0 ? Math.round((completed / total) * 100) : 0 })
-      } catch {}
-    }
+    const total = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
+    fetch('/api/roadmap-progress', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.statuses) {
+          const statuses: Record<string, string> = data.statuses
+          const completed = Object.values(statuses).filter((s) => s === "completed").length
+          const inProgress = Object.values(statuses).filter((s) => s === "in_progress").length
+          setProgress({ completed, inProgress, total, percent: total > 0 ? Math.round((completed / total) * 100) : 0 })
+        }
+      })
+      .catch(() => {})
   }, [])
 
   return (

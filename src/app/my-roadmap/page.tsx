@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ExternalLayout } from "@/components/layout/external-layout";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { journeyStages } from "@/data/journey-stages";
 import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay";
+import { useAuth } from "@/contexts/auth-context";
 import {
   Rocket,
   ChevronDown,
@@ -21,35 +23,40 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string; dotClass: string; bgCl
   { value: "completed", label: "Completed", dotClass: "bg-green-500", bgClass: "bg-green-50 border-green-200 hover:bg-green-100", textClass: "text-green-700" },
 ];
 
-const STORAGE_KEY = 'usdrop-journey-task-status';
-
 export default function MyJourneyPage() {
+  const { user, loading: authLoading } = useAuth()
   const [taskStatuses, setTaskStatuses] = useState<Record<string, TaskStatus>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (authLoading) return
+    if (hasFetched.current) return
+    hasFetched.current = true
+
+    if (!user) {
+      setIsLoading(false)
+      return
+    }
+
+    const fetchProgress = async () => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          setTaskStatuses(JSON.parse(stored));
+        const res = await fetch('/api/roadmap-progress', { credentials: 'include' })
+        if (res.ok) {
+          const data = await res.json()
+          setTaskStatuses(data.statuses || {})
         }
       } catch (error) {
-        console.error('Failed to load journey progress:', error);
+        console.error('Failed to load roadmap progress:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
-  }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && Object.keys(taskStatuses).length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(taskStatuses));
-      } catch (error) {
-        console.error('Failed to save journey progress:', error);
-      }
-    }
-  }, [taskStatuses]);
+    fetchProgress()
+  }, [authLoading, user]);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenDropdownId(null);
@@ -63,9 +70,20 @@ export default function MyJourneyPage() {
     return taskStatuses[taskId] || "not_started";
   }, [taskStatuses]);
 
-  const setTaskStatus = (taskId: string, status: TaskStatus) => {
+  const setTaskStatus = async (taskId: string, status: TaskStatus) => {
     setTaskStatuses(prev => ({ ...prev, [taskId]: status }));
     setOpenDropdownId(null);
+
+    try {
+      await fetch('/api/roadmap-progress', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ taskId, status }),
+      })
+    } catch (error) {
+      console.error('Failed to save roadmap progress:', error)
+    }
   };
 
   const toggleStage = (stageId: string) => {
@@ -94,6 +112,28 @@ export default function MyJourneyPage() {
   };
 
   const getStatusOption = (status: TaskStatus) => STATUS_OPTIONS.find(o => o.value === status)!;
+
+  if (isLoading) {
+    return (
+      <ExternalLayout>
+        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0">
+          <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
+            <h1 className="text-2xl font-bold">My Roadmap</h1>
+            <p className="text-sm text-blue-100 mt-1">Your step-by-step guide to dropshipping success</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="border rounded-lg bg-white p-4 space-y-3">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-2/3" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </ExternalLayout>
+    );
+  }
 
   return (
     <ExternalLayout>

@@ -42,13 +42,9 @@ function ShopifyStoresContent() {
       setLoading(true)
       setError(null)
       
-      // Add deliberate delay for enhanced UX (1-2 seconds)
-      const [response] = await Promise.all([
-        fetch("/api/shopify-stores", {
-          credentials: 'include', // Include cookies for authentication
-        }),
-        new Promise(resolve => setTimeout(resolve, 1500))
-      ])
+      const response = await fetch("/api/shopify-stores", {
+        credentials: 'include',
+      })
       
       if (response.status === 401) {
         // User is not authenticated - show empty state

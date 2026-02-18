@@ -10,50 +10,56 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
-      .eq('id', user.id)
-      .single()
+    const [profileResult, totalVideosResult, totalModulesResult, completedVideosResult, allVideosResult, completedProgressResult] = await Promise.all([
+      supabaseAdmin
+        .from('profiles')
+        .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
+        .eq('id', user.id)
+        .single(),
 
-    const { count: totalVideos } = await supabaseAdmin
-      .from('onboarding_videos')
-      .select('id', { count: 'exact', head: true })
+      supabaseAdmin
+        .from('onboarding_videos')
+        .select('id', { count: 'exact', head: true }),
 
-    const { count: totalModules } = await supabaseAdmin
-      .from('onboarding_modules')
-      .select('id', { count: 'exact', head: true })
+      supabaseAdmin
+        .from('onboarding_modules')
+        .select('id')
+        .order('id'),
 
-    const { count: completedVideos } = await supabaseAdmin
-      .from('onboarding_progress')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('completed', true)
+      supabaseAdmin
+        .from('onboarding_progress')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('completed', true),
 
-    const { data: allModules } = await supabaseAdmin
-      .from('onboarding_modules')
-      .select('id')
+      supabaseAdmin
+        .from('onboarding_videos')
+        .select('id, module_id'),
 
-    const { data: allVideos } = await supabaseAdmin
-      .from('onboarding_videos')
-      .select('id, module_id')
+      supabaseAdmin
+        .from('onboarding_progress')
+        .select('video_id')
+        .eq('user_id', user.id)
+        .eq('completed', true),
+    ])
 
-    const { data: completedProgress } = await supabaseAdmin
-      .from('onboarding_progress')
-      .select('video_id')
-      .eq('user_id', user.id)
-      .eq('completed', true)
+    const profile = profileResult.data
+    const totalVideos = totalVideosResult.count || 0
+    const allModules = totalModulesResult.data || []
+    const completedVideos = completedVideosResult.count || 0
+    const allVideos = allVideosResult.data || []
+    const completedProgress = completedProgressResult.data || []
 
-    const completedVideoIds = new Set((completedProgress || []).map((p: any) => p.video_id))
+    const completedVideoIds = new Set(completedProgress.map((p: any) => p.video_id))
     const videosByModule = new Map<string, string[]>()
-    for (const video of (allVideos || [])) {
+    for (const video of allVideos) {
       const moduleVideos = videosByModule.get(video.module_id) || []
       moduleVideos.push(video.id)
       videosByModule.set(video.module_id, moduleVideos)
     }
 
     let completedModules = 0
-    for (const module of (allModules || [])) {
+    for (const module of allModules) {
       const moduleVideos = videosByModule.get(module.id) || []
       if (moduleVideos.length > 0 && moduleVideos.every(vid => completedVideoIds.has(vid))) {
         completedModules++
@@ -64,10 +70,10 @@ export async function GET() {
       onboarding_completed: profile?.onboarding_completed || false,
       onboarding_completed_at: profile?.onboarding_completed_at || null,
       onboarding_progress: profile?.onboarding_progress || 0,
-      completed_videos: completedVideos || 0,
-      total_videos: totalVideos || 0,
+      completed_videos: completedVideos,
+      total_videos: totalVideos,
       completed_modules: completedModules,
-      total_modules: totalModules || 0,
+      total_modules: allModules.length,
     })
   } catch (error) {
     console.error('Onboarding status check error:', error)

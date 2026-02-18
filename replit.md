@@ -141,10 +141,19 @@ public/
 - **Product Hunt**: Has dedicated left filter sidebar (category, sort, price range) with mobile toggle. Product cards have a save button that adds to user's My Products (in Framework).
 
 ## Recent Changes (Feb 2026)
+- **Bug fix audit (Feb 18)**: Comprehensive end-to-end audit and fixes:
+  - Fixed user-details API crash on first visit (`.single()` → `.maybeSingle()`)
+  - Removed artificial 1500ms delay in My Store page
+  - Fixed dashboard stats variable naming bug (`coursesResult` → `picklistResult`)
+  - Migrated My Roadmap from localStorage to Supabase (`roadmap_progress` table + `/api/roadmap-progress` API)
+  - Updated Home page roadmap widgets to use API instead of localStorage
+  - Optimized onboarding/status API: 6 sequential DB queries → `Promise.all()` parallel
+  - Migrated Mentorship notes from localStorage to Supabase (`course_notes` table + `/api/course-notes` API)
+- **New Supabase tables**: roadmap_progress (task status per user), course_notes (mentorship notes per user/module)
 - **Navigation restructured to 10 groups**: Framework, Mentorship, Product, Videos & Ads, Order Fulfilment, Shopify, Studio, Important Tools, Blogs, Webinars
 - **Slug renames**: /academy→/mentorship, /my-journey→/my-roadmap, /intelligence→/blogs, /my-shopify-stores→/my-store, /ai-toolkit/*→/tools/*, /studio/*
 - **New pages**: My Profile (/my-profile) for user business details, My Credentials (/my-credentials) for secure credential vault
-- **New Supabase tables**: user_details (profile/business info), user_credentials (secure tool credential storage)
+- **New Supabase tables (earlier)**: user_details (profile/business info), user_credentials (secure tool credential storage)
 - **Campaign Studio deleted**: Removed from codebase
 - **Navigation refactored**: Replaced sidebar with top bar navigation for all external user pages; admin/dev routes keep sidebar
 - **Migrated to Supabase**: Full migration from Replit PostgreSQL + custom JWT auth to Supabase (database, auth, storage)

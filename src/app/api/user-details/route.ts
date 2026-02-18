@@ -10,10 +10,10 @@ export async function GET() {
     .from("user_details")
     .select("*")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   return NextResponse.json({
-    ...data,
+    ...(data || {}),
     email: user.email,
   });
 }
