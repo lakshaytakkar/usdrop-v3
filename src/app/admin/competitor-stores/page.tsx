@@ -950,18 +950,18 @@ export default function AdminCompetitorStoresPage() {
     <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h1 className="text-[20px] font-semibold text-foreground leading-[1.35]">Competitors</h1>
+          <h1 className="text-xl font-semibold leading-[1.35] tracking-tight text-foreground">Competitors</h1>
           <p className="text-sm text-muted-foreground mt-1">Monitor competitor stores</p>
         </div>
       </div>
 
       {!initialLoading && stores.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Total Stores</span>
               <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <Store className="w-4 h-4 text-blue-600" />
+                <Store className="h-[18px] w-[18px] text-primary" />
               </div>
             </div>
             <div className="mt-1">
@@ -971,11 +971,11 @@ export default function AdminCompetitorStoresPage() {
               <span className="text-xs text-muted-foreground">All competitor stores tracked</span>
             </div>
           </div>
-          <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Avg Traffic</span>
               <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-blue-600" />
+                <TrendingUp className="h-[18px] w-[18px] text-primary" />
               </div>
             </div>
             <div className="mt-1">
@@ -985,11 +985,11 @@ export default function AdminCompetitorStoresPage() {
               <span className="text-xs text-muted-foreground">Average monthly traffic</span>
             </div>
           </div>
-          <div className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Avg Rating</span>
               <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <Star className="w-4 h-4 text-blue-600" />
+                <Star className="h-[18px] w-[18px] text-primary" />
               </div>
             </div>
             <div className="mt-1">
