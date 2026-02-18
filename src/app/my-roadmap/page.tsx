@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ExternalLayout } from "@/components/layout/external-layout";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,33 +29,34 @@ export default function MyJourneyPage() {
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const hasFetched = useRef(false);
 
   useEffect(() => {
     if (authLoading) return
-    if (hasFetched.current) return
-    hasFetched.current = true
 
     if (!user) {
       setIsLoading(false)
       return
     }
 
+    let cancelled = false
+
     const fetchProgress = async () => {
       try {
         const res = await fetch('/api/roadmap-progress', { credentials: 'include' })
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json()
           setTaskStatuses(data.statuses || {})
         }
       } catch (error) {
         console.error('Failed to load roadmap progress:', error)
       } finally {
-        setIsLoading(false)
+        if (!cancelled) setIsLoading(false)
       }
     }
 
     fetchProgress()
+
+    return () => { cancelled = true }
   }, [authLoading, user]);
 
   useEffect(() => {

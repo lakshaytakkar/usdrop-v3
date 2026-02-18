@@ -2,7 +2,6 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Lock, ExternalLink, CheckCircle2 } from "lucide-react"
-import Image from "next/image"
 import { Marketplace } from "../data/marketplaces"
 import { cn } from "@/lib/utils"
 import { LockOverlay } from "@/components/ui/lock-overlay"
@@ -13,29 +12,31 @@ interface MarketplaceCardProps {
 }
 
 export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardProps) {
+  const initials = marketplace.name
+    .split(" ")
+    .map(w => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
     <Card className={cn(
       "relative flex h-full flex-col",
       marketplace.isLocked && "overflow-hidden"
     )}>
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
-        {/* Logo */}
         <div className="flex items-center justify-center h-16 mb-1">
-          <div className="relative w-full h-full max-w-[100px]">
-            <Image
-              src={marketplace.logo}
-              alt={`${marketplace.name} logo`}
-              fill
-              className={cn(
-                "object-contain transition-all duration-300",
-                marketplace.isLocked && "blur-sm"
-              )}
-              sizes="100px"
-            />
+          <div
+            className={cn(
+              "w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl",
+              marketplace.isLocked && "blur-sm"
+            )}
+            style={{ backgroundColor: marketplace.brandColor }}
+          >
+            {initials}
           </div>
         </div>
 
-        {/* Marketplace Name */}
         <h3 className={cn(
           "text-lg font-semibold text-center mb-2",
           marketplace.isLocked && "blur-sm opacity-0"
@@ -43,7 +44,6 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
           {marketplace.name}
         </h3>
 
-        {/* Requirements List */}
         <div className="flex-1 space-y-1.5 mb-3">
           {marketplace.requirements.map((requirement, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -61,7 +61,6 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
           ))}
         </div>
 
-        {/* Seller Panel Button */}
         {marketplace.isLocked ? (
           <button
             disabled
@@ -89,7 +88,6 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
           </button>
         )}
 
-        {/* Lock Overlay */}
         {marketplace.isLocked && (
           <LockOverlay onClick={onLockedClick} />
         )}
@@ -97,4 +95,3 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
     </Card>
   )
 }
-

@@ -32,7 +32,6 @@ import { Filter } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Loader } from "@/components/ui/loader"
 import { Supplier } from "@/app/suppliers/data/suppliers"
-import { adminSampleSuppliers } from "./data/suppliers"
 import { QuickViewModal } from "@/components/ui/quick-view-modal"
 import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { useToast } from "@/hooks/use-toast"
@@ -57,7 +56,7 @@ export default function AdminSuppliersPage() {
   const { hasPermission: canDelete } = useHasPermission("suppliers.delete")
   const { hasPermission: canVerify } = useHasPermission("suppliers.verify")
   
-  const [suppliers, setSuppliers] = useState<Supplier[]>(adminSampleSuppliers)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [selectedSuppliers, setSelectedSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -319,9 +318,14 @@ export default function AdminSuppliersPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setSuppliers(adminSampleSuppliers)
+      const params = new URLSearchParams()
+      if (searchQuery) params.set('search', searchQuery)
+      if (statusTab === 'verified') params.set('verified', 'true')
+      else if (statusTab === 'unverified') params.set('verified', 'false')
+      const response = await fetch(`/api/admin/suppliers?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to fetch suppliers')
+      const data = await response.json()
+      setSuppliers(data.suppliers || [])
     } catch (err) {
       console.error("Error fetching suppliers:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load suppliers. Please try again."
@@ -331,7 +335,7 @@ export default function AdminSuppliersPage() {
       setLoading(false)
       setInitialLoading(false)
     }
-  }, [showError])
+  }, [showError, searchQuery, statusTab])
 
   useEffect(() => {
     fetchSuppliers()

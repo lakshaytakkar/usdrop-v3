@@ -1,7 +1,6 @@
 "use client"
 
-import { Header } from '@/components/landing-deprecated/Header';
-import { Footer } from '@/components/landing-deprecated/Footer';
+import { ExternalLayout } from '@/components/layout/external-layout';
 import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,10 +8,8 @@ import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from 
 import Link from "next/link"
 export default function FulfillmentPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
-      <Header />
-      
-      <main className="pt-20">
+    <ExternalLayout>
+      <div className="flex flex-1 flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
         {/* Hero Section */}
         <section className="relative py-20 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white" />
@@ -205,10 +202,8 @@ export default function FulfillmentPage() {
           </Container>
         </section>
 
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </ExternalLayout>
   )
 }
 

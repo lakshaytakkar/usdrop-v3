@@ -33,8 +33,13 @@ import {
   Lock,
   Check,
   Trash2,
-  ArrowUp
+  ArrowUp,
+  Map,
+  BookOpen,
+  Key,
+  ClipboardList
 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ExternalUser } from "@/types/admin/users"
 import Loader from "@/components/kokonutui/loader"
 
@@ -46,6 +51,8 @@ export default function ExternalUserDetailPage() {
   const [user, setUser] = useState<ExternalUser | null>(null)
   const [allUsers, setAllUsers] = useState<ExternalUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [userProgress, setUserProgress] = useState<any>(null)
+  const [progressLoading, setProgressLoading] = useState(true)
 
   // Fetch current user from API
   useEffect(() => {
@@ -82,6 +89,26 @@ export default function ExternalUserDetailPage() {
     }
 
     fetchUser()
+  }, [userId])
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      if (!userId) return
+      try {
+        setProgressLoading(true)
+        const response = await fetch(`/api/admin/user-progress/${userId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setUserProgress(data)
+        }
+      } catch (err) {
+        console.error('Error fetching user progress:', err)
+      } finally {
+        setProgressLoading(false)
+      }
+    }
+
+    fetchProgress()
   }, [userId])
 
   // Fetch all users for navigation
@@ -348,8 +375,8 @@ export default function ExternalUserDetailPage() {
         <TabsList>
           <TabsTrigger value="overview" className="cursor-pointer">Overview</TabsTrigger>
           <TabsTrigger value="subscription" className="cursor-pointer">Subscription</TabsTrigger>
-          <TabsTrigger value="activity" className="cursor-pointer">Activity</TabsTrigger>
-          <TabsTrigger value="settings" className="cursor-pointer">Settings</TabsTrigger>
+          <TabsTrigger value="progress" className="cursor-pointer">Progress</TabsTrigger>
+          <TabsTrigger value="business" className="cursor-pointer">Business Details</TabsTrigger>
         </TabsList>
 
         <div className="flex-1 overflow-y-auto">
@@ -460,26 +487,203 @@ export default function ExternalUserDetailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="activity" className="space-y-2 mt-2">
-            <Card>
-              <CardHeader className="pb-2 px-4 pt-3">
-                <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-4 pb-3">
-                <p className="text-sm text-muted-foreground">Activity log will be displayed here</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="progress" className="space-y-2 mt-2">
+            {progressLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <Card key={i}>
+                    <CardHeader className="pb-2 px-4 pt-3">
+                      <Skeleton className="h-4 w-32" />
+                    </CardHeader>
+                    <CardContent className="pt-0 px-4 pb-3 space-y-2">
+                      <Skeleton className="h-3 w-48" />
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <>
+                <Card>
+                  <CardHeader className="pb-2 px-4 pt-3">
+                    <div className="flex items-center gap-2">
+                      <Map className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-sm font-semibold">Roadmap Progress</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-4 pb-3">
+                    {(() => {
+                      const tasks = userProgress?.roadmapProgress ?? []
+                      const completed = tasks.filter((t: any) => t.status === 'completed').length
+                      const inProgress = tasks.filter((t: any) => t.status === 'in_progress').length
+                      const notStarted = tasks.filter((t: any) => t.status === 'not_started' || !t.status).length
+                      const total = tasks.length
+                      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
+
+                      if (total === 0) {
+                        return <p className="text-sm text-muted-foreground">No roadmap tasks found</p>
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Overall completion</span>
+                            <span className="font-medium">{percentage}%</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-primary transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                              <span className="text-muted-foreground">Completed: <span className="font-medium text-foreground">{completed}</span></span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
+                              <span className="text-muted-foreground">In Progress: <span className="font-medium text-foreground">{inProgress}</span></span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                              <span className="text-muted-foreground">Not Started: <span className="font-medium text-foreground">{notStarted}</span></span>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2 px-4 pt-3">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-sm font-semibold">Onboarding Progress</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-4 pb-3">
+                    {(() => {
+                      const videos = userProgress?.onboardingProgress ?? []
+                      const completed = videos.filter((v: any) => v.completed).length
+                      const total = videos.length
+                      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
+
+                      if (total === 0) {
+                        return <p className="text-sm text-muted-foreground">No onboarding videos found</p>
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Videos completed</span>
+                            <span className="font-medium">{completed} / {total}</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-green-500 transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Card>
+                    <CardHeader className="pb-2 px-4 pt-3">
+                      <div className="flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-semibold">Course Notes</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 px-4 pb-3">
+                      <p className="text-2xl font-bold">{userProgress?.courseNotesCount ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Notes saved</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="pb-2 px-4 pt-3">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-semibold">Credentials</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0 px-4 pb-3">
+                      <p className="text-2xl font-bold">{userProgress?.credentialsCount ?? 0}</p>
+                      <p className="text-xs text-muted-foreground">Credentials stored</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-2 mt-2">
-            <Card>
-              <CardHeader className="pb-2 px-4 pt-3">
-                <CardTitle className="text-sm font-semibold">User Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-4 pb-3">
-                <p className="text-sm text-muted-foreground">Settings and preferences will be displayed here</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="business" className="space-y-2 mt-2">
+            {progressLoading ? (
+              <Card>
+                <CardHeader className="pb-2 px-4 pt-3">
+                  <Skeleton className="h-4 w-40" />
+                </CardHeader>
+                <CardContent className="pt-0 px-4 pb-3 space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="grid grid-cols-2 gap-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-36" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : (() => {
+              const details = Array.isArray(userProgress?.userDetails)
+                ? userProgress.userDetails[0] ?? null
+                : userProgress?.userDetails ?? null
+
+              if (!details) {
+                return (
+                  <Card>
+                    <CardContent className="py-8 text-center">
+                      <p className="text-sm text-muted-foreground">No business details on file</p>
+                    </CardContent>
+                  </Card>
+                )
+              }
+
+              const fields = [
+                { label: "Full Name", value: details.full_name },
+                { label: "Batch ID", value: details.batch_id },
+                { label: "Enrolled Number", value: details.enrolled_number },
+                { label: "Contact Number", value: details.contact_number },
+                { label: "Email", value: details.email },
+                { label: "Website", value: details.website_name },
+                { label: "Facebook Page", value: details.fb_page },
+                { label: "Instagram Account", value: details.ig_account },
+                { label: "LLC Name", value: details.llc_name },
+                { label: "EIN Name", value: details.ein_name },
+              ]
+
+              return (
+                <Card>
+                  <CardHeader className="pb-2 px-4 pt-3">
+                    <CardTitle className="text-sm font-semibold">Business Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-4 pb-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                      {fields.map((field) => (
+                        <div key={field.label}>
+                          <p className="text-xs text-muted-foreground">{field.label}</p>
+                          <p className="text-sm font-medium">{field.value || "—"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })()}
           </TabsContent>
         </div>
       </Tabs>

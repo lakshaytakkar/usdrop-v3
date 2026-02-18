@@ -42,7 +42,6 @@ import { DetailDrawer } from "@/components/ui/detail-drawer"
 import { CreateOrderForm } from "./components/create-order-form"
 import { createOrdersColumns } from "./components/orders-columns"
 import { Order, OrderStatus, OrderFilters } from "@/types/admin/orders"
-import { sampleOrders } from "./data/orders"
 import { format } from "date-fns"
 import { getAvatarUrl } from "@/lib/utils/avatar"
 import { Label } from "@/components/ui/label"
@@ -63,7 +62,7 @@ export default function AdminOrdersPage() {
   const { hasPermission: canDelete } = useHasPermission("orders.delete")
   const { hasPermission: canRefund } = useHasPermission("orders.refund")
   
-  const [orders, setOrders] = useState<Order[]>(sampleOrders)
+  const [orders, setOrders] = useState<Order[]>([])
   const [selectedOrders, setSelectedOrders] = useState<Order[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [sorting, setSorting] = useState<SortingState>([])
@@ -512,9 +511,15 @@ export default function AdminOrdersPage() {
     try {
       setLoading(true)
       setError(null)
-      // TODO: Replace with real API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setOrders(sampleOrders)
+      const params = new URLSearchParams()
+      if (statusTab !== 'all') params.set('status', statusTab)
+      if (searchQuery) params.set('search', searchQuery)
+      params.set('page', String(page))
+      params.set('pageSize', String(pageSize))
+      const response = await fetch(`/api/admin/orders?${params.toString()}`)
+      if (!response.ok) throw new Error('Failed to fetch orders')
+      const data = await response.json()
+      setOrders(data.orders || [])
     } catch (err) {
       console.error("Error fetching orders:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load orders. Please try again."
@@ -524,7 +529,7 @@ export default function AdminOrdersPage() {
       setLoading(false)
       setInitialLoading(false)
     }
-  }, [showError])
+  }, [showError, statusTab, searchQuery, page, pageSize])
 
   useEffect(() => {
     fetchOrders()

@@ -1,9 +1,10 @@
 export interface Marketplace {
   id: string
   name: string
-  logo: string // path to logo image or external URL
-  sellerPanelUrl: string // external URL to seller panel
-  requirements: string[] // array of requirement strings
+  logo: string
+  brandColor: string
+  sellerPanelUrl: string
+  requirements: string[]
   isLocked: boolean
 }
 
@@ -11,7 +12,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "amazon",
     name: "Amazon",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg",
+    logo: "",
+    brandColor: "#FF9900",
     sellerPanelUrl: "https://sellercentral.amazon.com/",
     requirements: [
       "Business License",
@@ -26,7 +28,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "chairish",
     name: "Chairish",
-    logo: "https://www.chairish.com/favicon.ico",
+    logo: "",
+    brandColor: "#1A1A1A",
     sellerPanelUrl: "https://www.chairish.com/sell",
     requirements: [
       "Business License",
@@ -39,7 +42,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "ebay",
     name: "eBay",
-    logo: "https://www.ebay.com/favicon.ico",
+    logo: "",
+    brandColor: "#E53238",
     sellerPanelUrl: "https://www.ebay.com/sh/landing",
     requirements: [
       "Bank Account",
@@ -52,7 +56,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "creoate",
     name: "Creoate",
-    logo: "https://creoate.com/favicon.ico",
+    logo: "",
+    brandColor: "#6366F1",
     sellerPanelUrl: "https://creoate.com/sell",
     requirements: [
       "Business License",
@@ -65,7 +70,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "fashiongo",
     name: "FashionGo",
-    logo: "https://www.fashiongo.net/favicon.ico",
+    logo: "",
+    brandColor: "#E91E63",
     sellerPanelUrl: "https://www.fashiongo.net/",
     requirements: [
       "Business License",
@@ -78,7 +84,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "walmart",
     name: "Walmart Marketplace",
-    logo: "https://www.walmart.com/favicon.ico",
+    logo: "",
+    brandColor: "#0071DC",
     sellerPanelUrl: "https://marketplace.walmart.com/",
     requirements: [
       "Business License",
@@ -93,7 +100,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "etsy",
     name: "Etsy",
-    logo: "https://www.etsy.com/favicon.ico",
+    logo: "",
+    brandColor: "#F1641E",
     sellerPanelUrl: "https://www.etsy.com/sell",
     requirements: [
       "Bank Account",
@@ -106,7 +114,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "poshmark",
     name: "Poshmark",
-    logo: "https://poshmark.com/favicon.ico",
+    logo: "",
+    brandColor: "#C1272D",
     sellerPanelUrl: "https://poshmark.com/sell",
     requirements: [
       "Bank Account",
@@ -118,7 +127,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "mercari",
     name: "Mercari",
-    logo: "https://www.mercari.com/favicon.ico",
+    logo: "",
+    brandColor: "#4DC3FF",
     sellerPanelUrl: "https://www.mercari.com/sell/",
     requirements: [
       "Bank Account",
@@ -130,7 +140,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "bonanza",
     name: "Bonanza",
-    logo: "https://www.bonanza.com/favicon.ico",
+    logo: "",
+    brandColor: "#2E7D32",
     sellerPanelUrl: "https://www.bonanza.com/sell",
     requirements: [
       "Bank Account",
@@ -142,7 +153,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "newegg",
     name: "Newegg",
-    logo: "https://www.newegg.com/favicon.ico",
+    logo: "",
+    brandColor: "#F7931E",
     sellerPanelUrl: "https://www.newegg.com/sell",
     requirements: [
       "Business License",
@@ -156,7 +168,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "wayfair",
     name: "Wayfair",
-    logo: "https://www.wayfair.com/favicon.ico",
+    logo: "",
+    brandColor: "#7B2D8E",
     sellerPanelUrl: "https://partners.wayfair.com/",
     requirements: [
       "Business License",
@@ -171,7 +184,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "overstock",
     name: "Overstock",
-    logo: "https://www.overstock.com/favicon.ico",
+    logo: "",
+    brandColor: "#D32F2F",
     sellerPanelUrl: "https://www.overstock.com/partners",
     requirements: [
       "Business License",
@@ -184,7 +198,8 @@ export const marketplaces: Marketplace[] = [
   {
     id: "reverb",
     name: "Reverb",
-    logo: "https://reverb.com/favicon.ico",
+    logo: "",
+    brandColor: "#2D4A9E",
     sellerPanelUrl: "https://reverb.com/sell",
     requirements: [
       "Bank Account",

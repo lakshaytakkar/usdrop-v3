@@ -53,17 +53,10 @@ import {
   Video,
   ExternalLink,
   Mail,
-  FileText,
-  Zap,
-  Droplets,
-  FileSearch,
   LayoutDashboard,
-  Share2,
   Receipt,
   PenTool,
   Calendar,
-  Code2,
-  Settings2,
   CheckSquare,
 } from "lucide-react"
 import Link from "next/link"
@@ -239,8 +232,16 @@ const aiWorkspaceItems: SidebarItem[] = [
   },
 ]
 
-// Admin User Management items
-const adminUserManagementItems = [
+// Admin items
+const adminDashboardItems = [
+  {
+    title: "Dashboard",
+    icon: LayoutDashboard,
+    url: "/admin",
+  },
+]
+
+const adminUserItems = [
   {
     title: "Internal Users (Team)",
     icon: Users,
@@ -252,27 +253,12 @@ const adminUserManagementItems = [
     url: "/admin/external-users",
   },
   {
-    title: "Permissions",
-    icon: Shield,
-    url: "/admin/permissions",
-  },
-  {
     title: "Plans",
     icon: CreditCard,
     url: "/admin/plans",
   },
 ]
 
-// Admin Orders & Transactions items
-const adminOrdersItems = [
-  {
-    title: "Orders",
-    icon: ShoppingCart,
-    url: "/admin/orders",
-  },
-]
-
-// Admin Content Management items
 const adminContentItems = [
   {
     title: "Products",
@@ -285,9 +271,9 @@ const adminContentItems = [
     url: "/admin/categories",
   },
   {
-    title: "Suppliers",
-    icon: Building,
-    url: "/admin/suppliers",
+    title: "Courses",
+    icon: Book,
+    url: "/admin/courses",
   },
   {
     title: "Competitor Stores",
@@ -295,47 +281,19 @@ const adminContentItems = [
     url: "/admin/competitor-stores",
   },
   {
-    title: "Courses",
-    icon: Book,
-    url: "/admin/courses",
+    title: "Suppliers",
+    icon: Building,
+    url: "/admin/suppliers",
   },
   {
-    title: "Intelligence",
-    icon: Newspaper,
-    url: "/admin/intelligence",
+    title: "Orders",
+    icon: ShoppingCart,
+    url: "/admin/orders",
   },
-]
-
-// Admin Research & Stores items
-const adminResearchItems = [
   {
     title: "Shopify Stores",
     icon: ShoppingBag,
     url: "/admin/shopify-stores",
-  },
-]
-
-// Admin Email Automation items
-const adminEmailAutomationItems = [
-  {
-    title: "Templates",
-    icon: FileText,
-    url: "/admin/email-automation/templates",
-  },
-  {
-    title: "Automations",
-    icon: Zap,
-    url: "/admin/email-automation/automations",
-  },
-  {
-    title: "Drip Campaigns",
-    icon: Droplets,
-    url: "/admin/email-automation/drips",
-  },
-  {
-    title: "Email Logs",
-    icon: FileSearch,
-    url: "/admin/email-automation/logs",
   },
 ]
 
@@ -644,13 +602,12 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Platform Admin Sections – mirror superadmin nav for dev context */}
-            {/* User Management Section */}
+            {/* Platform Admin Sections – mirror admin nav for dev context */}
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">USER MANAGEMENT</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">USERS & PLANS</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminUserManagementItems.map((item) => (
+                  {adminUserItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
@@ -664,69 +621,11 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Orders & Transactions Section */}
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">ORDERS & TRANSACTIONS</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminOrdersItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Content Management Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT MANAGEMENT</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT & DATA</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminContentItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Research & Stores Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">RESEARCH & STORES</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminResearchItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Email Automation Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">EMAIL AUTOMATION</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminEmailAutomationItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
@@ -745,12 +644,28 @@ export function AppSidebar() {
         {/* Admin Sections - Only show when on admin routes */}
         {isAdminRoute && (
           <>
-            {/* User Management Section */}
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">USER MANAGEMENT</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {adminUserManagementItems.map((item) => (
+                  {adminDashboardItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild tooltip={item.title} isActive={pathname === item.url}>
+                        <Link href={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">USERS & PLANS</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {adminUserItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
                         <Link href={item.url}>
@@ -764,28 +679,8 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* Orders & Transactions Section */}
             <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">ORDERS & TRANSACTIONS</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminOrdersItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Content Management Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT MANAGEMENT</SidebarGroupLabel>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">CONTENT & DATA</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminContentItems.map((item) => (
@@ -801,45 +696,6 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-
-            {/* Research & Stores Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">RESEARCH & STORES</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminResearchItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Email Automation Section */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="uppercase tracking-wider font-mono">EMAIL AUTOMATION</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminEmailAutomationItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive(item.url)}>
-                        <Link href={item.url}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
           </>
         )}
 
