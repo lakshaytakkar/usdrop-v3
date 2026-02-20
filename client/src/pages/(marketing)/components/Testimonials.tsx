@@ -8,151 +8,91 @@ const testimonials = [
     name: "Sarah Chen",
     role: "E-commerce Founder",
     avatar: "/images/landing/avatar-sarah.png",
-    content: "USDrop cut my product research from 10 hours to 10 minutes. Found my first $10K winner in week one.",
+    content: "Found my first $10K winner in week one. Product research went from 10 hours to 10 minutes.",
   },
   {
     id: "marcus",
     name: "Marcus Rodriguez",
     role: "Dropshipping Expert",
     avatar: "/images/landing/avatar-marcus.png",
-    content: "The AI Studio replaced expensive photoshoots. I generate all my product visuals in-house now.",
+    content: "The AI Studio replaced expensive photoshoots entirely. I generate all my visuals in-house now.",
   },
   {
     id: "emily",
     name: "Emily Johnson",
     role: "Store Owner",
     avatar: "/images/landing/avatar-emily.png",
-    content: "Orders process automatically and customers get tracking instantly. Total game-changer.",
-  },
-  {
-    id: "david",
-    name: "David Park",
-    role: "Serial Entrepreneur",
-    avatar: "/images/landing/avatar-david.png",
-    content: "We've streamlined our entire operation. Less admin work, more time scaling.",
+    content: "Orders process and ship automatically. Customers get tracking instantly. Total game-changer.",
   },
 ]
 
 const metrics = [
-  {
-    id: "metric-1",
-    value: "10X",
-    label: "Revenue Boost",
-    bgColor: "#E8E0FF",
-  },
-  {
-    id: "metric-2",
-    value: "2X",
-    label: "Faster Launches",
-    bgColor: "#D4F0E0",
-  },
-  {
-    id: "metric-3",
-    value: "5X",
-    label: "Team Growth",
-    bgColor: "#D4F0E0",
-  },
-  {
-    id: "metric-4",
-    value: "3X",
-    label: "More Productivity",
-    bgColor: "#F8E2FE",
-  },
+  { value: "10X", label: "Revenue boost" },
+  { value: "90%", label: "Time saved" },
+  { value: "3X", label: "Faster launches" },
 ]
-
-interface TestimonialCardProps {
-  testimonial: typeof testimonials[0]
-  delay: number
-}
-
-interface MetricCardProps {
-  metric: typeof metrics[0]
-  delay: number
-}
-
-function TestimonialCard({ testimonial, delay }: TestimonialCardProps) {
-  return (
-    <MotionFadeIn
-      key={testimonial.id}
-      direction="up"
-      distance={DISTANCE.lg}
-      delay={delay}
-      duration={DURATION.slow}
-    >
-      <div className="p-7 bg-white rounded-[12px] border border-black/5 h-full flex flex-col shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-        <p className="text-[15px] text-[#555555] mb-7 leading-[25px] flex-1">
-          &ldquo;{testimonial.content}&rdquo;
-        </p>
-        <div className="flex items-center gap-3 pt-5 border-t border-black/5">
-          <Avatar className="h-11 w-11 border-2 border-black/5">
-            <AvatarImage src={testimonial.avatar} alt={testimonial.name} />
-            <AvatarFallback>{testimonial.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-          </Avatar>
-          <div>
-            <div className="font-semibold text-black text-[14px]">{testimonial.name}</div>
-            <div className="text-[12px] text-[#999999]">{testimonial.role}</div>
-          </div>
-        </div>
-      </div>
-    </MotionFadeIn>
-  )
-}
-
-function MetricCard({ metric, delay }: MetricCardProps) {
-  return (
-    <MotionFadeIn
-      key={metric.id}
-      direction="up"
-      distance={DISTANCE.lg}
-      delay={delay}
-      duration={DURATION.slow}
-    >
-      <div
-        className="p-8 rounded-[12px] h-full flex flex-col justify-center items-center text-center"
-        style={{ backgroundColor: metric.bgColor }}
-      >
-        <div className="text-5xl font-bold text-black mb-2">{metric.value}</div>
-        <div className="text-[15px] text-[#555555] font-medium">{metric.label}</div>
-      </div>
-    </MotionFadeIn>
-  )
-}
 
 export function Testimonials() {
   return (
-    <section className="py-16 lg:py-24 bg-transparent relative overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-          <div className="mb-16">
-            <div className="bg-[#323140] text-white text-[13px] font-medium px-4 py-2 rounded-[8px] w-fit mb-8">
-              What users say
-            </div>
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-              <h2 className="text-5xl lg:text-6xl font-medium text-black tracking-[-0.02em] leading-tight flex-1">
-                Real Results From<br />Real Sellers
-              </h2>
-              <p className="text-[16px] text-[#666666] leading-[26px] max-w-[360px] lg:pt-2">
-                Hear from sellers who scaled their stores with our AI-powered tools
-              </p>
-            </div>
+    <section className="py-20 lg:py-32" data-testid="section-testimonials">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
+          <div className="text-center mb-16 lg:mb-20">
+            <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
+              Results
+            </p>
+            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] font-semibold text-black tracking-[-0.03em] leading-[1.15]">
+              Real sellers. Real results.
+            </h2>
           </div>
         </MotionFadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-[1400px] mx-auto">
-          <MetricCard metric={metrics[0]} delay={0} />
-          <TestimonialCard testimonial={testimonials[0]} delay={0.1} />
-          <MetricCard metric={metrics[1]} delay={0.2} />
-
-          <div className="md:col-span-2">
-            <TestimonialCard testimonial={testimonials[1]} delay={0.3} />
+        <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow} delay={0.1}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-[960px] mx-auto mb-16 lg:mb-20">
+            {metrics.map((metric) => (
+              <div
+                key={metric.label}
+                className="text-center py-8 px-6 rounded-[20px] bg-[#F8F7FF]"
+                data-testid={`metric-${metric.label}`}
+              >
+                <p className="text-[44px] sm:text-[52px] font-bold text-black tracking-[-0.03em] leading-none mb-2">
+                  {metric.value}
+                </p>
+                <p className="text-[14px] text-[#888] font-medium">{metric.label}</p>
+              </div>
+            ))}
           </div>
-          <div className="md:col-span-1">
-            <TestimonialCard testimonial={testimonials[2]} delay={0.4} />
-          </div>
+        </MotionFadeIn>
 
-          <TestimonialCard testimonial={testimonials[3]} delay={0.5} />
-          <MetricCard metric={metrics[2]} delay={0.6} />
-          <MetricCard metric={metrics[3]} delay={0.7} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-[960px] mx-auto">
+          {testimonials.map((t, index) => (
+            <MotionFadeIn
+              key={t.id}
+              direction="up"
+              distance={DISTANCE.md}
+              duration={DURATION.slow}
+              delay={0.15 + index * 0.1}
+            >
+              <div
+                className="p-7 bg-white rounded-[16px] border border-black/[0.05] h-full flex flex-col"
+                data-testid={`card-testimonial-${t.id}`}
+              >
+                <p className="text-[15px] text-[#555] leading-[24px] flex-1 mb-6">
+                  &ldquo;{t.content}&rdquo;
+                </p>
+                <div className="flex items-center gap-3 pt-5 border-t border-black/[0.05]">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={t.avatar} alt={t.name} />
+                    <AvatarFallback>{t.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-semibold text-black text-[14px]">{t.name}</div>
+                    <div className="text-[12px] text-[#999]">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            </MotionFadeIn>
+          ))}
         </div>
       </div>
     </section>

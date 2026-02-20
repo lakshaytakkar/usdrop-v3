@@ -1,94 +1,78 @@
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
+import { Search, Zap, Rocket } from "lucide-react"
 
 const steps = [
   {
-    step: "Step 1",
-    title: "Sign up free — takes 30 seconds.",
-    description: "No credit card. Just your email and a password.",
-    image: "/images/landing/step-signup.png",
-    accentColor: "#6B5CE7",
-    accentBg: "#E8E0FF",
+    number: "01",
+    icon: Search,
+    title: "Find Winners",
+    description: "AI scans trending products and shows profit margins instantly.",
+    bgColor: "#F3F0FF",
   },
   {
-    step: "Step 2",
-    title: "Find a winning product with AI.",
-    description: "We scan what's trending and show you profit margins upfront.",
-    image: "/images/landing/step-research.png",
-    accentColor: "#2DA565",
-    accentBg: "#D4F0E0",
+    number: "02",
+    icon: Zap,
+    title: "Build Your Store",
+    description: "One-click import to Shopify with AI-written listings.",
+    bgColor: "#EEFBF3",
   },
   {
-    step: "Step 3",
-    title: "Add it to your store in one click.",
-    description: "AI writes the listing. Your Shopify store is ready instantly.",
-    image: "/images/landing/step-store.png",
-    accentColor: "#3B8AD9",
-    accentBg: "#D4EDFF",
-  },
-  {
-    step: "Step 4",
-    title: "Start selling — we handle the rest.",
-    description: "Orders ship automatically. You just watch your business grow.",
-    image: "/images/landing/step-selling.png",
-    accentColor: "#B44ED9",
-    accentBg: "#F8E2FE",
+    number: "03",
+    icon: Rocket,
+    title: "Sell & Scale",
+    description: "Orders ship automatically. You focus on growing.",
+    bgColor: "#FDF2FF",
   },
 ]
 
 export function GettingStarted() {
   return (
-    <section className="py-16 lg:py-24 relative">
+    <section className="py-20 lg:py-32" data-testid="section-how-it-works">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-          <div className="text-center mb-14">
-            <div className="bg-[#323140] text-white text-[13px] font-medium px-4 py-2 rounded-[8px] w-fit mx-auto mb-6">
-              Getting started
-            </div>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight">
-              4 Steps to Your First Sale
+        <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
+          <div className="text-center mb-16 lg:mb-20">
+            <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
+              How it works
+            </p>
+            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] font-semibold text-black tracking-[-0.03em] leading-[1.15]">
+              Three steps. That's it.
             </h2>
           </div>
         </MotionFadeIn>
 
-        <div className="max-w-[900px] mx-auto flex flex-col gap-5">
-          {steps.map((step, index) => (
-            <MotionFadeIn
-              key={step.step}
-              direction="up"
-              distance={DISTANCE.md}
-              duration={DURATION.slow}
-              delay={index * 0.1}
-            >
-              <div
-                className="bg-white rounded-[16px] p-5 sm:p-7 flex items-center gap-5 sm:gap-7 border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-                data-testid={`card-step-${index + 1}`}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-[1000px] mx-auto">
+          {steps.map((step, index) => {
+            const Icon = step.icon
+            return (
+              <MotionFadeIn
+                key={step.number}
+                direction="up"
+                distance={DISTANCE.md}
+                duration={DURATION.slow}
+                delay={index * 0.1}
               >
-                <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-[12px] overflow-hidden border-2" style={{ borderColor: step.accentBg }}>
-                  <img
-                    src={step.image}
-                    alt={step.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span
-                    className="text-[13px] font-semibold mb-1 block"
-                    style={{ color: step.accentColor }}
-                  >
-                    {step.step}
-                  </span>
-                  <h3 className="text-[17px] sm:text-[19px] font-semibold text-black leading-snug mb-1">
+                <div
+                  className="rounded-[20px] p-8 lg:p-10 text-center h-full"
+                  style={{ backgroundColor: step.bgColor }}
+                  data-testid={`card-step-${step.number}`}
+                >
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white mb-6">
+                    <Icon className="w-6 h-6 text-[#323140]" strokeWidth={1.5} />
+                  </div>
+                  <div className="text-[12px] font-bold text-[#999] uppercase tracking-[0.1em] mb-3">
+                    Step {step.number}
+                  </div>
+                  <h3 className="text-[20px] font-semibold text-black mb-3 tracking-[-0.01em]">
                     {step.title}
                   </h3>
-                  <p className="text-[14px] text-[#777777] leading-[22px]">
+                  <p className="text-[14px] text-[#777] leading-[22px]">
                     {step.description}
                   </p>
                 </div>
-              </div>
-            </MotionFadeIn>
-          ))}
+              </MotionFadeIn>
+            )
+          })}
         </div>
       </div>
     </section>
