@@ -185,7 +185,7 @@ function Router() {
       <Route path="/fulfillment" component={() => <AppLayout><Fulfillment /></AppLayout>} />
       <Route path="/shopify-integration" component={() => <AppLayout><ShopifyIntegration /></AppLayout>} />
       <Route path="/shopify-stores" component={() => <AppLayout><ShopifyStores /></AppLayout>} />
-      <Route path="/what-is-dropshipping" component={() => <AppLayout><WhatIsDropshipping /></AppLayout>} />
+      <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
       <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />
       <Route path="/help-center" component={() => <AppLayout><HelpCenter /></AppLayout>} />
       <Route path="/help" component={() => <AppLayout><HelpPage /></AppLayout>} />
