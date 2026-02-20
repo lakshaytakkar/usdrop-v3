@@ -1,5 +1,6 @@
 import { Hero } from "./components/Hero"
 import { LogoMarquee } from "./components/LogoMarquee"
+import { GettingStarted } from "./components/GettingStarted"
 import { BentoFeatures } from "./components/BentoFeatures"
 import { Workflow } from "./components/Workflow"
 import { ProblemSolution } from "./components/ProblemSolution"
@@ -14,6 +15,7 @@ export default function MarketingPage() {
     <>
       <Hero />
       <LogoMarquee />
+      <GettingStarted />
       <BentoFeatures />
       <Workflow />
       <ProblemSolution />
