@@ -77,6 +77,7 @@ import WinningProducts from "@/pages/winning-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
 import ShopifyIntegration from "@/pages/shopify-integration/page";
 import ShopifyStores from "@/pages/shopify-stores/page";
+import ShopifyMarketingPage from "@/pages/shopify/page";
 import WhatIsDropshipping from "@/pages/what-is-dropshipping/page";
 import WhoIsThisFor from "@/pages/who-is-this-for/page";
 import HelpCenter from "@/pages/help-center/page";
@@ -116,6 +117,7 @@ function Router() {
     <Switch>
       {/* Marketing / Landing */}
       <Route path="/" component={() => <MarketingLayout><MarketingPage /></MarketingLayout>} />
+      <Route path="/shopify" component={ShopifyMarketingPage} />
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />

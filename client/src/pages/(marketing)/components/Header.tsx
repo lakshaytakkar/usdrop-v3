@@ -36,10 +36,13 @@ export function Header() {
       </div>
 
       <nav className="hidden md:flex gap-[32px] items-center leading-[18px] ml-[120px] shrink-0 text-[16px] text-black font-medium">
-        <Link href="/what-is-dropshipping" className="hover:opacity-70 transition-opacity">
+        <Link href="/what-is-dropshipping" className="hover:opacity-70 transition-opacity" data-testid="link-dropshipping">
           What is dropshipping?
         </Link>
-        <Link href="/pricing" className="hover:opacity-70 transition-opacity">
+        <Link href="/shopify" className="hover:opacity-70 transition-opacity" data-testid="link-shopify">
+          Shopify
+        </Link>
+        <Link href="/pricing" className="hover:opacity-70 transition-opacity" data-testid="link-pricing">
           Pricing
         </Link>
       </nav>
@@ -47,7 +50,7 @@ export function Header() {
       <div className="hidden md:flex items-center gap-3 shrink-0 ml-[120px]">
         {isLoggedIn ? (
           <div className="h-[42px] relative shrink-0 w-[140px]">
-            <Link href="/home">
+            <Link href="/home" data-testid="link-dashboard">
               <div
                 className="absolute h-[42px] left-0 overflow-clip rounded-[6.462px] shadow-[0px_0px_0px_0.8px_rgba(0,0,0,0.9)] top-0 w-[140px] cursor-pointer hover:opacity-90 transition-opacity"
                 style={{
@@ -68,6 +71,7 @@ export function Header() {
           <>
             <Link href="/login">
               <button
+                data-testid="button-login"
                 className="h-[42px] px-4 text-[14.538px] font-medium text-black hover:opacity-70 transition-opacity whitespace-nowrap"
               >
                 Log In
@@ -75,7 +79,7 @@ export function Header() {
             </Link>
 
             <div className="h-[42px] relative shrink-0 w-[130px]">
-              <Link href="/signup">
+              <Link href="/signup" data-testid="link-signup">
                 <div
                   className="absolute h-[42px] left-0 overflow-clip rounded-[6.462px] shadow-[0px_0px_0px_0.8px_rgba(0,0,0,0.9)] top-0 w-[130px] cursor-pointer hover:opacity-90 transition-opacity"
                   style={{
@@ -100,6 +104,7 @@ export function Header() {
         className="md:hidden ml-4 p-2 text-black hover:opacity-70 transition-opacity"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         aria-label="Toggle menu"
+        data-testid="button-mobile-menu"
       >
         {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
       </button>
@@ -110,13 +115,23 @@ export function Header() {
             href="/what-is-dropshipping"
             className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
             onClick={() => setIsMobileMenuOpen(false)}
+            data-testid="link-mobile-dropshipping"
           >
             What is dropshipping?
+          </Link>
+          <Link
+            href="/shopify"
+            className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
+            onClick={() => setIsMobileMenuOpen(false)}
+            data-testid="link-mobile-shopify"
+          >
+            Shopify
           </Link>
           <Link
             href="/pricing"
             className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
             onClick={() => setIsMobileMenuOpen(false)}
+            data-testid="link-mobile-pricing"
           >
             Pricing
           </Link>
@@ -126,6 +141,7 @@ export function Header() {
                 href="/home"
                 className="bg-black text-white text-center py-3 rounded-lg font-medium text-[14.538px]"
                 onClick={() => setIsMobileMenuOpen(false)}
+                data-testid="link-mobile-dashboard"
               >
                 My Dashboard
               </Link>
@@ -135,6 +151,7 @@ export function Header() {
                   href="/login"
                   className="text-black text-center py-3 font-medium text-[14.538px] hover:opacity-70 transition-opacity"
                   onClick={() => setIsMobileMenuOpen(false)}
+                  data-testid="link-mobile-login"
                 >
                   Log In
                 </Link>
@@ -142,6 +159,7 @@ export function Header() {
                   href="/signup"
                   className="bg-black text-white text-center py-3 rounded-lg font-medium text-[14.538px]"
                   onClick={() => setIsMobileMenuOpen(false)}
+                  data-testid="link-mobile-signup"
                 >
                   Get Started
                 </Link>

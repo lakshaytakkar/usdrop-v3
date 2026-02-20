@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/terms",
   "/what-is-dropshipping",
   "/who-is-this-for",
+  "/shopify",
   "/auth",
 ]
 

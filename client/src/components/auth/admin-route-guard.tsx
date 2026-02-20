@@ -19,6 +19,7 @@ const ADMIN_ALLOWED_PREFIXES = [
   "/terms",
   "/what-is-dropshipping",
   "/who-is-this-for",
+  "/shopify",
   "/auth",
   "/settings",
 ]
