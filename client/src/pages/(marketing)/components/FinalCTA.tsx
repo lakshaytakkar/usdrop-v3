@@ -7,40 +7,32 @@ import { DISTANCE, DURATION } from "@/lib/motion"
 
 export function FinalCTA() {
   return (
-    <section
-      className="w-full py-20 lg:py-32 relative overflow-hidden"
-      style={{
-        background: "linear-gradient(135deg, rgba(200,180,255,0.2) 0%, rgba(180,210,255,0.2) 50%, rgba(200,180,255,0.15) 100%)",
-      }}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-[1200px] mx-auto">
-          <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
-            <div className="flex flex-col items-center text-center space-y-8">
-              {/* Icon boxes row */}
+    <section className="w-full py-16 lg:py-24 relative overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
+          <div
+            className="rounded-[20px] py-16 lg:py-24 px-6 sm:px-10 lg:px-16 relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(200,180,255,0.2) 0%, rgba(180,210,255,0.2) 50%, rgba(200,180,255,0.15) 100%)",
+            }}
+          >
+            <div className="flex flex-col items-center text-center space-y-8 relative z-10">
               <div className="flex flex-col sm:flex-row gap-6 items-center justify-center">
-                {/* Search icon box */}
                 <div className="flex items-center justify-center w-14 h-14 rounded-md bg-[#323140] border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] transition-shadow">
                   <Search className="w-7 h-7 text-white" />
                 </div>
-
-                {/* FileText icon box */}
                 <div className="flex items-center justify-center w-14 h-14 rounded-md bg-[#323140] border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] transition-shadow">
                   <FileText className="w-7 h-7 text-white" />
                 </div>
-
-                {/* Wand2 icon box */}
                 <div className="flex items-center justify-center w-14 h-14 rounded-md bg-[#323140] border border-cyan-400/40 shadow-[0_0_20px_rgba(34,211,238,0.15)] hover:shadow-[0_0_30px_rgba(34,211,238,0.25)] transition-shadow">
                   <Wand2 className="w-7 h-7 text-white" />
                 </div>
               </div>
 
-              {/* Heading */}
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight max-w-4xl">
                 Unlock a Smarter, Easier Way to Scale Your Store
               </h2>
 
-              {/* CTA Button */}
               <div className="bg-white h-[48px] overflow-clip rounded-[8px] w-[184.2px] relative">
                 <Link href="/signup" className="block h-full w-full">
                   <div
@@ -62,8 +54,8 @@ export function FinalCTA() {
                 </Link>
               </div>
             </div>
-          </MotionFadeIn>
-        </div>
+          </div>
+        </MotionFadeIn>
       </div>
     </section>
   )

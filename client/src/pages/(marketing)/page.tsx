@@ -6,7 +6,6 @@ import { Workflow } from "./components/Workflow"
 import { ProblemSolution } from "./components/ProblemSolution"
 import { Testimonials } from "./components/Testimonials"
 import { StudioShowcase } from "./components/StudioShowcase"
-import { PricingPreview } from "./components/PricingPreview"
 import { FinalCTA } from "./components/FinalCTA"
 import { Footer } from "./components/Footer"
 
@@ -22,10 +21,8 @@ function GradientSection({ children, gradient }: { children: React.ReactNode; gr
 export default function MarketingPage() {
   return (
     <>
-      <GradientSection gradient="radial-gradient(ellipse 90% 70% at 50% 0%, rgba(195,170,255,0.25) 0%, transparent 65%), radial-gradient(ellipse 60% 50% at 85% 25%, rgba(170,210,255,0.22) 0%, transparent 55%)">
-        <Hero />
-        <LogoMarquee />
-      </GradientSection>
+      <Hero />
+      <LogoMarquee />
 
       <GradientSection gradient="radial-gradient(ellipse 80% 60% at 15% 40%, rgba(180,230,200,0.22) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 85% 60%, rgba(220,210,255,0.18) 0%, transparent 55%)">
         <GettingStarted />
@@ -49,10 +46,6 @@ export default function MarketingPage() {
 
       <GradientSection gradient="radial-gradient(ellipse 75% 55% at 55% 20%, rgba(180,215,255,0.22) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 15% 70%, rgba(240,210,250,0.2) 0%, transparent 55%)">
         <StudioShowcase />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 80% 55% at 60% 30%, rgba(195,170,255,0.2) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 25% 75%, rgba(180,230,200,0.22) 0%, transparent 55%)">
-        <PricingPreview />
       </GradientSection>
 
       <FinalCTA />
