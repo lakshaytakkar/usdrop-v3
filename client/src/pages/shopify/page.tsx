@@ -106,9 +106,9 @@ export default function ShopifyPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-[#323140] text-white rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5">
               <Zap className="size-3.5" />
               How It Works
@@ -117,37 +117,33 @@ export default function ShopifyPage() {
               From Zero to Selling in 4 Steps
             </h2>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {steps.map((step) => {
-              const Icon = step.icon
-              return (
-                <div
-                  key={step.number}
-                  className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover-elevate transition-all duration-200"
-                  data-testid={`card-step-${step.number}`}
-                >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
-                      src={step.image}
-                      alt={step.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`${step.color} w-10 h-10 rounded-xl flex items-center justify-center`}>
-                        <Icon className="size-5 text-[#323140]" />
-                      </div>
-                      <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Step {step.number}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-black mb-2">{step.title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{step.description}</p>
-                  </div>
+        <div className="relative">
+          <div
+            className="flex gap-5 overflow-x-auto px-4 md:px-[calc((100%-72rem)/2+1rem)] pb-4 snap-x snap-mandatory scrollbar-hide"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {steps.map((step) => (
+              <div
+                key={step.number}
+                className="flex-shrink-0 w-[280px] md:w-[320px] snap-start"
+                data-testid={`card-step-${step.number}`}
+              >
+                <div className="rounded-[20px] overflow-hidden border-2 border-white/80 shadow-sm hover-elevate transition-all duration-200 aspect-[3/4]">
+                  <img
+                    src={step.image}
+                    alt={step.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
-              )
-            })}
+                <div className="mt-4 px-1">
+                  <h3 className="text-lg font-bold text-black">{step.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mt-1">{step.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
