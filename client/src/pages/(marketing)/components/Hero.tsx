@@ -9,7 +9,6 @@ const imgEllipse11806 = "/images/hero/ellipse-11806.svg"
 const imgEllipse11807 = "/images/hero/ellipse-11807.svg"
 const imgEllipse11809 = "/images/hero/ellipse-11809.svg"
 const imgGroup1707483725 = "/images/hero/arrow-icon.svg"
-const imgBrowserMockup = "/images/hero/browser-mockup.svg"
 
 export function Hero() {
   const [isVideoOpen, setIsVideoOpen] = useState(false)
@@ -117,28 +116,6 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="hidden lg:block absolute left-[calc(50%+16.74px)] top-[593.98px] translate-x-[-50%] w-[1193.477px] h-[513.013px]">
-        <div className="absolute flex h-[507.243px] items-center justify-center left-[calc(50%+16.74px)] top-[596.86px] translate-x-[-50%] w-[1189.151px]">
-          <div className="flex-none" style={{ transform: "rotate(356.834deg) scaleX(99.859%) scaleY(101.146%) skewX(16.943deg)" }}>
-            <div className="border border-[rgba(255,255,255,0.6)] border-solid h-[476.626px] overflow-clip relative rounded-[23px] w-[1021.587px]">
-              <div className="absolute h-[672.167px] left-[-1px] top-[-1.01px] w-[1027px]" style={{ backgroundImage: "linear-gradient(1.4210854715202004e-14deg, rgba(255, 47, 47, 0.2) 0%, rgba(239, 123, 22, 0.2) 35.878%, rgba(138, 67, 225, 0.2) 69.922%, rgba(213, 17, 253, 0.2) 100%)" }} />
-              <div className="absolute border border-solid border-white h-[638px] left-[calc(50%-0.29px)] overflow-clip rounded-[16px] top-[calc(50%+85.93px)] translate-x-[-50%] translate-y-[-50%] w-[1011px]">
-                <div className="absolute h-[638.634px] left-[-2px] top-1/2 translate-y-[-50%] w-[1013.065px]">
-                  <div className="absolute h-[638.634px] left-0 rounded-[12.334px] top-0 w-[1013.065px]">
-                    <div className="absolute h-[638.634px] left-px overflow-clip top-0 w-[1011.075px]">
-                      <img 
-                        alt="Dashboard mockup" 
-                        className="w-full h-full object-cover object-top" 
-                        src={imgBrowserMockup}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
