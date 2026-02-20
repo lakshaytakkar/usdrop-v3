@@ -3,7 +3,7 @@ import { Footer } from "@/pages/(marketing)/components/Footer";
 
 export function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen" style={{ backgroundColor: "#F5F3F2" }}>
+    <div className="relative min-h-screen bg-white">
       <div
         className="pointer-events-none fixed inset-0 z-[1] opacity-[0.03]"
         style={{

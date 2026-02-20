@@ -15,7 +15,7 @@ export function Hero() {
   const [isVideoOpen, setIsVideoOpen] = useState(false)
 
   return (
-    <div className="bg-[rgba(255,255,255,0.4)] relative w-full min-h-[720px] overflow-hidden">
+    <div className="relative w-full min-h-[720px]">
       <div className="absolute bottom-[-140px] right-[-140px] size-[640px]">
         <div className="absolute inset-[-65.63%]">
           <img alt="" className="block max-w-none size-full" src={imgEllipse11806} />

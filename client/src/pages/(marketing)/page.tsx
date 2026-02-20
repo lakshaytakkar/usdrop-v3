@@ -8,46 +8,37 @@ import { Testimonials } from "./components/Testimonials"
 import { StudioShowcase } from "./components/StudioShowcase"
 import { FinalCTA } from "./components/FinalCTA"
 
-function GradientSection({ children, gradient }: { children: React.ReactNode; gradient: string }) {
-  return (
-    <div className="relative">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: gradient }} />
-      <div className="relative">{children}</div>
-    </div>
-  )
-}
-
 export default function MarketingPage() {
   return (
-    <>
-      <Hero />
-      <LogoMarquee />
-
-      <GradientSection gradient="radial-gradient(ellipse 80% 60% at 15% 40%, rgba(180,230,200,0.22) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 85% 60%, rgba(220,210,255,0.18) 0%, transparent 55%)">
+    <div className="relative">
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 35% at 50% 0%, rgba(195,170,255,0.18) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 30% at 85% 8%, rgba(180,215,255,0.16) 0%, transparent 60%),
+            radial-gradient(ellipse 70% 25% at 10% 18%, rgba(180,230,200,0.14) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 30% at 75% 28%, rgba(220,210,255,0.16) 0%, transparent 60%),
+            radial-gradient(ellipse 65% 25% at 20% 38%, rgba(240,210,250,0.14) 0%, transparent 55%),
+            radial-gradient(ellipse 75% 25% at 85% 48%, rgba(180,230,200,0.15) 0%, transparent 55%),
+            radial-gradient(ellipse 70% 25% at 15% 58%, rgba(180,215,255,0.16) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 30% at 70% 68%, rgba(195,170,255,0.14) 0%, transparent 55%),
+            radial-gradient(ellipse 65% 25% at 25% 78%, rgba(240,210,250,0.15) 0%, transparent 55%),
+            radial-gradient(ellipse 75% 30% at 80% 88%, rgba(180,215,255,0.14) 0%, transparent 60%)
+          `,
+        }}
+      />
+      <div className="relative z-[1]">
+        <Hero />
+        <LogoMarquee />
         <GettingStarted />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 85% 60% at 75% 20%, rgba(180,215,255,0.25) 0%, transparent 60%), radial-gradient(ellipse 50% 45% at 10% 75%, rgba(240,210,250,0.2) 0%, transparent 55%)">
         <BentoFeatures />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 70% 55% at 25% 35%, rgba(180,230,200,0.25) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 80% 15%, rgba(195,170,255,0.15) 0%, transparent 55%)">
         <Workflow />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 75% 55% at 65% 30%, rgba(240,210,250,0.22) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 15% 65%, rgba(180,215,255,0.25) 0%, transparent 55%)">
         <ProblemSolution />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 85% 65% at 40% 25%, rgba(220,210,255,0.25) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 90% 55%, rgba(180,230,200,0.18) 0%, transparent 55%)">
         <Testimonials />
-      </GradientSection>
-
-      <GradientSection gradient="radial-gradient(ellipse 75% 55% at 55% 20%, rgba(180,215,255,0.22) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 15% 70%, rgba(240,210,250,0.2) 0%, transparent 55%)">
         <StudioShowcase />
-      </GradientSection>
-
-      <FinalCTA />
-    </>
+        <FinalCTA />
+      </div>
+    </div>
   )
 }
