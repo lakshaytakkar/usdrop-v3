@@ -11,7 +11,7 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
           backgroundSize: "256px 256px",
         }}
       />
-      <div className="absolute top-[32px] left-0 right-0 z-50">
+      <div className="absolute top-[32px] left-0 right-0 z-50 px-4">
         <Header />
       </div>
       <main className="relative z-[2]">{children}</main>

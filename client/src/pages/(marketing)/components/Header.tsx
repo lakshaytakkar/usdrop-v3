@@ -1,10 +1,9 @@
-
-
 import { apiFetch } from '@/lib/supabase'
 import { Link } from "wouter"
 import { Logo } from "@/components/layout/logo"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
+import { DesktopMegaMenu, MobileMegaMenu } from "./MegaMenu"
 
 export function Header() {
   const [isMounted, setIsMounted] = useState(false)
@@ -27,27 +26,19 @@ export function Header() {
   }, [])
 
   return (
-    <div 
-      className="bg-[rgba(255,255,255,0.5)] border border-solid border-white content-stretch flex items-center px-[12px] py-[10px] relative rounded-[12px] w-fit mx-auto"
+    <div
+      className="bg-[rgba(255,255,255,0.5)] border border-solid border-white content-stretch flex items-center px-3 lg:px-5 py-[10px] relative rounded-[12px] w-full max-w-[1280px] mx-auto"
       style={{ backdropFilter: "blur(10px)" }}
     >
       <div className="h-[45px] flex items-center shrink-0">
         <Logo className="text-black text-lg" />
       </div>
 
-      <nav className="hidden md:flex gap-[32px] items-center leading-[18px] ml-[120px] shrink-0 text-[16px] text-black font-medium">
-        <Link href="/what-is-dropshipping" className="hover:opacity-70 transition-opacity" data-testid="link-dropshipping">
-          What is dropshipping?
-        </Link>
-        <Link href="/shopify" className="hover:opacity-70 transition-opacity" data-testid="link-shopify">
-          Shopify
-        </Link>
-        <Link href="/pricing" className="hover:opacity-70 transition-opacity" data-testid="link-pricing">
-          Pricing
-        </Link>
-      </nav>
+      <div className="hidden lg:flex flex-1 justify-center mx-4">
+        <DesktopMegaMenu />
+      </div>
 
-      <div className="hidden md:flex items-center gap-3 shrink-0 ml-[120px]">
+      <div className="hidden lg:flex items-center gap-3 shrink-0">
         {isLoggedIn ? (
           <div className="h-[42px] relative shrink-0 w-[140px]">
             <Link href="/home" data-testid="link-dashboard">
@@ -101,41 +92,20 @@ export function Header() {
       </div>
 
       <button
-        className="md:hidden ml-4 p-2 text-black hover:opacity-70 transition-opacity"
+        className="lg:hidden ml-auto p-2 text-black hover:opacity-70 transition-opacity"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         aria-label="Toggle menu"
+        aria-expanded={isMobileMenuOpen}
         data-testid="button-mobile-menu"
       >
         {isMobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
       </button>
 
       {isMobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-white rounded-[12px] shadow-lg p-4 flex flex-col gap-4 z-50 md:hidden">
-          <Link
-            href="/what-is-dropshipping"
-            className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-            data-testid="link-mobile-dropshipping"
-          >
-            What is dropshipping?
-          </Link>
-          <Link
-            href="/shopify"
-            className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-            data-testid="link-mobile-shopify"
-          >
-            Shopify
-          </Link>
-          <Link
-            href="/pricing"
-            className="text-[16px] text-black font-medium hover:opacity-70 transition-opacity py-2"
-            onClick={() => setIsMobileMenuOpen(false)}
-            data-testid="link-mobile-pricing"
-          >
-            Pricing
-          </Link>
-          <div className="border-t border-gray-200 pt-4 flex flex-col gap-3">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 border border-white rounded-[12px] shadow-lg p-4 z-50 lg:hidden" style={{ backdropFilter: "blur(20px)" }}>
+          <MobileMegaMenu onClose={() => setIsMobileMenuOpen(false)} />
+
+          <div className="border-t border-gray-200 pt-4 mt-2 flex flex-col gap-3">
             {isLoggedIn ? (
               <Link
                 href="/home"
