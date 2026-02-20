@@ -10,7 +10,7 @@ const steps = [
     title: "Find products that actually sell",
     href: "/features/winning-products",
     cta: "Start Researching",
-    image: "/images/landing/step-product-research.png",
+    image: "/images/landing/step-product-research.webp",
     subFeatures: [
       { label: "AI scans thousands of products daily", icon: "/3d-ecom-icons-blue/Search_Product.png" },
       { label: "See real profit margins instantly", icon: "/3d-ecom-icons-blue/Dollar_Tag.png" },
@@ -23,7 +23,7 @@ const steps = [
     title: "Create ads that stop the scroll",
     href: "/features/winning-ads",
     cta: "Start Creating",
-    image: "/images/landing/step-ad-studio.png",
+    image: "/images/landing/step-ad-studio.webp",
     subFeatures: [
       { label: "Generate video & image ads in seconds", icon: "/3d-ecom-icons-blue/Megaphone_Ads.png" },
       { label: "Pick your style: UGC or cinematic", icon: "/3d-ecom-icons-blue/Paint_Palette.png" },
@@ -36,7 +36,7 @@ const steps = [
     title: "Launch your store in minutes",
     href: "/features/dashboard",
     cta: "Build Your Store",
-    image: "/images/landing/step-store-builder.png",
+    image: "/images/landing/step-store-builder.webp",
     subFeatures: [
       { label: "One-click import products to Shopify", icon: "/3d-ecom-icons-blue/My_Store.png" },
       { label: "AI writes your product descriptions", icon: "/3d-ecom-icons-blue/Shopping_Cart.png" },
@@ -49,7 +49,7 @@ const steps = [
     title: "We ship it straight from our warehouse",
     href: "/features/fulfilment",
     cta: "Automate Shipping",
-    image: "/images/landing/step-fulfillment.png",
+    image: "/images/landing/step-fulfillment.webp",
     subFeatures: [
       { label: "Orders process and ship automatically", icon: "/3d-ecom-icons-blue/Delivery_Truck.png" },
       { label: "Customers get tracking instantly", icon: "/3d-ecom-icons-blue/Calculator_Ship.png" },
@@ -62,7 +62,7 @@ const steps = [
     title: "See what's working and scale it",
     href: "/features/winning-stores",
     cta: "View Analytics",
-    image: "/images/landing/step-analytics.png",
+    image: "/images/landing/step-analytics.webp",
     subFeatures: [
       { label: "Track revenue and conversions live", icon: "/3d-ecom-icons-blue/Open_Board.png" },
       { label: "Find your next winning product", icon: "/3d-ecom-icons-blue/Trophy_Star.png" },
@@ -75,7 +75,7 @@ const steps = [
     title: "Learn from experts who've done it",
     href: "/features/courses",
     cta: "Start Learning",
-    image: "/images/landing/step-learning.png",
+    image: "/images/landing/step-learning.webp",
     subFeatures: [
       { label: "Step-by-step video courses", icon: "/3d-ecom-icons-blue/Course_Book.png" },
       { label: "Live mentorship from top sellers", icon: "/3d-ecom-icons-blue/Graduation_Book.png" },

@@ -3,14 +3,14 @@ import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
 
 const products = [
-  { src: "/images/landing/product-earbuds.png", alt: "Wireless Earbuds", label: "Wireless Earbuds" },
-  { src: "/images/landing/product-smartwatch.png", alt: "Smart Watch", label: "Smart Watch" },
-  { src: "/images/landing/product-ringlight.png", alt: "Ring Light", label: "Ring Light" },
-  { src: "/images/landing/product-serum.png", alt: "Skincare Serum", label: "Skincare Serum" },
-  { src: "/images/landing/product-phonecase.png", alt: "Phone Case", label: "Phone Case" },
-  { src: "/images/landing/product-projector.png", alt: "Mini Projector", label: "Mini Projector" },
-  { src: "/images/landing/product-waterbottle.png", alt: "Water Bottle", label: "Water Bottle" },
-  { src: "/images/landing/product-sunsetlamp.png", alt: "Sunset Lamp", label: "Sunset Lamp" },
+  { src: "/images/landing/product-earbuds.webp", alt: "Wireless Earbuds", label: "Wireless Earbuds" },
+  { src: "/images/landing/product-smartwatch.webp", alt: "Smart Watch", label: "Smart Watch" },
+  { src: "/images/landing/product-ringlight.webp", alt: "Ring Light", label: "Ring Light" },
+  { src: "/images/landing/product-serum.webp", alt: "Skincare Serum", label: "Skincare Serum" },
+  { src: "/images/landing/product-phonecase.webp", alt: "Phone Case", label: "Phone Case" },
+  { src: "/images/landing/product-projector.webp", alt: "Mini Projector", label: "Mini Projector" },
+  { src: "/images/landing/product-waterbottle.webp", alt: "Water Bottle", label: "Water Bottle" },
+  { src: "/images/landing/product-sunsetlamp.webp", alt: "Sunset Lamp", label: "Sunset Lamp" },
 ]
 
 export function ImageCarousel() {
