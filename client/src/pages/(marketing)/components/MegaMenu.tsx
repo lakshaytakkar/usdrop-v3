@@ -1,31 +1,11 @@
 import { Link } from "wouter"
 import { useState, useRef, useEffect, useId } from "react"
-import {
-  TrendingUp,
-  BarChart3,
-  Store,
-  Map,
-  LayoutDashboard,
-  Package,
-  Video,
-  GraduationCap,
-  Newspaper,
-  ShoppingBag,
-  PenTool,
-  Mail,
-  Shield,
-  Receipt,
-  Calculator,
-  Truck,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react"
+import { ChevronDown, Sparkles } from "lucide-react"
 
 interface MenuItem {
   title: string
-  description: string
   href: string
-  icon: React.ElementType
+  icon3d: string
   isNew?: boolean
 }
 
@@ -51,22 +31,19 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Winning Products",
-        description: "Find trending products with real-time data",
         href: "/winning-products",
-        icon: TrendingUp,
+        icon3d: "/images/menu/icons/winning-products.png",
       },
       {
         title: "Winning Ads",
-        description: "Discover top-performing ad creatives",
         href: "/meta-ads",
-        icon: BarChart3,
+        icon3d: "/images/menu/icons/winning-ads.png",
         isNew: true,
       },
       {
         title: "Winning Stores",
-        description: "Analyze successful competitor stores",
         href: "/competitor-stores",
-        icon: Store,
+        icon3d: "/images/menu/icons/winning-stores.png",
       },
     ],
     featured: {
@@ -81,21 +58,18 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Journey Roadmap",
-        description: "Your step-by-step dropshipping path",
         href: "/my-roadmap",
-        icon: Map,
+        icon3d: "/images/menu/icons/journey-roadmap.png",
       },
       {
         title: "Live Dashboard",
-        description: "Track orders and sales in real time",
         href: "/home",
-        icon: LayoutDashboard,
+        icon3d: "/images/menu/icons/live-dashboard.png",
       },
       {
         title: "Products Tracking",
-        description: "Monitor your saved products & performance",
         href: "/my-products",
-        icon: Package,
+        icon3d: "/images/menu/icons/products-tracking.png",
       },
     ],
     featured: {
@@ -110,22 +84,19 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Live Sessions",
-        description: "Join weekly live mentoring sessions",
         href: "/webinars",
-        icon: Video,
+        icon3d: "/images/menu/icons/live-sessions.png",
         isNew: true,
       },
       {
         title: "Full Learning Modules",
-        description: "Complete courses from beginner to pro",
         href: "/mentorship",
-        icon: GraduationCap,
+        icon3d: "/images/menu/icons/learning-modules.png",
       },
       {
         title: "Blogs",
-        description: "Tips, guides, and industry insights",
         href: "/blogs",
-        icon: Newspaper,
+        icon3d: "/images/menu/icons/blogs.png",
       },
     ],
     featured: {
@@ -140,9 +111,8 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Shopify",
-        description: "Connect your Shopify store and manage everything",
         href: "/shopify-integration",
-        icon: ShoppingBag,
+        icon3d: "/images/menu/icons/shopify.png",
       },
     ],
     featured: {
@@ -157,39 +127,33 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Description Generator",
-        description: "AI-powered product descriptions",
         href: "/tools/description-generator",
-        icon: PenTool,
+        icon3d: "/images/menu/icons/description-generator.png",
       },
       {
         title: "Email Templates",
-        description: "Ready-to-use email templates",
         href: "/tools/email-templates",
-        icon: Mail,
+        icon3d: "/images/menu/icons/email-templates.png",
       },
       {
         title: "Policy Generator",
-        description: "Auto-generate store policies",
         href: "/tools/policy-generator",
-        icon: Shield,
+        icon3d: "/images/menu/icons/policy-generator.png",
       },
       {
         title: "Invoice Generator",
-        description: "Create professional invoices",
         href: "/tools/invoice-generator",
-        icon: Receipt,
+        icon3d: "/images/menu/icons/invoice-generator.png",
       },
       {
         title: "Profit Calculator",
-        description: "Calculate margins and profits",
         href: "/tools/profit-calculator",
-        icon: Calculator,
+        icon3d: "/images/menu/icons/profit-calculator.png",
       },
       {
         title: "Shipping Calculator",
-        description: "Estimate shipping costs worldwide",
         href: "/shipping-calculator",
-        icon: Truck,
+        icon3d: "/images/menu/icons/shipping-calculator.png",
       },
     ],
     featured: {
@@ -204,15 +168,13 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Order Fulfilment",
-        description: "We handle packing and shipping from our warehouse",
         href: "/suppliers",
-        icon: Package,
+        icon3d: "/images/menu/icons/order-fulfilment.png",
       },
       {
         title: "Fast Delivery",
-        description: "Delivery to your customer in under 7 days",
         href: "/shipping-calculator",
-        icon: Truck,
+        icon3d: "/images/menu/icons/fast-delivery.png",
       },
     ],
     featured: {
@@ -250,7 +212,7 @@ function DesktopDropdown({
     return (
       <Link
         href={category.href || "/"}
-        className="text-[14px] text-black/80 font-medium hover:text-black transition-colors py-2 whitespace-nowrap"
+        className="text-[14px] text-black/80 font-semibold hover:text-black transition-colors py-2 whitespace-nowrap"
         data-testid={`link-menu-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
       >
         {category.label}
@@ -265,7 +227,7 @@ function DesktopDropdown({
       onMouseLeave={onMouseLeave}
     >
       <button
-        className="flex items-center gap-1 text-[14px] text-black/80 font-medium hover:text-black transition-colors py-2 whitespace-nowrap"
+        className="flex items-center gap-1 text-[14px] text-black/80 font-semibold hover:text-black transition-colors py-2 whitespace-nowrap"
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-controls={panelId}
@@ -291,38 +253,32 @@ function DesktopDropdown({
           style={{ backdropFilter: "blur(20px)" }}
         >
           <div className="flex">
-            <div className="p-4 min-w-[240px]">
+            <div className="p-4 min-w-[220px]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-3 px-2">
                 {category.label}
               </p>
               <div className="flex flex-col gap-0.5">
-                {category.items.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      role="menuitem"
-                      className="group flex items-start gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-                      data-testid={`link-menu-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <div className="mt-0.5 size-8 rounded-lg bg-gray-100 group-hover:bg-white flex items-center justify-center shrink-0 transition-colors">
-                        <Icon className="size-4 text-gray-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-medium text-gray-900 group-hover:text-black">
-                            {item.title}
-                          </span>
-                          {item.isNew && <NewBadge />}
-                        </div>
-                        <p className="text-[12px] text-gray-500 leading-tight mt-0.5">
-                          {item.description}
-                        </p>
-                      </div>
-                    </Link>
-                  )
-                })}
+                {category.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    role="menuitem"
+                    className="group flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+                    data-testid={`link-menu-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    <img
+                      src={item.icon3d}
+                      alt=""
+                      className="size-9 object-contain shrink-0"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-[14px] font-semibold text-gray-900 group-hover:text-black">
+                        {item.title}
+                      </span>
+                      {item.isNew && <NewBadge />}
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
 
@@ -375,7 +331,7 @@ function MobileAccordionItem({
     return (
       <Link
         href={category.href || "/"}
-        className="text-[15px] text-black font-medium py-3 border-b border-gray-100 block"
+        className="text-[15px] text-black font-semibold py-3 border-b border-gray-100 block"
         onClick={onClose}
         data-testid={`link-mobile-menu-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
       >
@@ -387,7 +343,7 @@ function MobileAccordionItem({
   return (
     <div className="border-b border-gray-100">
       <button
-        className="flex items-center justify-between w-full text-[15px] text-black font-medium py-3"
+        className="flex items-center justify-between w-full text-[15px] text-black font-semibold py-3"
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
@@ -406,33 +362,27 @@ function MobileAccordionItem({
         }`}
       >
         <div className="flex flex-col gap-1 pl-1">
-          {category.items.map((item) => {
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-                onClick={onClose}
-                data-testid={`link-mobile-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                <div className="size-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                  <Icon className="size-4 text-gray-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium text-gray-800">
-                      {item.title}
-                    </span>
-                    {item.isNew && <NewBadge />}
-                  </div>
-                  <p className="text-[11px] text-gray-500 leading-tight mt-0.5">
-                    {item.description}
-                  </p>
-                </div>
-              </Link>
-            )
-          })}
+          {category.items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
+              onClick={onClose}
+              data-testid={`link-mobile-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <img
+                src={item.icon3d}
+                alt=""
+                className="size-9 object-contain shrink-0"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-[14px] font-semibold text-gray-800">
+                  {item.title}
+                </span>
+                {item.isNew && <NewBadge />}
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

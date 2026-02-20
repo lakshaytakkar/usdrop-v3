@@ -15,27 +15,18 @@ export function LogoMarquee() {
     <section className="py-10 lg:py-14 relative">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionFadeIn direction="up" distance={DISTANCE.sm} duration={DURATION.slow}>
-          <p className="text-center text-[15px] text-[#555555] mb-10">
-            Trusted by 50,000+ businesses for innovative design and growth.
-          </p>
-        </MotionFadeIn>
-
-        <MotionFadeIn direction="up" distance={DISTANCE.sm} duration={DURATION.slow} delay={0.1}>
-          <div className="flex items-center justify-between max-w-[900px] mx-auto gap-6 sm:gap-8 lg:gap-12 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center justify-center max-w-[900px] mx-auto gap-8 sm:gap-10 lg:gap-14 flex-wrap sm:flex-nowrap">
             {brands.map((brand) => (
               <div
                 key={brand.name}
-                className="flex items-center gap-2 opacity-60 hover:opacity-100 transition-opacity"
+                className="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity"
                 data-testid={`logo-${brand.name.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="h-5 w-auto object-contain grayscale"
+                  className="h-8 sm:h-9 w-auto object-contain"
                 />
-                <span className="text-[14px] font-medium text-[#333333] hidden sm:inline whitespace-nowrap">
-                  {brand.name}
-                </span>
               </div>
             ))}
           </div>

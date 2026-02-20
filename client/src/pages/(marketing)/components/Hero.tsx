@@ -38,18 +38,21 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="absolute h-[216px] mix-blend-screen opacity-60 right-[-190px] top-[30px] w-[661.091px] hidden lg:block">
+      <div className="absolute h-[180px] mix-blend-screen opacity-30 right-[-100px] top-[20px] w-[550px] hidden lg:block">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-full left-[-1.09%] max-w-none top-0 w-[103.05%]" src={imgImage} />
+          <img alt="" className="absolute h-full left-0 max-w-none top-0 w-full" src={imgImage} />
         </div>
       </div>
-      <div className="absolute h-[378px] left-[calc(50%-480px)] mix-blend-screen opacity-60 top-[200px] translate-x-[-50%] w-[1156.91px] hidden lg:block">
+      <div className="absolute h-[260px] left-[calc(50%-200px)] mix-blend-screen opacity-25 top-[280px] translate-x-[-50%] w-[900px] hidden lg:block">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-full left-[-1.09%] max-w-none top-0 w-[103.05%]" src={imgImage} />
+          <img alt="" className="absolute h-full left-0 max-w-none top-0 w-full" src={imgImage} />
         </div>
       </div>
-
-      <div className="absolute bg-[rgba(0,0,0,0.2)] blur-[10px] filter h-[14.332px] left-1/2 top-[562.67px] translate-x-[-50%] w-[179.82px] hidden lg:block" />
+      <div className="absolute h-[140px] mix-blend-screen opacity-20 left-[-60px] top-[60px] w-[400px] hidden lg:block">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <img alt="" className="absolute h-full left-0 max-w-none top-0 w-full" src={imgImage} />
+        </div>
+      </div>
 
       <div className="relative z-10 flex flex-col items-center pt-[120px] sm:pt-[160px] lg:pt-[200px] px-4 sm:px-6">
         <div className="bg-[rgba(255,255,255,0.5)] backdrop-blur-[10px] border border-solid border-white flex gap-[12px] items-center pl-[6px] pr-[16px] py-[6px] rounded-[99px] w-fit h-[52px] mb-6 lg:mb-8">
