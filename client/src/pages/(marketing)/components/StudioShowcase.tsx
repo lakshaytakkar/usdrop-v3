@@ -1,113 +1,167 @@
-
-
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
-
-import { EtherealBackground } from "./EtherealBackground"
 import { useState } from "react"
+import { ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Link } from "wouter"
 
-const showcaseImages = [
+const slides = [
   {
     id: 1,
-    src: "/images/landing/showcase-products-flatlay.png",
-    alt: "Product flat lay",
-    description: "Professional product flat lay arranged on clean background",
-    gridPosition: "lg:col-span-1 lg:row-span-1",
+    bgColor: "#D4EDFF",
+    heading: "Because Your Store Deserves Winning Products",
+    subtitle: "When your competition sleeps, your AI keeps working",
   },
   {
     id: 2,
-    src: "/images/landing/showcase-hero-product.png",
-    alt: "Hero product shot",
-    description: "Studio-lit hero product photography with reflections",
-    gridPosition: "lg:col-span-1 lg:row-span-2",
+    bgColor: "#D4F0E0",
+    heading: "AI-Powered Product Research That Never Stops",
+    subtitle: "Find winning products before they trend",
   },
   {
     id: 3,
-    src: "/images/landing/showcase-model-fashion.png",
-    alt: "AI model try-on",
-    description: "AI-generated model showcasing fashion products",
-    gridPosition: "lg:col-start-4 lg:row-start-2 lg:col-span-1 lg:row-span-1",
-  },
-  {
-    id: 4,
-    src: "/images/landing/showcase-desk-setup.png",
-    alt: "Lifestyle setup",
-    description: "Lifestyle product photography in real-world setting",
-    gridPosition: "lg:col-start-2 lg:row-start-1 lg:col-span-2 lg:row-span-1",
-  },
-  {
-    id: 5,
-    src: "/images/landing/showcase-beauty-products.png",
-    alt: "Beauty products",
-    description: "Premium beauty product showcase with elegant styling",
-    gridPosition: "lg:col-start-1 lg:row-start-2 lg:col-span-1 lg:row-span-1",
-  },
-  {
-    id: 6,
-    src: "/images/landing/showcase-ad-creative.png",
-    alt: "Ad creative",
-    description: "Bold ad creative designed for social media campaigns",
-    gridPosition: "lg:col-start-3 lg:row-start-2 lg:col-span-1 lg:row-span-1",
+    bgColor: "#E8E0FF",
+    heading: "From Discovery to Delivery, All Automated",
+    subtitle: "One platform to handle everything",
   },
 ]
 
-function ImageCard({ image, index }: { image: (typeof showcaseImages)[0]; index: number }) {
-  const [isHovering, setIsHovering] = useState(false)
-
-  return (
-    <MotionFadeIn
-      direction="up"
-      distance={DISTANCE.lg}
-      delay={index * 0.1}
-      duration={DURATION.slow}
-      className={`${image.gridPosition} col-span-1 row-span-1`}
-    >
-      <div
-        className="relative rounded-[16px] overflow-hidden bg-white shadow-lg h-full w-full"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
-        <div className="relative w-full h-full">
-          <img
-            src={image.src}
-            alt={image.alt}
-            className="object-cover w-full h-full"
-          />
-        </div>
-
-        <div
-          className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
-            isHovering ? "opacity-100" : "opacity-0"
-          } flex items-end p-6 rounded-[16px]`}
-        >
-          <p className="text-white text-sm font-medium leading-relaxed">{image.description}</p>
-        </div>
-      </div>
-    </MotionFadeIn>
-  )
-}
-
 export function StudioShowcase() {
+  const [currentSlide, setCurrentSlide] = useState(0)
+
+  const handlePrevious = () => {
+    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))
+  }
+
+  const handleNext = () => {
+    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1))
+  }
+
+  const getVisibleSlide = (offset: number) => {
+    return (currentSlide + offset) % slides.length
+  }
+
   return (
-    <section className="py-16 lg:py-24 bg-[rgba(255,255,255,0.4)] relative overflow-hidden">
-      <EtherealBackground />
+    <section className="py-16 lg:py-24 bg-transparent relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Badge and Heading */}
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
           <div className="text-center mb-16 max-w-[886px] mx-auto">
+            {/* Dark pill badge */}
+            <div className="bg-[#323140] text-white text-[13px] font-medium px-4 py-2 rounded-[8px] w-fit mx-auto mb-6">
+              Showcase
+            </div>
+
+            {/* Main heading */}
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight mb-4">
-              Zero Photoshoots. Infinite Visuals.
+              Discover Trending Products, Curated by AI for You
             </h2>
-            <p className="text-[16px] text-[#555555] leading-[22px] max-w-[580px] mx-auto">
-              See what our AI Studio creates—professional marketing visuals generated in seconds
-            </p>
           </div>
         </MotionFadeIn>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-6 auto-rows-[300px] md:auto-rows-[250px] lg:auto-rows-[280px]">
-          {showcaseImages.map((image, index) => (
-            <ImageCard key={image.id} image={image} index={index} />
-          ))}
-        </div>
+        {/* Carousel Section */}
+        <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow} delay={0.2}>
+          <div className="relative flex items-center justify-center gap-6 lg:gap-8">
+            {/* Left Navigation Button */}
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handlePrevious}
+              className="absolute left-0 lg:left-[-60px] z-20 rounded-full bg-[#323140] text-white flex-shrink-0"
+              data-testid="button-carousel-previous"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+
+            {/* Carousel Container */}
+            <div className="relative w-full max-w-4xl mx-auto h-80 lg:h-96">
+              {/* Stacked card effect - background cards */}
+              {[2, 1].map((offset, idx) => {
+                const slideIndex = getVisibleSlide(offset)
+                const scale = 1 - offset * 0.05
+                const yOffset = offset * 12
+
+                return (
+                  <div
+                    key={`bg-${idx}`}
+                    className="absolute inset-0 rounded-3xl transition-all duration-500 ease-out"
+                    style={{
+                      backgroundColor: slides[slideIndex].bgColor,
+                      transform: `scale(${scale}) translateY(${yOffset}px)`,
+                      zIndex: -offset,
+                    }}
+                  />
+                )
+              })}
+
+              {/* Main visible card */}
+              <div
+                className="absolute inset-0 rounded-3xl p-8 lg:p-12 flex flex-col justify-between transition-all duration-500 ease-out shadow-lg"
+                style={{
+                  backgroundColor: slides[currentSlide].bgColor,
+                  zIndex: 10,
+                }}
+              >
+                <div>
+                  {/* Card Heading */}
+                  <h3 className="text-2xl lg:text-4xl font-bold text-black mb-4 leading-tight">
+                    {slides[currentSlide].heading}
+                  </h3>
+
+                  {/* Card Subtitle */}
+                  <p className="text-base lg:text-lg text-gray-700 mb-8">
+                    {slides[currentSlide].subtitle}
+                  </p>
+                </div>
+
+                {/* Bottom section with CTA and decorative space */}
+                <div className="flex items-end justify-between">
+                  {/* Learn More Button */}
+                  <Link href="/studio">
+                    <Button
+                      className="bg-[#323140] text-white gap-2"
+                      data-testid="button-learn-more"
+                    >
+                      Learn More
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+
+                  {/* Decorative space on the right */}
+                  <div className="hidden lg:block w-24 h-24 rounded-2xl bg-black/5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Navigation Button */}
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleNext}
+              className="absolute right-0 lg:right-[-60px] z-20 rounded-full bg-[#323140] text-white flex-shrink-0"
+              data-testid="button-carousel-next"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+          </div>
+        </MotionFadeIn>
+
+        {/* Slide Indicators */}
+        <MotionFadeIn direction="up" distance={DISTANCE.sm} duration={DURATION.slow} delay={0.4}>
+          <div className="flex justify-center gap-2 mt-12">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? "bg-black w-8" : "bg-gray-300 w-2"
+                }`}
+                data-testid={`button-slide-indicator-${index}`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </MotionFadeIn>
       </div>
     </section>
   )

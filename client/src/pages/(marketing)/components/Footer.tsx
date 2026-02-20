@@ -1,94 +1,193 @@
 
-
 import { Link } from "wouter"
-
-const footerLinks = {
-  Product: [
-    { name: "AI Research", href: "/#features" },
-    { name: "AI Studio", href: "/#studio" },
-    { name: "AI Fulfillment", href: "/#workflow" },
-    { name: "Integrations", href: "/#features" },
-  ],
-  Resources: [
-    { name: "Blog", href: "/blog" },
-    { name: "Guides", href: "/#features" },
-    { name: "Help Center", href: "/help-center" },
-    { name: "Academy", href: "/mentorship" },
-  ],
-  Company: [
-    { name: "About Us", href: "/#about" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "Contact", href: "mailto:support@usdrop.ai" },
-  ],
-  Legal: [
-    { name: "Terms of Service", href: "/terms" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Refund Policy", href: "/refund" },
-  ],
-}
+import { ChevronDown, ArrowRight } from "lucide-react"
+import { FormEvent, useState } from "react"
 
 export function Footer() {
-  return (
-    <footer className="bg-[#0f0f14] text-slate-300 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-blue-500/5 blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-purple-500/5 blur-[120px]" />
-      </div>
+  const [email, setEmail] = useState("")
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 lg:gap-16 mb-16">
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-baseline gap-1 mb-5">
-              <span className="text-2xl font-bold tracking-tight text-white">USDrop</span>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent">AI</span>
+  const handleEmailSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setEmail("")
+  }
+
+  return (
+    <footer className="bg-[#F4F2F1]">
+      {/* Top Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 mb-16">
+          {/* Left Side - Logo & Email Form */}
+          <div>
+            {/* Logo */}
+            <Link href="/" className="flex items-baseline gap-2 mb-6">
+              <span className="text-2xl font-bold text-black">USDrop</span>
+              <span className="text-2xl font-bold text-black">AI</span>
             </Link>
-            <p className="text-sm text-slate-400 leading-relaxed max-w-[240px]">
-              The AI-powered dropshipping platform that finds winners, creates content, and handles fulfillment.
+
+            {/* Tagline */}
+            <h3 className="text-lg font-semibold text-black mb-2">
+              Stay connected with USDrop AI
+            </h3>
+            <p className="text-sm text-[#555555] mb-6 leading-relaxed">
+              Get smart updates & tips—delivered fresh to your inbox.
             </p>
+
+            {/* Email Subscription Form */}
+            <form onSubmit={handleEmailSubmit} className="flex">
+              <div className="flex items-center bg-white rounded-full border border-[#E5E5E5] overflow-hidden flex-1">
+                <input
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 px-6 py-3 text-sm placeholder-[#999999] focus:outline-none bg-white"
+                  required
+                  data-testid="input-email-subscribe"
+                />
+                <button
+                  type="submit"
+                  className="bg-black text-white px-6 py-3 font-medium text-sm flex items-center gap-2 hover:bg-black/90 transition-colors duration-200"
+                  data-testid="button-subscribe"
+                >
+                  Subscribe
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
           </div>
 
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h3 className="font-medium text-white text-sm tracking-wide uppercase mb-5">{category}</h3>
+          {/* Right Side - Link Columns */}
+          <div className="grid grid-cols-3 gap-8">
+            {/* Pages Column 1 */}
+            <div>
+              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+                Pages
+              </h4>
               <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-slate-400 hover:text-white transition-colors duration-200"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
+                <li>
+                  <Link
+                    href="/#how-it-works"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-how-it-works"
+                  >
+                    How It Works
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/#features"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-features"
+                  >
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/#why-choose-us"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-why-choose-us"
+                  >
+                    Why Choose Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/#testimonials"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-testimonials"
+                  >
+                    Testimonials
+                  </Link>
+                </li>
               </ul>
             </div>
-          ))}
-        </div>
 
-        <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-slate-500">
-            &copy; {new Date().getFullYear()} USDrop AI. All rights reserved.
+            {/* Pages Column 2 */}
+            <div>
+              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+                Pages
+              </h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/contact"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-contact-us"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/blogs"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-blogs"
+                  >
+                    Blogs
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social Column */}
+            <div>
+              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+                Social
+              </h4>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="https://instagram.com"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-instagram"
+                  >
+                    Instagram
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="https://linkedin.com"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-linkedin"
+                  >
+                    LinkedIn
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="https://twitter.com"
+                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
+                    data-testid="link-twitter"
+                  >
+                    Twitter
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-[#E0E0E0]">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Left - Copyright & Manage Cookies */}
+          <p className="text-xs text-[#555555]">
+            USDrop © 2024-2026{" "}
+            <Link
+              href="/cookies"
+              className="text-[#555555] hover:text-black transition-colors duration-200 font-medium"
+              data-testid="link-manage-cookies"
+            >
+              Manage Cookies
+            </Link>
           </p>
-          <div className="flex gap-8">
-            <Link
-              href="#"
-              className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-            >
-              Twitter
-            </Link>
-            <Link
-              href="#"
-              className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-            >
-              LinkedIn
-            </Link>
-            <Link
-              href="#"
-              className="text-slate-500 hover:text-white transition-colors duration-200 text-sm"
-            >
-              Discord
-            </Link>
+
+          {/* Right - Language Selector */}
+          <div className="flex items-center gap-2 text-xs text-[#555555]">
+            <span>English</span>
+            <ChevronDown className="w-4 h-4" />
           </div>
         </div>
       </div>
