@@ -8,21 +8,21 @@ const steps = [
     number: "01",
     icon: Search,
     title: "Discover",
-    description: "AI scans thousands of products to find trending winners before they saturate the market.",
+    description: "AI finds trending winners before they saturate the market.",
     bgColor: "#E8E0FF",
   },
   {
     number: "02",
     icon: Paintbrush,
     title: "Create",
-    description: "Generate studio-quality product photos, model try-ons, and ad creatives in seconds.",
+    description: "Generate studio-quality photos and ad creatives in seconds.",
     bgColor: "#D4F0E0",
   },
   {
     number: "03",
     icon: Rocket,
     title: "Launch & Fulfill",
-    description: "One-click store setup and automated fulfillment. Your store is live in minutes.",
+    description: "One-click store setup. Automated fulfillment. Live in minutes.",
     bgColor: "#F8E2FE",
   },
 ]
@@ -31,33 +31,26 @@ export function Workflow() {
   return (
     <section className="py-16 lg:py-24 relative overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header Section */}
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
           <div className="mb-12">
-            {/* Badge */}
             <div className="bg-[#323140] text-white text-[13px] font-medium px-4 py-2 rounded-[8px] w-fit mb-6">
               How it works
             </div>
-
-            {/* Heading and Description */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <h2 className="text-4xl sm:text-5xl lg:text-6xl font-medium text-black tracking-[-0.04em] leading-tight">
                 From Discovery to First Sale
               </h2>
               <p className="text-[16px] text-[#555555] leading-[22px] flex items-center">
-                A streamlined workflow that takes you from product research to customer delivery
+                Research, create, and launch — all from one platform
               </p>
             </div>
           </div>
         </MotionFadeIn>
 
-        {/* Hero Cards Section */}
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow} delay={0.1}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 lg:mb-20">
-            {/* Left Card - Light Grey */}
             <div className="rounded-[16px] p-8 lg:p-12" style={{ backgroundColor: "#EDEDED" }}>
               <div className="flex flex-col h-full justify-between">
-                {/* Badge and Content */}
                 <div>
                   <div className="bg-[#323140] text-white text-[11px] font-medium px-3 py-1.5 rounded-[6px] w-fit mb-6">
                     How it Works
@@ -66,13 +59,10 @@ export function Workflow() {
                     A Simple 3-Step Process
                   </h3>
                   <p className="text-[14px] sm:text-[16px] text-[#555555] leading-[22px]">
-                    Our streamlined workflow transforms your research into a live store in minutes, with AI handling every step of the way.
+                    AI handles the heavy lifting — from research to fulfillment.
                   </p>
                 </div>
-
-                {/* Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
-                  {/* Dark Gradient Button */}
                   <Link href="/signup" className="flex-1 sm:flex-initial">
                     <div className="bg-white h-[44px] overflow-clip rounded-[8px] w-full sm:w-[156px] relative cursor-pointer">
                       <div 
@@ -87,10 +77,8 @@ export function Workflow() {
                       </div>
                     </div>
                   </Link>
-
-                  {/* Outline Button */}
                   <Link href="/signup" className="flex-1 sm:flex-initial">
-                    <button className="h-[44px] px-6 rounded-[8px] border-2 border-[#323140] text-[#323140] font-medium text-[13px] hover:bg-[#323140]/5 transition-colors w-full sm:w-auto">
+                    <button className="h-[44px] px-6 rounded-[8px] border-2 border-[#323140] text-[#323140] font-medium text-[13px] hover:bg-[#323140]/5 transition-colors w-full sm:w-auto" data-testid="button-book-demo">
                       Book a Demo
                     </button>
                   </Link>
@@ -98,27 +86,25 @@ export function Workflow() {
               </div>
             </div>
 
-            {/* Right Card - Lavender/Purple */}
-            <div className="rounded-[16px] p-8 lg:p-12 relative overflow-hidden min-h-[300px] sm:min-h-[350px]" style={{ backgroundColor: "rgba(200, 180, 255, 0.3)" }}>
-              {/* Floating Badge */}
+            <div className="rounded-[16px] relative overflow-hidden min-h-[300px] sm:min-h-[350px]">
+              <img
+                src="/images/landing/workflow-hero.png"
+                alt="Entrepreneur using USDrop AI platform on laptop"
+                className="w-full h-full object-cover rounded-[16px]"
+                loading="lazy"
+              />
               <div className="absolute top-6 right-6 bg-white/90 backdrop-blur px-4 py-2 rounded-[8px] shadow-lg">
                 <span className="text-[12px] font-medium text-[#323140]">
                   AI Processing Complete
                 </span>
               </div>
-
-              {/* Decorative Content - Empty for now, can add visuals later */}
-              <div className="flex items-center justify-center h-full">
-                <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur" />
-              </div>
             </div>
           </div>
         </MotionFadeIn>
 
-        {/* Step Cards Grid */}
         <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow} delay={0.2}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {steps.map((step, index) => {
+            {steps.map((step) => {
               const Icon = step.icon
               return (
                 <div
@@ -126,24 +112,16 @@ export function Workflow() {
                   className="rounded-[16px] p-8 relative overflow-hidden"
                   style={{ backgroundColor: step.bgColor }}
                 >
-                  {/* Numbered Badge */}
                   <div className="absolute top-6 left-6 w-10 h-10 rounded-full bg-[#323140] flex items-center justify-center">
                     <span className="text-white text-[13px] font-bold">{step.number}</span>
                   </div>
-
-                  {/* Content */}
                   <div className="flex flex-col items-center text-center mt-12 mb-6">
-                    {/* Icon */}
                     <div className="mb-6 p-4 rounded-full" style={{ backgroundColor: "rgba(50, 49, 64, 0.1)" }}>
                       <Icon className="w-8 h-8 text-[#323140]" strokeWidth={1.5} />
                     </div>
-
-                    {/* Title */}
                     <h3 className="text-xl sm:text-2xl font-medium text-[#323140] mb-3">
                       {step.title}
                     </h3>
-
-                    {/* Description */}
                     <p className="text-[14px] text-[#555555] leading-[22px]">
                       {step.description}
                     </p>
