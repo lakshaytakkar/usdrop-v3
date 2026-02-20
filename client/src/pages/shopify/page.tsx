@@ -41,12 +41,22 @@ const steps = [
 
 export default function ShopifyPage() {
   return (
-    <div className="relative min-h-screen bg-[#F4F2F1]">
+    <div className="relative min-h-screen" style={{ backgroundColor: "#F5F3F2" }}>
+      <div
+        className="pointer-events-none fixed inset-0 z-[1] opacity-[0.03]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
+          backgroundSize: "256px 256px",
+        }}
+      />
       <div className="absolute top-[32px] left-0 right-0 z-50">
         <Header />
       </div>
 
-      <section className="pt-[140px] pb-16 px-4">
+      <section className="pt-[140px] pb-16 px-4 relative" style={{
+        background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(195,170,255,0.2) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 80% 30%, rgba(180,215,255,0.18) 0%, transparent 55%)"
+      }}>
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-5 py-2.5 mb-8 shadow-sm">
             <ShopifyIcon className="w-5 h-5 text-[#96BF48]" />
@@ -98,7 +108,9 @@ export default function ShopifyPage() {
         </div>
       </section>
 
-      <section className="py-20">
+      <section className="py-20 relative" style={{
+        background: "radial-gradient(ellipse 70% 50% at 20% 40%, rgba(220,210,255,0.2) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 80% 60%, rgba(180,230,200,0.15) 0%, transparent 55%)"
+      }}>
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-[#323140] text-white rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider mb-5">

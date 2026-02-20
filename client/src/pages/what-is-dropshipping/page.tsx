@@ -58,8 +58,10 @@ const benefits = [
 
 export default function WhatIsDropshippingPage() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#F4F2F1" }}>
-      <section className="pt-24 lg:pt-32 pb-16 lg:pb-24 relative overflow-hidden">
+    <div className="min-h-screen relative">
+      <section className="pt-24 lg:pt-32 pb-16 lg:pb-24 relative overflow-hidden" style={{
+        background: "radial-gradient(ellipse 85% 65% at 50% 0%, rgba(195,170,255,0.2) 0%, transparent 60%), radial-gradient(ellipse 60% 45% at 80% 30%, rgba(180,215,255,0.18) 0%, transparent 55%)"
+      }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
             <div className="max-w-[900px] mx-auto text-center mb-12">
@@ -88,7 +90,9 @@ export default function WhatIsDropshippingPage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 relative" style={{
+        background: "radial-gradient(ellipse 75% 55% at 20% 30%, rgba(180,230,200,0.22) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 85% 65%, rgba(240,210,250,0.18) 0%, transparent 55%)"
+      }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
             <div className="max-w-[700px] mx-auto text-center mb-16">
@@ -148,7 +152,9 @@ export default function WhatIsDropshippingPage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 relative" style={{
+        background: "radial-gradient(ellipse 80% 60% at 60% 25%, rgba(220,210,255,0.22) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 20% 70%, rgba(180,215,255,0.18) 0%, transparent 55%)"
+      }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
             <div className="max-w-[900px] mx-auto bg-white rounded-[20px] p-8 sm:p-12 lg:p-16 border border-black/[0.04] shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -181,7 +187,9 @@ export default function WhatIsDropshippingPage() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24">
+      <section className="py-16 lg:py-24 relative" style={{
+        background: "radial-gradient(ellipse 70% 50% at 40% 40%, rgba(240,210,250,0.2) 0%, transparent 60%), radial-gradient(ellipse 50% 35% at 80% 20%, rgba(180,230,200,0.18) 0%, transparent 55%)"
+      }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <MotionFadeIn direction="up" distance={DISTANCE.lg} duration={DURATION.slow}>
             <div

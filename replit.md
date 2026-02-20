@@ -70,5 +70,6 @@ script/
 - **Google Gemini API**: (Optional) For AI features.
 
 ## Recent Changes
+- **Feb 2026**: Added rhythmic gradient backgrounds to all marketing pages (landing, Shopify, What is Dropshipping). Each section has unique radial gradients using the palette colors (lavender, mint, pink, blue) that create visual flow as users scroll. MarketingLayout includes a subtle noise texture overlay at 3% opacity. GradientSection wrapper component in landing page for consistent section-level gradients.
 - **Feb 2026**: Migrated from Supabase to Replit's Neon PostgreSQL. Replaced Supabase Auth with local JWT auth (bcrypt + jsonwebtoken). Created Supabase-compatible query builder in `server/lib/supabase.ts` that wraps the `postgres` library. Database schema defined in `shared/schema.ts` with Drizzle ORM (30 tables). Client auth updated to use localStorage token storage.
 - **Feb 2026**: Migrated from Next.js 16 to Vite + Express + Wouter stack for faster dev compilation. All 86 API routes migrated to Express, all 74 pages ported to client-side Wouter routing, auth system converted from SSR cookies to client-side JWT Bearer tokens.
