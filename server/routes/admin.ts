@@ -1,6 +1,7 @@
 import { type Express, Router, Request, Response } from 'express';
 import { requireAdmin } from '../lib/auth';
 import { supabaseAdmin } from '../lib/supabase';
+import { supabaseRemote } from '../lib/supabase-remote';
 import multer from 'multer';
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -104,7 +105,7 @@ export function registerAdminRoutes(app: Express) {
       const trending = req.query.trending as string | undefined;
       const search = req.query.search as string | undefined;
 
-      let query = supabaseAdmin.from('categories').select('*');
+      let query = supabaseRemote.from('categories').select('*');
 
       if (parentCategoryId === 'null' || parentCategoryId === '') {
         query = query.is('parent_category_id', null);
@@ -129,7 +130,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(500).json({ error: 'Internal server error' });
       }
 
-      const { data: productCounts } = await supabaseAdmin
+      const { data: productCounts } = await supabaseRemote
         .from('products')
         .select('category_id');
 
@@ -255,7 +256,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: subcategories } = await supabaseAdmin
+      const { data: subcategories } = await supabaseRemote
         .from('categories')
         .select('*')
         .eq('parent_category_id', id)
@@ -368,7 +369,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data: subcategories } = await supabaseAdmin
+      const { data: subcategories } = await supabaseRemote
         .from('categories')
         .select('id')
         .eq('parent_category_id', id)
@@ -378,7 +379,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Cannot delete category with subcategories. Please delete or reassign subcategories first.' });
       }
 
-      const { data: products } = await supabaseAdmin
+      const { data: products } = await supabaseRemote
         .from('products')
         .select('id')
         .eq('category_id', id)
@@ -388,7 +389,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Cannot delete category with products. Please reassign or delete products first.' });
       }
 
-      await supabaseAdmin.from('categories').delete().eq('id', id);
+      await supabaseRemote.from('categories').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {
@@ -432,8 +433,8 @@ export function registerAdminRoutes(app: Express) {
       const sortBy = (req.query.sortBy as string) || 'created_at';
       const sortOrder = (req.query.sortOrder as string) || 'desc';
 
-      let countQuery = supabaseAdmin.from('competitor_stores').select('*', { count: 'exact', head: true });
-      let dataQuery = supabaseAdmin.from('competitor_stores').select('*, categories(id, name, slug)');
+      let countQuery = supabaseRemote.from('competitor_stores').select('*', { count: 'exact', head: true });
+      let dataQuery = supabaseRemote.from('competitor_stores').select('*, categories(id, name, slug)');
 
       if (verified !== undefined) {
         countQuery = countQuery.eq('verified', verified === 'true');
@@ -618,7 +619,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      await supabaseAdmin.from('competitor_stores').delete().eq('id', id);
+      await supabaseRemote.from('competitor_stores').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error: any) {
@@ -3039,7 +3040,7 @@ export function registerAdminRoutes(app: Express) {
 
       const calculatedProfit = parseFloat(sell_price) - parseFloat(buy_price);
 
-      const { data: product, error: productError } = await supabaseAdmin
+      const { data: product, error: productError } = await supabaseRemote
         .from('products')
         .insert({
           title,
@@ -3065,7 +3066,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (metadata && product) {
-        await supabaseAdmin.from('product_metadata').insert({
+        await supabaseRemote.from('product_metadata').insert({
           product_id: product.id,
           is_winning: metadata.is_winning || false,
           is_locked: metadata.is_locked || false,
@@ -3083,7 +3084,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (source && product) {
-        await supabaseAdmin.from('product_source').insert({
+        await supabaseRemote.from('product_source').insert({
           product_id: product.id,
           source_type: source.source_type || null,
           source_id: source.source_id || null,
@@ -3092,7 +3093,7 @@ export function registerAdminRoutes(app: Express) {
         });
       }
 
-      const { data: completeProduct } = await supabaseAdmin
+      const { data: completeProduct } = await supabaseRemote
         .from('products')
         .select(`
           *,
@@ -3287,9 +3288,9 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid product ID', details: 'Product ID is required and must be a valid UUID' });
       }
 
-      await supabaseAdmin.from('product_metadata').delete().eq('product_id', id);
-      await supabaseAdmin.from('product_source').delete().eq('product_id', id);
-      await supabaseAdmin.from('products').delete().eq('id', id);
+      await supabaseRemote.from('product_metadata').delete().eq('product_id', id);
+      await supabaseRemote.from('product_source').delete().eq('product_id', id);
+      await supabaseRemote.from('products').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {
@@ -3559,7 +3560,7 @@ export function registerAdminRoutes(app: Express) {
       const search = req.query.search as string | undefined;
       const verified = req.query.verified as string | undefined;
 
-      let query = supabaseAdmin.from('suppliers').select('*');
+      let query = supabaseRemote.from('suppliers').select('*');
 
       if (search) {
         query = query.or(`name.ilike.%${search}%,country.ilike.%${search}%,contact_email.ilike.%${search}%`);
@@ -3594,7 +3595,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Supplier name is required' });
       }
 
-      const { data: supplier, error } = await supabaseAdmin
+      const { data: supplier, error } = await supabaseRemote
         .from('suppliers')
         .insert({
           name,
@@ -3664,7 +3665,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: supplier, error } = await supabaseAdmin
+      const { data: supplier, error } = await supabaseRemote
         .from('suppliers')
         .update(updateData)
         .eq('id', id)
@@ -3686,7 +3687,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      await supabaseAdmin.from('suppliers').delete().eq('id', id);
+      await supabaseRemote.from('suppliers').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {

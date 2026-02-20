@@ -24,7 +24,6 @@ import { MarketAnalyticsChart } from "../components/market-analytics-chart"
 import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
 import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
-import { ReviewsSection } from "../components/reviews-section"
 import { Product, ProductResearch } from "@/types/products"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
@@ -465,31 +464,27 @@ export default function ProductDetailPage() {
                 />
               </div>
 
-              {/* Competitor Pricing */}
-              <div className="space-y-3 min-w-0 max-w-full">
-                <SectionHeader title="Pricing & Competition" description="How your pricing compares to competitors in the market" />
-                <CompetitorPricingChart
-                  productPrice={product.sell_price}
-                  competitors={researchData?.competitor_pricing?.competitors}
-                  priceRange={researchData?.competitor_pricing?.price_range}
-                />
-              </div>
+              {researchData?.competitor_pricing && (
+                <div className="space-y-3 min-w-0 max-w-full">
+                  <SectionHeader title="Pricing & Competition" description="How your pricing compares to competitors in the market" />
+                  <CompetitorPricingChart
+                    productPrice={product.sell_price}
+                    competitors={researchData.competitor_pricing.competitors}
+                    priceRange={researchData.competitor_pricing.price_range}
+                  />
+                </div>
+              )}
 
-              {/* Audience & Targeting */}
-              <div className="space-y-3 min-w-0 max-w-full">
-                <SectionHeader title="Audience & Targeting" description="Who buys this product and how to reach them effectively" />
-                <AudienceDemographicsChart
-                  demographics={researchData?.audience_targeting?.demographics}
-                  interests={researchData?.audience_targeting?.interests}
-                  suggestions={researchData?.audience_targeting?.suggestions}
-                />
-              </div>
-
-              {/* Product Reviews */}
-              <div className="space-y-3 min-w-0 max-w-full">
-                <SectionHeader title="Product Reviews" description="Customer feedback and ratings" />
-                <ReviewsSection reviews={[]} />
-              </div>
+              {researchData?.audience_targeting && (
+                <div className="space-y-3 min-w-0 max-w-full">
+                  <SectionHeader title="Audience & Targeting" description="Who buys this product and how to reach them effectively" />
+                  <AudienceDemographicsChart
+                    demographics={researchData.audience_targeting.demographics}
+                    interests={researchData.audience_targeting.interests}
+                    suggestions={researchData.audience_targeting.suggestions}
+                  />
+                </div>
+              )}
 
               {/* More Products */}
               <div className="space-y-3 min-w-0 max-w-full">

@@ -43,9 +43,9 @@ NEXT_PUBLIC_SITE_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13g
 NEXT_PUBLIC_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
 VITE_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
-VITE_SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2J5YnR4bWtka3ZxcWFoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDA4NDYsImV4cCI6MjA4Njg3Njg0Nn0.SlVMeExCwAviROksqA09ctzhvRmwO7Trc6GmwP_Ata8"
 SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
-SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2J5YnR4bWtka3ZxcWFoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDA4NDYsImV4cCI6MjA4Njg3Njg0Nn0.SlVMeExCwAviROksqA09ctzhvRmwO7Trc6GmwP_Ata8"
 
 [deployment]
 deploymentTarget = "autoscale"
