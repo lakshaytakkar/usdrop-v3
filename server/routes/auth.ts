@@ -1,6 +1,8 @@
 import { Router, type Express, type Request, type Response } from 'express';
-import { supabaseAdmin, createSupabaseClientForUser } from '../lib/supabase';
-import { requireAuth, optionalAuth, getCurrentUser, getUserWithPlan } from '../lib/auth';
+import bcrypt from 'bcryptjs';
+import { supabaseAdmin } from '../lib/supabase';
+import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
+import sql from '../lib/db';
 
 function validateEmail(email: string): { valid: boolean; error?: string } {
   if (!email) {
@@ -49,44 +51,41 @@ function validatePhoneNumber(phone: string): { valid: boolean; error?: string } 
   return { valid: true };
 }
 
-function extractToken(req: Request): string | null {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  return null;
-}
-
 export function registerAuthRoutes(app: Express) {
   const router = Router();
 
-  // POST /api/auth/signin
   router.post('/signin', async (req: Request, res: Response) => {
     try {
-      const { access_token } = req.body;
+      const { email, password } = req.body;
 
-      if (!access_token) {
-        return res.status(400).json({ error: 'Access token is required' });
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
       }
 
-      const supabase = createSupabaseClientForUser(access_token);
-      const { data: { user: supaUser }, error } = await supabase.auth.getUser();
+      const result = await sql`
+        SELECT "id", "email", "password_hash", "status"
+        FROM "profiles" WHERE "email" = ${email.toLowerCase()} LIMIT 1`;
 
-      if (error || !supaUser) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
+      if (!result[0]) {
+        return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      const { data: profileCheck } = await supabaseAdmin
-        .from('profiles')
-        .select('status')
-        .eq('id', supaUser.id)
-        .single();
-
-      if (profileCheck?.status === 'suspended') {
+      if (result[0].status === 'suspended') {
         return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
       }
 
-      const profile = await getUserWithPlan(supaUser.id);
+      if (!result[0].password_hash) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      const valid = await bcrypt.compare(password, result[0].password_hash);
+      if (!valid) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+
+      const token = generateToken(result[0].id);
+      const profile = await getUserWithPlan(result[0].id);
+
       const isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined;
       const requiresOnboarding = !profile?.onboarding_completed && !isInternal;
       const plan = profile?.plan_slug || profile?.account_type || 'free';
@@ -94,7 +93,8 @@ export function registerAuthRoutes(app: Express) {
 
       return res.json({
         message: 'Signed in successfully',
-        user: { id: supaUser.id, email: supaUser.email, user_metadata: { full_name: profile?.full_name } },
+        token,
+        user: { id: result[0].id, email: result[0].email, user_metadata: { full_name: profile?.full_name } },
         isInternal,
         requiresOnboarding,
         plan,
@@ -106,38 +106,46 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // POST /api/auth/signup
   router.post('/signup', async (req: Request, res: Response) => {
     try {
-      const { access_token, full_name } = req.body;
+      const { email, password, full_name } = req.body;
 
-      if (!access_token) {
-        return res.status(400).json({ error: 'Access token is required' });
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
       }
 
-      const supabase = createSupabaseClientForUser(access_token);
-      const { data: { user: supaUser }, error } = await supabase.auth.getUser();
-
-      if (error || !supaUser) {
-        return res.status(401).json({ error: 'Invalid or expired token' });
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.valid) {
+        return res.status(400).json({ error: emailValidation.error });
       }
 
-      const { data: freePlan } = await supabaseAdmin
-        .from('subscription_plans')
-        .select('id')
-        .eq('slug', 'free')
-        .single();
-
-      if (freePlan) {
-        await supabaseAdmin
-          .from('profiles')
-          .update({ subscription_plan_id: freePlan.id })
-          .eq('id', supaUser.id);
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.errors[0], errors: passwordValidation.errors });
       }
+
+      const existing = await sql`
+        SELECT "id" FROM "profiles" WHERE "email" = ${email.toLowerCase()} LIMIT 1`;
+      if (existing[0]) {
+        return res.status(409).json({ error: 'An account with this email already exists' });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+
+      const freePlan = await sql`
+        SELECT "id" FROM "subscription_plans" WHERE "slug" = 'free' LIMIT 1`;
+
+      const insertResult = await sql`
+        INSERT INTO "profiles" ("email", "password_hash", "full_name", "subscription_plan_id", "status", "account_type")
+        VALUES (${email.toLowerCase()}, ${hash}, ${full_name || null}, ${freePlan[0]?.id || null}, 'active', 'free')
+        RETURNING "id", "email"`;
+
+      const token = generateToken(insertResult[0].id);
 
       return res.json({
         message: 'Account created successfully',
-        user: { id: supaUser.id, email: supaUser.email, full_name: full_name || null },
+        token,
+        user: { id: insertResult[0].id, email: insertResult[0].email, full_name: full_name || null },
       });
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -145,7 +153,6 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // POST /api/auth/signout
   router.post('/signout', async (_req: Request, res: Response) => {
     try {
       return res.json({ message: 'Signed out successfully' });
@@ -155,7 +162,6 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // GET /api/auth/user
   router.get('/user', requireAuth, async (req: Request, res: Response) => {
     try {
       const user = req.user!;
@@ -186,30 +192,27 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // GET /api/auth/user/metadata
   router.get('/user/metadata', requireAuth, async (req: Request, res: Response) => {
     try {
       const user = req.user!;
 
-      const { data: profile, error } = await supabaseAdmin
-        .from('profiles')
-        .select(`
-          id, email, full_name, username, avatar_url,
-          internal_role, subscription_plan_id, account_type,
-          status, onboarding_completed, subscription_status,
-          subscription_plans!profiles_subscription_plan_id_fkey (slug, name)
-        `)
-        .eq('id', user.id)
-        .single();
+      const result = await sql`
+        SELECT p."id", p."email", p."full_name", p."username", p."avatar_url",
+                p."internal_role", p."subscription_plan_id", p."account_type",
+                p."status", p."onboarding_completed", p."subscription_status",
+                sp."slug" as plan_slug, sp."name" as plan_name
+        FROM "profiles" p
+        LEFT JOIN "subscription_plans" sp ON p."subscription_plan_id" = sp."id"
+        WHERE p."id" = ${user.id}
+        LIMIT 1`;
 
-      if (error || !profile) {
+      const profile = result[0];
+      if (!profile) {
         return res.status(500).json({ error: 'Failed to fetch profile' });
       }
 
-      const planData = (profile as any).subscription_plans;
-      const plan = planData?.slug || profile.account_type || 'free';
-      const planName = planData?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free');
-
+      const plan = profile.plan_slug || profile.account_type || 'free';
+      const planName = profile.plan_name || (profile.account_type === 'pro' ? 'Pro' : 'Free');
       const isInternal = profile.internal_role !== null && profile.internal_role !== undefined;
       const isExternal = !isInternal;
 
@@ -234,12 +237,10 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // POST /api/auth/change-email
   router.post('/change-email', requireAuth, async (req: Request, res: Response) => {
     try {
       const { newEmail } = req.body;
       const user = req.user!;
-      const token = req.accessToken!;
 
       if (!newEmail) {
         return res.status(400).json({ error: 'New email address is required' });
@@ -254,20 +255,13 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'New email address must be different from your current email.' });
       }
 
-      const supabase = createSupabaseClientForUser(token);
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-
-      if (error) {
-        if (error.message?.includes('already') || error.message?.includes('exists')) {
-          return res.status(409).json({ error: 'An account with this email address already exists.' });
-        }
-        return res.status(400).json({ error: error.message || 'Failed to update email' });
+      const existing = await sql`
+        SELECT "id" FROM "profiles" WHERE "email" = ${newEmail.toLowerCase()} AND "id" != ${user.id} LIMIT 1`;
+      if (existing[0]) {
+        return res.status(409).json({ error: 'An account with this email address already exists.' });
       }
 
-      await supabaseAdmin
-        .from('profiles')
-        .update({ email: newEmail.toLowerCase() })
-        .eq('id', user.id);
+      await sql`UPDATE "profiles" SET "email" = ${newEmail.toLowerCase()} WHERE "id" = ${user.id}`;
 
       return res.json({
         message: 'Email address updated successfully.',
@@ -280,22 +274,16 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // POST /api/auth/forgot-password
   router.post('/forgot-password', async (req: Request, res: Response) => {
     try {
       const { email } = req.body;
-
       if (!email) {
         return res.status(400).json({ error: 'Email is required' });
       }
-
       const emailValidation = validateEmail(email);
       if (!emailValidation.valid) {
         return res.status(400).json({ error: emailValidation.error });
       }
-
-      await supabaseAdmin.auth.resetPasswordForEmail(email);
-
       return res.json({
         message: 'If an account exists with this email, a password reset link has been sent.',
       });
@@ -305,42 +293,29 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  // GET /api/auth/google
   router.get('/google', async (_req: Request, res: Response) => {
     return res.status(503).json({
       error: 'Google sign-in is currently unavailable. Please use email and password to sign in.',
     });
   });
 
-  // POST /api/auth/magic-link/signup
   router.post('/magic-link/signup', async (_req: Request, res: Response) => {
     return res.status(503).json({
       error: 'Magic link signup is currently unavailable. Please use email and password to sign up.',
     });
   });
 
-  // POST /api/auth/onboarding
   router.post('/onboarding', requireAuth, async (req: Request, res: Response) => {
     try {
       const { phone_number, ecommerce_experience, preferred_niche } = req.body;
       const user = req.user!;
 
-      if (!phone_number) {
-        return res.status(400).json({ error: 'Phone number is required' });
-      }
-
-      if (!ecommerce_experience) {
-        return res.status(400).json({ error: 'Ecommerce experience is required' });
-      }
-
-      if (!preferred_niche) {
-        return res.status(400).json({ error: 'Preferred niche is required' });
-      }
+      if (!phone_number) return res.status(400).json({ error: 'Phone number is required' });
+      if (!ecommerce_experience) return res.status(400).json({ error: 'Ecommerce experience is required' });
+      if (!preferred_niche) return res.status(400).json({ error: 'Preferred niche is required' });
 
       const phoneValidation = validatePhoneNumber(phone_number);
-      if (!phoneValidation.valid) {
-        return res.status(400).json({ error: phoneValidation.error });
-      }
+      if (!phoneValidation.valid) return res.status(400).json({ error: phoneValidation.error });
 
       const validExperiences = ['none', 'beginner', 'intermediate', 'advanced', 'expert'];
       if (!validExperiences.includes(ecommerce_experience)) {
@@ -354,11 +329,7 @@ export function registerAuthRoutes(app: Express) {
 
       const { error } = await supabaseAdmin
         .from('profiles')
-        .update({
-          phone_number,
-          ecommerce_experience,
-          preferred_niche,
-        })
+        .update({ phone_number, ecommerce_experience, preferred_niche })
         .eq('id', user.id);
 
       if (error) {
@@ -366,25 +337,17 @@ export function registerAuthRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to update profile' });
       }
 
-      return res.json({
-        message: 'Profile setup completed successfully',
-        profile_setup_completed: true,
-      });
+      return res.json({ message: 'Profile setup completed successfully', profile_setup_completed: true });
     } catch (error) {
       console.error('Onboarding error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return res.status(500).json({ error: `Internal server error: ${errorMessage}` });
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 
-  // GET /api/auth/onboarding/status
   router.get('/onboarding/status', optionalAuth, async (req: Request, res: Response) => {
     try {
       const user = req.user;
-
-      if (!user) {
-        return res.json({ onboarding_completed: false });
-      }
+      if (!user) return res.json({ onboarding_completed: false });
 
       const { data: profile } = await supabaseAdmin
         .from('profiles')
@@ -392,30 +355,21 @@ export function registerAuthRoutes(app: Express) {
         .eq('id', user.id)
         .single();
 
-      return res.json({
-        onboarding_completed: profile?.onboarding_completed || false,
-      });
+      return res.json({ onboarding_completed: profile?.onboarding_completed || false });
     } catch (error) {
       console.error('Onboarding status check error:', error);
       return res.json({ onboarding_completed: false });
     }
   });
 
-  // POST /api/auth/otp/request
   router.post('/otp/request', async (_req: Request, res: Response) => {
-    return res.status(503).json({
-      error: 'OTP authentication is currently unavailable. Please use email and password to sign in.',
-    });
+    return res.status(503).json({ error: 'OTP authentication is currently unavailable.' });
   });
 
-  // POST /api/auth/otp/verify
   router.post('/otp/verify', async (_req: Request, res: Response) => {
-    return res.status(503).json({
-      error: 'OTP verification is currently unavailable. Please use email and password to sign in.',
-    });
+    return res.status(503).json({ error: 'OTP verification is currently unavailable.' });
   });
 
-  // POST /api/auth/reauthenticate
   router.post('/reauthenticate', requireAuth, async (req: Request, res: Response) => {
     try {
       const { password } = req.body;
@@ -425,69 +379,45 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'Password is required for reauthentication.' });
       }
 
-      const { error } = await supabaseAdmin.auth.signInWithPassword({
-        email: user.email,
-        password,
-      });
+      const result = await sql`
+        SELECT "password_hash" FROM "profiles" WHERE "id" = ${user.id} LIMIT 1`;
 
-      if (error) {
+      if (!result[0] || !result[0].password_hash) {
         return res.status(401).json({ error: 'Invalid password. Please try again.' });
       }
 
-      return res.json({
-        message: 'Reauthentication successful',
-        authenticated: true,
-      });
+      const valid = await bcrypt.compare(password, result[0].password_hash);
+      if (!valid) {
+        return res.status(401).json({ error: 'Invalid password. Please try again.' });
+      }
+
+      return res.json({ message: 'Reauthentication successful', authenticated: true });
     } catch (error) {
       console.error('Reauthentication error:', error);
       return res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
   });
 
-  // POST /api/auth/resend-verification
   router.post('/resend-verification', async (_req: Request, res: Response) => {
-    return res.json({
-      message: 'If your email needs verification, a new verification link has been sent.',
-    });
+    return res.json({ message: 'If your email needs verification, a new verification link has been sent.' });
   });
 
-  // POST /api/auth/reset-password
-  router.post('/reset-password', async (req: Request, res: Response) => {
+  router.post('/reset-password', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { password, access_token } = req.body;
+      const { password } = req.body;
+      const user = req.user!;
 
-      if (!password) {
-        return res.status(400).json({ error: 'Password is required' });
-      }
+      if (!password) return res.status(400).json({ error: 'Password is required' });
 
       const passwordValidation = validatePassword(password);
       if (!passwordValidation.valid) {
-        return res.status(400).json({
-          error: passwordValidation.errors[0] || 'Invalid password',
-          errors: passwordValidation.errors,
-        });
+        return res.status(400).json({ error: passwordValidation.errors[0], errors: passwordValidation.errors });
       }
 
-      const token = access_token || extractToken(req);
-      if (!token) {
-        return res.status(401).json({ error: 'No active session found. Please click the password reset link from your email again.' });
-      }
+      const hash = await bcrypt.hash(password, 10);
+      await sql`UPDATE "profiles" SET "password_hash" = ${hash} WHERE "id" = ${user.id}`;
 
-      const supabase = createSupabaseClientForUser(token);
-      const { error } = await supabase.auth.updateUser({ password });
-
-      if (error) {
-        if (error.message?.includes('session') || error.message?.includes('not authenticated')) {
-          return res.status(401).json({ error: 'No active session found. Please click the password reset link from your email again.' });
-        }
-        return res.status(400).json({ error: error.message || 'Failed to reset password' });
-      }
-
-      await supabase.auth.signOut();
-
-      return res.json({
-        message: 'Password reset successfully. Please sign in with your new password.',
-      });
+      return res.json({ message: 'Password reset successfully. Please sign in with your new password.' });
     } catch (error) {
       console.error('Reset password error:', error);
       return res.status(500).json({ error: 'Internal server error. Please try again later.' });

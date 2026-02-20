@@ -1,24 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const TOKEN_KEY = 'usdrop_auth_token';
 
 export function getAccessToken(): string | null {
-  const session = JSON.parse(
-    localStorage.getItem(`sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`) || 'null'
-  );
-  return session?.access_token || null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setAccessToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearAccessToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 export async function getSessionToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
+  return getAccessToken();
 }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const token = await getSessionToken();
+  const token = getAccessToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
@@ -31,3 +30,18 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     headers,
   });
 }
+
+export const supabase = {
+  auth: {
+    onAuthStateChange(_callback: any) {
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    },
+    async signOut() {
+      clearAccessToken();
+    },
+    async getSession() {
+      const token = getAccessToken();
+      return { data: { session: token ? { access_token: token } : null } };
+    },
+  },
+};

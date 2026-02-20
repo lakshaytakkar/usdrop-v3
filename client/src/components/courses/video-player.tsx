@@ -1,6 +1,7 @@
 
 
 import { useState, useRef, useEffect } from 'react'
+import { getAccessToken } from '@/lib/supabase'
 import { Play, Pause, Volume2, VolumeX, Maximize, Maximize2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -54,7 +55,7 @@ export function VideoPlayer({
         }
 
         // Otherwise, fetch signed URL from API
-        const token = localStorage.getItem('supabase.auth.token') || ''
+        const token = getAccessToken() || ''
         const response = await fetch(
           `/api/courses/${courseId}/chapters/${chapterId}/video`,
           {

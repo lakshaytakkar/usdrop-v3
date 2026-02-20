@@ -49,6 +49,6 @@ SUPABASE_ANON_KEY = "sb_publishable_UJ0O0d7h1Tb0s2V0EghdRQ_4nx1V2VE"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "dist/index.cjs"]
-build = ["npx", "tsx", "script/build.ts"]
+run = ["node", "./dist/index.cjs"]
+build = ["npm", "run", "build"]
 publicDir = "public"

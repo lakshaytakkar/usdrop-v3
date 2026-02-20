@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { supabase, apiFetch } from '@/lib/supabase'
+import { apiFetch, clearAccessToken, getAccessToken } from '@/lib/supabase'
 
 type UserProfile = {
   id: string
@@ -27,12 +27,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     try {
+      const token = getAccessToken()
+      if (!token) {
+        setUser(null)
+        setLoading(false)
+        return
+      }
       const res = await apiFetch("/api/auth/user")
       if (res.ok) {
         const data = await res.json()
         setUser(data.user || null)
       } else {
         setUser(null)
+        if (res.status === 401) {
+          clearAccessToken()
+        }
       }
     } catch {
       setUser(null)
@@ -43,25 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        fetchUser()
-      } else {
-        setUser(null)
-        setLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
   }, [fetchUser])
 
   const signOut = useCallback(async () => {
     try {
-      await supabase.auth.signOut()
+      await apiFetch('/api/auth/signout', { method: 'POST' })
     } catch (error) {
       console.error('Error signing out:', error)
     }
+    clearAccessToken()
     setUser(null)
     window.location.href = '/login'
   }, [])

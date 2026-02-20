@@ -1,6 +1,6 @@
 
 
-import { supabase, apiFetch } from '@/lib/supabase'
+import { apiFetch, setAccessToken } from '@/lib/supabase'
 import { useState } from "react"
 import { useRouter, useSearchParams } from "@/hooks/use-router"
 import { cn } from "@/lib/utils"
@@ -57,16 +57,23 @@ export function LoginForm({
     setLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (error) {
-        setErrors({ general: error.message || "Failed to sign in" })
-        showError(error.message || "Failed to sign in")
+      const data = await res.json()
+
+      if (!res.ok) {
+        setErrors({ general: data.error || "Failed to sign in" })
+        showError(data.error || "Failed to sign in")
         setLoading(false)
         return
+      }
+
+      if (data.token) {
+        setAccessToken(data.token)
       }
 
       showSuccess("Signed in successfully")
