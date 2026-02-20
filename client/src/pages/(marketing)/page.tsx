@@ -2,8 +2,7 @@ import { Hero } from "./components/Hero"
 import { LogoMarquee } from "./components/LogoMarquee"
 import { ImageCarousel } from "./components/ImageCarousel"
 import { StatsBar } from "./components/StatsBar"
-import { GettingStarted } from "./components/GettingStarted"
-import { BentoFeatures } from "./components/BentoFeatures"
+import { StepsSection } from "./components/StepsSection"
 import { Testimonials } from "./components/Testimonials"
 import { FinalCTA } from "./components/FinalCTA"
 
@@ -32,8 +31,7 @@ export default function MarketingPage() {
         <LogoMarquee />
         <ImageCarousel />
         <StatsBar />
-        <GettingStarted />
-        <BentoFeatures />
+        <StepsSection />
         <Testimonials />
         <FinalCTA />
       </div>

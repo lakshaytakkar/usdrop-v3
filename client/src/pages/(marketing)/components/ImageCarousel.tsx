@@ -1,16 +1,16 @@
 import { useEffect, useRef } from "react"
+import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
+import { DISTANCE, DURATION } from "@/lib/motion"
 
-const images = [
-  { src: "/images/landing/showcase-ad-creative.png", alt: "Ad creative" },
-  { src: "/images/landing/showcase-beauty-products.png", alt: "Beauty products" },
-  { src: "/images/landing/showcase-desk-setup.png", alt: "Desk setup" },
-  { src: "/images/landing/showcase-hero-product.png", alt: "Hero product" },
-  { src: "/images/landing/showcase-model-fashion.png", alt: "Fashion model" },
-  { src: "/images/landing/showcase-products-flatlay.png", alt: "Products flatlay" },
-  { src: "/images/landing/features-product-grid.png", alt: "Product grid" },
-  { src: "/images/landing/features-ai-studio.png", alt: "AI Studio" },
-  { src: "/images/landing/features-product-discovery.png", alt: "Product discovery" },
-  { src: "/images/landing/workflow-studio.png", alt: "Studio workflow" },
+const products = [
+  { src: "/images/landing/product-earbuds.png", alt: "Wireless Earbuds", label: "Wireless Earbuds" },
+  { src: "/images/landing/product-smartwatch.png", alt: "Smart Watch", label: "Smart Watch" },
+  { src: "/images/landing/product-ringlight.png", alt: "Ring Light", label: "Ring Light" },
+  { src: "/images/landing/product-serum.png", alt: "Skincare Serum", label: "Skincare Serum" },
+  { src: "/images/landing/product-phonecase.png", alt: "Phone Case", label: "Phone Case" },
+  { src: "/images/landing/product-projector.png", alt: "Mini Projector", label: "Mini Projector" },
+  { src: "/images/landing/product-waterbottle.png", alt: "Water Bottle", label: "Water Bottle" },
+  { src: "/images/landing/product-sunsetlamp.png", alt: "Sunset Lamp", label: "Sunset Lamp" },
 ]
 
 export function ImageCarousel() {
@@ -22,7 +22,7 @@ export function ImageCarousel() {
 
     let animationId: number
     let scrollPos = 0
-    const speed = 0.5
+    const speed = 0.4
 
     const animate = () => {
       scrollPos += speed
@@ -50,27 +50,45 @@ export function ImageCarousel() {
     }
   }, [])
 
-  const allImages = [...images, ...images]
+  const allProducts = [...products, ...products]
 
   return (
-    <section className="py-8 lg:py-12" data-testid="section-image-carousel">
+    <section className="py-16 lg:py-24" data-testid="section-image-carousel">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-10 lg:mb-14">
+        <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
+          <div className="text-center">
+            <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
+              Trending Now
+            </p>
+            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] font-semibold text-black tracking-[-0.03em] leading-[1.15]">
+              Discover winning products daily.
+            </h2>
+          </div>
+        </MotionFadeIn>
+      </div>
+
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-hidden"
+        className="flex gap-4 sm:gap-5 overflow-hidden px-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {allImages.map((img, i) => (
+        {allProducts.map((product, i) => (
           <div
-            key={`${img.alt}-${i}`}
-            className="flex-shrink-0 w-[280px] h-[180px] sm:w-[320px] sm:h-[200px] lg:w-[380px] lg:h-[240px] rounded-[16px] overflow-hidden"
+            key={`${product.alt}-${i}`}
+            className="flex-shrink-0 w-[200px] sm:w-[220px] lg:w-[240px] rounded-[20px] overflow-hidden relative group"
             data-testid={`img-carousel-${i}`}
           >
-            <img
-              src={img.src}
-              alt={img.alt}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
+            <div className="aspect-[9/16] w-full">
+              <img
+                src={product.src}
+                alt={product.alt}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+              <span className="text-white text-[13px] font-semibold" data-testid={`text-product-${i}`}>{product.label}</span>
+            </div>
           </div>
         ))}
       </div>

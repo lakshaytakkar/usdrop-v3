@@ -25,7 +25,7 @@ export function LogoMarquee() {
                 <img
                   src={brand.logo}
                   alt={brand.name}
-                  className="h-8 sm:h-9 w-auto object-contain"
+                  className="h-[52px] sm:h-[58px] w-auto object-contain"
                 />
               </div>
             ))}
