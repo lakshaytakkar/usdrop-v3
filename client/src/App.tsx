@@ -79,6 +79,23 @@ import ShopifyIntegration from "@/pages/shopify-integration/page";
 import ShopifyStores from "@/pages/shopify-stores/page";
 import ShopifyMarketingPage from "@/pages/shopify/page";
 import WhatIsDropshipping from "@/pages/what-is-dropshipping/page";
+
+import WinningProductsMarketing from "@/pages/(marketing)/winning-products/page";
+import WinningAdsMarketing from "@/pages/(marketing)/winning-ads/page";
+import WinningStoresMarketing from "@/pages/(marketing)/winning-stores/page";
+import RoadmapMarketing from "@/pages/(marketing)/roadmap/page";
+import LiveDashboardMarketing from "@/pages/(marketing)/live-dashboard/page";
+import ProductsTrackingMarketing from "@/pages/(marketing)/products-tracking/page";
+import LiveSessionsMarketing from "@/pages/(marketing)/live-sessions/page";
+import CoursesMarketing from "@/pages/(marketing)/courses/page";
+import BlogMarketing from "@/pages/(marketing)/blog/page";
+import DescriptionGeneratorMarketing from "@/pages/(marketing)/description-generator/page";
+import EmailTemplatesMarketing from "@/pages/(marketing)/email-templates/page";
+import PolicyGeneratorMarketing from "@/pages/(marketing)/policy-generator/page";
+import InvoiceGeneratorMarketing from "@/pages/(marketing)/invoice-generator/page";
+import ProfitCalculatorMarketing from "@/pages/(marketing)/profit-calculator/page";
+import ShippingCalculatorMarketing from "@/pages/(marketing)/shipping-calculator/page";
+import FulfilmentMarketing from "@/pages/(marketing)/fulfilment/page";
 import WhoIsThisFor from "@/pages/who-is-this-for/page";
 import HelpCenter from "@/pages/help-center/page";
 import HelpPage from "@/pages/help/page";
@@ -118,6 +135,24 @@ function Router() {
       {/* Marketing / Landing */}
       <Route path="/" component={() => <MarketingLayout><MarketingPage /></MarketingLayout>} />
       <Route path="/shopify" component={ShopifyMarketingPage} />
+
+      {/* Feature Marketing Pages */}
+      <Route path="/features/winning-products" component={WinningProductsMarketing} />
+      <Route path="/features/winning-ads" component={WinningAdsMarketing} />
+      <Route path="/features/winning-stores" component={WinningStoresMarketing} />
+      <Route path="/features/roadmap" component={RoadmapMarketing} />
+      <Route path="/features/dashboard" component={LiveDashboardMarketing} />
+      <Route path="/features/products-tracking" component={ProductsTrackingMarketing} />
+      <Route path="/features/live-sessions" component={LiveSessionsMarketing} />
+      <Route path="/features/courses" component={CoursesMarketing} />
+      <Route path="/features/blog" component={BlogMarketing} />
+      <Route path="/features/description-generator" component={DescriptionGeneratorMarketing} />
+      <Route path="/features/email-templates" component={EmailTemplatesMarketing} />
+      <Route path="/features/policy-generator" component={PolicyGeneratorMarketing} />
+      <Route path="/features/invoice-generator" component={InvoiceGeneratorMarketing} />
+      <Route path="/features/profit-calculator" component={ProfitCalculatorMarketing} />
+      <Route path="/features/shipping-calculator" component={ShippingCalculatorMarketing} />
+      <Route path="/features/fulfilment" component={FulfilmentMarketing} />
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />

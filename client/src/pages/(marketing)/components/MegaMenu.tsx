@@ -31,26 +31,26 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Winning Products",
-        href: "/winning-products",
+        href: "/features/winning-products",
         icon3d: "/images/menu/icons/winning-products.png",
       },
       {
         title: "Winning Ads",
-        href: "/meta-ads",
+        href: "/features/winning-ads",
         icon3d: "/images/menu/icons/winning-ads.png",
         isNew: true,
       },
       {
         title: "Winning Stores",
-        href: "/competitor-stores",
+        href: "/features/winning-stores",
         icon3d: "/images/menu/icons/winning-stores.png",
       },
     ],
     featured: {
       title: "Live Research Data",
-      description: "All research tools come with real-time data from top stores and ads worldwide.",
+      description: "Real-time data from top stores and ads worldwide.",
       image: "/images/menu/research.png",
-      href: "/winning-products",
+      href: "/features/winning-products",
     },
   },
   {
@@ -58,25 +58,25 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Journey Roadmap",
-        href: "/my-roadmap",
+        href: "/features/roadmap",
         icon3d: "/images/menu/icons/journey-roadmap.png",
       },
       {
         title: "Live Dashboard",
-        href: "/home",
+        href: "/features/dashboard",
         icon3d: "/images/menu/icons/live-dashboard.png",
       },
       {
         title: "Products Tracking",
-        href: "/my-products",
+        href: "/features/products-tracking",
         icon3d: "/images/menu/icons/products-tracking.png",
       },
     ],
     featured: {
       title: "Your Personal Hub",
-      description: "Everything about your dropshipping journey — saved items, progress, and store overview.",
+      description: "Saved items, progress, and store overview.",
       image: "/images/menu/framework.png",
-      href: "/home",
+      href: "/features/dashboard",
     },
   },
   {
@@ -84,26 +84,26 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Live Sessions",
-        href: "/webinars",
+        href: "/features/live-sessions",
         icon3d: "/images/menu/icons/live-sessions.png",
         isNew: true,
       },
       {
-        title: "Full Learning Modules",
-        href: "/mentorship",
+        title: "Full Courses",
+        href: "/features/courses",
         icon3d: "/images/menu/icons/learning-modules.png",
       },
       {
         title: "Blogs",
-        href: "/blogs",
+        href: "/features/blog",
         icon3d: "/images/menu/icons/blogs.png",
       },
     ],
     featured: {
       title: "Learn & Grow",
-      description: "From live sessions to full courses — everything you need to master dropshipping.",
+      description: "Live sessions to full courses — master dropshipping.",
       image: "/images/menu/learning.png",
-      href: "/mentorship",
+      href: "/features/courses",
     },
   },
   {
@@ -111,15 +111,15 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Shopify",
-        href: "/shopify-integration",
+        href: "/shopify",
         icon3d: "/images/menu/icons/shopify.png",
       },
     ],
     featured: {
       title: "Seamless Connections",
-      description: "Connect your store and manage products, orders, and inventory from one place.",
+      description: "Connect your store and manage everything from one place.",
       image: "/images/menu/integrations.png",
-      href: "/shopify-integration",
+      href: "/shopify",
     },
   },
   {
@@ -127,40 +127,40 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Description Generator",
-        href: "/tools/description-generator",
+        href: "/features/description-generator",
         icon3d: "/images/menu/icons/description-generator.png",
       },
       {
         title: "Email Templates",
-        href: "/tools/email-templates",
+        href: "/features/email-templates",
         icon3d: "/images/menu/icons/email-templates.png",
       },
       {
         title: "Policy Generator",
-        href: "/tools/policy-generator",
+        href: "/features/policy-generator",
         icon3d: "/images/menu/icons/policy-generator.png",
       },
       {
         title: "Invoice Generator",
-        href: "/tools/invoice-generator",
+        href: "/features/invoice-generator",
         icon3d: "/images/menu/icons/invoice-generator.png",
       },
       {
         title: "Profit Calculator",
-        href: "/tools/profit-calculator",
+        href: "/features/profit-calculator",
         icon3d: "/images/menu/icons/profit-calculator.png",
       },
       {
         title: "Shipping Calculator",
-        href: "/shipping-calculator",
+        href: "/features/shipping-calculator",
         icon3d: "/images/menu/icons/shipping-calculator.png",
       },
     ],
     featured: {
       title: "All-in-One Toolkit",
-      description: "Save hours with AI-powered tools built for dropshippers.",
+      description: "AI-powered tools built for dropshippers.",
       image: "/images/menu/tools.png",
-      href: "/tools/description-generator",
+      href: "/features/description-generator",
     },
   },
   {
@@ -168,20 +168,20 @@ const menuData: MenuCategory[] = [
     items: [
       {
         title: "Order Fulfilment",
-        href: "/suppliers",
+        href: "/features/fulfilment",
         icon3d: "/images/menu/icons/order-fulfilment.png",
       },
       {
         title: "Fast Delivery",
-        href: "/shipping-calculator",
+        href: "/features/shipping-calculator",
         icon3d: "/images/menu/icons/fast-delivery.png",
       },
     ],
     featured: {
       title: "We Ship For You",
-      description: "From our warehouse to your customer's door — packing, handling, and delivery under 7 days.",
+      description: "Packing, handling, and delivery under 7 days.",
       image: "/images/menu/fulfilment.png",
-      href: "/suppliers",
+      href: "/features/fulfilment",
     },
   },
 ]
