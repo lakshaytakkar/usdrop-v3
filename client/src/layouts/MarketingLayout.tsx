@@ -1,4 +1,5 @@
 import { Header } from "@/pages/(marketing)/components/Header";
+import { Footer } from "@/pages/(marketing)/components/Footer";
 
 export function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
         <Header />
       </div>
       <main className="relative z-[2]">{children}</main>
+      <Footer />
     </div>
   );
 }

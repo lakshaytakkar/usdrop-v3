@@ -7,7 +7,6 @@ import { ProblemSolution } from "./components/ProblemSolution"
 import { Testimonials } from "./components/Testimonials"
 import { StudioShowcase } from "./components/StudioShowcase"
 import { FinalCTA } from "./components/FinalCTA"
-import { Footer } from "./components/Footer"
 
 function GradientSection({ children, gradient }: { children: React.ReactNode; gradient: string }) {
   return (
@@ -49,7 +48,6 @@ export default function MarketingPage() {
       </GradientSection>
 
       <FinalCTA />
-      <Footer />
     </>
   )
 }

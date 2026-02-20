@@ -1,7 +1,51 @@
-
 import { Link } from "wouter"
-import { ChevronDown, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { FormEvent, useState } from "react"
+const footerLinks = {
+  research: {
+    title: "Research",
+    links: [
+      { label: "Winning Products", href: "/features/winning-products" },
+      { label: "Winning Ads", href: "/features/winning-ads" },
+      { label: "Winning Stores", href: "/features/winning-stores" },
+    ],
+  },
+  framework: {
+    title: "Framework",
+    links: [
+      { label: "Journey Roadmap", href: "/features/roadmap" },
+      { label: "Live Dashboard", href: "/features/dashboard" },
+      { label: "Products Tracking", href: "/features/products-tracking" },
+    ],
+  },
+  learning: {
+    title: "Learning",
+    links: [
+      { label: "Live Sessions", href: "/features/live-sessions" },
+      { label: "Courses", href: "/features/courses" },
+      { label: "Blog", href: "/features/blog" },
+    ],
+  },
+  tools: {
+    title: "Tools",
+    links: [
+      { label: "Description Generator", href: "/features/description-generator" },
+      { label: "Profit Calculator", href: "/features/profit-calculator" },
+      { label: "Shipping Calculator", href: "/features/shipping-calculator" },
+      { label: "Policy Generator", href: "/features/policy-generator" },
+      { label: "Invoice Generator", href: "/features/invoice-generator" },
+      { label: "Email Templates", href: "/features/email-templates" },
+    ],
+  },
+  company: {
+    title: "Company",
+    links: [
+      { label: "What is Dropshipping", href: "/what-is-dropshipping" },
+      { label: "Shopify Integration", href: "/shopify" },
+      { label: "Fulfilment", href: "/features/fulfilment" },
+    ],
+  },
+}
 
 export function Footer() {
   const [email, setEmail] = useState("")
@@ -12,182 +56,92 @@ export function Footer() {
   }
 
   return (
-    <footer className="bg-[#F4F2F1]">
-      {/* Top Section */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 mb-16">
-          {/* Left Side - Logo & Email Form */}
-          <div>
-            {/* Logo */}
-            <Link href="/" className="flex items-baseline gap-2 mb-6">
-              <span className="text-2xl font-bold text-black">USDrop</span>
-              <span className="text-2xl font-bold text-black">AI</span>
-            </Link>
+    <footer className="relative z-[2] bg-[#1A1926]">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-16 pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+          <div className="lg:col-span-4">
+            <div className="mb-6">
+              <Link href="/" className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold tracking-tight text-white">USDrop</span>
+                <span className="text-2xl font-bold text-blue-400">AI</span>
+              </Link>
+            </div>
 
-            {/* Tagline */}
-            <h3 className="text-lg font-semibold text-black mb-2">
-              Stay connected with USDrop AI
-            </h3>
-            <p className="text-sm text-[#555555] mb-6 leading-relaxed">
-              Get smart updates & tips—delivered fresh to your inbox.
+            <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-xs">
+              The all-in-one AI-powered platform for dropshipping. Research, build, and scale your store — all from one place.
             </p>
 
-            {/* Email Subscription Form */}
-            <form onSubmit={handleEmailSubmit} className="flex">
-              <div className="flex items-center bg-white rounded-full border border-[#E5E5E5] overflow-hidden flex-1">
+            <form onSubmit={handleEmailSubmit} className="max-w-sm">
+              <p className="text-sm font-medium text-white mb-3">Stay in the loop</p>
+              <div className="flex">
                 <input
                   type="email"
-                  placeholder="Enter email"
+                  placeholder="Your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-6 py-3 text-sm placeholder-[#999999] focus:outline-none bg-white"
+                  className="flex-1 px-4 py-2.5 text-sm bg-white/10 border border-white/10 rounded-l-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
                   required
                   data-testid="input-email-subscribe"
                 />
                 <button
                   type="submit"
-                  className="bg-black text-white px-6 py-3 font-medium text-sm flex items-center gap-2 hover:bg-black/90 transition-colors duration-200"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-r-lg text-sm font-medium flex items-center gap-1.5 transition-colors"
                   data-testid="button-subscribe"
                 >
                   Subscribe
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="size-3.5" />
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Right Side - Link Columns */}
-          <div className="grid grid-cols-3 gap-8">
-            {/* Pages Column 1 */}
-            <div>
-              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Pages
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/#how-it-works"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-how-it-works"
-                  >
-                    How It Works
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#features"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-features"
-                  >
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#why-choose-us"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-why-choose-us"
-                  >
-                    Why Choose Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#testimonials"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-testimonials"
-                  >
-                    Testimonials
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Pages Column 2 */}
-            <div>
-              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Pages
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/contact"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-contact-us"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/blogs"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-blogs"
-                  >
-                    Blogs
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Social Column */}
-            <div>
-              <h4 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
-                Social
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="https://instagram.com"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-instagram"
-                  >
-                    Instagram
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://linkedin.com"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-linkedin"
-                  >
-                    LinkedIn
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://twitter.com"
-                    className="text-sm text-[#555555] hover:text-black transition-colors duration-200"
-                    data-testid="link-twitter"
-                  >
-                    Twitter
-                  </Link>
-                </li>
-              </ul>
+          <div className="lg:col-span-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8">
+              {Object.values(footerLinks).map((section) => (
+                <div key={section.title}>
+                  <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-4">
+                    {section.title}
+                  </h4>
+                  <ul className="space-y-2.5">
+                    {section.links.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-[13px] text-gray-400 hover:text-white transition-colors"
+                          data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-[#E0E0E0]">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Left - Copyright & Manage Cookies */}
-          <p className="text-xs text-[#555555]">
-            USDrop © 2024-2026{" "}
-            <Link
-              href="/cookies"
-              className="text-[#555555] hover:text-black transition-colors duration-200 font-medium"
-              data-testid="link-manage-cookies"
-            >
-              Manage Cookies
-            </Link>
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-gray-500">
+            &copy; {new Date().getFullYear()} USDrop AI. All rights reserved.
           </p>
-
-          {/* Right - Language Selector */}
-          <div className="flex items-center gap-2 text-xs text-[#555555]">
-            <span>English</span>
-            <ChevronDown className="w-4 h-4" />
+          <div className="flex items-center gap-5">
+            <Link
+              href="/privacy"
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              data-testid="link-privacy-policy"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              data-testid="link-terms"
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>

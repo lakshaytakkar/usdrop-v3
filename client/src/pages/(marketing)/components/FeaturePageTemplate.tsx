@@ -1,6 +1,7 @@
 import { Link } from "wouter"
 import { ArrowRight } from "lucide-react"
 import { Header } from "./Header"
+import { Footer } from "./Footer"
 
 interface FeatureStep {
   title: string
@@ -198,6 +199,7 @@ export function FeaturePageTemplate({
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   )
 }
