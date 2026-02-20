@@ -1,6 +1,6 @@
 import { Link } from "wouter"
 import { Header } from "@/pages/(marketing)/components/Header"
-import { Store, ArrowRight, Zap, Package, BarChart3, RefreshCw } from "lucide-react"
+import { ArrowRight, Zap } from "lucide-react"
 
 function ShopifyIcon({ className }: { className?: string }) {
   return (
@@ -15,35 +15,27 @@ function ShopifyIcon({ className }: { className?: string }) {
 const steps = [
   {
     number: "01",
-    title: "Connect Your Store",
-    description: "Link your Shopify store to USDrop in one click. No coding needed — just authorize and you're ready to go.",
+    title: "One-Click Connect",
+    description: "Authorize your Shopify store and you're in.",
     image: "/images/shopify/step-connect.png",
-    icon: Store,
-    color: "bg-[#D4F0E0]",
   },
   {
     number: "02",
-    title: "Sync Products Instantly",
-    description: "Import products directly to your Shopify store with titles, images, and pricing — all synced in real time.",
+    title: "Product Sync",
+    description: "Products, images, and prices auto-import.",
     image: "/images/shopify/step-sync.png",
-    icon: RefreshCw,
-    color: "bg-[#E8E0FF]",
   },
   {
     number: "03",
-    title: "Auto-Fulfill Orders",
-    description: "When a customer orders, USDrop handles fulfillment automatically. Tracking numbers sync back to Shopify.",
+    title: "Auto Fulfillment",
+    description: "Orders ship and tracking updates automatically.",
     image: "/images/shopify/step-fulfill.png",
-    icon: Package,
-    color: "bg-[#D4EDFF]",
   },
   {
     number: "04",
-    title: "Track & Grow",
-    description: "Monitor sales, margins, and performance in one dashboard. Make data-driven decisions to scale your store.",
+    title: "Sales Dashboard",
+    description: "Track revenue and margins in one place.",
     image: "/images/shopify/step-track.png",
-    icon: BarChart3,
-    color: "bg-[#F8E2FE]",
   },
 ]
 
@@ -119,15 +111,15 @@ export default function ShopifyPage() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="flex justify-center">
           <div
-            className="flex gap-5 overflow-x-auto px-4 md:px-[calc((100%-72rem)/2+1rem)] pb-4 snap-x snap-mandatory scrollbar-hide"
+            className="flex gap-5 overflow-x-auto pb-4 px-4 snap-x snap-mandatory max-w-fit"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {steps.map((step) => (
               <div
                 key={step.number}
-                className="flex-shrink-0 w-[280px] md:w-[320px] snap-start"
+                className="flex-shrink-0 w-[260px] md:w-[290px] snap-center text-center"
                 data-testid={`card-step-${step.number}`}
               >
                 <div className="rounded-[20px] overflow-hidden border-2 border-white/80 shadow-sm hover-elevate transition-all duration-200 aspect-[3/4]">
@@ -138,10 +130,8 @@ export default function ShopifyPage() {
                     loading="lazy"
                   />
                 </div>
-                <div className="mt-4 px-1">
-                  <h3 className="text-lg font-bold text-black">{step.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed mt-1">{step.description}</p>
-                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-black mt-5">{step.title}</h3>
+                <p className="text-gray-400 text-sm mt-1">{step.description}</p>
               </div>
             ))}
           </div>
