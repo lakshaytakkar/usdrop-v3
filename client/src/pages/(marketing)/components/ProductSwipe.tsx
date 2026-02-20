@@ -179,9 +179,7 @@ export function ProductSwipe() {
                     <img 
                       src={product.image} 
                       alt={product.name}
-                     
-                     
-                      quality={65}
+                      loading="lazy"
                       className="object-cover"
                     />
                   </div>

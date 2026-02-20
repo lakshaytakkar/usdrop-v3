@@ -70,9 +70,8 @@ export function BrowserShowcase() {
             <img
               src="/images/landing/hero-browser-content.png"
               alt="USDrop AI Platform Dashboard"
-             
+              loading="lazy"
               className="object-cover"
-             
             />
           </div>
         </div>
