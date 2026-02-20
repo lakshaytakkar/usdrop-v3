@@ -8,7 +8,7 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 - Keep images compressed and loading fast.
 
 ## System Architecture
-The platform uses a Vite + Express + Wouter stack with React 19, TypeScript, and Tailwind CSS 4. Neon PostgreSQL (via Replit's built-in database) is used for the backend database, with local JWT authentication (bcrypt + jsonwebtoken). A Supabase-compatible query builder wraps the `postgres` library to provide the same `.from().select().eq()` API. UI components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion. State management is handled by TanStack React Query.
+The platform uses a Vite + Express + Wouter stack with React 19, TypeScript, and Tailwind CSS 4. **Dual database architecture**: Supabase (project `wecbybtxmkdkvqqahyuu`) is used for product data (835+ products, categories, product_metadata, product_source, product_research, suppliers, competitor_stores) via `@supabase/supabase-js`. Neon PostgreSQL (via Replit's built-in database) handles auth/user data (profiles, onboarding, courses, picklist, roadmap_progress, shopify_stores, orders). Local JWT authentication uses bcrypt + jsonwebtoken. A Supabase-compatible query builder (`server/lib/supabase.ts`) wraps the `postgres` library for local Neon queries. The real Supabase client (`server/lib/supabase-remote.ts`) connects to the remote Supabase project for product data. UI components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion. State management is handled by TanStack React Query.
 
 ### Project Structure
 ```
