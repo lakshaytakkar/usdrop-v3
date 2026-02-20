@@ -1,5 +1,6 @@
 import { type Express, Request, Response } from 'express';
 import { supabaseAdmin } from '../lib/supabase';
+import { supabaseRemote } from '../lib/supabase-remote';
 import { requireAuth, optionalAuth } from '../lib/auth';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -16,7 +17,7 @@ export function registerPublicRoutes(app: Express) {
       const search = req.query.search as string | undefined;
       const includeSubcategories = req.query.include_subcategories === 'true';
 
-      let query = supabaseAdmin.from('categories').select('*');
+      let query = supabaseRemote.from('categories').select('*');
 
       if (parentCategoryId === 'null' || parentCategoryId === '') {
         query = query.is('parent_category_id', null);
@@ -61,7 +62,7 @@ export function registerPublicRoutes(app: Express) {
       if (includeSubcategories) {
         const parentIds = categories.map((c: any) => c.id);
         if (parentIds.length > 0) {
-          const { data: subcategories } = await supabaseAdmin
+          const { data: subcategories } = await supabaseRemote
             .from('categories')
             .select('*')
             .in('parent_category_id', parentIds)
@@ -97,7 +98,7 @@ export function registerPublicRoutes(app: Express) {
         .map((c: any) => c.parent_category_id!)));
 
       if (parentIds.length > 0) {
-        const { data: parents } = await supabaseAdmin
+        const { data: parents } = await supabaseRemote
           .from('categories')
           .select('id, name, slug')
           .in('id', parentIds);
@@ -127,7 +128,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('categories')
         .select('*')
         .eq('id', id)
@@ -139,7 +140,7 @@ export function registerPublicRoutes(app: Express) {
 
       let parentCategory = null;
       if (data.parent_category_id) {
-        const { data: parentResult } = await supabaseAdmin
+        const { data: parentResult } = await supabaseRemote
           .from('categories')
           .select('id, name, slug')
           .eq('id', data.parent_category_id)
@@ -154,7 +155,7 @@ export function registerPublicRoutes(app: Express) {
         }
       }
 
-      const { data: subcategories } = await supabaseAdmin
+      const { data: subcategories } = await supabaseRemote
         .from('categories')
         .select('*')
         .eq('parent_category_id', id)
@@ -232,7 +233,7 @@ export function registerPublicRoutes(app: Express) {
         const imageUrl = `/categories/${slug}.png`;
 
         try {
-          const { data: existing } = await supabaseAdmin
+          const { data: existing } = await supabaseRemote
             .from('categories')
             .select('id, name, slug')
             .eq('slug', slug)
@@ -243,7 +244,7 @@ export function registerPublicRoutes(app: Express) {
             continue;
           }
 
-          const { data, error } = await supabaseAdmin
+          const { data, error } = await supabaseRemote
             .from('categories')
             .update({ image: imageUrl })
             .eq('id', existing.id)
@@ -2414,7 +2415,7 @@ export function registerPublicRoutes(app: Express) {
         selectParts.push('product_source(*)');
       }
 
-      let query = supabaseAdmin
+      let query = supabaseRemote
         .from('products')
         .select(selectParts.join(', '), { count: 'exact' });
 
@@ -2516,7 +2517,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid product ID', details: 'Product ID is required and must be a valid UUID' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('products')
         .select('*, categories(*), suppliers(*), product_metadata(*), product_source(*)')
         .eq('id', id)
@@ -2572,7 +2573,7 @@ export function registerPublicRoutes(app: Express) {
       if (Object.keys(updateFields).length > 0) {
         updateFields.updated_at = new Date().toISOString();
 
-        const { data: updateResult, error: updateError } = await supabaseAdmin
+        const { data: updateResult, error: updateError } = await supabaseRemote
           .from('products')
           .update(updateFields)
           .eq('id', id)
@@ -2594,7 +2595,7 @@ export function registerPublicRoutes(app: Express) {
 
           if (Object.keys(metaUpdate).length > 1) {
             metaUpdate.updated_at = new Date().toISOString();
-            await supabaseAdmin.from('product_metadata').upsert(metaUpdate, { onConflict: 'product_id' });
+            await supabaseRemote.from('product_metadata').upsert(metaUpdate, { onConflict: 'product_id' });
           }
         } catch (metaError) {
           console.error('Error updating product metadata:', metaError);
@@ -2612,14 +2613,14 @@ export function registerPublicRoutes(app: Express) {
 
           if (Object.keys(srcUpdate).length > 1) {
             srcUpdate.updated_at = new Date().toISOString();
-            await supabaseAdmin.from('product_source').upsert(srcUpdate, { onConflict: 'product_id' });
+            await supabaseRemote.from('product_source').upsert(srcUpdate, { onConflict: 'product_id' });
           }
         } catch (sourceError) {
           console.error('Error updating product source:', sourceError);
         }
       }
 
-      const { data: completeResult, error: fetchError } = await supabaseAdmin
+      const { data: completeResult, error: fetchError } = await supabaseRemote
         .from('products')
         .select('*, categories(*), suppliers(*), product_metadata(*), product_source(*)')
         .eq('id', id)
@@ -2647,9 +2648,9 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid product ID', details: 'Product ID is required and must be a valid UUID' });
       }
 
-      await supabaseAdmin.from('product_metadata').delete().eq('product_id', id);
-      await supabaseAdmin.from('product_source').delete().eq('product_id', id);
-      await supabaseAdmin.from('products').delete().eq('id', id);
+      await supabaseRemote.from('product_metadata').delete().eq('product_id', id);
+      await supabaseRemote.from('product_source').delete().eq('product_id', id);
+      await supabaseRemote.from('products').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {
@@ -2668,7 +2669,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid product ID' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('product_research')
         .select('*')
         .eq('product_id', id)
@@ -2699,7 +2700,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid product ID' });
       }
 
-      const { data: product, error: productError } = await supabaseAdmin
+      const { data: product, error: productError } = await supabaseRemote
         .from('products')
         .select(`id, title, description, buy_price, sell_price, category:categories(name, slug)`)
         .eq('id', id)
@@ -2735,7 +2736,7 @@ export function registerPublicRoutes(app: Express) {
           const slug = categorySuggestion.slug?.toLowerCase().trim();
           const name = categorySuggestion.name?.trim();
 
-          let categoryQuery = supabaseAdmin.from('categories').select('id, slug, name');
+          let categoryQuery = supabaseRemote.from('categories').select('id, slug, name');
 
           if (slug) {
             categoryQuery = categoryQuery.ilike('slug', slug);
@@ -2746,7 +2747,7 @@ export function registerPublicRoutes(app: Express) {
           const { data: matchedCategory, error: categoryError } = await categoryQuery.limit(1).maybeSingle();
 
           if (!categoryError && matchedCategory) {
-            const { error: updateError } = await supabaseAdmin
+            const { error: updateError } = await supabaseRemote
               .from('products')
               .update({ category_id: matchedCategory.id })
               .eq('id', id);
@@ -2762,7 +2763,7 @@ export function registerPublicRoutes(app: Express) {
         }
       }
 
-      const { data: savedResearch, error: saveError } = await supabaseAdmin
+      const { data: savedResearch, error: saveError } = await supabaseRemote
         .from('product_research')
         .upsert({
           product_id: id,
