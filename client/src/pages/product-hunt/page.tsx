@@ -34,92 +34,31 @@ type ProductCardData = {
 type SortOption = "newest" | "price-low" | "price-high" | "profit" | "rating"
 
 function FilterSidebar({
-  categories,
-  selectedCategory,
-  setSelectedCategory,
   sortBy,
   setSortBy,
   priceRange,
   setPriceRange,
   onReset,
 }: {
-  categories: Category[]
-  selectedCategory: string
-  setSelectedCategory: (cat: string) => void
   sortBy: SortOption
   setSortBy: (sort: SortOption) => void
   priceRange: [number, number]
   setPriceRange: (range: [number, number]) => void
   onReset: () => void
 }) {
-  const [categoryOpen, setCategoryOpen] = useState(true)
   const [sortOpen, setSortOpen] = useState(true)
   const [priceOpen, setPriceOpen] = useState(false)
 
-  const parentCategories = categories.filter(cat => !cat.parent_category_id)
-
   return (
-    <aside className="w-[240px] shrink-0 border-r border-gray-200 bg-white overflow-y-auto hidden lg:block">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <Filter className="h-4 w-4" />
-            Filters
-          </div>
+    <aside className="w-[220px] shrink-0 hidden lg:block">
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 sticky top-0">
+        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+          <Filter className="h-4 w-4" />
+          Filters
         </div>
 
         <div className="space-y-4">
           <div>
-            <button
-              onClick={() => setCategoryOpen(!categoryOpen)}
-              className="flex items-center justify-between w-full text-sm font-medium text-gray-800 py-1.5 cursor-pointer"
-            >
-              <span>Category</span>
-              {categoryOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
-            </button>
-            {categoryOpen && (
-              <div className="mt-2 space-y-1 max-h-[280px] overflow-y-auto">
-                <button
-                  onClick={() => setSelectedCategory("all")}
-                  className={cn(
-                    "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
-                    selectedCategory === "all"
-                      ? "bg-blue-50 text-blue-600 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  )}
-                >
-                  All Categories
-                </button>
-                {parentCategories.map(category => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.slug)}
-                    className={cn(
-                      "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
-                      selectedCategory === category.slug
-                        ? "bg-blue-50 text-blue-600 font-medium"
-                        : "text-gray-600 hover:bg-gray-50"
-                    )}
-                  >
-                    {(category.thumbnail || category.image) && (
-                      <div className="relative w-6 h-6 rounded overflow-hidden flex-shrink-0">
-                        <img
-                          src={category.thumbnail || category.image || '/categories/other-thumbnail.png'}
-                          alt={category.name}
-                         
-                          className="object-cover"
-                         
-                        />
-                      </div>
-                    )}
-                    <span className="truncate capitalize">{category.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-gray-100 pt-3">
             <button
               onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center justify-between w-full text-sm font-medium text-gray-800 py-1.5 cursor-pointer"
@@ -237,6 +176,8 @@ export default function ProductHuntPage() {
   const { isFree } = useOnboarding()
 
   categoriesRef.current = categories
+
+  const parentCategories = categories.filter(cat => !cat.parent_category_id)
 
   useEffect(() => {
     const fetchSavedProducts = async () => {
@@ -400,197 +341,198 @@ export default function ProductHuntPage() {
 
   return (
     <>
-      <div className="flex flex-1 h-[calc(100vh-110px)]">
-        <FilterSidebar
-          categories={categories}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          priceRange={priceRange}
-          setPriceRange={setPriceRange}
-          onReset={handleResetFilters}
-        />
+      <div
+        className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #e8f4fd 0%, #dbeef9 20%, #c8e6f5 40%, #b8ddf0 60%, #d4ecf7 80%, #eaf5fc 100%)',
+        }}
+      >
+        <div className="flex flex-1 gap-4 p-4 md:p-5 overflow-hidden">
+          <FilterSidebar
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            onReset={handleResetFilters}
+          />
 
-        <div
-          ref={containerRef}
-          className="flex-1 flex flex-col gap-4 p-4 md:p-6 overflow-y-auto"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-gray-900">Product Hunt</h1>
-              {selectedCategory !== "all" && (
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium capitalize">
-                  {selectedCategory}
-                </span>
-              )}
+          <div
+            ref={containerRef}
+            className="flex-1 flex flex-col gap-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 md:p-5 overflow-y-auto"
+          >
+            <div className="flex items-center justify-between">
+              <h1 className="text-base font-bold text-gray-900" data-testid="text-page-title">Product Hunt</h1>
+              <button
+                data-testid="button-mobile-filters"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+              </button>
             </div>
-            <button
-              onClick={() => setShowMobileFilters(!showMobileFilters)}
-              className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-            </button>
-          </div>
 
-          {showMobileFilters && (
-            <div className="lg:hidden bg-white rounded-lg border border-gray-200 p-4 mb-2">
-              <div className="space-y-3">
-                <div>
-                  <span className="text-sm font-medium text-gray-700 block mb-2">Category</span>
+            <div className="flex flex-wrap items-center gap-2" data-testid="category-pills">
+              <button
+                data-testid="button-category-all"
+                onClick={() => setSelectedCategory("all")}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border",
+                  selectedCategory === "all"
+                    ? "bg-blue-500 text-white border-blue-500 shadow-sm"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"
+                )}
+              >
+                All Categories
+              </button>
+              {parentCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  data-testid={`button-category-${cat.slug}`}
+                  onClick={() => setSelectedCategory(cat.slug)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border",
+                    selectedCategory === cat.slug
+                      ? "bg-blue-500 text-white border-blue-500 shadow-sm"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"
+                  )}
+                >
+                  {(cat.thumbnail || cat.image) && (
+                    <img
+                      src={cat.thumbnail || cat.image || ''}
+                      alt={cat.name}
+                      className="w-4 h-4 rounded-sm object-cover"
+                    />
+                  )}
+                  <span className="capitalize">{cat.name}</span>
+                </button>
+              ))}
+            </div>
+
+            {showMobileFilters && (
+              <div className="lg:hidden bg-gray-50 rounded-lg border border-gray-200 p-4">
+                <div className="space-y-3">
+                  <span className="text-sm font-medium text-gray-700 block mb-2">Sort & Filter</span>
                   <div className="flex flex-wrap gap-1.5">
-                    <button
-                      onClick={() => setSelectedCategory("all")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer",
-                        selectedCategory === "all"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                      )}
-                    >
-                      All
-                    </button>
-                    {categories.filter(c => !c.parent_category_id).map(cat => (
+                    {[
+                      { value: "newest" as SortOption, label: "Newest" },
+                      { value: "price-low" as SortOption, label: "Price: Low" },
+                      { value: "price-high" as SortOption, label: "Price: High" },
+                      { value: "profit" as SortOption, label: "Profit" },
+                      { value: "rating" as SortOption, label: "Rating" },
+                    ].map(option => (
                       <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.slug)}
+                        key={option.value}
+                        onClick={() => setSortBy(option.value)}
                         className={cn(
-                          "px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer capitalize",
-                          selectedCategory === cat.slug
+                          "px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer",
+                          sortBy === option.value
                             ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
                         )}
                       >
-                        {cat.name}
+                        {option.label}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {error && (
-            <SectionError
-              className="max-w-2xl mx-auto"
-              description={error}
-              onRetry={() => {
-                setError(null)
-                setPage(1)
-                setProducts([])
-                setIsLoading(true)
-                setIsLoadingMore(false)
-                setHasMore(true)
-              }}
-            />
-          )}
-          
-          <div className="relative flex-1">
-            {isLoading && products.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <Card key={index} className="overflow-hidden border-border/50 p-0">
-                    <Skeleton className="aspect-square w-full" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <div className="flex items-center justify-between">
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-16" />
-                      </div>
-                      <Skeleton className="h-16 w-full" />
-                      <div className="flex items-center gap-2">
-                        <Skeleton className="h-4 w-12" />
-                        <Skeleton className="h-4 w-16" />
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <>
-                {productCardData.length > 0 ? (
-                  <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                    {productCardData.map((product, index) => {
-                      const { isLocked } = getTeaserLockState(index, isFree, { 
-                        freeVisibleCount: 6,
-                        strategy: "first-n-items"
-                      })
-                      
-                      return (
-                        <div key={product.id}>
-                          <ProductCard 
-                            product={product} 
-                            isLocked={isLocked}
-                            onLockedClick={() => setIsUpsellOpen(true)}
-                            isSaved={savedProductIds.has(String(product.id))}
-                          />
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="No products found"
-                    description="Try adjusting your filters or category selection."
-                    action={{
-                      label: "Reset filters",
-                      onClick: handleResetFilters,
-                    }}
-                  />
-                )}
-              </>
             )}
-          </div>
 
-          <div ref={sentinelRef} className="w-full py-2" />
-
-          {isLoadingMore && (
-            <div className="flex flex-col items-center gap-3 py-6">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-                <span className="text-sm font-medium">Loading more products...</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <Card key={index} className="overflow-hidden border-border/50 p-0 animate-pulse">
-                    <Skeleton className="aspect-square w-full" />
-                    <div className="p-4 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-20" />
+            {error && (
+              <SectionError
+                className="max-w-2xl mx-auto"
+                description={error}
+                onRetry={() => {
+                  setError(null)
+                  setPage(1)
+                  setProducts([])
+                  setIsLoading(true)
+                  setIsLoadingMore(false)
+                  setHasMore(true)
+                }}
+              />
+            )}
+            
+            <div className="relative flex-1">
+              {isLoading && products.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                  {Array.from({ length: 12 }).map((_, index) => (
+                    <Card key={index} className="overflow-hidden border-border/50 p-0">
+                      <Skeleton className="aspect-square w-full" />
+                      <div className="p-4 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <div className="flex items-center justify-between">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                        <Skeleton className="h-16 w-full" />
+                        <div className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-12" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {productCardData.length > 0 ? (
+                    <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                      {productCardData.map((product, index) => {
+                        const { isLocked } = getTeaserLockState(index, isFree, { 
+                          freeVisibleCount: 6,
+                          strategy: "first-n-items"
+                        })
+                        
+                        return (
+                          <div key={product.id}>
+                            <ProductCard 
+                              product={product} 
+                              isLocked={isLocked}
+                              onLockedClick={() => setIsUpsellOpen(true)}
+                              isSaved={savedProductIds.has(String(product.id))}
+                            />
+                          </div>
+                        )
+                      })}
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  ) : (
+                    <EmptyState
+                      title="No products found"
+                      description="Try adjusting your filters or category selection."
+                      action={{
+                        label: "Reset filters",
+                        onClick: handleResetFilters,
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </div>
-          )}
 
-          {isFree && hasMore && !isLoading && productCardData.length > 0 && (
-            <div className="flex flex-col items-center gap-3 py-8">
-              <div className="text-center max-w-sm">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Upgrade to Pro to browse unlimited products
+            <div ref={sentinelRef} className="w-full py-2" />
+
+            {isLoadingMore && (
+              <div className="flex flex-col items-center gap-3 py-6">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  <span className="text-sm font-medium">Loading more products...</span>
+                </div>
+              </div>
+            )}
+
+            {!hasMore && productCardData.length > 0 && (
+              <div className="flex flex-col items-center py-6">
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  You&apos;ve seen all the products
                 </p>
-                <button
-                  onClick={() => setIsUpsellOpen(true)}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium hover:from-blue-700 hover:to-blue-600 transition-all shadow-md hover:shadow-lg cursor-pointer"
-                >
-                  Unlock All Products
-                </button>
               </div>
-            </div>
-          )}
+            )}
 
-          {!hasMore && productCardData.length > 0 && (
-            <div className="flex flex-col items-center py-8">
-              <div className="w-16 h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
-              <p className="text-sm text-muted-foreground">
-                You&apos;ve seen all the products
-              </p>
-            </div>
-          )}
-
-          <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
+            <UpsellDialog isOpen={isUpsellOpen} onClose={() => setIsUpsellOpen(false)} />
+          </div>
         </div>
       </div>
     </>
