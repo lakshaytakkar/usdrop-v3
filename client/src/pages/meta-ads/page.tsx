@@ -134,8 +134,8 @@ function FilterSidebar({
   onReset: () => void
 }) {
   return (
-    <aside className="w-[220px] shrink-0 hidden lg:block">
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-[180px]">
+    <aside className="w-[220px] shrink-0 hidden lg:block border-r border-gray-200/60 bg-white/50 backdrop-blur-sm overflow-y-auto">
+      <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 ds-label">
             <Filter className="h-4 w-4" />
@@ -349,217 +349,235 @@ export default function MetaAdsPage() {
   return (
     <>
       <div className="flex flex-1 flex-col gap-0 relative">
-        <div className="flex gap-5 px-4 md:px-6 pt-2 pb-4">
+        <div className="flex flex-1 min-h-0">
           <FilterSidebar
             filters={filters}
             setFilter={setFilter}
             onReset={resetFilters}
           />
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search advertisers, categories, links..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 text-sm bg-white/70 backdrop-blur-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                  data-testid="input-search-ads"
-                />
-              </div>
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/60 px-5 py-3 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search advertisers, categories, links..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-10 pl-10 pr-4 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                    data-testid="input-search-ads"
+                  />
+                </div>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[170px] h-10 bg-white/70 backdrop-blur-sm text-sm" data-testid="select-sort-ads">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-gray-400">↕</span>
-                    <SelectValue placeholder="Sort by" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="publication">Publication date</SelectItem>
-                  <SelectItem value="impressions">Impressions</SelectItem>
-                  <SelectItem value="engagement">Engagement</SelectItem>
-                  <SelectItem value="active-ads">Active ads count</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex rounded-lg border border-gray-200 bg-white/70 backdrop-blur-sm overflow-hidden">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={cn(
-                    "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer",
-                    viewMode === "grid"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-50"
-                  )}
-                  data-testid="button-view-grid"
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={cn(
-                    "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer border-l border-gray-200",
-                    viewMode === "list"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-400 hover:bg-gray-50"
-                  )}
-                  data-testid="button-view-list"
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 mb-4 flex-wrap">
-              {quickFilterOptions.map((qf) => (
-                <button
-                  key={qf.label}
-                  onClick={() =>
-                    setActiveQuickFilter(
-                      activeQuickFilter === qf.label ? null : qf.label
-                    )
-                  }
-                  className={cn(
-                    "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
-                    activeQuickFilter === qf.label
-                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                      : "bg-white/70 text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
-                  )}
-                  data-testid={`button-quickfilter-${qf.label.replace(/\s/g, "-").toLowerCase()}`}
-                >
-                  {(() => { const QfIcon = quickFilterIconMap[qf.icon]; return QfIcon ? <QfIcon className="h-3.5 w-3.5" /> : null })()}
-                  <span>{qf.label}</span>
-                </button>
-              ))}
-
-              <div className="ml-auto flex items-center gap-2">
-                <Select value={showPerPage} onValueChange={setShowPerPage}>
-                  <SelectTrigger className="h-8 w-[180px] text-[12px] bg-white/70 backdrop-blur-sm border-gray-200">
-                    <SelectValue placeholder="Show" />
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[170px] h-10 bg-white text-sm" data-testid="select-sort-ads">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-gray-400">↕</span>
+                      <SelectValue placeholder="Sort by" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="one">Show one ad per page</SelectItem>
-                    <SelectItem value="multiple">Show all ads per page</SelectItem>
+                    <SelectItem value="publication">Publication date</SelectItem>
+                    <SelectItem value="impressions">Impressions</SelectItem>
+                    <SelectItem value="engagement">Engagement</SelectItem>
+                    <SelectItem value="active-ads">Active ads count</SelectItem>
                   </SelectContent>
                 </Select>
+
+                <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={cn(
+                      "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer",
+                      viewMode === "grid"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-400 hover:bg-gray-50"
+                    )}
+                    data-testid="button-view-grid"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={cn(
+                      "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer border-l border-gray-200",
+                      viewMode === "list"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-400 hover:bg-gray-50"
+                    )}
+                    data-testid="button-view-list"
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {quickFilterOptions.map((qf) => (
+                  <button
+                    key={qf.label}
+                    onClick={() =>
+                      setActiveQuickFilter(
+                        activeQuickFilter === qf.label ? null : qf.label
+                      )
+                    }
+                    className={cn(
+                      "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
+                      activeQuickFilter === qf.label
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                    )}
+                    data-testid={`button-quickfilter-${qf.label.replace(/\s/g, "-").toLowerCase()}`}
+                  >
+                    {(() => { const QfIcon = quickFilterIconMap[qf.icon]; return QfIcon ? <QfIcon className="h-3.5 w-3.5" /> : null })()}
+                    <span>{qf.label}</span>
+                  </button>
+                ))}
+
+                <div className="ml-auto flex items-center gap-2">
+                  <Select value={showPerPage} onValueChange={setShowPerPage}>
+                    <SelectTrigger className="h-8 w-[180px] text-[12px] bg-white border-gray-200">
+                      <SelectValue placeholder="Show" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="one">Show one ad per page</SelectItem>
+                      <SelectItem value="multiple">Show all ads per page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-medium text-gray-600">
+                    Filtering Conditions
+                  </span>
+                  {Object.entries(filters).filter(([_, v]) => v !== "all").map(([key, value]) => (
+                    <span
+                      key={key}
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md border border-gray-200 bg-white text-[12px] text-gray-600"
+                    >
+                      {key === "mediaType" ? "Media" : key === "impressionLevel" ? "Impression" : key.charAt(0).toUpperCase() + key.slice(1)}: {(value as string).charAt(0).toUpperCase() + (value as string).slice(1)}
+                      <button
+                        onClick={() => setFilter(key as keyof FilterState, "all")}
+                        className="text-gray-400 hover:text-gray-600 ml-0.5 cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    onClick={resetFilters}
+                    className="text-[12px] text-blue-600 hover:text-blue-700 font-medium cursor-pointer ml-1"
+                    data-testid="button-clear-filters"
+                  >
+                    Clear all
+                  </button>
+                  <span className="text-gray-300 mx-1">|</span>
+                  <span className="text-[12px] text-gray-500">
+                    {filteredAds.length} result{filteredAds.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {activeFilterCount > 0 && (
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[12px] text-gray-500">
-                  {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active
-                </span>
-                <span className="text-gray-300">·</span>
-                <span className="text-[12px] text-gray-600 font-medium">
-                  {filteredAds.length} result{filteredAds.length !== 1 ? "s" : ""}
-                </span>
-                <button
-                  onClick={resetFilters}
-                  className="text-[12px] text-blue-600 hover:text-blue-700 font-medium cursor-pointer ml-1"
-                  data-testid="button-clear-filters"
-                >
-                  Clear all
-                </button>
-              </div>
-            )}
-
-            {filteredAds.length === 0 ? (
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-12 text-center">
-                <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-700 mb-1">
-                  No ads found
-                </h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Try adjusting your search or filters to find more ads.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetFilters}
-                  className="cursor-pointer"
-                  data-testid="button-reset-empty"
-                >
-                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                  Reset Filters
-                </Button>
-              </div>
-            ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {filteredAds.map((ad) => (
-                  <AdCard key={ad.id} ad={ad} onClick={handleAdClick} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredAds.map((ad) => (
-                  <div
-                    key={ad.id}
-                    onClick={() => handleAdClick(ad)}
-                    className="flex items-center gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
-                    data-testid={`list-ad-${ad.id}`}
+            <div className="flex-1 p-5 overflow-y-auto">
+              {filteredAds.length === 0 ? (
+                <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-12 text-center">
+                  <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <h3 className="text-base font-semibold text-gray-700 mb-1">
+                    No ads found
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Try adjusting your search or filters to find more ads.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resetFilters}
+                    className="cursor-pointer"
+                    data-testid="button-reset-empty"
                   >
-                    <img
-                      src={ad.creative}
-                      alt={ad.advertiserName}
-                      className="w-20 h-20 rounded-lg object-cover shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <img
-                          src={ad.advertiserLogo}
-                          alt=""
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                        <span className="text-sm font-semibold text-gray-900 truncate">
-                          {ad.advertiserName}
-                        </span>
-                        <span className="text-[11px] text-gray-500">
-                          {ad.activeAdsCount} active ads
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] text-gray-500">
-                        <span className="inline-flex items-center text-emerald-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
-                          {ad.daysActive}d Active
-                        </span>
-                        <span>
-                          {ad.startDate} → {ad.endDate}
-                        </span>
-                        <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium">
-                          {ad.region}
-                        </span>
-                        <span className={cn(
-                          "px-1.5 py-0.5 rounded font-medium",
-                          ad.impressionLevel === "high" ? "text-emerald-600 bg-emerald-50" :
-                          ad.impressionLevel === "medium" ? "text-amber-600 bg-amber-50" :
-                          "text-red-500 bg-red-50"
-                        )}>
-                          {ad.impressionLevel} impr.
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-400 mt-1 truncate">
-                        {ad.adLink}
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="shrink-0 text-[12px] cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleAdClick(ad)
-                      }}
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                    Reset Filters
+                  </Button>
+                </div>
+              ) : viewMode === "grid" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                  {filteredAds.map((ad) => (
+                    <AdCard key={ad.id} ad={ad} onClick={handleAdClick} />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredAds.map((ad) => (
+                    <div
+                      key={ad.id}
+                      onClick={() => handleAdClick(ad)}
+                      className="flex items-center gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
+                      data-testid={`list-ad-${ad.id}`}
                     >
-                      Ad analysis
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <img
+                        src={ad.creative}
+                        alt={ad.advertiserName}
+                        className="w-20 h-20 rounded-lg object-cover shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <img
+                            src={ad.advertiserLogo}
+                            alt=""
+                            className="w-6 h-6 rounded-full object-cover"
+                          />
+                          <span className="text-sm font-semibold text-gray-900 truncate">
+                            {ad.advertiserName}
+                          </span>
+                          <span className="text-[11px] text-gray-500">
+                            {ad.activeAdsCount} active ads
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                          <span className="inline-flex items-center text-emerald-600">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
+                            {ad.daysActive}d Active
+                          </span>
+                          <span>
+                            {ad.startDate} → {ad.endDate}
+                          </span>
+                          <span className="text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded font-medium">
+                            {ad.region}
+                          </span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded font-medium",
+                            ad.impressionLevel === "high" ? "text-emerald-600 bg-emerald-50" :
+                            ad.impressionLevel === "medium" ? "text-amber-600 bg-amber-50" :
+                            "text-red-500 bg-red-50"
+                          )}>
+                            {ad.impressionLevel} impr.
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1 truncate">
+                          {ad.adLink}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 text-[12px] cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleAdClick(ad)
+                        }}
+                      >
+                        Ad analysis
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
