@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import sql from './db';
+import { supabaseRemote } from './supabase-remote';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'usdrop-dev-secret-key-change-in-production';
 
@@ -43,30 +43,36 @@ export async function getCurrentUser(accessToken: string): Promise<AuthUser | nu
     const payload = verifyToken(accessToken);
     if (!payload) return null;
 
-    const result = await sql`
-      SELECT "id", "email", "full_name", "username", "avatar_url", "account_type", "internal_role", "status", "onboarding_completed", "subscription_plan_id"
-      FROM "profiles" WHERE "id" = ${payload.sub} AND "status" = 'active' LIMIT 1`;
+    const { data, error } = await supabaseRemote
+      .from('profiles')
+      .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id')
+      .eq('id', payload.sub)
+      .eq('status', 'active')
+      .single();
 
-    if (!result[0]) return null;
-    return result[0] as AuthUser;
+    if (error || !data) return null;
+    return data as AuthUser;
   } catch {
     return null;
   }
 }
 
 export async function getUserWithPlan(userId: string) {
-  const result = await sql`
-    SELECT p."id", p."email", p."full_name", p."username", p."avatar_url",
-            p."account_type", p."internal_role", p."status", p."onboarding_completed",
-            p."subscription_plan_id", p."onboarding_progress",
-            sp."slug" as plan_slug, sp."name" as plan_name, sp."price_monthly"
-    FROM "profiles" p
-    LEFT JOIN "subscription_plans" sp ON p."subscription_plan_id" = sp."id"
-    WHERE p."id" = ${userId}
-    LIMIT 1`;
+  const { data, error } = await supabaseRemote
+    .from('profiles')
+    .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id, onboarding_progress, subscription_plans(slug, name, price_monthly)')
+    .eq('id', userId)
+    .single();
 
-  if (!result[0]) return null;
-  return result[0];
+  if (error || !data) return null;
+
+  const plan = data.subscription_plans as any;
+  return {
+    ...data,
+    plan_slug: plan?.slug || null,
+    plan_name: plan?.name || null,
+    price_monthly: plan?.price_monthly || null,
+  };
 }
 
 function extractToken(req: Request): string | null {

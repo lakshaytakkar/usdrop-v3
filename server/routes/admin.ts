@@ -1,6 +1,5 @@
 import { type Express, Router, Request, Response } from 'express';
 import { requireAdmin } from '../lib/auth';
-import { supabaseAdmin } from '../lib/supabase';
 import { supabaseRemote } from '../lib/supabase-remote';
 import multer from 'multer';
 
@@ -32,45 +31,45 @@ export function registerAdminRoutes(app: Express) {
         suppliersResult,
         shopifyStoresResult,
       ] = await Promise.all([
-        supabaseAdmin
+        supabaseRemote
           .from('profiles')
           .select('id', { count: 'exact', head: true })
           .is('internal_role', null),
-        supabaseAdmin
+        supabaseRemote
           .from('products')
           .select('id', { count: 'exact', head: true }),
-        supabaseAdmin
+        supabaseRemote
           .from('courses')
           .select('id', { count: 'exact', head: true }),
-        supabaseAdmin
+        supabaseRemote
           .from('competitor_stores')
           .select('id', { count: 'exact', head: true }),
-        supabaseAdmin
+        supabaseRemote
           .from('subscription_plans')
           .select('id', { count: 'exact', head: true })
           .eq('active', true),
-        supabaseAdmin
+        supabaseRemote
           .from('profiles')
           .select('id', { count: 'exact', head: true })
           .is('internal_role', null)
           .gte('created_at', sevenDaysAgoISO),
-        supabaseAdmin
+        supabaseRemote
           .from('profiles')
           .select('id', { count: 'exact', head: true })
           .is('internal_role', null)
           .eq('account_type', 'free'),
-        supabaseAdmin
+        supabaseRemote
           .from('profiles')
           .select('id', { count: 'exact', head: true })
           .is('internal_role', null)
           .eq('account_type', 'pro'),
-        supabaseAdmin
+        supabaseRemote
           .from('leads')
           .select('id', { count: 'exact', head: true }),
-        supabaseAdmin
+        supabaseRemote
           .from('suppliers')
           .select('id', { count: 'exact', head: true }),
-        supabaseAdmin
+        supabaseRemote
           .from('shopify_stores')
           .select('id', { count: 'exact', head: true }),
       ]);
@@ -188,7 +187,7 @@ export function registerAdminRoutes(app: Express) {
 
       const generatedSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('categories')
         .select('id')
         .eq('slug', generatedSlug)
@@ -198,7 +197,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Category with this slug already exists' });
       }
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('categories')
         .insert({
           name,
@@ -229,7 +228,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('categories')
         .select('*')
         .eq('id', id)
@@ -241,7 +240,7 @@ export function registerAdminRoutes(app: Express) {
 
       let parentCategory = null;
       if (data.parent_category_id) {
-        const { data: parentResult } = await supabaseAdmin
+        const { data: parentResult } = await supabaseRemote
           .from('categories')
           .select('id, name, slug')
           .eq('id', data.parent_category_id)
@@ -318,7 +317,7 @@ export function registerAdminRoutes(app: Express) {
       const generatedSlug = slug || (name ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : undefined);
 
       if (generatedSlug) {
-        const { data: existing } = await supabaseAdmin
+        const { data: existing } = await supabaseRemote
           .from('categories')
           .select('id')
           .eq('slug', generatedSlug)
@@ -347,7 +346,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('categories')
         .update(updateData)
         .eq('id', id)
@@ -503,7 +502,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Name and URL are required' });
       }
 
-      const { data: inserted, error: insertError } = await supabaseAdmin
+      const { data: inserted, error: insertError } = await supabaseRemote
         .from('competitor_stores')
         .insert({
           name,
@@ -539,7 +538,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('competitor_stores')
         .select('*, categories(id, name, slug)')
         .eq('id', id)
@@ -595,7 +594,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: updated, error: updateError } = await supabaseAdmin
+      const { data: updated, error: updateError } = await supabaseRemote
         .from('competitor_stores')
         .update(updateData)
         .eq('id', id)
@@ -645,7 +644,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('competitor_store_products')
         .select('*, products(id, title, image)')
         .eq('competitor_store_id', id);
@@ -673,7 +672,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'product_id is required' });
       }
 
-      const { data: inserted, error: insertError } = await supabaseAdmin
+      const { data: inserted, error: insertError } = await supabaseRemote
         .from('competitor_store_products')
         .insert({ competitor_store_id: id, product_id })
         .select('*, products(id, title, image)')
@@ -705,7 +704,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'product_id query parameter is required' });
       }
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('competitor_store_products')
         .delete()
         .eq('competitor_store_id', id)
@@ -728,7 +727,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'verified must be a boolean' });
       }
 
-      const { data: updated, error: updateError } = await supabaseAdmin
+      const { data: updated, error: updateError } = await supabaseRemote
         .from('competitor_stores')
         .update({ verified, updated_at: new Date().toISOString() })
         .eq('id', id)
@@ -763,8 +762,8 @@ export function registerAdminRoutes(app: Express) {
       const page = parseInt((req.query.page as string) || '1');
       const pageSize = parseInt((req.query.pageSize as string) || '20');
 
-      let countQuery = supabaseAdmin.from('courses').select('*', { count: 'exact', head: true });
-      let dataQuery = supabaseAdmin.from('courses').select('*');
+      let countQuery = supabaseRemote.from('courses').select('*', { count: 'exact', head: true });
+      let dataQuery = supabaseRemote.from('courses').select('*');
 
       if (category) {
         countQuery = countQuery.eq('category', category);
@@ -812,7 +811,7 @@ export function registerAdminRoutes(app: Express) {
       let instructorMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
 
       if (instructorIds.length > 0) {
-        const { data: profiles } = await supabaseAdmin
+        const { data: profiles } = await supabaseRemote
           .from('profiles')
           .select('id, full_name, avatar_url')
           .in('id', instructorIds);
@@ -895,7 +894,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Missing required fields: title, slug' });
       }
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('courses')
         .select('id')
         .eq('slug', slug)
@@ -905,7 +904,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Course with this slug already exists' });
       }
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('courses')
         .insert({
           title,
@@ -945,7 +944,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data: courseData, error: courseError } = await supabaseAdmin
+      const { data: courseData, error: courseError } = await supabaseRemote
         .from('courses')
         .select('*')
         .eq('id', id)
@@ -957,7 +956,7 @@ export function registerAdminRoutes(app: Express) {
 
       let instructorProfile: { full_name: string | null; avatar_url: string | null } | null = null;
       if (courseData.instructor_id) {
-        const { data: profileResult } = await supabaseAdmin
+        const { data: profileResult } = await supabaseRemote
           .from('profiles')
           .select('id, full_name, avatar_url')
           .eq('id', courseData.instructor_id)
@@ -971,7 +970,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: modulesData } = await supabaseAdmin
+      const { data: modulesData } = await supabaseRemote
         .from('course_modules')
         .select('*')
         .eq('course_id', id)
@@ -1054,7 +1053,7 @@ export function registerAdminRoutes(app: Express) {
       if (published !== undefined) {
         updateData.published = published;
         if (published && !body.published_at) {
-          const { data: existing } = await supabaseAdmin
+          const { data: existing } = await supabaseRemote
             .from('courses')
             .select('published_at')
             .eq('id', id)
@@ -1067,7 +1066,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (slug) {
-        const { data: existing } = await supabaseAdmin
+        const { data: existing } = await supabaseRemote
           .from('courses')
           .select('id')
           .eq('slug', slug)
@@ -1085,7 +1084,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('courses')
         .update(updateData)
         .eq('id', id)
@@ -1107,7 +1106,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      await supabaseAdmin.from('courses').delete().eq('id', id);
+      await supabaseRemote.from('courses').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {
@@ -1132,7 +1131,7 @@ export function registerAdminRoutes(app: Express) {
       };
 
       if (published) {
-        const { data: existing } = await supabaseAdmin
+        const { data: existing } = await supabaseRemote
           .from('courses')
           .select('published_at')
           .eq('id', id)
@@ -1143,7 +1142,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('courses')
         .update(updateData)
         .eq('id', id)
@@ -1180,7 +1179,7 @@ export function registerAdminRoutes(app: Express) {
 
       let finalOrderIndex = order_index;
       if (finalOrderIndex === undefined) {
-        const { data: maxResult } = await supabaseAdmin
+        const { data: maxResult } = await supabaseRemote
           .from('course_modules')
           .select('order_index')
           .eq('course_id', courseId)
@@ -1190,7 +1189,7 @@ export function registerAdminRoutes(app: Express) {
         finalOrderIndex = (maxResult && maxResult.length > 0 ? maxResult[0].order_index : -1) + 1;
       }
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('course_modules')
         .insert({
           course_id: courseId,
@@ -1243,7 +1242,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('course_modules')
         .update(updateData)
         .eq('id', moduleId)
@@ -1265,7 +1264,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { moduleId } = req.params;
 
-      await supabaseAdmin.from('course_modules').delete().eq('id', moduleId);
+      await supabaseRemote.from('course_modules').delete().eq('id', moduleId);
 
       return res.json({ success: true });
     } catch (error) {
@@ -1300,7 +1299,7 @@ export function registerAdminRoutes(app: Express) {
 
       let finalOrderIndex = order_index;
       if (finalOrderIndex === undefined) {
-        const { data: maxResult } = await supabaseAdmin
+        const { data: maxResult } = await supabaseRemote
           .from('course_chapters')
           .select('order_index')
           .eq('module_id', moduleId)
@@ -1317,7 +1316,7 @@ export function registerAdminRoutes(app: Express) {
           try {
             const { moveVideoFromTemp } = await import('../../src/lib/storage/course-storage');
 
-            const { data: tempChapter, error: tempError } = await supabaseAdmin
+            const { data: tempChapter, error: tempError } = await supabaseRemote
               .from('course_chapters')
               .insert({
                 module_id: moduleId,
@@ -1349,7 +1348,7 @@ export function registerAdminRoutes(app: Express) {
               video_storage_path: movedVideo.path,
             };
 
-            const { data: updateResult, error: updateError } = await supabaseAdmin
+            const { data: updateResult, error: updateError } = await supabaseRemote
               .from('course_chapters')
               .update({ content: finalContent })
               .eq('id', tempChapter.id)
@@ -1357,7 +1356,7 @@ export function registerAdminRoutes(app: Express) {
               .single();
 
             if (updateError || !updateResult) {
-              await supabaseAdmin.from('course_chapters').delete().eq('id', tempChapter.id);
+              await supabaseRemote.from('course_chapters').delete().eq('id', tempChapter.id);
               throw new Error('Failed to update chapter with final video path');
             }
 
@@ -1372,7 +1371,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('course_chapters')
         .insert({
           module_id: moduleId,
@@ -1434,7 +1433,7 @@ export function registerAdminRoutes(app: Express) {
 
       updateData.updated_at = new Date().toISOString();
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('course_chapters')
         .update(updateData)
         .eq('id', chapterId)
@@ -1456,7 +1455,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { chapterId } = req.params;
 
-      await supabaseAdmin.from('course_chapters').delete().eq('id', chapterId);
+      await supabaseRemote.from('course_chapters').delete().eq('id', chapterId);
 
       return res.json({ success: true });
     } catch (error) {
@@ -1471,7 +1470,7 @@ export function registerAdminRoutes(app: Express) {
       const courseId = req.params.id;
       const { moduleId, chapterId } = req.params;
 
-      const { data: courseResult, error: courseError } = await supabaseAdmin
+      const { data: courseResult, error: courseError } = await supabaseRemote
         .from('courses')
         .select('id')
         .eq('id', courseId)
@@ -1481,7 +1480,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: 'Course not found' });
       }
 
-      const { data: moduleResult, error: moduleError } = await supabaseAdmin
+      const { data: moduleResult, error: moduleError } = await supabaseRemote
         .from('course_modules')
         .select('id, course_id')
         .eq('id', moduleId)
@@ -1496,7 +1495,7 @@ export function registerAdminRoutes(app: Express) {
       let chapterExists = false;
 
       if (!isTempUpload) {
-        const { data: chapterResult, error: chapterError } = await supabaseAdmin
+        const { data: chapterResult, error: chapterError } = await supabaseRemote
           .from('course_chapters')
           .select('id, module_id')
           .eq('id', chapterId)
@@ -1541,7 +1540,7 @@ export function registerAdminRoutes(app: Express) {
       const signedUrl = await getVideoSignedUrl(uploadResult.path, 3600);
 
       if (chapterExists) {
-        const { data: currentChapter } = await supabaseAdmin
+        const { data: currentChapter } = await supabaseRemote
           .from('course_chapters')
           .select('content')
           .eq('id', chapterId)
@@ -1555,13 +1554,13 @@ export function registerAdminRoutes(app: Express) {
           video_duration: null,
         };
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await supabaseRemote
           .from('course_chapters')
           .update({ content: updatedContent, updated_at: new Date().toISOString() })
           .eq('id', chapterId);
 
         if (updateError) {
-          await supabaseAdmin.storage
+          await supabaseRemote.storage
             .from('course-videos')
             .remove([uploadResult.path])
             .catch(() => {});
@@ -1615,7 +1614,7 @@ export function registerAdminRoutes(app: Express) {
 
   router.get('/external-users', async (req: Request, res: Response) => {
     try {
-      const { data: rows, error } = await supabaseAdmin
+      const { data: rows, error } = await supabaseRemote
         .from('profiles')
         .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
         .is('internal_role', null)
@@ -1661,7 +1660,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Name, email, and password are required' });
       }
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('profiles')
         .select('id')
         .eq('email', email)
@@ -1671,7 +1670,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(409).json({ error: 'A user with this email already exists' });
       }
 
-      const { data: planResult } = await supabaseAdmin
+      const { data: planResult } = await supabaseRemote
         .from('subscription_plans')
         .select('id, trial_days')
         .eq('slug', plan)
@@ -1701,7 +1700,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Subscription end date must be after start date' });
       }
 
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: authError } = await supabaseRemote.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -1715,7 +1714,7 @@ export function registerAdminRoutes(app: Express) {
 
       const now = new Date().toISOString();
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('profiles')
         .upsert({
           id: authData.user.id,
@@ -1737,7 +1736,7 @@ export function registerAdminRoutes(app: Express) {
           updated_at: now,
         }, { onConflict: 'id' });
 
-      const { data: rows } = await supabaseAdmin
+      const { data: rows } = await supabaseRemote
         .from('profiles')
         .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
         .eq('id', authData.user.id);
@@ -1756,7 +1755,7 @@ export function registerAdminRoutes(app: Express) {
   });
 
   async function fetchUserWithPlan(id: string) {
-    const { data } = await supabaseAdmin
+    const { data } = await supabaseRemote
       .from('profiles')
       .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
       .eq('id', id)
@@ -1836,7 +1835,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (password !== undefined && password.trim() !== '') {
-        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        const { error: pwError } = await supabaseRemote.auth.admin.updateUserById(id, {
           password,
         });
         if (pwError) {
@@ -1846,7 +1845,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (email !== undefined) {
-        const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        const { error: emailError } = await supabaseRemote.auth.admin.updateUserById(id, {
           email,
         });
         if (emailError) {
@@ -1863,7 +1862,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (plan !== undefined) {
-        const { data: planResult } = await supabaseAdmin
+        const { data: planResult } = await supabaseRemote
           .from('subscription_plans')
           .select('id, trial_days')
           .eq('slug', plan)
@@ -1886,7 +1885,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: updateResult, error: updateError } = await supabaseAdmin
+      const { data: updateResult, error: updateError } = await supabaseRemote
         .from('profiles')
         .update(updateData)
         .eq('id', id)
@@ -1926,12 +1925,12 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+      const { error: authError } = await supabaseRemote.auth.admin.deleteUser(id);
       if (authError) {
         console.error('Error deleting auth user:', authError);
       }
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('profiles')
         .delete()
         .eq('id', id)
@@ -1949,7 +1948,7 @@ export function registerAdminRoutes(app: Express) {
   // =============================================
   router.get('/internal-users', async (req: Request, res: Response) => {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('profiles')
         .select('*')
         .not('internal_role', 'is', null)
@@ -2001,7 +2000,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid role. Must be one of: superadmin, admin, manager, executive' });
       }
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('profiles')
         .select('id')
         .eq('email', email)
@@ -2011,7 +2010,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(409).json({ error: 'A user with this email already exists' });
       }
 
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      const { data: authData, error: authError } = await supabaseRemote.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -2025,7 +2024,7 @@ export function registerAdminRoutes(app: Express) {
 
       const now = new Date().toISOString();
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('profiles')
         .upsert({
           id: authData.user.id,
@@ -2071,7 +2070,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('profiles')
         .select('*')
         .eq('id', id)
@@ -2106,7 +2105,7 @@ export function registerAdminRoutes(app: Express) {
       const { id } = req.params;
       const { name, email, role, status, phoneNumber, username, avatarUrl, password } = req.body;
 
-      const { data: existing, error: existingError } = await supabaseAdmin
+      const { data: existing, error: existingError } = await supabaseRemote
         .from('profiles')
         .select('internal_role')
         .eq('id', id)
@@ -2117,7 +2116,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (password !== undefined && password.trim() !== '') {
-        const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        const { error: pwError } = await supabaseRemote.auth.admin.updateUserById(id, {
           password,
         });
         if (pwError) {
@@ -2127,7 +2126,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (email !== undefined) {
-        const { error: emailError } = await supabaseAdmin.auth.admin.updateUserById(id, {
+        const { error: emailError } = await supabaseRemote.auth.admin.updateUserById(id, {
           email,
         });
         if (emailError) {
@@ -2159,7 +2158,7 @@ export function registerAdminRoutes(app: Express) {
       if (username !== undefined) updateData.username = username || null;
       if (avatarUrl !== undefined) updateData.avatar_url = avatarUrl || null;
 
-      const { data: result, error: updateError } = await supabaseAdmin
+      const { data: result, error: updateError } = await supabaseRemote
         .from('profiles')
         .update(updateData)
         .eq('id', id)
@@ -2201,7 +2200,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('profiles')
         .select('internal_role')
         .eq('id', id)
@@ -2211,12 +2210,12 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: 'User not found or not an internal user' });
       }
 
-      const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
+      const { error: authError } = await supabaseRemote.auth.admin.deleteUser(id);
       if (authError) {
         console.error('Error deleting auth user:', authError);
       }
 
-      await supabaseAdmin.from('profiles').delete().eq('id', id);
+      await supabaseRemote.from('profiles').delete().eq('id', id);
 
       return res.json({ success: true });
     } catch (error) {
@@ -2234,7 +2233,7 @@ export function registerAdminRoutes(app: Express) {
       const search = req.query.search as string | undefined;
       const priority = req.query.priority as string | undefined;
 
-      const { data: profiles, error: profilesError } = await supabaseAdmin
+      const { data: profiles, error: profilesError } = await supabaseRemote
         .from('profiles')
         .select('id, email, full_name, avatar_url, account_type, subscription_status, onboarding_completed, onboarding_progress, created_at, updated_at, subscription_plan_id, subscription_plans(name, slug)')
         .is('internal_role', null)
@@ -2245,7 +2244,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to fetch profiles' });
       }
 
-      const { data: leadsData, error: leadsError } = await supabaseAdmin
+      const { data: leadsData, error: leadsError } = await supabaseRemote
         .from('leads')
         .select('*');
 
@@ -2257,9 +2256,9 @@ export function registerAdminRoutes(app: Express) {
       const leadsMap = new Map((leadsData || []).map((l: any) => [l.user_id, l]));
 
       const [picklistResult, shopifyResult, roadmapResult] = await Promise.all([
-        supabaseAdmin.from('user_picklist').select('user_id'),
-        supabaseAdmin.from('shopify_stores').select('user_id'),
-        supabaseAdmin.from('roadmap_progress').select('user_id, status'),
+        supabaseRemote.from('user_picklist').select('user_id'),
+        supabaseRemote.from('shopify_stores').select('user_id'),
+        supabaseRemote.from('roadmap_progress').select('user_id, status'),
       ]);
 
       const picklistByUser = new Map<string, number>();
@@ -2405,7 +2404,7 @@ export function registerAdminRoutes(app: Express) {
         ...updateData,
       };
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('leads')
         .upsert(upsertData, { onConflict: 'user_id' })
         .select()
@@ -2454,7 +2453,7 @@ export function registerAdminRoutes(app: Express) {
 
   router.get('/plans', async (req: Request, res: Response) => {
     try {
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('subscription_plans')
         .select('*')
         .order('display_order', { ascending: true })
@@ -2508,7 +2507,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid slug format. Must be lowercase alphanumeric with hyphens or underscores' });
       }
 
-      const { data: existingPlan } = await supabaseAdmin
+      const { data: existingPlan } = await supabaseRemote
         .from('subscription_plans')
         .select('id')
         .eq('slug', slug)
@@ -2533,7 +2532,7 @@ export function registerAdminRoutes(app: Express) {
 
       const now = new Date().toISOString();
 
-      const { data: result, error: insertError } = await supabaseAdmin
+      const { data: result, error: insertError } = await supabaseRemote
         .from('subscription_plans')
         .insert({
           name,
@@ -2578,7 +2577,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('subscription_plans')
         .select('*')
         .eq('id', id)
@@ -2650,7 +2649,7 @@ export function registerAdminRoutes(app: Express) {
       }
 
       if (updateData.slug) {
-        const { data: existingPlan } = await supabaseAdmin
+        const { data: existingPlan } = await supabaseRemote
           .from('subscription_plans')
           .select('id')
           .eq('slug', updateData.slug)
@@ -2662,7 +2661,7 @@ export function registerAdminRoutes(app: Express) {
         }
       }
 
-      const { data: result, error: updateError } = await supabaseAdmin
+      const { data: result, error: updateError } = await supabaseRemote
         .from('subscription_plans')
         .update(updateData)
         .eq('id', id)
@@ -2692,7 +2691,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data: profiles } = await supabaseAdmin
+      const { data: profiles } = await supabaseRemote
         .from('profiles')
         .select('id')
         .eq('subscription_plan_id', id)
@@ -2700,7 +2699,7 @@ export function registerAdminRoutes(app: Express) {
 
       if (profiles && profiles.length > 0) {
         const now = new Date().toISOString();
-        const { data: result, error } = await supabaseAdmin
+        const { data: result, error } = await supabaseRemote
           .from('subscription_plans')
           .update({ active: false, updated_at: now })
           .eq('id', id)
@@ -2718,7 +2717,7 @@ export function registerAdminRoutes(app: Express) {
         });
       }
 
-      const { data: deleteResult, error: deleteError } = await supabaseAdmin
+      const { data: deleteResult, error: deleteError } = await supabaseRemote
         .from('subscription_plans')
         .delete()
         .eq('id', id)
@@ -2828,7 +2827,7 @@ export function registerAdminRoutes(app: Express) {
   }
 
   async function fetchCompleteProduct(id: string) {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseRemote
       .from('products')
       .select(`
         *,
@@ -2855,7 +2854,7 @@ export function registerAdminRoutes(app: Express) {
       const sortBy = (req.query.sortBy as string) || 'created_at';
       const sortOrder = (req.query.sortOrder as string) || 'desc';
 
-      let countQuery = supabaseAdmin
+      let countQuery = supabaseRemote
         .from('products')
         .select('id, product_metadata!left(is_winning, is_locked), product_source!left(source_type)', { count: 'exact', head: true });
 
@@ -2866,7 +2865,7 @@ export function registerAdminRoutes(app: Express) {
 
       const offset = (page - 1) * pageSize;
 
-      let dataQuery = supabaseAdmin
+      let dataQuery = supabaseRemote
         .from('products')
         .select(`
           *,
@@ -3185,7 +3184,7 @@ export function registerAdminRoutes(app: Express) {
       if (Object.keys(updateData).length > 0) {
         updateData.updated_at = new Date().toISOString();
 
-        const { error: updateError } = await supabaseAdmin
+        const { error: updateError } = await supabaseRemote
           .from('products')
           .update(updateData)
           .eq('id', id);
@@ -3208,19 +3207,19 @@ export function registerAdminRoutes(app: Express) {
 
           if (Object.keys(metaUpdate).length > 0) {
             metaUpdate.updated_at = new Date().toISOString();
-            const { data: existingMeta } = await supabaseAdmin
+            const { data: existingMeta } = await supabaseRemote
               .from('product_metadata')
               .select('id')
               .eq('product_id', id)
               .single();
 
             if (existingMeta) {
-              await supabaseAdmin
+              await supabaseRemote
                 .from('product_metadata')
                 .update(metaUpdate)
                 .eq('product_id', id);
             } else {
-              await supabaseAdmin
+              await supabaseRemote
                 .from('product_metadata')
                 .insert({ product_id: id, ...metaUpdate });
             }
@@ -3243,19 +3242,19 @@ export function registerAdminRoutes(app: Express) {
 
           if (Object.keys(srcUpdate).length > 0) {
             srcUpdate.updated_at = new Date().toISOString();
-            const { data: existingSrc } = await supabaseAdmin
+            const { data: existingSrc } = await supabaseRemote
               .from('product_source')
               .select('id')
               .eq('product_id', id)
               .single();
 
             if (existingSrc) {
-              await supabaseAdmin
+              await supabaseRemote
                 .from('product_source')
                 .update(srcUpdate)
                 .eq('product_id', id);
             } else {
-              await supabaseAdmin
+              await supabaseRemote
                 .from('product_source')
                 .insert({ product_id: id, ...srcUpdate });
             }
@@ -3390,8 +3389,8 @@ export function registerAdminRoutes(app: Express) {
       const sortBy = (req.query.sortBy as string) || 'created_at';
       const sortOrder = (req.query.sortOrder as string) || 'desc';
 
-      let countQuery = supabaseAdmin.from('shopify_stores').select('*', { count: 'exact', head: true });
-      let dataQuery = supabaseAdmin.from('shopify_stores').select('*, profiles(id, email, full_name)');
+      let countQuery = supabaseRemote.from('shopify_stores').select('*', { count: 'exact', head: true });
+      let dataQuery = supabaseRemote.from('shopify_stores').select('*, profiles(id, email, full_name)');
 
       if (status) {
         countQuery = countQuery.eq('status', status);
@@ -3452,7 +3451,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const storeId = req.params.id;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('shopify_stores')
         .select('*, profiles(id, email, full_name)')
         .eq('id', storeId)
@@ -3502,7 +3501,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'No fields to update' });
       }
 
-      const { data: result, error: updateError } = await supabaseAdmin
+      const { data: result, error: updateError } = await supabaseRemote
         .from('shopify_stores')
         .update(updateData)
         .eq('id', storeId)
@@ -3533,7 +3532,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const storeId = req.params.id;
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('shopify_stores')
         .select('id')
         .eq('id', storeId)
@@ -3543,7 +3542,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: 'Store not found' });
       }
 
-      await supabaseAdmin.from('shopify_stores').delete().eq('id', storeId);
+      await supabaseRemote.from('shopify_stores').delete().eq('id', storeId);
 
       return res.json({ success: true, message: 'Store deleted successfully' });
     } catch (error) {
@@ -3626,7 +3625,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('suppliers')
         .select('*')
         .eq('id', id)
@@ -3703,7 +3702,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { userId } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_details')
         .select('*')
         .eq('user_id', userId)
@@ -3730,7 +3729,7 @@ export function registerAdminRoutes(app: Express) {
       const { userId } = req.params;
       const body = req.body;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_details')
         .upsert(
           {
@@ -3769,27 +3768,27 @@ export function registerAdminRoutes(app: Express) {
         credentialsResult,
         courseNotesResult,
       ] = await Promise.all([
-        supabaseAdmin
+        supabaseRemote
           .from('roadmap_progress')
           .select('*')
           .eq('user_id', userId),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_progress')
           .select('*, onboarding_videos(*)')
           .eq('user_id', userId),
 
-        supabaseAdmin
+        supabaseRemote
           .from('user_details')
           .select('*')
           .eq('user_id', userId),
 
-        supabaseAdmin
+        supabaseRemote
           .from('user_credentials')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),
 
-        supabaseAdmin
+        supabaseRemote
           .from('course_notes')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', userId),

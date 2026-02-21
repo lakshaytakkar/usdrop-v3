@@ -1,8 +1,7 @@
 import { Router, type Express, type Request, type Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { supabaseAdmin } from '../lib/supabase';
+import { supabaseRemote } from '../lib/supabase-remote';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
-import sql from '../lib/db';
 
 function validateEmail(email: string): { valid: boolean; error?: string } {
   if (!email) {
@@ -62,39 +61,41 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'Email and password are required' });
       }
 
-      const result = await sql`
-        SELECT "id", "email", "password_hash", "status"
-        FROM "profiles" WHERE "email" = ${email.toLowerCase()} LIMIT 1`;
+      const { data: profile, error } = await supabaseRemote
+        .from('profiles')
+        .select('id, email, password_hash, status')
+        .eq('email', email.toLowerCase())
+        .single();
 
-      if (!result[0]) {
+      if (error || !profile) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      if (result[0].status === 'suspended') {
+      if (profile.status === 'suspended') {
         return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
       }
 
-      if (!result[0].password_hash) {
+      if (!profile.password_hash) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      const valid = await bcrypt.compare(password, result[0].password_hash);
+      const valid = await bcrypt.compare(password, profile.password_hash);
       if (!valid) {
         return res.status(401).json({ error: 'Invalid email or password' });
       }
 
-      const token = generateToken(result[0].id);
-      const profile = await getUserWithPlan(result[0].id);
+      const token = generateToken(profile.id);
+      const fullProfile = await getUserWithPlan(profile.id);
 
-      const isInternal = profile?.internal_role !== null && profile?.internal_role !== undefined;
-      const requiresOnboarding = !profile?.onboarding_completed && !isInternal;
-      const plan = profile?.plan_slug || profile?.account_type || 'free';
-      const planName = profile?.plan_name || 'Free';
+      const isInternal = fullProfile?.internal_role !== null && fullProfile?.internal_role !== undefined;
+      const requiresOnboarding = !fullProfile?.onboarding_completed && !isInternal;
+      const plan = fullProfile?.plan_slug || fullProfile?.account_type || 'free';
+      const planName = fullProfile?.plan_name || 'Free';
 
       return res.json({
         message: 'Signed in successfully',
         token,
-        user: { id: result[0].id, email: result[0].email, user_metadata: { full_name: profile?.full_name } },
+        user: { id: profile.id, email: profile.email, user_metadata: { full_name: fullProfile?.full_name } },
         isInternal,
         requiresOnboarding,
         plan,
@@ -124,28 +125,48 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: passwordValidation.errors[0], errors: passwordValidation.errors });
       }
 
-      const existing = await sql`
-        SELECT "id" FROM "profiles" WHERE "email" = ${email.toLowerCase()} LIMIT 1`;
-      if (existing[0]) {
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existing) {
         return res.status(409).json({ error: 'An account with this email already exists' });
       }
 
       const hash = await bcrypt.hash(password, 10);
 
-      const freePlan = await sql`
-        SELECT "id" FROM "subscription_plans" WHERE "slug" = 'free' LIMIT 1`;
+      const { data: freePlan } = await supabaseRemote
+        .from('subscription_plans')
+        .select('id')
+        .eq('slug', 'free')
+        .single();
 
-      const insertResult = await sql`
-        INSERT INTO "profiles" ("email", "password_hash", "full_name", "subscription_plan_id", "status", "account_type")
-        VALUES (${email.toLowerCase()}, ${hash}, ${full_name || null}, ${freePlan[0]?.id || null}, 'active', 'free')
-        RETURNING "id", "email"`;
+      const { data: newProfile, error: insertError } = await supabaseRemote
+        .from('profiles')
+        .insert({
+          email: email.toLowerCase(),
+          password_hash: hash,
+          full_name: full_name || null,
+          subscription_plan_id: freePlan?.id || null,
+          status: 'active',
+          account_type: 'free',
+        })
+        .select('id, email')
+        .single();
 
-      const token = generateToken(insertResult[0].id);
+      if (insertError || !newProfile) {
+        console.error('Signup insert error:', insertError);
+        return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+      }
+
+      const token = generateToken(newProfile.id);
 
       return res.json({
         message: 'Account created successfully',
         token,
-        user: { id: insertResult[0].id, email: insertResult[0].email, full_name: full_name || null },
+        user: { id: newProfile.id, email: newProfile.email, full_name: full_name || null },
       });
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -196,23 +217,19 @@ export function registerAuthRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const result = await sql`
-        SELECT p."id", p."email", p."full_name", p."username", p."avatar_url",
-                p."internal_role", p."subscription_plan_id", p."account_type",
-                p."status", p."onboarding_completed", p."subscription_status",
-                sp."slug" as plan_slug, sp."name" as plan_name
-        FROM "profiles" p
-        LEFT JOIN "subscription_plans" sp ON p."subscription_plan_id" = sp."id"
-        WHERE p."id" = ${user.id}
-        LIMIT 1`;
+      const { data: profile, error } = await supabaseRemote
+        .from('profiles')
+        .select('id, email, full_name, username, avatar_url, internal_role, subscription_plan_id, account_type, status, onboarding_completed, subscription_status, subscription_plans(slug, name)')
+        .eq('id', user.id)
+        .single();
 
-      const profile = result[0];
-      if (!profile) {
+      if (error || !profile) {
         return res.status(500).json({ error: 'Failed to fetch profile' });
       }
 
-      const plan = profile.plan_slug || profile.account_type || 'free';
-      const planName = profile.plan_name || (profile.account_type === 'pro' ? 'Pro' : 'Free');
+      const planData = profile.subscription_plans as any;
+      const plan = planData?.slug || profile.account_type || 'free';
+      const planName = planData?.name || (profile.account_type === 'pro' ? 'Pro' : 'Free');
       const isInternal = profile.internal_role !== null && profile.internal_role !== undefined;
       const isExternal = !isInternal;
 
@@ -255,13 +272,21 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'New email address must be different from your current email.' });
       }
 
-      const existing = await sql`
-        SELECT "id" FROM "profiles" WHERE "email" = ${newEmail.toLowerCase()} AND "id" != ${user.id} LIMIT 1`;
-      if (existing[0]) {
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('email', newEmail.toLowerCase())
+        .neq('id', user.id)
+        .single();
+
+      if (existing) {
         return res.status(409).json({ error: 'An account with this email address already exists.' });
       }
 
-      await sql`UPDATE "profiles" SET "email" = ${newEmail.toLowerCase()} WHERE "id" = ${user.id}`;
+      await supabaseRemote
+        .from('profiles')
+        .update({ email: newEmail.toLowerCase() })
+        .eq('id', user.id);
 
       return res.json({
         message: 'Email address updated successfully.',
@@ -327,7 +352,7 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid preferred niche value' });
       }
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('profiles')
         .update({ phone_number, ecommerce_experience, preferred_niche })
         .eq('id', user.id);
@@ -349,7 +374,7 @@ export function registerAuthRoutes(app: Express) {
       const user = req.user;
       if (!user) return res.json({ onboarding_completed: false });
 
-      const { data: profile } = await supabaseAdmin
+      const { data: profile } = await supabaseRemote
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', user.id)
@@ -379,14 +404,17 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ error: 'Password is required for reauthentication.' });
       }
 
-      const result = await sql`
-        SELECT "password_hash" FROM "profiles" WHERE "id" = ${user.id} LIMIT 1`;
+      const { data: profile } = await supabaseRemote
+        .from('profiles')
+        .select('password_hash')
+        .eq('id', user.id)
+        .single();
 
-      if (!result[0] || !result[0].password_hash) {
+      if (!profile || !profile.password_hash) {
         return res.status(401).json({ error: 'Invalid password. Please try again.' });
       }
 
-      const valid = await bcrypt.compare(password, result[0].password_hash);
+      const valid = await bcrypt.compare(password, profile.password_hash);
       if (!valid) {
         return res.status(401).json({ error: 'Invalid password. Please try again.' });
       }
@@ -415,7 +443,10 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const hash = await bcrypt.hash(password, 10);
-      await sql`UPDATE "profiles" SET "password_hash" = ${hash} WHERE "id" = ${user.id}`;
+      await supabaseRemote
+        .from('profiles')
+        .update({ password_hash: hash })
+        .eq('id', user.id);
 
       return res.json({ message: 'Password reset successfully. Please sign in with your new password.' });
     } catch (error) {

@@ -8,7 +8,13 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 - Keep images compressed and loading fast.
 
 ## System Architecture
-The platform uses a Vite + Express + Wouter stack with React 19, TypeScript, and Tailwind CSS 4. **Dual database architecture**: Supabase (project `wecbybtxmkdkvqqahyuu`) is used for product data (835+ products, categories, product_metadata, product_source, product_research, suppliers, competitor_stores) via `@supabase/supabase-js`. Neon PostgreSQL (via Replit's built-in database) handles auth/user data (profiles, onboarding, courses, picklist, roadmap_progress, shopify_stores, orders). Local JWT authentication uses bcrypt + jsonwebtoken. A Supabase-compatible query builder (`server/lib/supabase.ts`) wraps the `postgres` library for local Neon queries. The real Supabase client (`server/lib/supabase-remote.ts`) connects to the remote Supabase project for product data. UI components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion. State management is handled by TanStack React Query.
+The platform uses a Vite + Express + Wouter stack with React 19, TypeScript, and Tailwind CSS 4. **All data lives in Supabase** (project `wecbybtxmkdkvqqahyuu`). There is NO local Neon/PostgreSQL database connection. The Supabase client (`server/lib/supabase-remote.ts`) handles all database operations via `@supabase/supabase-js`. Authentication uses local JWT tokens (bcrypt + jsonwebtoken) with profiles stored in Supabase. UI components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion. State management is handled by TanStack React Query.
+
+### Supabase Tables (project wecbybtxmkdkvqqahyuu)
+- **Product data**: products (844), product_metadata (844), product_source (844), product_research (239), categories (11), suppliers, competitor_stores (23), competitor_store_products
+- **User data**: profiles (4), subscription_plans (2), user_picklist, user_details, user_credentials, shopify_stores, orders, leads, roadmap_progress
+- **Learning**: courses (10), course_modules (69), course_chapters, course_enrollments, chapter_completions, module_completions, quiz_attempts, course_notes, onboarding_modules (6), onboarding_videos (19), onboarding_progress
+- **Dev**: dev_tasks, dev_task_attachments, dev_task_comments, dev_task_history, intelligence_articles
 
 ### Project Structure
 ```
@@ -29,20 +35,20 @@ server/              # Backend (Express)
     admin.ts         # Admin API routes (30+ endpoints, admin middleware)
     public.ts        # Public API routes (40+ endpoints)
   lib/
-    auth.ts          # JWT auth middleware (requireAuth, requireAdmin, optionalAuth)
-    supabase.ts      # Supabase client & admin instances
+    auth.ts          # JWT auth middleware (requireAuth, requireAdmin, optionalAuth) - queries Supabase
+    supabase-remote.ts  # Supabase client instance (single source of truth for all DB operations)
 script/
   build.ts           # Production build (Vite client + esbuild server)
 ```
 
 ### Key Architectural Decisions
 - **Stack**: Vite (frontend bundler) + Express (API server) + Wouter (client-side routing). Migrated from Next.js for faster compilation.
-- **Authentication**: Local JWT authentication with bcrypt password hashing. The `apiFetch()` helper in `client/src/lib/supabase.ts` automatically attaches the Bearer token (stored in localStorage as `usdrop_auth_token`) to all API requests. Express middleware (`requireAuth`, `requireAdmin`, `optionalAuth`) validates JWT tokens server-side. Token generation uses `jsonwebtoken` with 7-day expiry.
+- **Database**: Supabase is the ONLY database. All tables, auth data, and user data live in Supabase project `wecbybtxmkdkvqqahyuu`. No local Neon/PostgreSQL connection exists.
+- **Authentication**: Local JWT authentication with bcrypt password hashing. Profiles stored in Supabase `profiles` table. The `apiFetch()` helper in `client/src/lib/supabase.ts` automatically attaches the Bearer token (stored in localStorage as `usdrop_auth_token`) to all API requests. Express middleware (`requireAuth`, `requireAdmin`, `optionalAuth`) validates JWT tokens server-side and loads user profile from Supabase. Token generation uses `jsonwebtoken` with 7-day expiry.
 - **Routing**: Wouter handles client-side routing. The `use-router` hook (`client/src/hooks/use-router.ts`) provides Next.js-compatible `useRouter()`, `useParams()`, `useSearchParams()` APIs.
-- **API Pattern**: All API calls go through `apiFetch()` which handles auth headers. Express routes are organized in `server/routes/` (auth, admin, public).
-- **Environment Variables**: Client-side vars must be prefixed with `VITE_` (e.g., `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Server-side vars use standard `process.env`.
+- **API Pattern**: All API calls go through `apiFetch()` which handles auth headers. Express routes are organized in `server/routes/` (auth, admin, public). All routes use `supabaseRemote` for database operations.
+- **Environment Variables**: Client-side vars must be prefixed with `VITE_` (e.g., `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). Server-side vars use `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
 - **Framework & Navigation System**: The "Framework" acts as the user's personal hub for saved items, store, roadmap, profile, and credentials. Other pages serve as browsing libraries and tools. External users interact via a top-bar navigation, while admin/dev users retain a sidebar navigation.
-- **Database Interaction**: Neon PostgreSQL (Replit built-in) is the primary database. Schema is defined in `shared/schema.ts` using Drizzle ORM. Server-side database operations use a Supabase-compatible query builder (`server/lib/supabase.ts`) that wraps the `postgres` library, providing the same `.from().select().eq().single()` API for minimal code changes during migration.
 - **Design System**: White background base with continuous flowing radial-gradient overlays (lavender, mint, pink, blue) across the full page. Glass-morphism cards, specific typography with text-black headings and grey body text, and blue gradient accents for CTAs. Admin pages use a refined design system: subtle shadows (`shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)]`), `hover-elevate` CSS utility, `--elevate-1`/`--elevate-2` CSS variables, consistent stat cards with 36x36 icon boxes and change badges, and `text-xl font-semibold leading-[1.35] tracking-tight` headings.
 - **Admin Panel**: Features a professionally designed admin interface with 4 sidebar groups (Overview, Sales & Clients, Content Library, Team). Active sidebar items use solid primary fill (`bg-primary text-white`), group labels use `text-[11px] font-semibold uppercase tracking-[0.08em]`.
 - **Banner System**: Consistent banners across sidebar pages, featuring a 4-layer grainy texture, dark gradient, 3D icon, and title/description. Icons are sourced from `/3d-ecom-icons-blue/`.
@@ -54,7 +60,7 @@ script/
 - Production: `node dist/index.cjs`
 
 ## External Dependencies
-- **PostgreSQL (Neon)**: Database via Replit's built-in DATABASE_URL.
+- **Supabase**: All database operations via `@supabase/supabase-js` (project `wecbybtxmkdkvqqahyuu`).
 - **Vite**: Frontend build tool and dev server.
 - **Express**: Backend API server.
 - **Wouter**: Client-side routing (lightweight React router).
@@ -70,6 +76,6 @@ script/
 - **Google Gemini API**: (Optional) For AI features.
 
 ## Recent Changes
+- **Feb 2026**: Complete Supabase migration. ALL database operations now go through Supabase (project wecbybtxmkdkvqqahyuu). Removed local Neon PostgreSQL connection entirely. Auth system reads/writes profiles from Supabase. Created 11 missing tables in Supabase (course_chapters, course_enrollments, chapter_completions, module_completions, quiz_attempts, competitor_store_products, dev_tasks, dev_task_attachments, dev_task_comments, dev_task_history, intelligence_articles). Dropped FK constraints to auth.users for custom JWT compatibility. Removed server/lib/db.ts and server/lib/supabase.ts (local query builder).
 - **Feb 2026**: Added rhythmic gradient backgrounds to all marketing pages (landing, Shopify, What is Dropshipping). Each section has unique radial gradients using the palette colors (lavender, mint, pink, blue) that create visual flow as users scroll. MarketingLayout includes a subtle noise texture overlay at 3% opacity. GradientSection wrapper component in landing page for consistent section-level gradients.
-- **Feb 2026**: Migrated from Supabase to Replit's Neon PostgreSQL. Replaced Supabase Auth with local JWT auth (bcrypt + jsonwebtoken). Created Supabase-compatible query builder in `server/lib/supabase.ts` that wraps the `postgres` library. Database schema defined in `shared/schema.ts` with Drizzle ORM (30 tables). Client auth updated to use localStorage token storage.
 - **Feb 2026**: Migrated from Next.js 16 to Vite + Express + Wouter stack for faster dev compilation. All 86 API routes migrated to Express, all 74 pages ported to client-side Wouter routing, auth system converted from SSR cookies to client-side JWT Bearer tokens.

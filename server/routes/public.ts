@@ -1,5 +1,4 @@
 import { type Express, Request, Response } from 'express';
-import { supabaseAdmin } from '../lib/supabase';
 import { supabaseRemote } from '../lib/supabase-remote';
 import { requireAuth, optionalAuth } from '../lib/auth';
 import * as fs from 'fs';
@@ -293,12 +292,12 @@ export function registerPublicRoutes(app: Express) {
 
       const isVerified = verified === undefined || verified === null ? true : verified === 'true';
 
-      let countQuery = supabaseAdmin
+      let countQuery = supabaseRemote
         .from('competitor_stores')
         .select('id', { count: 'exact', head: true })
         .eq('verified', isVerified);
 
-      let dataQuery = supabaseAdmin
+      let dataQuery = supabaseRemote
         .from('competitor_stores')
         .select('*, categories(id, name, slug)', { count: 'exact' })
         .eq('verified', isVerified);
@@ -378,7 +377,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'moduleId is required' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('course_notes')
         .select('*')
         .eq('user_id', user.id)
@@ -407,7 +406,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'moduleId and text are required' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('course_notes')
         .insert({
           user_id: user.id,
@@ -440,7 +439,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'id and text are required' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('course_notes')
         .update({ text, timestamp_seconds: timestamp_seconds || 0, updated_at: new Date().toISOString() })
         .eq('id', id)
@@ -470,7 +469,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'id is required' });
       }
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('course_notes')
         .delete()
         .eq('id', id)
@@ -503,7 +502,7 @@ export function registerPublicRoutes(app: Express) {
       const page = parseInt(req.query.page as string || '1');
       const pageSize = parseInt(req.query.pageSize as string || '20');
 
-      let query = supabaseAdmin
+      let query = supabaseRemote
         .from('courses')
         .select('*')
         .eq('is_onboarding', false);
@@ -516,7 +515,7 @@ export function registerPublicRoutes(app: Express) {
       if (featured === 'true') query = query.eq('featured', true);
       if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,slug.ilike.%${search}%`);
 
-      let countQuery = supabaseAdmin
+      let countQuery = supabaseRemote
         .from('courses')
         .select('*', { count: 'exact', head: true })
         .eq('is_onboarding', false);
@@ -551,7 +550,7 @@ export function registerPublicRoutes(app: Express) {
       let instructorMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
 
       if (instructorIds.length > 0) {
-        const { data: profiles } = await supabaseAdmin
+        const { data: profiles } = await supabaseRemote
           .from('profiles')
           .select('id, full_name, avatar_url')
           .in('id', instructorIds);
@@ -610,7 +609,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data: courseData, error: courseError } = await supabaseAdmin
+      const { data: courseData, error: courseError } = await supabaseRemote
         .from('courses')
         .select('*')
         .eq('id', id)
@@ -622,7 +621,7 @@ export function registerPublicRoutes(app: Express) {
 
       let instructorProfile: { full_name: string | null; avatar_url: string | null } | null = null;
       if (courseData.instructor_id) {
-        const { data: profileData } = await supabaseAdmin
+        const { data: profileData } = await supabaseRemote
           .from('profiles')
           .select('id, full_name, avatar_url')
           .eq('id', courseData.instructor_id)
@@ -633,7 +632,7 @@ export function registerPublicRoutes(app: Express) {
         }
       }
 
-      const { data: modulesData } = await supabaseAdmin
+      const { data: modulesData } = await supabaseRemote
         .from('course_modules')
         .select('*')
         .eq('course_id', id)
@@ -685,7 +684,7 @@ export function registerPublicRoutes(app: Express) {
       const { id: courseId, chapterId } = req.params;
       const body = req.body;
 
-      const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+      const { data: enrollment, error: enrollmentError } = await supabaseRemote
         .from('course_enrollments')
         .select('id')
         .eq('course_id', courseId)
@@ -696,7 +695,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Not enrolled in this course' });
       }
 
-      const { data: chapter, error: chapterError } = await supabaseAdmin
+      const { data: chapter, error: chapterError } = await supabaseRemote
         .from('course_chapters')
         .select('*')
         .eq('id', chapterId)
@@ -719,7 +718,7 @@ export function registerPublicRoutes(app: Express) {
 
       const { score, passed, feedback } = calculateQuizScore(questions, body.answers);
 
-      const { data: attempt, error: attemptError } = await supabaseAdmin
+      const { data: attempt, error: attemptError } = await supabaseRemote
         .from('quiz_attempts')
         .insert({
           enrollment_id: enrollment.id,
@@ -765,7 +764,7 @@ export function registerPublicRoutes(app: Express) {
       const { id: courseId, chapterId } = req.params;
       const userId = req.user?.id || null;
 
-      const { data: chapter, error: chapterError } = await supabaseAdmin
+      const { data: chapter, error: chapterError } = await supabaseRemote
         .from('course_chapters')
         .select(`
           id,
@@ -797,7 +796,7 @@ export function registerPublicRoutes(app: Express) {
       let hasAccess = false;
 
       if (userId) {
-        const { data: enrollment } = await supabaseAdmin
+        const { data: enrollment } = await supabaseRemote
           .from('course_enrollments')
           .select('id')
           .eq('course_id', courseId)
@@ -807,7 +806,7 @@ export function registerPublicRoutes(app: Express) {
         if (enrollment) hasAccess = true;
         if (course.instructor_id === userId) hasAccess = true;
 
-        const { data: profile } = await supabaseAdmin
+        const { data: profile } = await supabaseRemote
           .from('profiles')
           .select('internal_role')
           .eq('id', userId)
@@ -818,7 +817,7 @@ export function registerPublicRoutes(app: Express) {
         }
       }
 
-      const { data: chapterData } = await supabaseAdmin
+      const { data: chapterData } = await supabaseRemote
         .from('course_chapters')
         .select('is_preview')
         .eq('id', chapterId)
@@ -846,7 +845,7 @@ export function registerPublicRoutes(app: Express) {
       }
 
       const expiresIn = 3600;
-      const { data: signedData, error: signedError } = await supabaseAdmin.storage
+      const { data: signedData, error: signedError } = await supabaseRemote.storage
         .from('course-videos')
         .createSignedUrl(storagePath, expiresIn);
 
@@ -871,7 +870,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id: courseId } = req.params;
 
-      const { data: course, error: courseError } = await supabaseAdmin
+      const { data: course, error: courseError } = await supabaseRemote
         .from('courses')
         .select('id, published')
         .eq('id', courseId)
@@ -885,7 +884,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(403).json({ error: 'Course is not published' });
       }
 
-      const { data: existingEnrollment } = await supabaseAdmin
+      const { data: existingEnrollment } = await supabaseRemote
         .from('course_enrollments')
         .select('id')
         .eq('course_id', courseId)
@@ -896,7 +895,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Already enrolled in this course' });
       }
 
-      const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+      const { data: enrollment, error: enrollmentError } = await supabaseRemote
         .from('course_enrollments')
         .insert({
           course_id: courseId,
@@ -939,7 +938,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Path parameter is required' });
       }
 
-      const { data, error } = await supabaseAdmin.storage
+      const { data, error } = await supabaseRemote.storage
         .from('course-videos')
         .createSignedUrl(videoPath, 3600);
 
@@ -960,7 +959,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id: courseId } = req.params;
 
-      const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+      const { data: enrollment, error: enrollmentError } = await supabaseRemote
         .from('course_enrollments')
         .select('*')
         .eq('course_id', courseId)
@@ -971,28 +970,28 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Not enrolled in this course' });
       }
 
-      const { data: completions } = await supabaseAdmin
+      const { data: completions } = await supabaseRemote
         .from('chapter_completions')
         .select('chapter_id')
         .eq('enrollment_id', enrollment.id);
 
       const completed_chapters = completions?.map((c: { chapter_id: string }) => c.chapter_id) || [];
 
-      const { data: modules } = await supabaseAdmin
+      const { data: modules } = await supabaseRemote
         .from('course_modules')
         .select('id')
         .eq('course_id', courseId);
 
       const moduleIds = modules?.map((m: { id: string }) => m.id) || [];
 
-      const { count: totalChapters } = await supabaseAdmin
+      const { count: totalChapters } = await supabaseRemote
         .from('course_chapters')
         .select('*', { count: 'exact', head: true })
         .in('module_id', moduleIds);
 
       let lastAccessedChapter = null;
       if (enrollment.last_accessed_chapter_id) {
-        const { data: chapter } = await supabaseAdmin
+        const { data: chapter } = await supabaseRemote
           .from('course_chapters')
           .select('*')
           .eq('id', enrollment.last_accessed_chapter_id)
@@ -1044,7 +1043,7 @@ export function registerPublicRoutes(app: Express) {
       const { id: courseId, chapterId } = req.params;
       const { time_spent_minutes } = req.body || {};
 
-      const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+      const { data: enrollment, error: enrollmentError } = await supabaseRemote
         .from('course_enrollments')
         .select('id')
         .eq('course_id', courseId)
@@ -1055,7 +1054,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Not enrolled in this course' });
       }
 
-      const { data: chapter } = await supabaseAdmin
+      const { data: chapter } = await supabaseRemote
         .from('course_chapters')
         .select('id, module_id')
         .eq('id', chapterId)
@@ -1065,7 +1064,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Chapter not found' });
       }
 
-      const { data: module } = await supabaseAdmin
+      const { data: module } = await supabaseRemote
         .from('course_modules')
         .select('course_id')
         .eq('id', chapter.module_id)
@@ -1075,7 +1074,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Chapter does not belong to this course' });
       }
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('chapter_completions')
         .select('id')
         .eq('enrollment_id', enrollment.id)
@@ -1083,7 +1082,7 @@ export function registerPublicRoutes(app: Express) {
         .single();
 
       if (existing) {
-        const { data: completion, error: updateError } = await supabaseAdmin
+        const { data: completion, error: updateError } = await supabaseRemote
           .from('chapter_completions')
           .update({
             completed_at: new Date().toISOString(),
@@ -1108,7 +1107,7 @@ export function registerPublicRoutes(app: Express) {
         });
       }
 
-      const { data: completion, error: completionError } = await supabaseAdmin
+      const { data: completion, error: completionError } = await supabaseRemote
         .from('chapter_completions')
         .insert({
           enrollment_id: enrollment.id,
@@ -1154,39 +1153,39 @@ export function registerPublicRoutes(app: Express) {
         picklistResult,
         winningProductsResult
       ] = await Promise.allSettled([
-        supabaseAdmin
+        supabaseRemote
           .from('products')
           .select('*', { count: 'exact', head: true }),
 
-        supabaseAdmin
+        supabaseRemote
           .from('shopify_stores')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id),
 
-        supabaseAdmin
+        supabaseRemote
           .from('shopify_stores')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .eq('status', 'active'),
 
         (async () => {
-          const { data: profile } = await supabaseAdmin
+          const { data: profile } = await supabaseRemote
             .from('profiles')
             .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
             .eq('id', user.id)
             .single();
 
-          const { count: totalVideos } = await supabaseAdmin
+          const { count: totalVideos } = await supabaseRemote
             .from('onboarding_videos')
             .select('*', { count: 'exact', head: true })
             .then(r => r.count !== null ? r : { count: 0 });
 
-          const { count: totalModules } = await supabaseAdmin
+          const { count: totalModules } = await supabaseRemote
             .from('onboarding_modules')
             .select('*', { count: 'exact', head: true })
             .then(r => r.count !== null ? r : { count: 0 });
 
-          const { count: completedVideos } = await supabaseAdmin
+          const { count: completedVideos } = await supabaseRemote
             .from('onboarding_progress')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
@@ -1202,12 +1201,12 @@ export function registerPublicRoutes(app: Express) {
           };
         })(),
 
-        supabaseAdmin
+        supabaseRemote
           .from('user_picklist')
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id),
 
-        supabaseAdmin
+        supabaseRemote
           .from('product_metadata')
           .select('product_id', { count: 'exact', head: true })
           .eq('is_winning', true)
@@ -1259,7 +1258,7 @@ export function registerPublicRoutes(app: Express) {
       }
       if (req.query.project_id) filters.project_id = req.query.project_id as string;
 
-      let query = supabaseAdmin.from('dev_tasks').select('*');
+      let query = supabaseRemote.from('dev_tasks').select('*');
 
       if (filters.status?.length > 0) query = query.in('status', filters.status);
       if (filters.priority?.length > 0) query = query.in('priority', filters.priority);
@@ -1292,7 +1291,7 @@ export function registerPublicRoutes(app: Express) {
         const allUserIds = Array.from(new Set([...assignedToIds, ...createdByIds]));
 
         if (allUserIds.length > 0) {
-          const { data: users } = await supabaseAdmin
+          const { data: users } = await supabaseRemote
             .from('profiles')
             .select('id, full_name, email, avatar_url, username')
             .in('id', allUserIds as string[]);
@@ -1340,7 +1339,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const taskData = req.body;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_tasks')
         .insert({
           ...taskData,
@@ -1373,7 +1372,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const limit = parseInt(req.query.limit as string || '10');
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_tasks')
         .select('*')
         .is('parent_task_id', null)
@@ -1395,7 +1394,7 @@ export function registerPublicRoutes(app: Express) {
   // GET /api/dev/tasks/stats
   app.get('/api/dev/tasks/stats', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { data: tasks, error } = await supabaseAdmin
+      const { data: tasks, error } = await supabaseRemote
         .from('dev_tasks')
         .select('status, priority')
         .is('parent_task_id', null);
@@ -1440,7 +1439,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_tasks')
         .select('*')
         .eq('id', id)
@@ -1458,7 +1457,7 @@ export function registerPublicRoutes(app: Express) {
 
       if (task.assigned_to || task.created_by) {
         const userIds = [task.assigned_to, task.created_by].filter(Boolean) as string[];
-        const { data: users } = await supabaseAdmin
+        const { data: users } = await supabaseRemote
           .from('profiles')
           .select('id, full_name, email, avatar_url, username')
           .in('id', userIds);
@@ -1468,7 +1467,7 @@ export function registerPublicRoutes(app: Express) {
         if (task.created_by) task.created_user = userMap.get(task.created_by);
       }
 
-      const { data: subtasks } = await supabaseAdmin
+      const { data: subtasks } = await supabaseRemote
         .from('dev_tasks')
         .select('*')
         .eq('parent_task_id', id)
@@ -1495,7 +1494,7 @@ export function registerPublicRoutes(app: Express) {
       if (taskData.related_files !== undefined) updateData.related_files = taskData.related_files;
       if (taskData.metadata !== undefined) updateData.metadata = taskData.metadata;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_tasks')
         .update(updateData)
         .eq('id', id)
@@ -1523,7 +1522,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('dev_tasks')
         .delete()
         .eq('id', id);
@@ -1545,7 +1544,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_task_attachments')
         .select('*, profiles!dev_task_attachments_uploaded_by_fkey(id, full_name, email, avatar_url, username)')
         .eq('task_id', id)
@@ -1601,7 +1600,7 @@ export function registerPublicRoutes(app: Express) {
             const uniqueFileName = `${id}/${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
             const filePath = `tasks/${uniqueFileName}`;
 
-            const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+            const { data: uploadData, error: uploadError } = await supabaseRemote.storage
               .from('dev-task-attachments')
               .upload(filePath, file.buffer, { contentType: file.mimetype });
 
@@ -1610,11 +1609,11 @@ export function registerPublicRoutes(app: Express) {
               return resolve();
             }
 
-            const { data: urlData } = supabaseAdmin.storage
+            const { data: urlData } = supabaseRemote.storage
               .from('dev-task-attachments')
               .getPublicUrl(filePath);
 
-            const { data: attachment, error: attachmentError } = await supabaseAdmin
+            const { data: attachment, error: attachmentError } = await supabaseRemote
               .from('dev_task_attachments')
               .insert({
                 task_id: id,
@@ -1652,19 +1651,19 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { attachmentId } = req.params;
 
-      const { data: attachment } = await supabaseAdmin
+      const { data: attachment } = await supabaseRemote
         .from('dev_task_attachments')
         .select('file_path')
         .eq('id', attachmentId)
         .single();
 
       if (attachment?.file_path) {
-        await supabaseAdmin.storage
+        await supabaseRemote.storage
           .from('dev-task-attachments')
           .remove([attachment.file_path]);
       }
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('dev_task_attachments')
         .delete()
         .eq('id', attachmentId);
@@ -1686,7 +1685,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_task_comments')
         .select('*, profiles!dev_task_comments_user_id_fkey(id, full_name, email, avatar_url, username)')
         .eq('task_id', id)
@@ -1717,7 +1716,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { comment_text } = req.body;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_task_comments')
         .insert({
           task_id: id,
@@ -1748,7 +1747,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const { id } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('dev_task_history')
         .select('*, profiles!dev_task_history_changed_by_fkey(id, full_name, email, avatar_url, username)')
         .eq('task_id', id)
@@ -1784,17 +1783,17 @@ export function registerPublicRoutes(app: Express) {
         user.account_type === 'pro' ||
         ['admin', 'super_admin', 'editor', 'moderator'].includes(user.internal_role || '');
 
-      const { data: modules } = await supabaseAdmin
+      const { data: modules } = await supabaseRemote
         .from('onboarding_modules')
         .select('id, title, description, order_index, thumbnail')
         .order('order_index');
 
-      const { data: videos } = await supabaseAdmin
+      const { data: videos } = await supabaseRemote
         .from('onboarding_videos')
         .select('id, title, description, video_url, video_duration, order_index, thumbnail, module_id')
         .order('order_index');
 
-      const { data: progress } = await supabaseAdmin
+      const { data: progress } = await supabaseRemote
         .from('onboarding_progress')
         .select('video_id, completed, completed_at')
         .eq('user_id', user.id);
@@ -1869,12 +1868,12 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data: progress } = await supabaseAdmin
+      const { data: progress } = await supabaseRemote
         .from('onboarding_progress')
         .select('video_id, completed, completed_at')
         .eq('user_id', user.id);
 
-      const { count: totalCount } = await supabaseAdmin
+      const { count: totalCount } = await supabaseRemote
         .from('onboarding_videos')
         .select('*', { count: 'exact', head: true });
 
@@ -1903,7 +1902,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'videoId is required' });
       }
 
-      const { data: video } = await supabaseAdmin
+      const { data: video } = await supabaseRemote
         .from('onboarding_videos')
         .select('id')
         .eq('id', videoId)
@@ -1916,7 +1915,7 @@ export function registerPublicRoutes(app: Express) {
       const completedAt = completed !== false ? new Date().toISOString() : null;
       const isCompleted = completed !== false;
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('onboarding_progress')
         .upsert({
           user_id: user.id,
@@ -1950,7 +1949,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'video_id is required' });
       }
 
-      const { data: video, error: videoError } = await supabaseAdmin
+      const { data: video, error: videoError } = await supabaseRemote
         .from('onboarding_videos')
         .select('id, module_id')
         .eq('id', video_id)
@@ -1960,7 +1959,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Video not found' });
       }
 
-      const { data: existingProgress } = await supabaseAdmin
+      const { data: existingProgress } = await supabaseRemote
         .from('onboarding_progress')
         .select('id, completed')
         .eq('user_id', user.id)
@@ -1979,7 +1978,7 @@ export function registerPublicRoutes(app: Express) {
 
       let result;
       if (existingProgress) {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabaseRemote
           .from('onboarding_progress')
           .update(progressData)
           .eq('id', existingProgress.id)
@@ -1992,7 +1991,7 @@ export function registerPublicRoutes(app: Express) {
         }
         result = data;
       } else {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabaseRemote
           .from('onboarding_progress')
           .insert({ ...progressData, created_at: new Date().toISOString() })
           .select()
@@ -2017,7 +2016,7 @@ export function registerPublicRoutes(app: Express) {
   // GET /api/onboarding/course
   app.get('/api/onboarding/course', async (_req: Request, res: Response) => {
     try {
-      const { data: modules, error: modulesError } = await supabaseAdmin
+      const { data: modules, error: modulesError } = await supabaseRemote
         .from('course_modules')
         .select(`
           id, title, description, order_index, thumbnail,
@@ -2079,7 +2078,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data: progress, error: progressError } = await supabaseAdmin
+      const { data: progress, error: progressError } = await supabaseRemote
         .from('onboarding_progress')
         .select(`
           id, user_id, video_id, completed, completed_at,
@@ -2094,17 +2093,17 @@ export function registerPublicRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to fetch progress' });
       }
 
-      const { data: profile } = await supabaseAdmin
+      const { data: profile } = await supabaseRemote
         .from('profiles')
         .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
         .eq('id', user.id)
         .single();
 
-      const { count: totalVideos } = await supabaseAdmin
+      const { count: totalVideos } = await supabaseRemote
         .from('onboarding_videos')
         .select('*', { count: 'exact', head: true });
 
-      const { count: totalModules } = await supabaseAdmin
+      const { count: totalModules } = await supabaseRemote
         .from('onboarding_modules')
         .select('*', { count: 'exact', head: true });
 
@@ -2138,7 +2137,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'video_id is required' });
       }
 
-      const { data: video, error: videoError } = await supabaseAdmin
+      const { data: video, error: videoError } = await supabaseRemote
         .from('onboarding_videos')
         .select('id, module_id')
         .eq('id', video_id)
@@ -2148,7 +2147,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Video not found' });
       }
 
-      const { data: existingProgress } = await supabaseAdmin
+      const { data: existingProgress } = await supabaseRemote
         .from('onboarding_progress')
         .select('id, completed, watch_time')
         .eq('user_id', user.id)
@@ -2174,7 +2173,7 @@ export function registerPublicRoutes(app: Express) {
 
       let result;
       if (existingProgress) {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabaseRemote
           .from('onboarding_progress')
           .update(updateData)
           .eq('id', existingProgress.id)
@@ -2187,7 +2186,7 @@ export function registerPublicRoutes(app: Express) {
         }
         result = data;
       } else {
-        const { data, error } = await supabaseAdmin
+        const { data, error } = await supabaseRemote
           .from('onboarding_progress')
           .insert({ ...updateData, created_at: new Date().toISOString() })
           .select()
@@ -2215,32 +2214,32 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
 
       const [profileResult, totalVideosResult, totalModulesResult, completedVideosResult, allVideosResult, completedProgressResult] = await Promise.all([
-        supabaseAdmin
+        supabaseRemote
           .from('profiles')
           .select('onboarding_completed, onboarding_completed_at, onboarding_progress')
           .eq('id', user.id)
           .single(),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_videos')
           .select('id', { count: 'exact', head: true }),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_modules')
           .select('id')
           .order('id'),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_progress')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .eq('completed', true),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_videos')
           .select('id, module_id'),
 
-        supabaseAdmin
+        supabaseRemote
           .from('onboarding_progress')
           .select('video_id')
           .eq('user_id', user.id)
@@ -2292,7 +2291,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data: picklistItems, error } = await supabaseAdmin
+      const { data: picklistItems, error } = await supabaseRemote
         .from('user_picklist')
         .select('id, product_id, notes, created_at, products(id, title, image, buy_price, sell_price, profit_per_order, category_id, categories(id, name, slug))')
         .eq('user_id', user.id)
@@ -2337,7 +2336,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Product ID is required' });
       }
 
-      const { data: product } = await supabaseAdmin
+      const { data: product } = await supabaseRemote
         .from('products')
         .select('id')
         .eq('id', productId)
@@ -2347,7 +2346,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Product not found' });
       }
 
-      const { data: result, error: insertError } = await supabaseAdmin
+      const { data: result, error: insertError } = await supabaseRemote
         .from('user_picklist')
         .insert({ user_id: user.id, product_id: productId })
         .select()
@@ -2374,7 +2373,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id } = req.params;
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('user_picklist')
         .delete()
         .eq('id', id)
@@ -2793,7 +2792,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('roadmap_progress')
         .select('task_id, status')
         .eq('user_id', user.id);
@@ -2829,7 +2828,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid status' });
       }
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('roadmap_progress')
         .upsert(
           { user_id: user.id, task_id: taskId, status, updated_at: new Date().toISOString() },
@@ -2887,7 +2886,7 @@ export function registerPublicRoutes(app: Express) {
       const pageSize = parseInt(req.query.pageSize as string || '50');
       const offset = (page - 1) * pageSize;
 
-      let query = supabaseAdmin
+      let query = supabaseRemote
         .from('shopify_stores')
         .select('*, profiles(email, full_name)', { count: 'exact' })
         .eq('user_id', user.id);
@@ -2951,7 +2950,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id: storeId } = req.params;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('shopify_stores')
         .select('*, profiles(email, full_name)')
         .eq('id', storeId)
@@ -2976,7 +2975,7 @@ export function registerPublicRoutes(app: Express) {
       const { id: storeId } = req.params;
       const body = req.body;
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('shopify_stores')
         .select('id')
         .eq('id', storeId)
@@ -2994,7 +2993,7 @@ export function registerPublicRoutes(app: Express) {
       if (body.status !== undefined) updateFields.is_active = body.status === 'connected';
       if (body.plan !== undefined) updateFields.plan = body.plan;
 
-      const { data: result, error } = await supabaseAdmin
+      const { data: result, error } = await supabaseRemote
         .from('shopify_stores')
         .update(updateFields)
         .eq('id', storeId)
@@ -3019,7 +3018,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id: storeId } = req.params;
 
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabaseRemote
         .from('shopify_stores')
         .select('id')
         .eq('id', storeId)
@@ -3030,7 +3029,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Store not found or access denied' });
       }
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('shopify_stores')
         .delete()
         .eq('id', storeId)
@@ -3049,7 +3048,7 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const { id: storeId } = req.params;
 
-      const { data: store, error: storeError } = await supabaseAdmin
+      const { data: store, error: storeError } = await supabaseRemote
         .from('shopify_stores')
         .select('id, user_id, shop_domain, access_token, is_active')
         .eq('id', storeId)
@@ -3068,13 +3067,13 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Store access token is missing' });
       }
 
-      await supabaseAdmin
+      await supabaseRemote
         .from('shopify_stores')
         .update({ last_synced_at: new Date().toISOString(), updated_at: new Date().toISOString() })
         .eq('id', storeId)
         .eq('user_id', user.id);
 
-      const { data: updated } = await supabaseAdmin
+      const { data: updated } = await supabaseRemote
         .from('shopify_stores')
         .select('*, profiles(email, full_name)')
         .eq('id', storeId)
@@ -3128,7 +3127,7 @@ export function registerPublicRoutes(app: Express) {
         const storeInfo = await fetchShopifyStoreInfo(access_token, shop);
         const normalizedUrl = normalizeShopifyStoreUrl(storeInfo.myshopify_domain);
 
-        const { data: existingStore } = await supabaseAdmin
+        const { data: existingStore } = await supabaseRemote
           .from('shopify_stores')
           .select('id')
           .eq('user_id', user.id)
@@ -3139,7 +3138,7 @@ export function registerPublicRoutes(app: Express) {
         const plan = mapShopifyPlan(storeInfo.plan_name);
 
         if (existingStore) {
-          const { error: updateError } = await supabaseAdmin
+          const { error: updateError } = await supabaseRemote
             .from('shopify_stores')
             .update({
               name: storeInfo.name,
@@ -3162,7 +3161,7 @@ export function registerPublicRoutes(app: Express) {
 
           return res.redirect('/my-store?success=store_updated');
         } else {
-          const { error: createError } = await supabaseAdmin
+          const { error: createError } = await supabaseRemote
             .from('shopify_stores')
             .insert({
               user_id: user.id,
@@ -3210,7 +3209,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_credentials')
         .select('*')
         .eq('user_id', user.id)
@@ -3233,7 +3232,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Service name is required' });
       }
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_credentials')
         .insert({
           user_id: user.id,
@@ -3262,7 +3261,7 @@ export function registerPublicRoutes(app: Express) {
       if (!id) return res.status(400).json({ error: 'Credential ID is required' });
       if (!service_name) return res.status(400).json({ error: 'Service name is required' });
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_credentials')
         .update({
           service_name,
@@ -3298,7 +3297,7 @@ export function registerPublicRoutes(app: Express) {
 
       if (!id) return res.status(400).json({ error: 'Credential ID is required' });
 
-      const { error } = await supabaseAdmin
+      const { error } = await supabaseRemote
         .from('user_credentials')
         .delete()
         .eq('id', id)
@@ -3318,7 +3317,7 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data } = await supabaseAdmin
+      const { data } = await supabaseRemote
         .from('user_details')
         .select('*')
         .eq('user_id', user.id)
@@ -3338,7 +3337,7 @@ export function registerPublicRoutes(app: Express) {
 
       const { email, id, created_at, updated_at, ...details } = body;
 
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabaseRemote
         .from('user_details')
         .upsert(
           { ...details, user_id: user.id, updated_at: new Date().toISOString() },
@@ -3450,13 +3449,13 @@ function mapRowToProduct(row: any) {
 
 async function updateUserProgressPercentage(userId: string) {
   try {
-    const { count: totalVideos } = await supabaseAdmin
+    const { count: totalVideos } = await supabaseRemote
       .from('onboarding_videos')
       .select('*', { count: 'exact', head: true });
 
     if (!totalVideos || totalVideos === 0) return;
 
-    const { count: completedVideos } = await supabaseAdmin
+    const { count: completedVideos } = await supabaseRemote
       .from('onboarding_progress')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
@@ -3472,7 +3471,7 @@ async function updateUserProgressPercentage(userId: string) {
 
     if (allCompleted) {
       updateData.onboarding_completed = true;
-      const { data: profile } = await supabaseAdmin
+      const { data: profile } = await supabaseRemote
         .from('profiles')
         .select('onboarding_completed_at')
         .eq('id', userId)
@@ -3483,7 +3482,7 @@ async function updateUserProgressPercentage(userId: string) {
       }
     }
 
-    await supabaseAdmin
+    await supabaseRemote
       .from('profiles')
       .update(updateData)
       .eq('id', userId);
