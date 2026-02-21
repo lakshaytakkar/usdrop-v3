@@ -14,7 +14,6 @@ import { BarChart3, Search, TrendingUp, DollarSign, Sparkles } from "lucide-reac
 import { AdCard } from "./components/ad-card"
 import { AdDetailSheet } from "./components/ad-detail-sheet"
 import { MetaAd, sampleAds } from "./data/ads"
-import { ComingSoonOverlay } from "./components/coming-soon-overlay"
 export default function MetaAdsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all")
@@ -71,8 +70,7 @@ export default function MetaAdsPage() {
     <>
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 relative">
 
-          {/* Blurred background content */}
-          <div className="blur-md pointer-events-none select-none opacity-60">
+          <div>
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="h-8 w-8 text-primary" />
@@ -187,9 +185,6 @@ export default function MetaAdsPage() {
               </div>
             )}
           </div>
-
-          {/* Coming Soon Overlay */}
-          <ComingSoonOverlay />
 
           {/* Detail Sidebar */}
           <AdDetailSheet
