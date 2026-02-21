@@ -2709,7 +2709,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Product not found' });
       }
 
-      const { productResearchService } = await import('../../src/lib/services/product-research-service');
+      const { productResearchService } = await import('../lib/product-research-service');
 
       const researchDataRaw = await productResearchService.researchProduct({
         title: product.title,
@@ -2932,7 +2932,7 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Shop parameter is required' });
       }
 
-      const { generateOAuthState, buildShopifyOAuthUrl } = await import('../../src/lib/utils/shopify-oauth');
+      const { generateOAuthState, buildShopifyOAuthUrl } = await import('../lib/shopify-oauth');
 
       const state = generateOAuthState();
       const oauthUrl = buildShopifyOAuthUrl(shop, state);
@@ -3120,8 +3120,8 @@ export function registerPublicRoutes(app: Express) {
       }
 
       try {
-        const { exchangeCodeForToken, fetchShopifyStoreInfo, mapShopifyPlan } = await import('../../src/lib/utils/shopify-oauth');
-        const { normalizeShopifyStoreUrl } = await import('../../src/lib/utils/shopify-store-helpers');
+        const { exchangeCodeForToken, fetchShopifyStoreInfo, mapShopifyPlan } = await import('../lib/shopify-oauth');
+        const { normalizeShopifyStoreUrl } = await import('../lib/shopify-store-helpers');
 
         const { access_token } = await exchangeCodeForToken(shop, code, state || '');
         const storeInfo = await fetchShopifyStoreInfo(access_token, shop);

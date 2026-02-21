@@ -1314,7 +1314,7 @@ export function registerAdminRoutes(app: Express) {
         const tempPath = content.video_storage_path;
         if (tempPath.includes('/temp/')) {
           try {
-            const { moveVideoFromTemp } = await import('../../src/lib/storage/course-storage');
+            const { moveVideoFromTemp } = await import('../lib/course-storage');
 
             const { data: tempChapter, error: tempError } = await supabaseRemote
               .from('course_chapters')
@@ -1524,7 +1524,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: 'File size exceeds maximum allowed size of 500MB' });
       }
 
-      const { uploadCourseVideo, getVideoSignedUrl } = await import('../../src/lib/storage/course-storage');
+      const { uploadCourseVideo, getVideoSignedUrl } = await import('../lib/course-storage');
 
       const blob = new Blob([file.buffer], { type: file.mimetype });
       const fileObj = new File([blob], file.originalname, { type: file.mimetype });
