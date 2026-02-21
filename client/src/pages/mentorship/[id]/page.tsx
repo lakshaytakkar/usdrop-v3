@@ -14,7 +14,7 @@ import { CourseContentTabs } from "./components/course-content-tabs"
 function CourseDetailContent() {
   const params = useParams()
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const courseId = params.id as string
   
   const [course, setCourse] = useState<Course | null>(null)

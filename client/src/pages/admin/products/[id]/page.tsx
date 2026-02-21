@@ -100,7 +100,7 @@ const transformToProductPick = (product: Product): ProductPick => {
 function ProductDetailContent() {
   const router = useRouter()
   const params = useParams()
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const productId = params?.id as string
   const productType = (searchParams?.get("type") || "hand-picked") as ProductType
   const { showSuccess, showError } = useToast()

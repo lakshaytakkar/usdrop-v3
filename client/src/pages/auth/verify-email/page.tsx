@@ -18,7 +18,7 @@ import { Link } from "wouter"
 const RESEND_COOLDOWN_SECONDS = 60
 
 function VerifyEmailContent() {
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const router = useRouter()
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()

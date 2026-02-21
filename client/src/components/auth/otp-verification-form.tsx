@@ -32,7 +32,7 @@ export function OTPVerificationForm({
   onResend,
 }: OTPVerificationFormProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { showSuccess, showError } = useToast()
   
   const [otp, setOtp] = useState("")

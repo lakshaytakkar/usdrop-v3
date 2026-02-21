@@ -12,7 +12,7 @@ import { Logo } from "@/components/layout/logo"
 import { Link } from "wouter"
 
 function AuthCodeErrorContent() {
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const errorType = searchParams.get("type") || "generic"
   const errorMessage = searchParams.get("error") || searchParams.get("description") || ""
 

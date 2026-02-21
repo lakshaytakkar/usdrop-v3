@@ -28,7 +28,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { showSuccess, showError } = useToast()
   
   const [email, setEmail] = useState("")

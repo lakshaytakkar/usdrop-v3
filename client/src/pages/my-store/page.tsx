@@ -16,7 +16,7 @@ import Loader from "@/components/kokonutui/loader"
 
 function ShopifyStoresContent() {
   const { showSuccess, showError } = useToast()
-  const searchParams = useSearchParams()
+  const [searchParams] = useSearchParams()
   const [stores, setStores] = useState<ShopifyStore[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
