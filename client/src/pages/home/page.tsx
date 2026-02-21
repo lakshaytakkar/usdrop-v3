@@ -66,23 +66,34 @@ function WelcomeBanner() {
   const firstName = displayName.split(" ")[0]
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 p-6 md:p-8 text-white">
+    <div
+      className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
+      style={{
+        background: 'linear-gradient(135deg, #0f2b5e 0%, #0d3b8f 30%, #1a4faa 60%, #0d3b8f 80%, #0a2456 100%)',
+      }}
+    >
+      <div
+        className="absolute inset-0 opacity-[0.12]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+        }}
+      />
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-white/15 rounded-full translate-y-1/3" />
-        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-300/30 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-400/20 rounded-full translate-y-1/3" />
       </div>
 
       <div className="relative flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <img src="/3d-ecom-icons-blue/Rocket_Launch.png" alt="" width={36} height={36} className="w-9 h-9 object-contain" />
+          <div className="flex items-center gap-2.5 mb-1">
+            <img src="/3d-ecom-icons-blue/Wave_Hand.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
             <h1 className="text-2xl md:text-3xl font-bold">
               Welcome, {firstName}!
             </h1>
           </div>
-          <p className="text-white/70 text-sm md:text-base mt-1">
-            Your all-in-one dropshipping command center
+          <p className="text-blue-200/80 text-sm md:text-base mt-1">
+            Your all-in-one dropshipping command center — research, launch & scale
           </p>
           <div className="flex items-center gap-3 mt-3">
             <Badge className={cn(
@@ -91,19 +102,19 @@ function WelcomeBanner() {
             )}>
               {plan || "Free"} Plan
             </Badge>
-            <Link href="/mentorship" className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white transition-colors font-medium">
+            <Link href="/mentorship" className="inline-flex items-center gap-1.5 text-sm text-blue-200/80 hover:text-white transition-colors font-medium">
               <Play className="h-3.5 w-3.5 fill-current" />
               Watch tutorial
             </Link>
           </div>
         </div>
-        <img
-          src="/3d-ecom-icons-blue/Shopping_Sale.png"
-          alt=""
-          width={100}
-          height={100}
-          className="hidden md:block w-24 h-24 object-contain opacity-90"
-        />
+        <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg shrink-0">
+          <img
+            src="/images/mentor-portrait-2.png"
+            alt="Your mentor"
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
     </div>
   )
