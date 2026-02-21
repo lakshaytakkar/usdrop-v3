@@ -51,18 +51,12 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
   },
   Framework: {
-    searchPlaceholder: "Search your saved products, stores, and tools...",
-    showSearch: true,
+    searchPlaceholder: "",
+    showSearch: false,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
     videoTutorialTitle: "Framework Page Video Tutorial",
-    quickFilters: [
-      { id: "recent", emoji: "🕐", label: "Recently Saved" },
-      { id: "favorites", emoji: "❤️", label: "Favorites" },
-      { id: "products", emoji: "📦", label: "Products" },
-      { id: "stores", emoji: "🏪", label: "Stores" },
-    ],
   },
   Ads: {
     searchPlaceholder: "Search ad creatives, strategies, and campaigns...",
@@ -79,46 +73,28 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
   },
   Fulfilment: {
-    searchPlaceholder: "Search suppliers, shipping options...",
-    showSearch: true,
+    searchPlaceholder: "",
+    showSearch: false,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
     videoTutorialTitle: "Fulfilment Page Video Tutorial",
-    quickFilters: [
-      { id: "verified", emoji: "✅", label: "Verified" },
-      { id: "fast-shipping", emoji: "🚚", label: "Fast Shipping" },
-      { id: "low-moq", emoji: "📋", label: "Low MOQ" },
-      { id: "top-rated", emoji: "🌟", label: "Top Rated" },
-    ],
   },
   Tools: {
-    searchPlaceholder: "Search tools and generators...",
-    showSearch: true,
+    searchPlaceholder: "",
+    showSearch: false,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
     videoTutorialTitle: "Tools Page Video Tutorial",
-    quickFilters: [
-      { id: "popular", emoji: "🎯", label: "Popular" },
-      { id: "calculators", emoji: "🧮", label: "Calculators" },
-      { id: "generators", emoji: "⚙️", label: "Generators" },
-      { id: "templates", emoji: "📝", label: "Templates" },
-    ],
   },
   Mentorship: {
-    searchPlaceholder: "Search courses and lessons...",
-    showSearch: true,
+    searchPlaceholder: "",
+    showSearch: false,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
     videoTutorialTitle: "Mentorship Page Video Tutorial",
-    quickFilters: [
-      { id: "beginner", emoji: "🌱", label: "Beginner" },
-      { id: "advanced", emoji: "🎓", label: "Advanced" },
-      { id: "popular", emoji: "🔥", label: "Popular" },
-      { id: "new", emoji: "🆕", label: "New Courses" },
-    ],
   },
 }
 
@@ -178,21 +154,25 @@ export function SubNavTabs() {
           })}
         </div>}
 
-        {toolbar.showSearch && (
+        {(toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0)) && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-gray-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-              <SlidersHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
-              <div className="h-5 w-px bg-gray-200 shrink-0" />
-              <Search className="h-4 w-4 text-gray-400 shrink-0" />
-              <input
-                type="text"
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                placeholder={toolbar.searchPlaceholder}
-                className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
-                data-testid="input-subnav-search"
-              />
-            </div>
+            {toolbar.showSearch && (
+              <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-gray-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+                <SlidersHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
+                <div className="h-5 w-px bg-gray-200 shrink-0" />
+                <Search className="h-4 w-4 text-gray-400 shrink-0" />
+                <input
+                  type="text"
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder={toolbar.searchPlaceholder}
+                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                  data-testid="input-subnav-search"
+                />
+              </div>
+            )}
+
+            {!toolbar.showSearch && <div className="flex-1" />}
 
             {toolbar.actions && toolbar.actions.length > 0 && (
               <div className="flex items-center gap-1.5 shrink-0">
