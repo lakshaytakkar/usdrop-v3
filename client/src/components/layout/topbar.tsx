@@ -22,7 +22,6 @@ import {
   Crown,
   BookOpen,
 } from "lucide-react"
-import { WhatsAppContactButton } from "@/components/shared/whatsapp-contact-button"
 import { useState, useEffect } from "react"
 import { Link } from "wouter"
 import { useAuth } from "@/contexts/auth-context"
@@ -178,14 +177,6 @@ export function Topbar() {
                 </Link>
               </Button>
             </>
-          )}
-
-          {/* WhatsApp Contact Button */}
-          {mounted && !isInternal && (
-            <WhatsAppContactButton 
-              pocName="Parth"
-              phoneNumber="+91 9350502364"
-            />
           )}
 
           {/* User Profile Dropdown */}

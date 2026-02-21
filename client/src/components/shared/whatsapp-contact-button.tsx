@@ -1,9 +1,8 @@
 
-
-import { Button } from "@/components/ui/button"
+import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { X } from "lucide-react"
 
-// WhatsApp icon SVG component
 const WhatsAppIcon = ({ className }: { className?: string }) => (
   <svg
     viewBox="0 0 24 24"
@@ -15,48 +14,122 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-interface WhatsAppContactButtonProps {
+interface WhatsAppFloatingButtonProps {
   pocName?: string
   phoneNumber?: string
-  className?: string
+  avatarUrl?: string
 }
 
-export function WhatsAppContactButton({ 
-  pocName = "Parth", 
-  phoneNumber = "+1 (555) 123-4567",
-  className 
-}: WhatsAppContactButtonProps) {
-  // Format phone number for WhatsApp URL (remove all non-numeric characters)
+export function WhatsAppFloatingButton({
+  pocName = "Parth",
+  phoneNumber = "+91 9350502364",
+  avatarUrl = "https://avatar.iran.liara.run/public/boy",
+}: WhatsAppFloatingButtonProps) {
+  const [open, setOpen] = useState(false)
+  const popupRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
   const formattedNumber = phoneNumber.replace(/[^0-9]/g, "")
   const whatsappUrl = `https://wa.me/${formattedNumber}`
 
-  const handleClick = () => {
-    window.open(whatsappUrl, "_blank")
-  }
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false)
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside)
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [open])
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={handleClick}
-      className={cn(
-        "flex items-center gap-2 cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/20 transition-colors",
-        className
-      )}
-      aria-label={`Contact ${pocName} on WhatsApp`}
-    >
-      <div className="relative">
-        <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
-          <WhatsAppIcon className="h-5 w-5 text-white" />
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end" data-testid="whatsapp-floating">
+      <div
+        ref={popupRef}
+        className={cn(
+          "mb-3 w-72 rounded-2xl overflow-hidden shadow-xl transition-all duration-300 origin-bottom-right",
+          open
+            ? "opacity-100 scale-100 translate-y-0"
+            : "opacity-0 scale-90 translate-y-2 pointer-events-none"
+        )}
+        style={{
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.9)",
+        }}
+      >
+        <div className="bg-gradient-to-r from-green-500 to-green-600 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <WhatsAppIcon className="h-5 w-5 text-white" />
+            <span className="text-white font-semibold text-sm">Your POC</span>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className="text-white/80 hover:text-white transition-colors cursor-pointer"
+            data-testid="button-close-whatsapp-popup"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        {/* Green online dot */}
-        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-background rounded-full" />
+
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-4 hover:bg-green-50/50 transition-colors group cursor-pointer"
+          data-testid="link-whatsapp-contact"
+        >
+          <div className="relative shrink-0">
+            <img
+              src={avatarUrl}
+              alt={pocName}
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-green-100"
+            />
+            <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+              {pocName}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{phoneNumber}</p>
+            <p className="text-[11px] text-green-600 font-medium mt-1">
+              Tap to chat on WhatsApp
+            </p>
+          </div>
+          <WhatsAppIcon className="h-5 w-5 text-green-500 opacity-60 group-hover:opacity-100 transition-opacity shrink-0" />
+        </a>
       </div>
-      <div className="flex flex-col items-start">
-        <span className="text-sm font-semibold text-foreground leading-tight">Contact POC</span>
-        <span className="text-xs text-muted-foreground leading-tight">{pocName} : {phoneNumber}</span>
-      </div>
-    </Button>
+
+      <button
+        ref={buttonRef}
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "h-14 w-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95",
+          open
+            ? "bg-gray-600 hover:bg-gray-700"
+            : "bg-green-500 hover:bg-green-600"
+        )}
+        style={{
+          boxShadow: open
+            ? "0 4px 14px rgba(0,0,0,0.2)"
+            : "0 4px 14px rgba(37,211,102,0.4)",
+        }}
+        data-testid="button-whatsapp-floating"
+      >
+        {open ? (
+          <X className="h-6 w-6 text-white" />
+        ) : (
+          <WhatsAppIcon className="h-7 w-7 text-white" />
+        )}
+      </button>
+    </div>
   )
 }
-

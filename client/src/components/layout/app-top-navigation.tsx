@@ -26,7 +26,6 @@ import {
   X,
   ChevronDown,
 } from "lucide-react"
-import { WhatsAppContactButton } from "@/components/shared/whatsapp-contact-button"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
 import { externalNavGroups, findActiveGroup } from "@/data/navigation"
@@ -234,13 +233,6 @@ export function AppTopNavigation() {
                   <span className="hidden lg:inline text-sm">Help</span>
                 </Link>
               </Button>
-
-              {mounted && !isInternal && (
-                <WhatsAppContactButton
-                  pocName="Parth"
-                  phoneNumber="+91 9350502364"
-                />
-              )}
 
               {mounted && (
                 <DropdownMenu>
