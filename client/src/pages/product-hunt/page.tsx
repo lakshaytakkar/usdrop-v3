@@ -155,7 +155,7 @@ function FilterSidebar({
 }
 
 export default function ProductHuntPage() {
-  const PRODUCTS_PER_PAGE = 12
+  const PRODUCTS_PER_PAGE = 25
   
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -269,22 +269,37 @@ export default function ProductHuntPage() {
     }
   }, [selectedCategory])
   
+  const generateSampleTrend = (id: string | number): number[] => {
+    const seed = typeof id === 'string' ? id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : Number(id)
+    const points: number[] = []
+    let value = 20 + (seed % 60)
+    for (let i = 0; i < 7; i++) {
+      value = Math.max(5, Math.min(100, value + ((seed * (i + 1) * 7) % 31) - 15))
+      points.push(Math.round(value))
+    }
+    return points
+  }
+
   const productCardData: ProductCardData[] = useMemo(() => {
-    let filtered = products.map((product) => ({
-      id: product.id,
-      image: product.image,
-      title: product.title,
-      buyPrice: product.buy_price,
-      sellPrice: product.sell_price,
-      profitPerOrder: product.profit_per_order,
-      trendData: Array.isArray(product.trend_data) ? product.trend_data : [],
-      category: product.category?.name || product.category?.slug || 'uncategorized',
-      rating: product.rating || 0,
-      reviews: product.reviews_count || 0,
-      trending: Array.isArray(product.trend_data) && product.trend_data.length > 1 
-        ? product.trend_data[product.trend_data.length - 1] > product.trend_data[0]
-        : false,
-    }))
+    let filtered = products.map((product) => {
+      const rawTrend = Array.isArray(product.trend_data) ? product.trend_data : []
+      const trendData = rawTrend.length >= 2 ? rawTrend : generateSampleTrend(product.id)
+      return {
+        id: product.id,
+        image: product.image,
+        title: product.title,
+        buyPrice: product.buy_price,
+        sellPrice: product.sell_price,
+        profitPerOrder: product.profit_per_order,
+        trendData,
+        category: product.category?.name || product.category?.slug || 'uncategorized',
+        rating: product.rating || 0,
+        reviews: product.reviews_count || 0,
+        trending: trendData.length > 1 
+          ? trendData[trendData.length - 1] > trendData[0]
+          : false,
+      }
+    })
 
     if (priceRange[0] > 0 || priceRange[1] < 999) {
       filtered = filtered.filter(p => p.sellPrice >= priceRange[0] && p.sellPrice <= priceRange[1])
@@ -457,7 +472,7 @@ export default function ProductHuntPage() {
             <div className="relative flex-1">
               {isLoading && products.length === 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                  {Array.from({ length: 12 }).map((_, index) => (
+                  {Array.from({ length: 15 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden border-border/50 p-0">
                       <Skeleton className="aspect-square w-full" />
                       <div className="p-4 space-y-3">

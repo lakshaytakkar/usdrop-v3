@@ -16,13 +16,7 @@ import {
   Check,
   Loader2,
 } from "lucide-react"
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
+import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
 import { useToast } from "@/hooks/use-toast"
 
 interface ProductCardProps {
@@ -142,11 +136,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
           <img
             src={product.image || "/demo-products/product-1.png"}
             alt={product.title}
-           
-           
-            quality={60}
             loading="lazy"
-            placeholder="empty"
             className={`object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}
           />
@@ -271,54 +261,35 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
         </h3>
 
         {/* Mini Area Chart */}
-        <div className="h-12 w-full">
-          <ChartContainer 
-            config={{
-              orders: {
-                label: "Orders",
-                color: trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)",
-              },
-            } satisfies ChartConfig}
-            className="h-full w-full"
-          >
+        <div style={{ width: '100%', height: 52 }}>
+          <ResponsiveContainer width="100%" height={52}>
             <AreaChart
-              data={safeTrendData.map((value, index) => ({
-                index,
-                orders: value,
-              }))}
-              margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+              data={safeTrendData.map((value, i) => ({ i, v: value }))}
+              margin={{ top: 4, right: 4, bottom: 4, left: 4 }}
             >
               <defs>
-                <linearGradient id={`gradient-${product.id}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="0%"
-                    stopColor={trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)"}
-                    stopOpacity={0.3}
-                  />
-                  <stop
-                    offset="100%"
-                    stopColor={trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)"}
-                    stopOpacity={0.05}
-                  />
+                <linearGradient id={`grad-${product.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={trendDirection === "up" ? "#22c55e" : "#ef4444"} stopOpacity={0.25} />
+                  <stop offset="100%" stopColor={trendDirection === "up" ? "#22c55e" : "#ef4444"} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="transparent" />
-              <XAxis hide dataKey="index" />
-              <YAxis hide />
-              <ChartTooltip
-                cursor={{ stroke: trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)", strokeWidth: 1, strokeDasharray: "3 3" }}
-                content={<ChartTooltipContent className="min-w-[100px]" />}
+              <Tooltip
+                contentStyle={{ fontSize: 11, borderRadius: 8, padding: '4px 8px', border: '1px solid #e5e7eb' }}
+                formatter={(value: number) => [`${value} orders`, '']}
+                labelFormatter={() => ''}
               />
               <Area
-                dataKey="orders"
+                dataKey="v"
                 type="monotone"
-                fill={`url(#gradient-${product.id})`}
+                fill={`url(#grad-${product.id})`}
                 fillOpacity={1}
-                stroke={trendDirection === "up" ? "hsl(142.1 76.2% 36.3%)" : "hsl(0 84.2% 60.2%)"}
-                strokeWidth={1.5}
+                stroke={trendDirection === "up" ? "#22c55e" : "#ef4444"}
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 3, strokeWidth: 0 }}
               />
             </AreaChart>
-          </ChartContainer>
+          </ResponsiveContainer>
         </div>
 
         {/* Pricing Grid */}
