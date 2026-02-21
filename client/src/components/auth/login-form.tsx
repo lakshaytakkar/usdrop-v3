@@ -21,13 +21,7 @@ import { getRedirectUrl } from "@/lib/utils/auth"
 import { getUserRedirectPath } from "@/lib/utils/user-redirects"
 import type { UserMetadata } from "@/types/user-metadata"
 import { Link } from "wouter"
-import { Eye, EyeOff, Shield, Crown, User } from "lucide-react"
-
-const devQuickLogins = [
-  { label: "Sign in as Admin", email: "admin@usdrop.ai", password: "usdrop", Icon: Shield },
-  { label: "Sign in as Pro User", email: "pro@usdrop.ai", password: "usdrop", Icon: Crown },
-  { label: "Sign in as Free User", email: "free@usdrop.ai", password: "usdrop", Icon: User },
-]
+import { Eye, EyeOff } from "lucide-react"
 
 export function LoginForm({
   className,
@@ -42,7 +36,6 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [quickLoginLoading, setQuickLoginLoading] = useState<string | null>(null)
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -181,66 +174,6 @@ export function LoginForm({
                   )}
                 </Button>
               </Field>
-              {devQuickLogins.map((ql) => (
-                <Field key={ql.email}>
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="w-full h-9 text-sm"
-                    disabled={loading || googleLoading || !!quickLoginLoading}
-                    data-testid={`button-login-${ql.label.toLowerCase().replace(/\s+/g, '-')}`}
-                    onClick={async () => {
-                      setQuickLoginLoading(ql.email)
-                      setErrors({})
-                      try {
-                        const res = await fetch("/api/auth/signin", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ email: ql.email, password: ql.password }),
-                        })
-                        const data = await res.json()
-                        if (!res.ok) {
-                          setErrors({ general: data.error || "Login failed" })
-                          setQuickLoginLoading(null)
-                          return
-                        }
-                        if (data.token) setAccessToken(data.token)
-                        showSuccess(`Signed in as ${ql.label.replace("Sign in as ", "")}`)
-                        const redirectedFrom = searchParams.get("redirectedFrom")
-                        if (redirectedFrom) { router.push(redirectedFrom); router.refresh(); return }
-                        const userRes = await apiFetch("/api/auth/user")
-                        if (userRes.ok) {
-                          const userData = await userRes.json()
-                          const path = getUserRedirectPath(userData)
-                          router.push(path)
-                          router.refresh()
-                        } else {
-                          router.push("/home")
-                          router.refresh()
-                        }
-                      } catch {
-                        setErrors({ general: "Login failed" })
-                        setQuickLoginLoading(null)
-                      }
-                    }}
-                  >
-                    {quickLoginLoading === ql.email ? (
-                      <>
-                        <svg className="mr-1.5 h-3 w-3 animate-spin" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Signing in...
-                      </>
-                    ) : (
-                      <>
-                        <ql.Icon className="mr-1.5 h-3 w-3" />
-                        {ql.label}
-                      </>
-                    )}
-                  </Button>
-                </Field>
-              ))}
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card -my-1.5">
                 Or continue with
               </FieldSeparator>
