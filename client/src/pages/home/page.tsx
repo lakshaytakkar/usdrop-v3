@@ -128,7 +128,7 @@ function HowToUseSection() {
                   </div>
                   <p className="ds-caption leading-relaxed">{card.description}</p>
                 </div>
-                <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+                <div className="relative w-36 h-24 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                   <img
                     src={card.thumbnail}
                     alt={card.title}
@@ -138,7 +138,7 @@ function HowToUseSection() {
                   <img
                     src={card.iconSrc}
                     alt=""
-                    className="absolute bottom-1 right-1 w-6 h-6 object-contain drop-shadow-sm"
+                    className="absolute bottom-1 right-1 w-7 h-7 object-contain drop-shadow-sm"
                   />
                 </div>
               </div>
