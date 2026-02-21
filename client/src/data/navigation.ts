@@ -115,18 +115,11 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Shopify",
-    icon: ShoppingBag,
-    iconSrc: "/3d-ecom-icons-blue/Shopping_Cart.png",
-    items: [
-      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
-    ],
-  },
-  {
     label: "More",
     icon: MoreHorizontal,
     isDropdown: true,
     items: [
+      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
       { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
       { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
     ],
