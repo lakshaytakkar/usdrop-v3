@@ -197,7 +197,7 @@ function QuickLinksSection() {
 
 function DashboardContent() {
   return (
-    <div className="flex flex-1 flex-col gap-5 p-4 md:p-6 lg:p-8 bg-gray-50/30">
+    <div className="flex flex-1 flex-col gap-5 p-4 md:p-6 lg:p-8">
       <WelcomeBanner />
       <HowToUseSection />
       <QuickLinksSection />
@@ -209,7 +209,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-1 flex-col gap-5 p-4 md:p-6 lg:p-8 bg-gray-50/30">
+        <div className="flex flex-1 flex-col gap-5 p-4 md:p-6 lg:p-8">
           <div className="flex justify-center items-center" style={{ minHeight: "calc(100vh - 300px)" }}>
             <BlueSpinner size="lg" label="Loading dashboard..." />
           </div>

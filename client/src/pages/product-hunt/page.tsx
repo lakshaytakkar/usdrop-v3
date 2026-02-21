@@ -358,9 +358,6 @@ export default function ProductHuntPage() {
     <>
       <div
         className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #e8f4fd 0%, #dbeef9 20%, #c8e6f5 40%, #b8ddf0 60%, #d4ecf7 80%, #eaf5fc 100%)',
-        }}
       >
         <div className="flex flex-1 gap-4 p-4 md:p-5 overflow-hidden">
           <FilterSidebar

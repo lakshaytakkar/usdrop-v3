@@ -125,15 +125,17 @@ export function AppTopNavigation() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full">
+      <header
+        className="sticky top-0 z-50 w-full"
+        style={{
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          background: 'linear-gradient(135deg, rgba(232,244,253,0.85) 0%, rgba(219,238,249,0.85) 40%, rgba(200,230,245,0.85) 70%, rgba(212,236,247,0.85) 100%)',
+        }}
+      >
         <div className="px-3 pt-2">
           <div
-            className="flex h-[64px] items-center px-5 lg:px-6 rounded-xl border border-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
-            style={{
-              background: 'rgba(255,255,255,0.6)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-            }}
+            className="flex h-[64px] items-center px-5 lg:px-6"
           >
             <button
               className="md:hidden p-1.5 rounded-md text-gray-600 hover:bg-gray-100 cursor-pointer mr-2"
