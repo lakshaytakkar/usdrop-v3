@@ -43,6 +43,7 @@ export interface NavItem {
 export interface NavGroup {
   label: string
   icon: LucideIcon
+  iconSrc?: string
   items: NavItem[]
 }
 
@@ -50,6 +51,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Framework",
     icon: Compass,
+    iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
     items: [
       { title: "Dashboard", icon: Home, url: "/home", isPro: false },
       { title: "My Products", icon: Bookmark, url: "/my-products", isPro: false },
@@ -62,6 +64,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Mentorship",
     icon: GraduationCap,
+    iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
     items: [
       { title: "Mentorship", icon: GraduationCap, url: "/mentorship", isPro: false },
     ],
@@ -69,6 +72,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Product",
     icon: Package,
+    iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
     items: [
       { title: "Product Hunt", icon: TrendingUp, url: "/product-hunt", isPro: true },
       { title: "Winning Products", icon: Trophy, url: "/winning-products", isPro: true },
@@ -80,13 +84,15 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Videos & Ads",
     icon: Play,
+    iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
     items: [
       { title: "Meta Ads", icon: BarChart3, url: "/meta-ads", isPro: true },
     ],
   },
   {
-    label: "Order Fulfilment",
+    label: "Fulfilment",
     icon: Truck,
+    iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [
       { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: true },
       { title: "Selling Channels", icon: ExternalLink, url: "/selling-channels", isPro: true },
@@ -96,6 +102,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Shopify",
     icon: ShoppingBag,
+    iconSrc: "/3d-ecom-icons-blue/Shopping_Cart.png",
     items: [
       { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
     ],
@@ -103,14 +110,16 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Studio",
     icon: Palette,
+    iconSrc: "/3d-ecom-icons-blue/Paint_Palette.png",
     items: [
       { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
       { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
     ],
   },
   {
-    label: "Important Tools",
+    label: "Tools",
     icon: Wrench,
+    iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
     items: [
       { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
       { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
@@ -122,6 +131,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Blogs",
     icon: FileText,
+    iconSrc: "/3d-ecom-icons-blue/Open_Board.png",
     items: [
       { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
     ],
@@ -129,6 +139,7 @@ export const externalNavGroups: NavGroup[] = [
   {
     label: "Webinars",
     icon: MonitorPlay,
+    iconSrc: "/3d-ecom-icons-blue/Webinar_Video.png",
     items: [
       { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
     ],

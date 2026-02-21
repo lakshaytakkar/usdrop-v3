@@ -146,12 +146,15 @@ export function AppTopNavigation() {
                   key={group.label}
                   href={firstItem.url}
                   className={cn(
-                    "px-3 py-1.5 text-[13px] font-semibold rounded-md transition-colors whitespace-nowrap",
+                    "px-2.5 py-1.5 text-[13px] font-semibold rounded-md transition-colors whitespace-nowrap inline-flex items-center gap-1",
                     isActive
                       ? "text-blue-600 bg-blue-50/80"
                       : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
+                  {group.iconSrc && (
+                    <img src={group.iconSrc} alt="" width={16} height={16} className="w-4 h-4 object-contain" />
+                  )}
                   {group.label}
                 </Link>
               )
