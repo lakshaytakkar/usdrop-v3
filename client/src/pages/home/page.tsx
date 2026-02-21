@@ -1,5 +1,5 @@
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -7,7 +7,9 @@ import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import {
   ChevronRight,
+  PlayCircle,
 } from "lucide-react"
+import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
 import { Link } from "wouter"
 
@@ -58,47 +60,64 @@ const howToCards = [
 
 function WelcomeBanner() {
   const { user } = useAuth()
+  const [videoModalOpen, setVideoModalOpen] = useState(false)
 
   const displayName = user?.full_name || user?.email?.split("@")[0] || "there"
   const firstName = displayName.split(" ")[0]
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
-      style={{
-        background: 'linear-gradient(135deg, #0f2b5e 0%, #0d3b8f 30%, #1a4faa 60%, #0d3b8f 80%, #0a2456 100%)',
-      }}
-    >
+    <>
       <div
-        className="absolute inset-0 opacity-[0.12]"
+        className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
+          background: 'linear-gradient(135deg, #0f2b5e 0%, #0d3b8f 30%, #1a4faa 60%, #0d3b8f 80%, #0a2456 100%)',
         }}
-      />
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-300/30 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-400/20 rounded-full translate-y-1/3" />
+      >
+        <div
+          className="absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+          }}
+        />
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-300/30 rounded-full -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-400/20 rounded-full translate-y-1/3" />
+        </div>
+
+        <div className="relative flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">
+              <span className="text-4xl md:text-5xl mr-2 align-middle">👋</span> Welcome, {firstName}!
+            </h1>
+            <p className="text-blue-200/80 text-sm md:text-base mb-3">
+              Your all-in-one dropshipping command center — research, launch & scale
+            </p>
+            <button
+              onClick={() => setVideoModalOpen(true)}
+              className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-white/15 hover:bg-white/25 border border-white/20 text-sm font-medium text-white transition-all cursor-pointer whitespace-nowrap backdrop-blur-sm"
+              data-testid="button-welcome-video-tutorial"
+            >
+              <PlayCircle className="h-4 w-4" />
+              <span>Video Tutorial</span>
+            </button>
+          </div>
+          <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg shrink-0">
+            <img
+              src="/images/mentor-portrait-2.png"
+              alt="Your mentor"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="relative flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-1">
-            <span className="text-4xl md:text-5xl mr-2 align-middle">👋</span> Welcome, {firstName}!
-          </h1>
-          <p className="text-blue-200/80 text-sm md:text-base">
-            Your all-in-one dropshipping command center — research, launch & scale
-          </p>
-        </div>
-        <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg shrink-0">
-          <img
-            src="/images/mentor-portrait-2.png"
-            alt="Your mentor"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
-    </div>
+      <VideoTutorialModal
+        isOpen={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        title="Welcome Video Tutorial"
+      />
+    </>
   )
 }
 

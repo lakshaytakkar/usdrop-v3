@@ -53,10 +53,7 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
   Framework: {
     searchPlaceholder: "",
     showSearch: false,
-    actions: [
-      { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
-    ],
-    videoTutorialTitle: "Framework Page Video Tutorial",
+    actions: [],
   },
   Ads: {
     searchPlaceholder: "Search ad creatives, strategies, and campaigns...",
