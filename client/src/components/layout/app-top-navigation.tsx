@@ -24,12 +24,12 @@ import {
   Crown,
   Menu,
   X,
+  ChevronDown,
 } from "lucide-react"
 import { WhatsAppContactButton } from "@/components/shared/whatsapp-contact-button"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
 import { externalNavGroups, findActiveGroup } from "@/data/navigation"
-import { useUserPlan } from "@/hooks/use-user-plan"
 
 interface UserData {
   name: string
@@ -121,145 +121,199 @@ export function AppTopNavigation() {
     return activeGroup?.label === groupLabel
   }
 
+  const primaryGroups = externalNavGroups.filter(g => !g.isDropdown)
+  const moreGroup = externalNavGroups.find(g => g.isDropdown)
+
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="flex h-12 items-center px-4 lg:px-6 gap-1">
-          <button
-            className="md:hidden p-1.5 rounded-md text-gray-600 hover:bg-gray-100 cursor-pointer mr-1"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      <header className="sticky top-0 z-50 w-full">
+        <div className="px-3 pt-2">
+          <div
+            className="flex h-[52px] items-center px-4 lg:px-5 rounded-xl border border-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+            style={{
+              background: 'rgba(255,255,255,0.6)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+            }}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-
-          <Link href="/home" className="flex items-baseline gap-1 mr-5 shrink-0">
-            <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
-            <span className="text-xl font-bold text-blue-600">AI</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
-            {externalNavGroups.map((group) => {
-              const isActive = isGroupActive(group.label)
-              const firstItem = group.items[0]
-              return (
-                <Link
-                  key={group.label}
-                  href={firstItem.url}
-                  className={cn(
-                    "px-2.5 py-1.5 text-[13px] font-semibold rounded-md transition-colors whitespace-nowrap inline-flex items-center gap-1",
-                    isActive
-                      ? "text-blue-600 bg-blue-50/80"
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
-                  )}
-                >
-                  {group.iconSrc && (
-                    <img src={group.iconSrc} alt="" width={16} height={16} className="w-4 h-4 object-contain" />
-                  )}
-                  {group.label}
-                </Link>
-              )
-            })}
-          </nav>
-
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-            <GradientButton
-              variant="golden"
-              className="hidden lg:inline-flex h-8 px-3 text-xs font-mono items-center gap-1.5 group"
-              onClick={() => setIsHotProductsOpen(true)}
+            <button
+              className="md:hidden p-1.5 rounded-md text-gray-600 hover:bg-gray-100 cursor-pointer mr-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              data-testid="button-mobile-menu"
             >
-              <Flame className="h-3.5 w-3.5 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
-              <span className="uppercase">HOT PRODUCTS</span>
-            </GradientButton>
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
 
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 flex items-center gap-1.5 cursor-pointer"
-              asChild
-            >
-              <Link href="/help">
-                <HelpCircle className="h-4 w-4" />
-                <span className="hidden lg:inline text-sm">Help</span>
-              </Link>
-            </Button>
+            <Link href="/home" className="flex items-baseline gap-1 mr-6 shrink-0" data-testid="link-home-logo">
+              <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
+              <span className="text-xl font-bold text-blue-600">AI</span>
+            </Link>
 
-            {mounted && !isInternal && (
-              <WhatsAppContactButton
-                pocName="Parth"
-                phoneNumber="+91 9350502364"
-              />
-            )}
-
-            {mounted && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full cursor-pointer p-0">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage
-                        src={userData?.avatar_url || "https://avatar.iran.liara.run/public"}
-                        alt="User avatar"
-                      />
-                      <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
-                    </Avatar>
-                    {!isInternal && isPro && (
-                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-                        <Crown className="h-2.5 w-2.5 text-white" />
-                      </span>
+            <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
+              {primaryGroups.map((group) => {
+                const isActive = isGroupActive(group.label)
+                const firstItem = group.items[0]
+                return (
+                  <Link
+                    key={group.label}
+                    href={firstItem.url}
+                    data-testid={`link-nav-${group.label.toLowerCase()}`}
+                    className={cn(
+                      "px-2.5 py-1.5 text-[13px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
+                      isActive
+                        ? "text-blue-600 bg-blue-50/80"
+                        : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
                     )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="flex items-center gap-3 px-2 py-2">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={userData?.avatar_url || "https://avatar.iran.liara.run/public"}
-                        alt="User avatar"
-                      />
-                      <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">
-                        {userData?.name || fullName || "User"}
-                      </span>
-                      {isInternal && internalRole ? (
-                        <Badge
-                          variant="outline"
-                          className={cn("w-fit text-xs mt-0.5 border", getRoleBadgeClassName(internalRole))}
-                        >
-                          {getRoleLabel(internalRole)}
-                        </Badge>
-                      ) : isPro ? (
-                        <Badge
-                          className="w-fit text-xs mt-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 gap-1"
-                        >
-                          <Crown className="h-3 w-3" />
-                          Pro
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="w-fit text-xs mt-0.5">
-                          Free
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    variant="destructive"
-                    className="cursor-pointer"
-                    onClick={handleLogout}
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                    {group.iconSrc && (
+                      <img src={group.iconSrc} alt="" className="w-4 h-4 object-contain" />
+                    )}
+                    {group.label}
+                  </Link>
+                )
+              })}
+
+              {moreGroup && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      data-testid="button-nav-more"
+                      className={cn(
+                        "px-2.5 py-1.5 text-[13px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
+                        isGroupActive(moreGroup.label)
+                          ? "text-blue-600 bg-blue-50/80"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
+                      )}
+                    >
+                      More
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    {moreGroup.items.map((item) => {
+                      const ItemIcon = item.icon
+                      const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
+                      return (
+                        <DropdownMenuItem key={item.url} asChild className="cursor-pointer">
+                          <Link
+                            href={item.url}
+                            className={cn(
+                              "flex items-center gap-2 w-full",
+                              isItemActive && "text-blue-600 font-semibold"
+                            )}
+                          >
+                            <ItemIcon className="h-4 w-4" />
+                            {item.title}
+                          </Link>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </nav>
+
+            <div className="flex items-center gap-2 ml-auto shrink-0">
+              <GradientButton
+                variant="golden"
+                className="hidden lg:inline-flex h-8 px-3 text-xs font-mono items-center gap-1.5 group"
+                onClick={() => setIsHotProductsOpen(true)}
+              >
+                <Flame className="h-3.5 w-3.5 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
+                <span className="uppercase">HOT PRODUCTS</span>
+              </GradientButton>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 flex items-center gap-1.5 cursor-pointer"
+                asChild
+              >
+                <Link href="/help" data-testid="link-help">
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="hidden lg:inline text-sm">Help</span>
+                </Link>
+              </Button>
+
+              {mounted && !isInternal && (
+                <WhatsAppContactButton
+                  pocName="Parth"
+                  phoneNumber="+91 9350502364"
+                />
+              )}
+
+              {mounted && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full cursor-pointer p-0" data-testid="button-user-menu">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage
+                          src={userData?.avatar_url || "https://avatar.iran.liara.run/public"}
+                          alt="User avatar"
+                        />
+                        <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
+                      </Avatar>
+                      {!isInternal && isPro && (
+                        <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+                          <Crown className="h-2.5 w-2.5 text-white" />
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center gap-3 px-2 py-2">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={userData?.avatar_url || "https://avatar.iran.liara.run/public"}
+                          alt="User avatar"
+                        />
+                        <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-foreground">
+                          {userData?.name || fullName || "User"}
+                        </span>
+                        {isInternal && internalRole ? (
+                          <Badge
+                            variant="outline"
+                            className={cn("w-fit text-xs mt-0.5 border", getRoleBadgeClassName(internalRole))}
+                          >
+                            {getRoleLabel(internalRole)}
+                          </Badge>
+                        ) : isPro ? (
+                          <Badge
+                            className="w-fit text-xs mt-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 gap-1"
+                          >
+                            <Crown className="h-3 w-3" />
+                            Pro
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="w-fit text-xs mt-0.5">
+                            Free
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      className="cursor-pointer"
+                      onClick={handleLogout}
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-12 z-40 bg-white overflow-y-auto">
+        <div className="md:hidden fixed inset-0 top-[68px] z-40 bg-white overflow-y-auto">
           <nav className="p-4 space-y-3">
             {externalNavGroups.map((group) => {
               return (

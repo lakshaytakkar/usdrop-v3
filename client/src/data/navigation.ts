@@ -26,11 +26,11 @@ import {
   UserCircle,
   KeyRound,
   Compass,
-  Play,
   Palette,
   Wrench,
   FileText,
   MonitorPlay,
+  MoreHorizontal,
 } from "lucide-react"
 
 export interface NavItem {
@@ -45,6 +45,7 @@ export interface NavGroup {
   icon: LucideIcon
   iconSrc?: string
   items: NavItem[]
+  isDropdown?: boolean
 }
 
 export const externalNavGroups: NavGroup[] = [
@@ -70,7 +71,7 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Product",
+    label: "Products",
     icon: Package,
     iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
     items: [
@@ -82,8 +83,8 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Videos & Ads",
-    icon: Play,
+    label: "Ads",
+    icon: BarChart3,
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
     items: [
       { title: "Meta Ads", icon: BarChart3, url: "/meta-ads", isPro: true },
@@ -100,23 +101,6 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Shopify",
-    icon: ShoppingBag,
-    iconSrc: "/3d-ecom-icons-blue/Shopping_Cart.png",
-    items: [
-      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
-    ],
-  },
-  {
-    label: "Studio",
-    icon: Palette,
-    iconSrc: "/3d-ecom-icons-blue/Paint_Palette.png",
-    items: [
-      { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
-      { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
-    ],
-  },
-  {
     label: "Tools",
     icon: Wrench,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
@@ -126,21 +110,24 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
       { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
       { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
+      { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
+      { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
     ],
   },
   {
-    label: "Blogs",
-    icon: FileText,
-    iconSrc: "/3d-ecom-icons-blue/Open_Board.png",
+    label: "Shopify",
+    icon: ShoppingBag,
+    iconSrc: "/3d-ecom-icons-blue/Shopping_Cart.png",
+    items: [
+      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
+    ],
+  },
+  {
+    label: "More",
+    icon: MoreHorizontal,
+    isDropdown: true,
     items: [
       { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
-    ],
-  },
-  {
-    label: "Webinars",
-    icon: MonitorPlay,
-    iconSrc: "/3d-ecom-icons-blue/Webinar_Video.png",
-    items: [
       { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
     ],
   },

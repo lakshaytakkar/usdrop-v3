@@ -51,7 +51,7 @@ function FilterSidebar({
 
   return (
     <aside className="w-[220px] shrink-0 hidden lg:block">
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 sticky top-0">
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-0">
         <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
           <Filter className="h-4 w-4" />
           Filters
@@ -358,10 +358,10 @@ export default function ProductHuntPage() {
 
           <div
             ref={containerRef}
-            className="flex-1 flex flex-col gap-4 bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 md:p-5 overflow-y-auto"
+            className="flex-1 flex flex-col gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 md:p-5 overflow-y-auto"
           >
             <div className="flex items-center justify-between">
-              <h1 className="text-base font-bold text-gray-900" data-testid="text-page-title">Product Hunt</h1>
+              <h1 className="text-lg font-bold text-gray-900" data-testid="text-page-title">Product Hunt</h1>
               <button
                 data-testid="button-mobile-filters"
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
@@ -377,7 +377,7 @@ export default function ProductHuntPage() {
                 data-testid="button-category-all"
                 onClick={() => setSelectedCategory("all")}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border",
+                  "px-3.5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
                   selectedCategory === "all"
                     ? "bg-blue-500 text-white border-blue-500 shadow-sm"
                     : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"
@@ -391,7 +391,7 @@ export default function ProductHuntPage() {
                   data-testid={`button-category-${cat.slug}`}
                   onClick={() => setSelectedCategory(cat.slug)}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer border",
+                    "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
                     selectedCategory === cat.slug
                       ? "bg-blue-500 text-white border-blue-500 shadow-sm"
                       : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"

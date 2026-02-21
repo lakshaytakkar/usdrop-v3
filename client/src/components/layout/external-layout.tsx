@@ -10,7 +10,7 @@ interface ExternalLayoutProps {
 
 export function ExternalLayout({ children, showSubNav = true }: ExternalLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-[#f0f6fb]">
       <AppTopNavigation />
       {showSubNav && <SubNavTabs />}
       <main className="flex-1">
