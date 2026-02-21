@@ -132,9 +132,9 @@ export function AppTopNavigation() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link href="/home" className="flex items-baseline gap-0.5 mr-5 shrink-0">
-            <span className="text-lg font-extrabold tracking-tight text-gray-900">USDrop</span>
-            <span className="text-lg font-extrabold text-blue-600">AI</span>
+          <Link href="/home" className="flex items-baseline gap-1 mr-5 shrink-0">
+            <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
+            <span className="text-xl font-bold text-blue-600">AI</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
