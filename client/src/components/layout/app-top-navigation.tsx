@@ -202,25 +202,47 @@ export function AppTopNavigation() {
                       <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    {moreGroup.items.map((item) => {
-                      const ItemIcon = item.icon
-                      const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
-                      return (
-                        <DropdownMenuItem key={item.url} asChild className="cursor-pointer">
-                          <Link
-                            href={item.url}
-                            className={cn(
-                              "flex items-center gap-2 w-full",
-                              isItemActive && "ds-text-primary font-semibold"
-                            )}
-                          >
-                            <ItemIcon className="h-4 w-4" />
-                            {item.title}
-                          </Link>
-                        </DropdownMenuItem>
-                      )
-                    })}
+                  <DropdownMenuContent align="start" className="w-[340px] p-0 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border-gray-100">
+                    <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50 rounded-t-xl">
+                      <h3 className="text-[13px] font-semibold text-gray-900">Explore More</h3>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Additional tools and resources</p>
+                    </div>
+                    <div className="p-2 space-y-0.5">
+                      {moreGroup.items.map((item) => {
+                        const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
+                        return (
+                          <DropdownMenuItem key={item.url} asChild className="p-0 focus:bg-transparent">
+                            <Link
+                              href={item.url}
+                              className={cn(
+                                "flex items-center gap-3.5 w-full px-3 py-3 rounded-lg transition-all group hover:bg-blue-50/60",
+                                isItemActive && "bg-blue-50/80"
+                              )}
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/60 border border-blue-100/80 flex items-center justify-center shrink-0 group-hover:shadow-sm transition-shadow">
+                                {item.iconSrc ? (
+                                  <img src={item.iconSrc} alt="" className="w-6 h-6 object-contain" />
+                                ) : (
+                                  <item.icon className="h-5 w-5 text-blue-600" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={cn(
+                                  "text-[13px] font-semibold truncate",
+                                  isItemActive ? "text-blue-700" : "text-gray-900"
+                                )}>
+                                  {item.title}
+                                </p>
+                                {item.description && (
+                                  <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{item.description}</p>
+                                )}
+                              </div>
+                              <ChevronDown className="h-3.5 w-3.5 text-gray-300 -rotate-90 shrink-0 group-hover:text-blue-400 transition-colors" />
+                            </Link>
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}

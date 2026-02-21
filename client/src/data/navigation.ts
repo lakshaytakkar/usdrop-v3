@@ -38,6 +38,8 @@ export interface NavItem {
   icon: LucideIcon
   url: string
   isPro?: boolean
+  iconSrc?: string
+  description?: string
 }
 
 export interface NavGroup {
@@ -119,9 +121,9 @@ export const externalNavGroups: NavGroup[] = [
     icon: MoreHorizontal,
     isDropdown: true,
     items: [
-      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
-      { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true },
-      { title: "Webinars", icon: Video, url: "/webinars", isPro: true },
+      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true, iconSrc: "/3d-ecom-icons-blue/My_Store.png", description: "Connect and manage your Shopify stores" },
+      { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true, iconSrc: "/3d-ecom-icons-blue/Open_Board.png", description: "Latest e-commerce insights and guides" },
+      { title: "Webinars", icon: Video, url: "/webinars", isPro: true, iconSrc: "/3d-ecom-icons-blue/Webinar_Video.png", description: "Live sessions with industry experts" },
     ],
   },
 ]
