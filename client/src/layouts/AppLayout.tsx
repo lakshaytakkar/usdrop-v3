@@ -2,6 +2,7 @@ import { AppTopNavigation } from "@/components/layout/app-top-navigation";
 import { SubNavTabs } from "@/components/layout/sub-nav-tabs";
 import { Toaster } from "@/components/ui/toast";
 import { VerifyEmailBanner } from "@/components/feedback/banners/verify-email-banner";
+import { ContactTeamButton } from "@/components/ui/contact-team-button";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Toaster />
+      <ContactTeamButton />
     </div>
   );
 }
