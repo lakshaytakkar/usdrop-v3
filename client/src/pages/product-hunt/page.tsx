@@ -418,7 +418,7 @@ export default function ProductHuntPage() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold text-gray-800">Product Hunt</h1>
+              <h1 className="text-base font-bold text-gray-900">Product Hunt</h1>
               {selectedCategory !== "all" && (
                 <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium capitalize">
                   {selectedCategory}

@@ -123,8 +123,8 @@ export function AppTopNavigation() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-200">
-        <div className="flex h-14 items-center px-4 gap-1">
+      <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-sm border-b border-gray-100">
+        <div className="flex h-12 items-center px-4 lg:px-6 gap-1">
           <button
             className="md:hidden p-1.5 rounded-md text-gray-600 hover:bg-gray-100 cursor-pointer mr-1"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -132,28 +132,26 @@ export function AppTopNavigation() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Link href="/home" className="flex items-baseline gap-1 mr-6 shrink-0">
-            <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
-            <span className="text-xl font-bold text-blue-600">AI</span>
+          <Link href="/home" className="flex items-baseline gap-0.5 mr-5 shrink-0">
+            <span className="text-lg font-extrabold tracking-tight text-gray-900">USDrop</span>
+            <span className="text-lg font-extrabold text-blue-600">AI</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-0.5 flex-1 min-w-0">
+          <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
             {externalNavGroups.map((group) => {
               const isActive = isGroupActive(group.label)
               const firstItem = group.items[0]
-              const GroupIcon = group.icon
               return (
                 <Link
                   key={group.label}
                   href={firstItem.url}
                   className={cn(
-                    "px-2.5 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap inline-flex items-center gap-1.5",
+                    "px-3 py-1.5 text-[13px] font-semibold rounded-md transition-colors whitespace-nowrap",
                     isActive
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      ? "text-blue-600 bg-blue-50/80"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                   )}
                 >
-                  <GroupIcon className="h-4 w-4 flex-shrink-0" />
                   {group.label}
                 </Link>
               )
@@ -258,17 +256,15 @@ export function AppTopNavigation() {
       </header>
 
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 top-14 z-40 bg-white overflow-y-auto">
-          <nav className="p-4 space-y-4">
+        <div className="md:hidden fixed inset-0 top-12 z-40 bg-white overflow-y-auto">
+          <nav className="p-4 space-y-3">
             {externalNavGroups.map((group) => {
-              const MobileGroupIcon = group.icon
               return (
               <div key={group.label}>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider inline-flex items-center gap-1.5">
-                  <MobileGroupIcon className="h-3.5 w-3.5" />
+                <span className="text-[11px] font-bold text-gray-300 uppercase tracking-widest">
                   {group.label}
                 </span>
-                <div className="mt-1.5 space-y-0.5">
+                <div className="mt-1 space-y-0">
                   {group.items.map((item) => {
                     const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
                     return (
@@ -277,14 +273,13 @@ export function AppTopNavigation() {
                         href={item.url}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
+                          "block px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
                           isItemActive
-                            ? "bg-blue-50 text-blue-600 font-medium"
-                            : "text-gray-700 hover:bg-gray-50"
+                            ? "bg-blue-50 text-blue-600 font-semibold"
+                            : "text-gray-600 hover:bg-gray-50"
                         )}
                       >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
+                        {item.title}
                       </Link>
                     )
                   })}

@@ -15,8 +15,8 @@ export function SubNavTabs() {
   if (!activeGroup || activeGroup.items.length <= 1) return null
 
   return (
-    <div className="w-full bg-white border-b border-gray-200">
-      <div className="flex items-center gap-2 px-6 py-1 overflow-x-auto scrollbar-hide">
+    <div className="w-full bg-white border-b border-gray-100">
+      <div className="flex items-center gap-0 px-4 lg:px-6 overflow-x-auto scrollbar-hide">
         {activeGroup.items.map((item) => {
           const isActive = pathname === item.url || pathname?.startsWith(item.url + "/")
           const isLocked = !isLoading && isFree && item.isPro
@@ -26,11 +26,11 @@ export function SubNavTabs() {
               key={item.url}
               href={item.url}
               className={cn(
-                "flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium whitespace-nowrap transition-all border-b-2",
+                "flex items-center gap-1.5 px-3.5 py-2 text-[13px] font-semibold whitespace-nowrap transition-all border-b-2",
                 isActive
                   ? "text-blue-600 border-blue-600"
-                  : "text-gray-500 border-transparent hover:text-gray-800 hover:border-gray-300",
-                isLocked && "opacity-60"
+                  : "text-gray-400 border-transparent hover:text-gray-700 hover:border-gray-200",
+                isLocked && "opacity-50"
               )}
             >
               <span>{item.title}</span>
