@@ -3,7 +3,12 @@ import { Footer } from "@/pages/(marketing)/components/Footer";
 
 export function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen bg-white">
+    <div
+      className="relative min-h-screen"
+      style={{
+        background: 'linear-gradient(135deg, #e8f4fd 0%, #dbeef9 20%, #c8e6f5 40%, #b8ddf0 60%, #d4ecf7 80%, #eaf5fc 100%)',
+      }}
+    >
       <div
         className="pointer-events-none fixed inset-0 z-[1] opacity-[0.03]"
         style={{

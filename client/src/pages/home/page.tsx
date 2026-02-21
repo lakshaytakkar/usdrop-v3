@@ -64,35 +64,33 @@ function WelcomeBanner() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6 md:p-8"
+      className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
       style={{
-        background: `
-          radial-gradient(ellipse 80% 60% at 20% 30%, rgba(195,170,255,0.25) 0%, transparent 70%),
-          radial-gradient(ellipse 70% 50% at 80% 20%, rgba(180,215,255,0.22) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 60% 70%, rgba(180,230,200,0.18) 0%, transparent 55%),
-          radial-gradient(ellipse 70% 50% at 10% 80%, rgba(240,210,250,0.2) 0%, transparent 60%),
-          linear-gradient(135deg, #e8f4fd 0%, #dbeef9 30%, #d0e8f6 60%, #e2f0fb 100%)
-        `,
+        background: 'linear-gradient(135deg, #0f2b5e 0%, #0d3b8f 30%, #1a4faa 60%, #0d3b8f 80%, #0a2456 100%)',
       }}
     >
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.12]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'repeat',
         }}
       />
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-300/30 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-1/4 w-48 h-48 bg-blue-400/20 rounded-full translate-y-1/3" />
+      </div>
 
       <div className="relative flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">
             Welcome, {firstName}!
           </h1>
-          <p className="text-gray-500 text-sm md:text-base">
+          <p className="text-blue-200/80 text-sm md:text-base">
             Your all-in-one dropshipping command center — research, launch & scale
           </p>
         </div>
-        <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-blue-200/40 shadow-lg shrink-0">
+        <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg shrink-0">
           <img
             src="/images/mentor-portrait-2.png"
             alt="Your mentor"
