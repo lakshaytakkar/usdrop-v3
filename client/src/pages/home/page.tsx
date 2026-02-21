@@ -84,7 +84,7 @@ function WelcomeBanner() {
       <div className="relative flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold mb-1">
-            Welcome, {firstName}!
+            <span className="text-4xl md:text-5xl mr-2 align-middle">👋</span> Welcome, {firstName}!
           </h1>
           <p className="text-blue-200/80 text-sm md:text-base">
             Your all-in-one dropshipping command center — research, launch & scale
