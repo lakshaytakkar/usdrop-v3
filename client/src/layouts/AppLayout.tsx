@@ -9,7 +9,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <VerifyEmailBanner />
       <AppTopNavigation />
       <SubNavTabs />
-      <main className="flex-1 p-2">
+      <main className="flex-1">
         {children}
       </main>
       <Toaster />

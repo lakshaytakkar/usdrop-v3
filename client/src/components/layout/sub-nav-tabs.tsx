@@ -15,8 +15,8 @@ export function SubNavTabs() {
   if (!activeGroup || activeGroup.items.length <= 1) return null
 
   return (
-    <div className="w-full bg-gradient-to-b from-blue-50/80 to-white border-b border-gray-200">
-      <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto scrollbar-hide">
+    <div className="w-full bg-white border-b border-gray-200">
+      <div className="flex items-center gap-2 px-6 py-1 overflow-x-auto scrollbar-hide">
         {activeGroup.items.map((item) => {
           const isActive = pathname === item.url || pathname?.startsWith(item.url + "/")
           const isLocked = !isLoading && isFree && item.isPro
@@ -26,14 +26,13 @@ export function SubNavTabs() {
               key={item.url}
               href={item.url}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all",
+                "flex items-center gap-1.5 px-4 py-2.5 text-[14px] font-medium whitespace-nowrap transition-all border-b-2",
                 isActive
-                  ? "bg-white text-blue-600 shadow-sm border border-blue-100"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-white/60",
+                  ? "text-blue-600 border-blue-600"
+                  : "text-gray-500 border-transparent hover:text-gray-800 hover:border-gray-300",
                 isLocked && "opacity-60"
               )}
             >
-              <item.icon className={cn("h-4 w-4", isActive ? "text-blue-500" : "text-gray-400")} />
               <span>{item.title}</span>
               {isLocked && <UnlockBadge variant="text-only" />}
             </Link>
