@@ -6,10 +6,6 @@ import { LogoStudio } from "@/components/ai-tools/logo-studio"
 export default function LogoStudioPage() {
   const toolContent = (
     <>
-      <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-        <h1 className="text-2xl font-bold">Whitelabelling</h1>
-        <p className="text-sm text-blue-100 mt-1">Apply your logo to multiple images in bulk. Customize placement, size, and opacity.</p>
-      </div>
 
       <LogoStudio />
     </>

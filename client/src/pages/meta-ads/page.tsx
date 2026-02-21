@@ -70,10 +70,6 @@ export default function MetaAdsPage() {
   return (
     <>
         <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
-          <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-            <h1 className="text-2xl font-bold">Meta Ads</h1>
-            <p className="text-sm text-blue-100 mt-1">Discover winning ads and optimize your campaigns</p>
-          </div>
 
           {/* Blurred background content */}
           <div className="blur-md pointer-events-none select-none opacity-60">

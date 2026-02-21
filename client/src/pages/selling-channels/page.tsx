@@ -14,10 +14,6 @@ export default function SellingChannelsPage() {
   return (
     <>
         <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-          <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-            <h1 className="text-2xl font-bold">Selling Channels</h1>
-            <p className="text-sm text-blue-100 mt-1">Connect with top marketplaces to expand your reach</p>
-          </div>
 
           {/* Marketplaces Grid */}
           <div>

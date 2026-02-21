@@ -6,10 +6,6 @@ import { DescriptionGenerator } from "@/components/ai-tools/description-generato
 export default function DescriptionGeneratorPage() {
   const toolContent = (
     <>
-      <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-        <h1 className="text-2xl font-bold">Description Generator</h1>
-        <p className="text-sm text-blue-100 mt-1">Generate compelling product listing copy that converts. AI-powered descriptions optimized for e-commerce.</p>
-      </div>
 
       <DescriptionGenerator />
     </>

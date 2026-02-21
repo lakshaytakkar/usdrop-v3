@@ -6,10 +6,6 @@ import { InvoiceGenerator } from "@/components/ai-tools/invoice-generator"
 export default function InvoiceGeneratorPage() {
   const toolContent = (
     <>
-      <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-        <h1 className="text-2xl font-bold">Invoice Generator</h1>
-        <p className="text-sm text-blue-100 mt-1">Create professional business invoices with automatic calculations and customizable templates.</p>
-      </div>
 
       <InvoiceGenerator />
     </>

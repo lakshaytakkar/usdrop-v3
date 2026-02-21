@@ -97,7 +97,7 @@ export const externalNavGroups: NavGroup[] = [
     label: "Shopify",
     icon: ShoppingBag,
     items: [
-      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify-integration", isPro: true },
+      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true },
     ],
   },
   {

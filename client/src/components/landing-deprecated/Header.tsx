@@ -40,7 +40,7 @@ export const Header: React.FC = () => {
       href: "#",
       label: "Platform",
       children: [
-        { href: "/shopify-integration", label: "Shopify Integration" },
+        { href: "/shopify", label: "Shopify Integration" },
         { href: "/fulfillment", label: "Fulfillment" },
       ]
     },

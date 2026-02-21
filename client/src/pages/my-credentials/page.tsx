@@ -117,10 +117,6 @@ export default function MyCredentialsPage() {
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-        <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-          <h1 className="text-2xl font-bold">My Credentials</h1>
-          <p className="text-sm text-blue-100 mt-1">Securely store your tool logins and important credentials</p>
-        </div>
 
         <div className="flex justify-end">
           <Button

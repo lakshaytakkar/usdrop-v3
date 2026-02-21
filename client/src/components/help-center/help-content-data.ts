@@ -76,7 +76,7 @@ export const categoryCards: CategoryCard[] = [
     category: "AI Studio",
   },
   {
-    id: "shopify-integration",
+    id: "shopify",
     title: "Shopify Integration",
     description: "Connect and manage your Shopify stores, sync products, and automate workflows.",
     icon: ShoppingBag,

@@ -75,7 +75,6 @@ import SellingChannels from "@/pages/selling-channels/page";
 import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
-import ShopifyIntegration from "@/pages/shopify-integration/page";
 import ShopifyStores from "@/pages/shopify-stores/page";
 import ShopifyMarketingPage from "@/pages/shopify/page";
 import WhatIsDropshipping from "@/pages/what-is-dropshipping/page";
@@ -218,7 +217,7 @@ function Router() {
       <Route path="/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
       <Route path="/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
       <Route path="/fulfillment" component={() => <AppLayout><Fulfillment /></AppLayout>} />
-      <Route path="/shopify-integration" component={() => <AppLayout><ShopifyIntegration /></AppLayout>} />
+
       <Route path="/shopify-stores" component={() => <AppLayout><ShopifyStores /></AppLayout>} />
       <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
       <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />

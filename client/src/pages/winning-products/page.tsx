@@ -333,10 +333,6 @@ export default function WinningProductsPage() {
     <>
       <>
           <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
-            <div className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white">
-              <h1 className="text-2xl font-bold">Winning Products</h1>
-              <p className="text-sm text-blue-100 mt-1">Expert-curated high-profit products for your store</p>
-            </div>
 
             {/* Filters and Sorting Section */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 border-b border-border/50 space-y-3">
