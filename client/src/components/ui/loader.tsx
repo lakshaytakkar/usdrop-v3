@@ -1,5 +1,3 @@
-
-
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
@@ -15,58 +13,14 @@ const sizeClasses = {
   lg: "h-8 w-8",
 }
 
-export function Loader({ className, size = "md", variant = "spinner" }: LoaderProps) {
-  if (variant === "spinner") {
-    return (
-      <Loader2
-        className={cn("animate-spin text-primary", sizeClasses[size], className)}
-        aria-label="Loading"
-      />
-    )
-  }
-
-  if (variant === "dots") {
-    return (
-      <div className={cn("flex items-center gap-1", className)} aria-label="Loading">
-        <div
-          className={cn(
-            "rounded-full bg-primary animate-pulse",
-            size === "sm" ? "h-1.5 w-1.5" : size === "md" ? "h-2 w-2" : "h-2.5 w-2.5"
-          )}
-          style={{ animationDelay: "0ms" }}
-        />
-        <div
-          className={cn(
-            "rounded-full bg-primary animate-pulse",
-            size === "sm" ? "h-1.5 w-1.5" : size === "md" ? "h-2 w-2" : "h-2.5 w-2.5"
-          )}
-          style={{ animationDelay: "150ms" }}
-        />
-        <div
-          className={cn(
-            "rounded-full bg-primary animate-pulse",
-            size === "sm" ? "h-1.5 w-1.5" : size === "md" ? "h-2 w-2" : "h-2.5 w-2.5"
-          )}
-          style={{ animationDelay: "300ms" }}
-        />
-      </div>
-    )
-  }
-
-  if (variant === "pulse") {
-    return (
-      <div
-        className={cn(
-          "rounded-full bg-primary animate-pulse",
-          sizeClasses[size],
-          className
-        )}
-        aria-label="Loading"
-      />
-    )
-  }
-
-  return null
+export function Loader({ className, size = "md" }: LoaderProps) {
+  return (
+    <Loader2
+      className={cn("animate-spin text-blue-600", sizeClasses[size], className)}
+      strokeWidth={2.5}
+      aria-label="Loading"
+    />
+  )
 }
 
 interface PageLoaderProps {
@@ -77,8 +31,8 @@ interface PageLoaderProps {
 export function PageLoader({ message = "Loading...", className }: PageLoaderProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 gap-4", className)}>
-      <Loader size="lg" variant="spinner" />
-      <p className="text-sm text-muted-foreground">{message}</p>
+      <Loader size="lg" />
+      <p className="text-sm text-gray-500 font-medium">{message}</p>
     </div>
   )
 }
@@ -91,8 +45,7 @@ interface InlineLoaderProps {
 export function InlineLoader({ className, size = "sm" }: InlineLoaderProps) {
   return (
     <div className={cn("flex items-center justify-center", className)}>
-      <Loader size={size} variant="spinner" />
+      <Loader size={size} />
     </div>
   )
 }
-

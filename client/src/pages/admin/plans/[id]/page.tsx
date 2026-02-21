@@ -31,7 +31,7 @@ import {
   ArrowUp,
 } from "lucide-react"
 import { SubscriptionPlan } from "@/types/admin/plans"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { useToast } from "@/hooks/use-toast"
 export default function PlanDetailPage() {
   const router = useRouter()
@@ -130,11 +130,7 @@ export default function PlanDetailPage() {
     return (
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
         <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-          <Loader 
-            title="Loading plan details..." 
-            subtitle="Fetching subscription plan information"
-            size="md"
-          />
+          <BlueSpinner size="lg" label="Loading plan details..." />
         </div>
       </div>
     )

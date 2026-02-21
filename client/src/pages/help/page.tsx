@@ -72,7 +72,7 @@ export default function HelpPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-2 bg-gray-50/50">
+        <div className="flex flex-1 flex-col gap-4 p-2">
           <div className="bg-primary/85 text-primary-foreground rounded-md px-4 py-3 flex-shrink-0 w-full">
             <div className="flex items-center justify-between">
               <div>

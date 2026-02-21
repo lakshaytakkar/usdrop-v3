@@ -1,6 +1,3 @@
-
-
-import { ExternalLayout } from "@/components/layout/external-layout"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface PageLoadingProps {
@@ -9,22 +6,20 @@ interface PageLoadingProps {
 
 export function PageLoading({ title }: PageLoadingProps) {
   return (
-    <ExternalLayout>
-      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-100/50">
-        {title && (
-          <h1 className="text-2xl font-bold">{title}</h1>
-        )}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl border bg-card p-6">
-              <Skeleton className="h-32 w-full mb-4 rounded-lg" />
-              <Skeleton className="h-4 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
+    <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
+      {title && (
+        <h1 className="text-2xl font-bold">{title}</h1>
+      )}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-xl border border-white/60 bg-white/40 p-6">
+            <Skeleton className="h-32 w-full mb-4 rounded-lg" />
+            <Skeleton className="h-4 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        ))}
       </div>
-    </ExternalLayout>
+    </div>
   )
 }
 
@@ -33,7 +28,7 @@ export function ContentLoading() {
     <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-xl border bg-card p-6">
+          <div key={i} className="rounded-xl border border-white/60 bg-white/40 p-6">
             <Skeleton className="h-32 w-full mb-4 rounded-lg" />
             <Skeleton className="h-4 w-3/4 mb-2" />
             <Skeleton className="h-4 w-1/2" />

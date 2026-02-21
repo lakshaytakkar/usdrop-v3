@@ -3,7 +3,8 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { ProductCard } from "./components/product-card"
-import { Loader2, ChevronDown, ChevronRight, RotateCcw, Filter } from "lucide-react"
+import { ChevronDown, ChevronRight, RotateCcw, Filter } from "lucide-react"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -528,7 +529,7 @@ export default function ProductHuntPage() {
             {isLoadingMore && (
               <div className="flex flex-col items-center gap-3 py-6">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  <BlueSpinner size="sm" />
                   <span className="text-sm font-medium">Loading more products...</span>
                 </div>
               </div>

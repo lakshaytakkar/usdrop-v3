@@ -116,7 +116,7 @@ export default function MyJourneyPage() {
   if (isLoading) {
     return (
       <>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0">
+        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 min-h-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="border rounded-lg bg-white p-4 space-y-3">
@@ -133,7 +133,7 @@ export default function MyJourneyPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 min-h-0 relative">
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
           {journeyStages.map((stage) => {

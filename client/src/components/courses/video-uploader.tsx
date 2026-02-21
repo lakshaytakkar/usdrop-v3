@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, Video, Loader2, CheckCircle2 } from 'lucide-react'
+import { Upload, X, Video, CheckCircle2 } from 'lucide-react'
+import { BlueSpinner } from '@/components/ui/blue-spinner'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
@@ -199,7 +200,7 @@ export function VideoUploader({
           <input {...getInputProps()} />
           {uploading ? (
             <div className="space-y-4">
-              <Loader2 className="h-12 w-12 mx-auto text-primary animate-spin" />
+              <BlueSpinner size="xl" />
               <div className="space-y-2">
                 <p className="text-sm font-medium">Uploading video...</p>
                 <Progress value={progress} className="w-full max-w-md mx-auto" />

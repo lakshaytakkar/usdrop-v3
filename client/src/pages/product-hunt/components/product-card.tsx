@@ -14,8 +14,8 @@ import {
   Lock,
   Bookmark,
   Check,
-  Loader2,
 } from "lucide-react"
+import { ButtonSpinner } from "@/components/ui/blue-spinner"
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
 import { useToast } from "@/hooks/use-toast"
 
@@ -346,7 +346,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
             title={isSaved ? "Saved" : "Save to My Products"}
           >
             {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <ButtonSpinner />
             ) : isSaved ? (
               <Check className="h-4 w-4" />
             ) : (

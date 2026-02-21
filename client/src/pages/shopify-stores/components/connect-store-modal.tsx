@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { ButtonSpinner } from "@/components/ui/blue-spinner"
 
 interface ConnectStoreModalProps {
   open: boolean
@@ -134,7 +134,7 @@ export function ConnectStoreModal({ open, onClose, onStoreAdded }: ConnectStoreM
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ButtonSpinner />
                   Connecting...
                 </>
               ) : (

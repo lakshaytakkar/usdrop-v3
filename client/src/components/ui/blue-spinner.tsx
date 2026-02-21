@@ -1,5 +1,3 @@
-
-
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
@@ -33,7 +31,7 @@ export function BlueSpinner({ size = "md", label, className, fullPage }: BlueSpi
 
   if (fullPage) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50/50">
+      <div className="flex items-center justify-center min-h-screen">
         {spinner}
       </div>
     )
@@ -52,8 +50,12 @@ export function FullPageSpinner({ label = "Loading..." }: { label?: string }) {
 
 export function InlineBlueSpinner({ size = "sm", className }: { size?: "xs" | "sm" | "md"; className?: string }) {
   return (
-    <div className={cn("flex items-center justify-center", className)}>
-      <Loader2 className={cn("animate-spin text-blue-600", sizeMap[size])} strokeWidth={2.5} />
-    </div>
+    <Loader2 className={cn("animate-spin text-blue-600", sizeMap[size], className)} strokeWidth={2.5} />
+  )
+}
+
+export function ButtonSpinner({ className }: { className?: string }) {
+  return (
+    <Loader2 className={cn("h-4 w-4 mr-2 animate-spin", className)} strokeWidth={2.5} />
   )
 }

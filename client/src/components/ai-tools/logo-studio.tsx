@@ -2,7 +2,8 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, Image as ImageIcon, Download, MousePointer2, Loader2, RotateCcw, Wand2, Package } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Download, MousePointer2, RotateCcw, Wand2, Package } from 'lucide-react';
+import { ButtonSpinner } from '@/components/ui/blue-spinner';
 import { geminiService } from '@/lib/services/gemini-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -344,7 +345,7 @@ Generate a photorealistic image where the logo appears naturally embedded on the
                                 <span className="relative flex items-center justify-center gap-2 z-10">
                                     {isDownloading ? (
                                         <>
-                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            <ButtonSpinner className="text-white" />
                                             Downloading...
                                         </>
                                     ) : (

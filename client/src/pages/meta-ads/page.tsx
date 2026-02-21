@@ -69,7 +69,7 @@ export default function MetaAdsPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
+        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 relative">
 
           {/* Blurred background content */}
           <div className="blur-md pointer-events-none select-none opacity-60">

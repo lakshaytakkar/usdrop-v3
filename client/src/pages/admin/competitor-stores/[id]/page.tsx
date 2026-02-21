@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BlueSpinner, ButtonSpinner } from "@/components/ui/blue-spinner"
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,6 @@ import {
   Package,
   Star,
   CheckCircle2,
-  Loader2,
 } from "lucide-react"
 import { CompetitorStore as CompetitorStoreType } from "@/types/competitor-stores"
 import { CompetitorStoreProduct } from "@/types/competitor-stores"
@@ -293,7 +293,7 @@ export default function CompetitorStoreDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <BlueSpinner size="lg" />
       </div>
     )
   }
@@ -589,7 +589,7 @@ export default function CompetitorStoreDetailPage() {
             <Button variant="destructive" onClick={confirmDelete} disabled={actionLoading === "delete"}>
               {actionLoading === "delete" ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ButtonSpinner />
                   Deleting...
                 </>
               ) : (

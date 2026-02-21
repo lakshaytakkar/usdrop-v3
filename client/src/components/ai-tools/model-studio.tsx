@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Loader2, Download, X, Wand2, User, Shirt, Image as ImageIcon, Hash, Sparkles, RotateCcw, Smartphone, Square, Monitor, Tv, RefreshCw } from 'lucide-react';
+import { Download, X, Wand2, User, Shirt, Image as ImageIcon, Hash, Sparkles, RotateCcw, Smartphone, Square, Monitor, Tv, RefreshCw } from 'lucide-react';
+import { ButtonSpinner, BlueSpinner } from '@/components/ui/blue-spinner';
 import { geminiService } from '@/lib/services/gemini-service';
 import { resizeImageToAspectRatio } from '@/lib/utils/image-resizer';
 import JSZip from 'jszip';
@@ -500,7 +501,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                 <span className="relative flex items-center justify-center gap-2 z-10">
                                     {isDownloading ? (
                                         <>
-                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            <ButtonSpinner className="text-white" />
                                             Creating ZIP...
                                         </>
                                     ) : (
@@ -523,7 +524,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                 <Card key={index} className="bg-card border-border">
                                     <CardContent className="p-4">
                                         <div className={`${getAspectRatioClass()} w-full bg-muted rounded-lg flex items-center justify-center relative`}>
-                                            {image.status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-foreground" />}
+                                            {image.status === 'pending' && <BlueSpinner size="lg" />}
                                             {image.status === 'error' && (
                                                 <div className="text-center p-4">
                                                     <p className="text-sm text-destructive mb-2">Error</p>

@@ -10,10 +10,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { ButtonSpinner } from "@/components/ui/blue-spinner"
 import { useToast } from "@/hooks/use-toast"
 import { ProductPick } from "@/types/admin/products"
 import {
-  Loader2,
   Plus,
   Trash2,
   ImageIcon,
@@ -742,7 +742,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
             </Button>
           ) : (
             <Button type="button" onClick={handleSubmit} disabled={submitting}>
-              {submitting && <Loader2 className="size-4 animate-spin" />}
+              {submitting && <ButtonSpinner />}
               {isEditMode ? "Update Product" : "Create Product"}
             </Button>
           )}

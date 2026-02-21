@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,7 +37,6 @@ import { Product, ProductMetadata } from "@/types/products"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
-import { Loader2 } from "lucide-react"
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { ProductFormModal } from "../components/product-form-modal"
 
@@ -192,7 +192,7 @@ function ProductDetailContent() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex items-center justify-center p-8">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <BlueSpinner size="md" />
             <span>Loading product...</span>
           </div>
         </div>
@@ -859,7 +859,7 @@ export default function ProductDetailPage() {
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex items-center justify-center p-8">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <BlueSpinner size="md" />
             <span>Loading product...</span>
           </div>
         </div>

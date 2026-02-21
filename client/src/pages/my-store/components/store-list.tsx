@@ -12,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Store, CheckCircle2, XCircle, Trash2, Loader2, RefreshCw } from "lucide-react"
+import { Store, CheckCircle2, XCircle, Trash2, RefreshCw } from "lucide-react"
+import { ButtonSpinner } from "@/components/ui/blue-spinner"
 import { ShopifyStore } from "../data/stores"
 import { useToast } from "@/hooks/use-toast"
 // Helper function to format relative time
@@ -169,7 +170,7 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                   >
                     {syncingStoreId === store.id ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <ButtonSpinner />
                         Syncing...
                       </>
                     ) : (
@@ -210,7 +211,7 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
             <Button variant="destructive" onClick={handleConfirmDisconnect} disabled={isDisconnecting}>
               {isDisconnecting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <ButtonSpinner />
                   Disconnecting...
                 </>
               ) : (

@@ -105,7 +105,7 @@ export default function MyProfilePage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 min-h-0 relative">
 
         {loading ? (
           <div className="space-y-4">

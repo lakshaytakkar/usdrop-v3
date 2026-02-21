@@ -2,7 +2,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Loader2, Download, X, Wand2, Package, Image as ImageIcon, FileText, Sparkles, RotateCcw, Globe, Radio, Zap } from 'lucide-react';
+import { Download, X, Wand2, Package, Image as ImageIcon, FileText, Sparkles, RotateCcw, Globe, Radio, Zap } from 'lucide-react';
+import { ButtonSpinner } from '@/components/ui/blue-spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -214,7 +215,7 @@ export function AdStudio() {
                                 <span className="relative flex items-center justify-center gap-2 z-10">
                                     {isDownloading ? (
                                         <>
-                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            <ButtonSpinner className="text-white" />
                                             Exporting...
                                         </>
                                     ) : (

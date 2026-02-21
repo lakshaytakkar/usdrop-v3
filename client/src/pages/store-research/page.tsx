@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, Search as SearchIcon } from "lucide-react"
+import { AlertCircle, Search as SearchIcon } from "lucide-react"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { StoreSearch } from "./components/store-search"
 import { StoreAnalysisCard } from "./components/store-analysis-card"
 import { RevenueEstimates } from "./components/revenue-estimates"
@@ -37,7 +38,7 @@ export default function StoreResearchPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 bg-gray-50/50 relative">
+        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 relative">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <SearchIcon className="h-8 w-8 text-primary" />
@@ -56,7 +57,7 @@ export default function StoreResearchPage() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <BlueSpinner size="lg" />
             </div>
           )}
 

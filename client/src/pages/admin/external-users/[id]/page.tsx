@@ -42,7 +42,7 @@ import {
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ExternalUser } from "@/types/admin/users"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 
 export default function ExternalUserDetailPage() {
   const router = useRouter()
@@ -152,11 +152,7 @@ export default function ExternalUserDetailPage() {
     return (
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
         <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-          <Loader 
-            title="Loading user details..." 
-            subtitle="Fetching user information and subscription data"
-            size="md"
-          />
+          <BlueSpinner size="lg" label="Loading user details..." />
         </div>
       </div>
     )

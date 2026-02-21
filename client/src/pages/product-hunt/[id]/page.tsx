@@ -26,7 +26,7 @@ import { AudienceDemographicsChart } from "../components/audience-demographics-c
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
 import { Product, ProductResearch } from "@/types/products"
 import { cn } from "@/lib/utils"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 
 import { Link } from "wouter"
 import { useToast } from "@/hooks/use-toast"
@@ -186,11 +186,7 @@ export default function ProductDetailPage() {
     return (
       <>
           <div className="flex flex-1 flex-col items-center justify-center" style={{ minHeight: 'calc(100vh - 200px)' }}>
-            <Loader 
-              title="Loading product details..." 
-              subtitle="Fetching comprehensive product information and analytics"
-              size="md"
-            />
+            <BlueSpinner size="lg" label="Loading product details..." />
           </div>
       </>
     )

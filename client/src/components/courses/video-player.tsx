@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { getAccessToken } from '@/lib/supabase'
-import { Play, Pause, Volume2, VolumeX, Maximize, Maximize2, Loader2 } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize, Maximize2 } from 'lucide-react'
+import { BlueSpinner } from '@/components/ui/blue-spinner'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
@@ -211,7 +212,7 @@ export function VideoPlayer({
           className
         )}
       >
-        <Loader2 className="h-8 w-8 text-white animate-spin" />
+        <BlueSpinner size="lg" />
       </div>
     )
   }
@@ -329,7 +330,7 @@ export function VideoPlayer({
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <Loader2 className="h-8 w-8 text-white animate-spin" />
+          <BlueSpinner size="lg" />
         </div>
       )}
     </div>

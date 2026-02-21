@@ -2,7 +2,7 @@
 import { Suspense } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BlueSpinner } from "@/components/ui/blue-spinner"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import {
@@ -210,8 +210,22 @@ export default function DashboardPage() {
     <Suspense
       fallback={
         <div className="flex flex-1 flex-col gap-5 p-4 md:p-6 lg:p-8">
-          <div className="flex justify-center items-center" style={{ minHeight: "calc(100vh - 300px)" }}>
-            <BlueSpinner size="lg" label="Loading dashboard..." />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-white/60 bg-white/40 p-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <Skeleton className="h-20 w-28 rounded-lg" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       }

@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { format } from "date-fns"
-import { ExternalLink, Calendar, Clock, Loader2, Check } from "lucide-react"
+import { ExternalLink, Calendar, Clock, Check } from "lucide-react"
+import { ButtonSpinner } from "@/components/ui/blue-spinner"
 import {
   Dialog,
   DialogContent,
@@ -110,7 +111,7 @@ export function WebinarModal({ webinar, open, onOpenChange }: WebinarModalProps)
                 <span className="relative flex items-center justify-center gap-2 z-10">
                   {isOpening ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      <ButtonSpinner className="text-white" />
                       Opening...
                     </>
                   ) : (
@@ -138,7 +139,7 @@ export function WebinarModal({ webinar, open, onOpenChange }: WebinarModalProps)
                   <span className="relative flex items-center justify-center gap-2 z-10">
                     {isOpening ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <ButtonSpinner className="text-white" />
                         Opening...
                       </>
                     ) : (

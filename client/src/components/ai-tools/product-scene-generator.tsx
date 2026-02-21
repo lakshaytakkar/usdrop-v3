@@ -1,7 +1,8 @@
 
 
 import React, { useState, DragEvent, ChangeEvent } from 'react';
-import { UploadCloud, Loader2, Download, RotateCcw, Wand2 } from 'lucide-react';
+import { UploadCloud, Download, RotateCcw, Wand2 } from 'lucide-react';
+import { ButtonSpinner, BlueSpinner } from '@/components/ui/blue-spinner';
 import { geminiService } from '@/lib/services/gemini-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,7 +90,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ title, imageUrl, status, error,
             <CardContent className="p-4">
                 <h3 className="font-semibold text-sm mb-2 text-center text-foreground">{title}</h3>
                 <div className="aspect-[4/5] w-full bg-muted rounded-lg border border-border flex items-center justify-center text-muted-foreground text-center relative overflow-hidden group">
-                    {status === 'pending' && <Loader2 className="animate-spin h-8 w-8 text-foreground" />}
+                    {status === 'pending' && <BlueSpinner size="lg" />}
                     {status === 'error' && (
                         <div className="p-4 text-center">
                             <p className="text-sm text-destructive mb-2 font-semibold">Error</p>
@@ -357,7 +358,7 @@ export function ProductSceneGenerator() {
                                 <span className="relative flex items-center justify-center gap-2 z-10">
                                     {isDownloading ? (
                                         <>
-                                            <Loader2 className="animate-spin h-4 w-4 text-white" />
+                                            <ButtonSpinner className="text-white" />
                                             Creating ZIP...
                                         </>
                                     ) : (

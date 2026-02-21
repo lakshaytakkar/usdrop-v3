@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useParams, useRouter, useSearchParams } from "@/hooks/use-router"
 import { Course } from "@/types/courses"
-import { Loader } from "@/components/ui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { CourseSidebar } from "./components/course-sidebar"
@@ -108,11 +108,9 @@ function CourseDetailContent() {
 
   if (loading) {
     return (
-      <>
-          <div className="flex flex-1 items-center justify-center p-8">
-            <Loader />
-          </div>
-      </>
+      <div className="flex flex-1 items-center justify-center p-8">
+        <BlueSpinner size="lg" label="Loading course..." />
+      </div>
     )
   }
 
@@ -195,11 +193,9 @@ function CourseDetailContent() {
 export default function CourseDetailPage() {
   return (
     <Suspense fallback={
-      <>
-          <div className="flex flex-1 items-center justify-center p-8">
-            <Loader />
-          </div>
-      </>
+      <div className="flex flex-1 items-center justify-center p-8">
+        <BlueSpinner size="lg" label="Loading course..." />
+      </div>
     }>
       <CourseDetailContent />
     </Suspense>

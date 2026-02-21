@@ -4,7 +4,8 @@ import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Edit, Trash2, Plus, Loader2 } from "lucide-react"
+import { Edit, Trash2, Plus } from "lucide-react"
+import { BlueSpinner, ButtonSpinner } from "@/components/ui/blue-spinner"
 import {
   Dialog,
   DialogContent,
@@ -131,7 +132,7 @@ export function NotesTab({ moduleId }: NotesTabProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <BlueSpinner size="md" />
       </div>
     )
   }
@@ -182,7 +183,7 @@ export function NotesTab({ moduleId }: NotesTabProps) {
                 onClick={editingNote ? handleUpdateNote : handleCreateNote}
                 disabled={!noteText.trim() || saving}
               >
-                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {saving && <ButtonSpinner />}
                 {editingNote ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>

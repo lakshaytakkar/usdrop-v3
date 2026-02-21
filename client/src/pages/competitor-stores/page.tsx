@@ -52,7 +52,7 @@ import {
 import { CompetitorStore, CompetitorStoreExternal } from "@/types/competitor-stores"
 import { Category } from "@/types/categories"
 import { cn } from "@/lib/utils"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
@@ -276,7 +276,7 @@ export default function CompetitorStoresPage() {
   return (
     <>
       <>
-          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 min-h-0 relative">
 
             {/* Advanced Filters and Sorting */}
             <Card className="p-4">
@@ -560,11 +560,7 @@ export default function CompetitorStoresPage() {
             {/* Loading State */}
             {loading && (
               <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-                <Loader 
-                  title="Loading competitor stores..." 
-                  subtitle="Analyzing store data and metrics"
-                  size="md"
-                />
+                <BlueSpinner size="lg" label="Loading competitor stores..." />
               </div>
             )}
 

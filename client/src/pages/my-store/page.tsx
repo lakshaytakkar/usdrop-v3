@@ -11,7 +11,7 @@ import { ConnectStoreModal } from "./components/connect-store-modal"
 import { StoreList } from "./components/store-list"
 import { ShopifyStore } from "./data/stores"
 import { useToast } from "@/hooks/use-toast"
-import Loader from "@/components/kokonutui/loader"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 
 function ShopifyStoresContent() {
   const { showSuccess, showError } = useToast()
@@ -88,15 +88,11 @@ function ShopifyStoresContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 min-h-0 relative">
 
           {loading ? (
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-              <Loader 
-                title="Loading your stores..." 
-                subtitle="Fetching your connected Shopify stores"
-                size="md"
-              />
+              <BlueSpinner size="lg" label="Loading your stores..." />
             </div>
           ) : stores.length === 0 ? (
             <Card>
@@ -146,13 +142,9 @@ export default function ShopifyStoresPage() {
   return (
     <Suspense fallback={
       <>
-          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0">
+          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 min-h-0">
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
-              <Loader
-                title="Loading your stores..."
-                subtitle="Fetching your connected Shopify stores"
-                size="md"
-              />
+              <BlueSpinner size="lg" label="Loading your stores..." />
             </div>
           </div>
       </>

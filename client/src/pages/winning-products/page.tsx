@@ -332,7 +332,7 @@ export default function WinningProductsPage() {
   return (
     <>
       <>
-          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
+          <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 min-h-0 relative">
 
             {/* Filters and Sorting Section */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 border-b border-border/50 space-y-3">
