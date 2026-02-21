@@ -7,11 +7,9 @@ import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import {
   ChevronRight,
-  Play,
 } from "lucide-react"
 
 import { Link } from "wouter"
-import { cn } from "@/lib/utils"
 
 const howToCards = [
   {
@@ -60,7 +58,6 @@ const howToCards = [
 
 function WelcomeBanner() {
   const { user } = useAuth()
-  const { plan, isPro } = useUserPlanContext()
 
   const displayName = user?.full_name || user?.email?.split("@")[0] || "there"
   const firstName = displayName.split(" ")[0]
@@ -88,27 +85,12 @@ function WelcomeBanner() {
 
       <div className="relative flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <img src="/3d-ecom-icons-blue/Wave_Hand.png" alt="" width={40} height={40} className="w-10 h-10 object-contain" />
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Welcome, {firstName}!
-            </h1>
-          </div>
-          <p className="text-gray-500 text-sm md:text-base mt-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+            Welcome, {firstName}!
+          </h1>
+          <p className="text-gray-500 text-sm md:text-base">
             Your all-in-one dropshipping command center — research, launch & scale
           </p>
-          <div className="flex items-center gap-3 mt-3">
-            <Badge className={cn(
-              "text-xs px-2.5 py-0.5 border-0",
-              isPro ? "bg-amber-500 text-white" : "bg-blue-600 text-white"
-            )}>
-              {plan || "Free"} Plan
-            </Badge>
-            <Link href="/mentorship" className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 transition-colors font-medium">
-              <Play className="h-3.5 w-3.5 fill-current" />
-              Watch tutorial
-            </Link>
-          </div>
         </div>
         <div className="hidden md:block w-28 h-28 rounded-xl overflow-hidden border-2 border-blue-200/40 shadow-lg shrink-0">
           <img
