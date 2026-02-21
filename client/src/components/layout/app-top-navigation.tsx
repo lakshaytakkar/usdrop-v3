@@ -148,20 +148,6 @@ export function AppTopNavigation() {
               <span className="text-2xl font-bold text-blue-600">AI</span>
             </Link>
 
-            <Link
-              href="/shopify-stores"
-              data-testid="button-shopify-pill"
-              className="hidden md:inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full bg-[#1a1a2e] hover:bg-[#2a2a3e] text-white text-[13px] font-semibold transition-all mr-4 shrink-0 group"
-            >
-              <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 109.5 124.5" fill="none">
-                <path d="M95.6 28.2c-.1-.6-.6-1-1.1-1-.5 0-10.2-.8-10.2-.8s-6.7-6.7-7.5-7.5c-.8-.8-2.3-.5-2.9-.4-.1 0-1.5.5-4 1.2-2.4-6.8-6.5-13.1-13.9-13.1h-.6C53.1 3.7 50.6 2 48.5 2c-16.7 0-24.7 20.9-27.2 31.5-6.5 2-11.1 3.4-11.7 3.6C6.1 38.1 6 38.2 5.8 41.7c-.2 2.6-8.1 62.4-8.1 62.4L73.3 118l36.2-7.8S95.7 28.8 95.6 28.2zM67.3 21.3l-5.4 1.7c0-1.7 0-4.2-.5-6.7 3.7.7 5.2 4 5.9 5zM57.6 24.1L44.2 28.3c1.3-5.1 3.8-10.1 8.6-13.4 1.9 1.4 3.7 4.4 4.8 9.2zm-8-16.2c.6 0 1.1.2 1.6.5-4 1.9-8.3 6.7-10.1 16.3L30.2 28c2.6-9.5 8.2-20.1 19.4-20.1z" fill="#95BF47"/>
-                <path d="M94.5 27.2c-.5 0-10.2-.8-10.2-.8s-6.7-6.7-7.5-7.5c-.3-.3-.7-.4-1-.5l-2.5 51.7 36.2-7.8S95.7 28.8 95.6 28.2c-.1-.6-.6-1-1.1-1z" fill="#5E8E3E"/>
-                <path d="M55.3 42.3l-4.8 14.3s-4.3-2.3-9.5-2.3c-7.7 0-8.1 4.8-8.1 6 0 6.6 17.2 9.1 17.2 24.5 0 12.1-7.7 19.9-18.1 19.9-12.5 0-18.9-7.8-18.9-7.8l3.3-11s6.6 5.6 12.1 5.6c3.6 0 5.1-2.8 5.1-4.9 0-8.6-14.1-9-14.1-23.1 0-11.9 8.5-23.4 25.8-23.4 6.6.1 9.8 1.9 9.8 1.9l.2.3z" fill="#fff"/>
-              </svg>
-              <span>Shopify</span>
-              <ChevronDown className="h-3 w-3 ml-0.5 opacity-70 group-hover:opacity-100 transition-opacity" />
-            </Link>
-
             <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
               {primaryGroups.map((group) => {
                 const isActive = isGroupActive(group.label)
@@ -257,6 +243,19 @@ export function AppTopNavigation() {
                 <Flame className="h-4 w-4 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
                 <span className="uppercase">HOT PRODUCTS</span>
               </GradientButton>
+
+              <Link
+                href="/shopify-stores"
+                data-testid="button-shopify-pill"
+                className="hidden md:inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full bg-[#1a1a2e] hover:bg-[#2a2a3e] text-white text-[13px] font-semibold transition-all shrink-0"
+              >
+                <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 109.5 124.5" fill="none">
+                  <path d="M95.6 28.2c-.1-.6-.6-1-1.1-1-.5 0-10.2-.8-10.2-.8s-6.7-6.7-7.5-7.5c-.8-.8-2.3-.5-2.9-.4-.1 0-1.5.5-4 1.2-2.4-6.8-6.5-13.1-13.9-13.1h-.6C53.1 3.7 50.6 2 48.5 2c-16.7 0-24.7 20.9-27.2 31.5-6.5 2-11.1 3.4-11.7 3.6C6.1 38.1 6 38.2 5.8 41.7c-.2 2.6-8.1 62.4-8.1 62.4L73.3 118l36.2-7.8S95.7 28.8 95.6 28.2zM67.3 21.3l-5.4 1.7c0-1.7 0-4.2-.5-6.7 3.7.7 5.2 4 5.9 5zM57.6 24.1L44.2 28.3c1.3-5.1 3.8-10.1 8.6-13.4 1.9 1.4 3.7 4.4 4.8 9.2zm-8-16.2c.6 0 1.1.2 1.6.5-4 1.9-8.3 6.7-10.1 16.3L30.2 28c2.6-9.5 8.2-20.1 19.4-20.1z" fill="#95BF47"/>
+                  <path d="M94.5 27.2c-.5 0-10.2-.8-10.2-.8s-6.7-6.7-7.5-7.5c-.3-.3-.7-.4-1-.5l-2.5 51.7 36.2-7.8S95.7 28.8 95.6 28.2c-.1-.6-.6-1-1.1-1z" fill="#5E8E3E"/>
+                  <path d="M55.3 42.3l-4.8 14.3s-4.3-2.3-9.5-2.3c-7.7 0-8.1 4.8-8.1 6 0 6.6 17.2 9.1 17.2 24.5 0 12.1-7.7 19.9-18.1 19.9-12.5 0-18.9-7.8-18.9-7.8l3.3-11s6.6 5.6 12.1 5.6c3.6 0 5.1-2.8 5.1-4.9 0-8.6-14.1-9-14.1-23.1 0-11.9 8.5-23.4 25.8-23.4 6.6.1 9.8 1.9 9.8 1.9l.2.3z" fill="#fff"/>
+                </svg>
+                <span>Shopify</span>
+              </Link>
 
               <Button
                 variant="ghost"
