@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import { useDashboardStats } from "@/hooks/use-dashboard-stats"
@@ -551,7 +550,6 @@ function DashboardContent() {
         </div>
         <QuickAccessSection />
         <ExploreGrid />
-        <OnboardingProgressOverlay pageName="Dashboard" />
       </div>
     </>
   )

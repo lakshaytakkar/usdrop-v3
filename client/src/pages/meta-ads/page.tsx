@@ -14,7 +14,6 @@ import { BarChart3, Search, TrendingUp, DollarSign, Sparkles } from "lucide-reac
 import { AdCard } from "./components/ad-card"
 import { AdDetailSheet } from "./components/ad-detail-sheet"
 import { MetaAd, sampleAds } from "./data/ads"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { ComingSoonOverlay } from "./components/coming-soon-overlay"
 export default function MetaAdsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -195,9 +194,6 @@ export default function MetaAdsPage() {
 
           {/* Coming Soon Overlay */}
           <ComingSoonOverlay />
-
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Meta Ads" />
 
           {/* Detail Sidebar */}
           <AdDetailSheet

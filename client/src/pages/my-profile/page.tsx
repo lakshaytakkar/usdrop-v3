@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect } from "react"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -334,7 +333,6 @@ export default function MyProfilePage() {
           </div>
         )}
 
-        <OnboardingProgressOverlay pageName="My Profile" />
       </div>
     </>
   )

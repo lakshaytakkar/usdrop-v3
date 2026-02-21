@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/supabase'
 import { useMemo, useEffect, useState } from "react"
 import { useOnboarding } from "@/contexts/onboarding-context"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { CategoryCard } from "./components/category-card"
 import { Category } from "@/types/categories"
 import { Loader2, AlertCircle } from "lucide-react"
@@ -138,8 +137,6 @@ function CategoriesPageContent() {
               </>
             )}
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Categories" />
         </div>
       </>
     

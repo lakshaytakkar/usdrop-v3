@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { journeyStages } from "@/data/journey-stages";
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay";
 import { useAuth } from "@/contexts/auth-context";
 import {
   Rocket,
@@ -293,7 +292,6 @@ export default function MyJourneyPage() {
           </Card>
         )}
 
-        <OnboardingProgressOverlay pageName="My Roadmap" />
       </div>
     </>
   );

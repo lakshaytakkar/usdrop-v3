@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { LogoStudio } from "@/components/ai-tools/logo-studio"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 export default function LogoStudioPage() {
   const toolContent = (
     <>
@@ -21,7 +20,6 @@ export default function LogoStudioPage() {
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {toolContent}
 
-          <OnboardingProgressOverlay pageName="Whitelabelling" />
         </div>
     </>
   )

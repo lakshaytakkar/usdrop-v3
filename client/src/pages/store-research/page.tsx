@@ -9,7 +9,6 @@ import { RevenueEstimates } from "./components/revenue-estimates"
 import { TrafficSourcesChart } from "./components/traffic-sources-chart"
 import { ProductsGrid } from "./components/products-grid"
 import { getStoreResearchData, StoreResearchData } from "./data/store-research-data"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 
 export default function StoreResearchPage() {
   const [storeData, setStoreData] = useState<StoreResearchData | null>(null)
@@ -86,8 +85,6 @@ export default function StoreResearchPage() {
             </>
           )}
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Store Research" />
         </div>
     </>
   )

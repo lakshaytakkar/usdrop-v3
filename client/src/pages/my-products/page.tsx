@@ -2,7 +2,6 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect } from "react"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useAuth } from "@/contexts/auth-context"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -288,8 +287,6 @@ export default function MyProductsPage() {
               </Card>
             )}
 
-            {/* Onboarding Progress Overlay */}
-            <OnboardingProgressOverlay pageName="My Products" />
           </div>
     </>
   )

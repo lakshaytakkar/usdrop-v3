@@ -53,7 +53,6 @@ import { CompetitorStore, CompetitorStoreExternal } from "@/types/competitor-sto
 import { Category } from "@/types/categories"
 import { cn } from "@/lib/utils"
 import Loader from "@/components/kokonutui/loader"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
@@ -717,8 +716,6 @@ export default function CompetitorStoresPage() {
             )}
           </div>
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="Competitor Stores" />
       </>
 
       {/* Upsell Dialog */}

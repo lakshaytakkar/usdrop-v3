@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
 import { DescriptionGenerator } from "@/components/ai-tools/description-generator"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 export default function DescriptionGeneratorPage() {
   const toolContent = (
     <>
@@ -21,7 +20,6 @@ export default function DescriptionGeneratorPage() {
         <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 bg-gray-50/50 min-h-0 relative">
           {toolContent}
 
-          <OnboardingProgressOverlay pageName="Description Generator" />
         </div>
     </>
   )

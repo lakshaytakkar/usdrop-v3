@@ -14,7 +14,6 @@ import {
 import { Search, Users } from "lucide-react"
 import { SupplierCard } from "./components/supplier-card"
 import { Supplier, sampleSuppliers } from "./data/suppliers"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
@@ -135,7 +134,6 @@ export default function SuppliersPage() {
               })}
             </div>
           )}
-          <OnboardingProgressOverlay pageName="Private Suppliers" />
         </div>
 
       <UpsellDialog 

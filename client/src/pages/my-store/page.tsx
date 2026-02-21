@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "@/hooks/use-router"
-import { OnboardingProgressOverlay } from "@/components/onboarding/onboarding-progress-overlay"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -142,8 +141,6 @@ function ShopifyStoresContent() {
             onStoreAdded={handleStoreAdded}
           />
 
-          {/* Onboarding Progress Overlay */}
-          <OnboardingProgressOverlay pageName="My Shopify Stores" />
         </div>
     </>
   )
