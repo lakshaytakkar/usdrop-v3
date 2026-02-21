@@ -20,9 +20,16 @@ import {
 import { ArrowDown, ArrowUp, Minus, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+function parsePrice(value: number | string): number {
+  if (typeof value === "number") return value
+  const cleaned = String(value).replace(/[^0-9.]/g, "")
+  const parsed = parseFloat(cleaned)
+  return isNaN(parsed) ? 0 : parsed
+}
+
 interface Competitor {
   name: string
-  price: number
+  price: number | string
   url?: string
 }
 
@@ -30,39 +37,40 @@ interface CompetitorPricingChartProps {
   productPrice?: number
   competitors?: Competitor[]
   priceRange?: {
-    min: number
-    max: number
-    avg: number
+    min: number | string
+    max: number | string
+    avg: number | string
   }
 }
-
-const generateSampleData = (productPrice: number = 29.99) => ({
-  competitors: [
-    { name: "AliDirect", price: Math.round(productPrice * 0.82 * 100) / 100 },
-    { name: "DropStore", price: Math.round(productPrice * 0.91 * 100) / 100 },
-    { name: "ShopHub", price: Math.round(productPrice * 1.05 * 100) / 100 },
-    { name: "TrendMart", price: Math.round(productPrice * 1.14 * 100) / 100 },
-    { name: "GlobalShip", price: Math.round(productPrice * 0.97 * 100) / 100 },
-  ],
-  priceRange: {
-    min: Math.round(productPrice * 0.82 * 100) / 100,
-    max: Math.round(productPrice * 1.14 * 100) / 100,
-    avg: Math.round(productPrice * 0.98 * 100) / 100,
-  },
-})
 
 export function CompetitorPricingChart({
   productPrice = 29.99,
   competitors,
   priceRange,
 }: CompetitorPricingChartProps) {
-  const data = competitors && competitors.length > 0
-    ? { competitors, priceRange: priceRange || { min: 0, max: 0, avg: 0 } }
-    : generateSampleData(productPrice)
+  if (!competitors || competitors.length === 0) return null
+
+  const parsedCompetitors = competitors.map((c) => ({
+    name: c.name,
+    price: parsePrice(c.price),
+    url: c.url,
+  }))
+
+  const parsedRange = priceRange
+    ? {
+        min: parsePrice(priceRange.min),
+        max: parsePrice(priceRange.max),
+        avg: parsePrice(priceRange.avg),
+      }
+    : {
+        min: Math.min(...parsedCompetitors.map((c) => c.price)),
+        max: Math.max(...parsedCompetitors.map((c) => c.price)),
+        avg: parsedCompetitors.reduce((s, c) => s + c.price, 0) / parsedCompetitors.length,
+      }
 
   const chartData = [
-    ...data.competitors.map((c) => ({
-      name: c.name.length > 10 ? c.name.substring(0, 9) + "…" : c.name,
+    ...parsedCompetitors.map((c) => ({
+      name: c.name.length > 12 ? c.name.substring(0, 11) + "…" : c.name,
       price: c.price,
       isYours: false,
     })),
@@ -73,13 +81,12 @@ export function CompetitorPricingChart({
     price: { label: "Price", color: "hsl(var(--muted-foreground))" },
   } satisfies ChartConfig
 
-  const computedAvg = chartData.reduce((s, d) => s + d.price, 0) / (chartData.length || 1)
-  const avgPrice = data.priceRange.avg > 0 ? data.priceRange.avg : (computedAvg > 0 ? computedAvg : productPrice)
+  const avgPrice = parsedRange.avg > 0 ? parsedRange.avg : productPrice
   const priceDiff = avgPrice > 0 ? ((productPrice - avgPrice) / avgPrice) * 100 : 0
   const isBelow = priceDiff < -2
   const isAbove = priceDiff > 2
-  const cheaperCount = data.competitors.filter((c) => c.price > productPrice).length
-  const totalCompetitors = data.competitors.length
+  const cheaperCount = parsedCompetitors.filter((c) => c.price > productPrice).length
+  const totalCompetitors = parsedCompetitors.length
 
   return (
     <Card className="p-5">
@@ -100,7 +107,7 @@ export function CompetitorPricingChart({
         </Badge>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Cheaper than {cheaperCount} of {totalCompetitors} competitors · Range ${data.priceRange.min.toFixed(2)}–${data.priceRange.max.toFixed(2)}
+        Cheaper than {cheaperCount} of {totalCompetitors} competitors · Range ${parsedRange.min.toFixed(2)}–${parsedRange.max.toFixed(2)}
       </p>
 
       <ChartContainer config={chartConfig} className="h-[220px] w-full">
@@ -157,7 +164,7 @@ export function CompetitorPricingChart({
       <div className="grid grid-cols-3 gap-3 mt-4 pt-3 border-t">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Lowest</p>
-          <p className="text-sm font-semibold">${data.priceRange.min.toFixed(2)}</p>
+          <p className="text-sm font-semibold">${parsedRange.min.toFixed(2)}</p>
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Average</p>
@@ -165,7 +172,7 @@ export function CompetitorPricingChart({
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Highest</p>
-          <p className="text-sm font-semibold">${data.priceRange.max.toFixed(2)}</p>
+          <p className="text-sm font-semibold">${parsedRange.max.toFixed(2)}</p>
         </div>
       </div>
     </Card>

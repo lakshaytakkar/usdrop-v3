@@ -23,8 +23,10 @@ import { ProductKPICards } from "../components/product-kpi-cards"
 import { MarketAnalyticsChart } from "../components/market-analytics-chart"
 import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
 import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
+import { FulfillmentCard } from "../components/fulfillment-card"
+import { CompetitorStoresSection } from "../components/competitor-stores-section"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
-import { Product, ProductResearch } from "@/types/products"
+import { Product, ProductResearch, CompetitorStore } from "@/types/products"
 import { cn } from "@/lib/utils"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
 
@@ -66,6 +68,7 @@ export default function ProductDetailPage() {
   const [isAddingToPicklist, setIsAddingToPicklist] = useState(false)
   const [researchData, setResearchData] = useState<ProductResearch | null>(null)
   const [isLoadingResearch, setIsLoadingResearch] = useState(false)
+  const [competitorStores, setCompetitorStores] = useState<CompetitorStore[]>([])
   const { showSuccess, showError } = useToast()
 
   useEffect(() => {
@@ -138,6 +141,16 @@ export default function ProductDetailPage() {
           }
         }
         setIsLoadingResearch(false)
+        
+        if (data.product.category_id && isMounted) {
+          const storesResponse = await apiFetch(`/api/competitor-stores?category_id=${data.product.category_id}&pageSize=6&sortBy=monthly_revenue&sortOrder=desc`)
+          if (storesResponse.ok && isMounted) {
+            const storesResult = await storesResponse.json()
+            if (storesResult.stores) {
+              setCompetitorStores(storesResult.stores)
+            }
+          }
+        }
         
         setIsLoading(false)
       } catch (err) {
@@ -479,6 +492,23 @@ export default function ProductDetailPage() {
                     interests={researchData.audience_targeting.interests}
                     suggestions={researchData.audience_targeting.suggestions}
                   />
+                </div>
+              )}
+
+              {researchData?.fulfillment && (
+                <div className="space-y-3 min-w-0 max-w-full">
+                  <SectionHeader title="Fulfillment & Costs" description="Shipping details and market saturation analysis" />
+                  <FulfillmentCard
+                    fulfillment={researchData.fulfillment}
+                    demandSaturation={researchData.demand_saturation}
+                  />
+                </div>
+              )}
+
+              {competitorStores.length > 0 && (
+                <div className="space-y-3 min-w-0 max-w-full">
+                  <SectionHeader title="Competitor Stores" description="Top stores in this category by revenue" />
+                  <CompetitorStoresSection stores={competitorStores} />
                 </div>
               )}
 

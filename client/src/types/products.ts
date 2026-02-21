@@ -102,8 +102,8 @@ export interface ProductResearch {
   id: string
   product_id: string
   competitor_pricing: {
-    competitors: Array<{name: string, price: number, url?: string}>
-    price_range: {min: number, max: number, avg: number}
+    competitors: Array<{name: string, price: number | string, url?: string}>
+    price_range: {min: number | string, max: number | string, avg: number | string}
   } | null
   seasonal_demand: string | null
   audience_targeting: {
@@ -118,9 +118,50 @@ export interface ProductResearch {
     shares: number
     virality_score: number
   } | null
+  fulfillment: {
+    total_price: number
+    product_cost: number
+    shipping_cost: number
+    shipping_days: string
+  } | null
+  complements: Array<{name?: string, title?: string, url?: string, image?: string}> | null
+  profit_calculator: {
+    pc_ratio: number | null
+    other_fees: number | null
+    product_cost: number | null
+    profit_margin: number | null
+    selling_price: number | null
+    shipping_cost: number | null
+    break_even_roas: number | null
+    net_profit_per_sale: number | null
+  } | null
+  demand_saturation: {
+    stores_selling_count: number
+    saturation_level?: string
+    monthly_searches?: number
+    competition_score?: number
+  } | null
+  amazon_reviews: Array<{rating?: number, text?: string, title?: string}> | null
+  instagram_influencers: Array<{name?: string, followers?: number, url?: string}> | null
   research_date: string
   created_at: string
   updated_at: string
+}
+
+export interface CompetitorStore {
+  id: string
+  name: string
+  url: string
+  logo: string | null
+  category_id: string | null
+  category?: {id: string, name: string, slug: string} | null
+  country: string | null
+  monthly_traffic: number | null
+  monthly_revenue: number | null
+  growth: number | null
+  products_count: number | null
+  rating: number | null
+  verified: boolean
 }
 
 // For backward compatibility - can be used during migration
