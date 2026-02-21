@@ -123,7 +123,7 @@ export function StudioShowcase() {
                       src={slides[currentSlide].image}
                       alt={slides[currentSlide].heading}
                       className="absolute inset-0 w-full h-full object-cover"
-                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 </div>

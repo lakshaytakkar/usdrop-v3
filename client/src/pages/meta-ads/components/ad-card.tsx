@@ -121,7 +121,7 @@ export function AdCard({ ad, onClick }: AdCardProps) {
           src={ad.creative}
           alt={`Ad creative by ${ad.advertiserName}`}
           className="w-full h-full object-cover"
-          loading="lazy"
+          decoding="async"
         />
         {ad.mediaType === "video" && (
           <div className="absolute inset-0 flex items-center justify-center">

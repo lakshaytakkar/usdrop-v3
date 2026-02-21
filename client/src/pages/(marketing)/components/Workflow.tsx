@@ -91,7 +91,7 @@ export function Workflow() {
                 src="/images/landing/workflow-hero.png"
                 alt="Entrepreneur using USDrop AI platform on laptop"
                 className="w-full h-full object-cover rounded-[16px]"
-                loading="lazy"
+                decoding="async"
               />
               <div className="absolute top-6 right-6 bg-white/90 backdrop-blur px-4 py-2 rounded-[8px] shadow-lg">
                 <span className="text-[12px] font-medium text-[#323140]">

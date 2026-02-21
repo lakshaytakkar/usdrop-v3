@@ -124,8 +124,7 @@ export function ChristmasBanner() {
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}
-                loading="lazy"
-                quality={85}
+
               />
             </div>
             <div className="relative w-24 h-24 cursor-pointer">
@@ -139,8 +138,7 @@ export function ChristmasBanner() {
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}
-                loading="lazy"
-                quality={85}
+
               />
             </div>
             <div className="relative w-24 h-24 cursor-pointer">
@@ -154,8 +152,7 @@ export function ChristmasBanner() {
                 style={{
                   filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
                 }}
-                loading="lazy"
-                quality={85}
+
               />
             </div>
           </div>

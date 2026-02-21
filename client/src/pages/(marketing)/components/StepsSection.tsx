@@ -120,7 +120,7 @@ export function StepsSection() {
                         src={step.image}
                         alt={step.title}
                         className="w-full h-full object-cover"
-                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   </div>
@@ -150,7 +150,7 @@ export function StepsSection() {
                               src={sub.icon}
                               alt=""
                               className="w-12 h-12 object-contain"
-                              loading="lazy"
+                              decoding="async"
                             />
                           </div>
                           <p className="text-[15px] sm:text-[16px] text-[#555] leading-[22px]">

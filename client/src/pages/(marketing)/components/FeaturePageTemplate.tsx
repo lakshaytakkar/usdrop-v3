@@ -108,7 +108,7 @@ export function FeaturePageTemplate({
                   src={heroImage}
                   alt={heroImageAlt}
                   className="w-full"
-                  loading="eager"
+                  decoding="async"
                 />
               </div>
             </div>
@@ -156,7 +156,7 @@ export function FeaturePageTemplate({
                         src={step.image}
                         alt={step.title}
                         className="w-full h-full object-cover"
-                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold text-black mt-5">

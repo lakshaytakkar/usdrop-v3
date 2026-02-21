@@ -126,7 +126,7 @@ function HowToUseSection() {
                     src={card.thumbnail}
                     alt={card.title}
                     className="w-full h-full object-cover"
-                    loading="lazy"
+                    decoding="async"
                   />
                   <img
                     src={card.iconSrc}

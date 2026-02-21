@@ -136,8 +136,8 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
           <img
             src={product.image || "/demo-products/product-1.png"}
             alt={product.title}
-            loading="lazy"
-            className={`object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
+            decoding="async"
+            className={`w-full h-full object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}
           />
         )}

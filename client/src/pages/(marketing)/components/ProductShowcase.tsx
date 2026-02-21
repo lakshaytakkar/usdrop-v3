@@ -39,7 +39,7 @@ function ProductCard({ product }: { product: ShowcaseProduct }) {
           src={product.image}
           alt={product.name}
           className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
+          decoding="async"
         />
         {product.categoryName && (
           <Badge className="absolute top-2 left-2 text-[10px] bg-blue-600 text-white border-0">

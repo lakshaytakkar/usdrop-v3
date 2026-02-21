@@ -295,7 +295,7 @@ function DesktopDropdown({
                       src={category.featured.image}
                       alt={category.featured.title}
                       className="w-full h-[130px] object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <p className="text-[13px] font-semibold text-gray-900 group-hover:text-black">

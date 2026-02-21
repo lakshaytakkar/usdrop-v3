@@ -606,7 +606,7 @@ Your single most important, critical, and unbreakable task is to perfectly prese
                                                     src={imgUrl} 
                                                     className="w-full h-full object-cover pointer-events-none" 
                                                     alt={model?.name || `Model ${index + 1}`}
-                                                    loading="lazy"
+                                                    decoding="async"
                                                 />
                                                 
                                                 {/* Hover overlay with name, age, and city */}

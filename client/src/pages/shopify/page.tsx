@@ -101,7 +101,7 @@ export default function ShopifyPage() {
                 src="/images/shopify/browser-mockup.png"
                 alt="USDrop Shopify connection interface"
                 className="w-full"
-                loading="lazy"
+                decoding="async"
               />
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function ShopifyPage() {
                     src={step.image}
                     alt={step.title}
                     className="w-full h-full object-cover"
-                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold text-black mt-5">{step.title}</h3>

@@ -127,7 +127,7 @@ export default function WhatIsDropshippingPage() {
                         src={step.image}
                         alt={step.title}
                         className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                     <div className="lg:w-[55%] p-8 sm:p-10 lg:p-12 flex flex-col justify-center">

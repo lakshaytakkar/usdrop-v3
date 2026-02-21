@@ -78,7 +78,7 @@ export function BentoFeatures() {
                       src={tool.image}
                       alt={tool.title}
                       className="w-full h-full object-cover"
-                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div className="p-6">
