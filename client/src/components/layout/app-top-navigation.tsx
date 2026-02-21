@@ -128,7 +128,7 @@ export function AppTopNavigation() {
       <header className="sticky top-0 z-50 w-full">
         <div className="px-3 pt-2">
           <div
-            className="flex h-[52px] items-center px-4 lg:px-5 rounded-xl border border-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
+            className="flex h-[64px] items-center px-5 lg:px-6 rounded-xl border border-white/80 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]"
             style={{
               background: 'rgba(255,255,255,0.6)',
               backdropFilter: 'blur(12px)',
@@ -143,9 +143,9 @@ export function AppTopNavigation() {
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
-            <Link href="/home" className="flex items-baseline gap-1 mr-6 shrink-0" data-testid="link-home-logo">
-              <span className="text-xl font-bold tracking-tight text-foreground">USDrop</span>
-              <span className="text-xl font-bold text-blue-600">AI</span>
+            <Link href="/home" className="flex items-baseline gap-1 mr-8 shrink-0" data-testid="link-home-logo">
+              <span className="text-2xl font-bold tracking-tight text-foreground">USDrop</span>
+              <span className="text-2xl font-bold text-blue-600">AI</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-0 flex-1 min-w-0">
@@ -158,14 +158,14 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-2.5 py-1.5 ds-label rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
+                      "px-3 py-2 text-[15px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
                       isActive
                         ? "ds-text-primary bg-blue-50/80 font-semibold"
                         : "ds-text-body hover:text-gray-900 hover:bg-white/60"
                     )}
                   >
                     {group.iconSrc && (
-                      <img src={group.iconSrc} alt="" className="w-4 h-4 object-contain" />
+                      <img src={group.iconSrc} alt="" className="w-5 h-5 object-contain" />
                     )}
                     {group.label}
                   </Link>
@@ -178,7 +178,7 @@ export function AppTopNavigation() {
                     <button
                       data-testid="button-nav-more"
                       className={cn(
-                        "px-2.5 py-1.5 ds-label rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
+                        "px-3 py-2 text-[15px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer",
                         isGroupActive(moreGroup.label)
                           ? "ds-text-primary bg-blue-50/80 font-semibold"
                           : "ds-text-body hover:text-gray-900 hover:bg-white/60"
@@ -215,30 +215,30 @@ export function AppTopNavigation() {
             <div className="flex items-center gap-2 ml-auto shrink-0">
               <GradientButton
                 variant="golden"
-                className="hidden lg:inline-flex h-8 px-3 text-xs font-mono items-center gap-1.5 group"
+                className="hidden lg:inline-flex h-9 px-4 text-sm font-mono items-center gap-1.5 group"
                 onClick={() => setIsHotProductsOpen(true)}
               >
-                <Flame className="h-3.5 w-3.5 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
+                <Flame className="h-4 w-4 flex-shrink-0 text-white group-hover:text-yellow-300 transition-colors" />
                 <span className="uppercase">HOT PRODUCTS</span>
               </GradientButton>
 
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 flex items-center gap-1.5 cursor-pointer"
+                className="h-9 px-2.5 flex items-center gap-1.5 cursor-pointer"
                 asChild
               >
                 <Link href="/help" data-testid="link-help">
-                  <HelpCircle className="h-4 w-4" />
-                  <span className="hidden lg:inline text-sm">Help</span>
+                  <HelpCircle className="h-5 w-5" />
+                  <span className="hidden lg:inline text-[15px]">Help</span>
                 </Link>
               </Button>
 
               {mounted && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full cursor-pointer p-0" data-testid="button-user-menu">
-                      <Avatar className="h-9 w-9">
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer p-0" data-testid="button-user-menu">
+                      <Avatar className="h-10 w-10">
                         <AvatarImage
                           src={userData?.avatar_url || "https://avatar.iran.liara.run/public"}
                           alt="User avatar"
