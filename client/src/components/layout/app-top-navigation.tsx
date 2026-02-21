@@ -158,9 +158,9 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-2.5 py-1.5 text-[13px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
+                      "px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
                       isActive
-                        ? "text-blue-600 bg-blue-50/80"
+                        ? "text-blue-600 bg-blue-50/80 font-semibold"
                         : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
                     )}
                   >
@@ -178,9 +178,9 @@ export function AppTopNavigation() {
                     <button
                       data-testid="button-nav-more"
                       className={cn(
-                        "px-2.5 py-1.5 text-[13px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
+                        "px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
                         isGroupActive(moreGroup.label)
-                          ? "text-blue-600 bg-blue-50/80"
+                          ? "text-blue-600 bg-blue-50/80 font-semibold"
                           : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
                       )}
                     >
@@ -310,7 +310,7 @@ export function AppTopNavigation() {
             {externalNavGroups.map((group) => {
               return (
               <div key={group.label}>
-                <span className="text-[11px] font-bold text-gray-300 uppercase tracking-widest">
+                <span className="ds-overline text-gray-300">
                   {group.label}
                 </span>
                 <div className="mt-1 space-y-0">

@@ -112,7 +112,7 @@ function WelcomeBanner() {
 function HowToUseSection() {
   return (
     <div>
-      <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+      <h2 className="ds-section-title mb-4 flex items-center gap-2">
         <img src="/3d-ecom-icons-blue/Open_Board.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
         How to use USDrop
       </h2>
@@ -123,10 +123,10 @@ function HowToUseSection() {
               <div className="p-4 flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1 mb-1">
-                    <h3 className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{card.title}</h3>
+                    <h3 className="ds-card-title group-hover:text-blue-600 transition-colors">{card.title}</h3>
                     <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">{card.description}</p>
+                  <p className="ds-caption leading-relaxed">{card.description}</p>
                 </div>
                 <div className="relative w-20 h-14 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                   <img
@@ -162,7 +162,7 @@ const quickLinks = [
 function QuickLinksSection() {
   return (
     <div>
-      <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+      <h2 className="ds-section-title mb-3 flex items-center gap-2">
         <img src="/3d-ecom-icons-blue/Category_Grid.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
         Quick Access
       </h2>
@@ -171,8 +171,8 @@ function QuickLinksSection() {
           <Link key={item.href} href={item.href} className="block group" data-testid={`link-quick-${item.title.toLowerCase().replace(/\s/g, '-')}`}>
             <Card className="p-3 hover:border-gray-200 transition-all cursor-pointer rounded-xl hover:shadow-sm border-gray-100 text-center">
               <img src={item.iconSrc} alt={item.title} width={32} height={32} decoding="async" className="w-8 h-8 object-contain mx-auto mb-1.5" />
-              <h4 className="text-[12px] font-semibold text-gray-900 truncate">{item.title}</h4>
-              <p className="text-[10px] text-gray-400 truncate mt-0.5">{item.description}</p>
+              <h4 className="text-xs font-semibold text-gray-900 truncate">{item.title}</h4>
+              <p className="text-[10px] text-gray-500 truncate mt-0.5">{item.description}</p>
               {item.isPro && (
                 <Badge className="text-[8px] px-1 py-0 h-3 bg-amber-500 text-white border-0 leading-none mt-1 mx-auto">PRO</Badge>
               )}

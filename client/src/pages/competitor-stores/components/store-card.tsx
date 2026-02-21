@@ -67,12 +67,12 @@ export function StoreCard({ store }: StoreCardProps) {
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-base truncate">{store.name}</h3>
+            <h3 className="ds-card-title text-base truncate">{store.name}</h3>
             {store.verified && (
               <CheckCircle2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
             )}
           </div>
-          <p className="text-sm text-muted-foreground truncate flex items-center gap-1">
+          <p className="ds-body truncate flex items-center gap-1">
             <ExternalLink className="h-3 w-3" />
             {store.url}
           </p>
@@ -92,27 +92,27 @@ export function StoreCard({ store }: StoreCardProps) {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b">
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 ds-caption">
             <DollarSign className="h-3 w-3" />
             <span>Monthly Revenue</span>
           </div>
-          <p className="text-lg font-bold text-emerald-600">
+          <p className="ds-stat text-emerald-600">
             {formatCurrency(store.monthlyRevenue)}
           </p>
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 ds-caption">
             <Users className="h-3 w-3" />
             <span>Monthly Traffic</span>
           </div>
-          <p className="text-lg font-bold">
+          <p className="ds-stat">
             {formatNumber(store.monthlyTraffic)}
           </p>
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 ds-caption">
             <TrendingUp className="h-3 w-3" />
             <span>Growth</span>
           </div>
@@ -124,7 +124,7 @@ export function StoreCard({ store }: StoreCardProps) {
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 ds-caption">
             <Package className="h-3 w-3" />
             <span>Products</span>
           </div>

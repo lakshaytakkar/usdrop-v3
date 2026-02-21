@@ -52,7 +52,7 @@ function FilterSidebar({
   return (
     <aside className="w-[220px] shrink-0 hidden lg:block">
       <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-0">
-        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-4">
+        <div className="flex items-center gap-2 mb-4 ds-label">
           <Filter className="h-4 w-4" />
           Filters
         </div>
@@ -61,7 +61,7 @@ function FilterSidebar({
           <div>
             <button
               onClick={() => setSortOpen(!sortOpen)}
-              className="flex items-center justify-between w-full text-sm font-medium text-gray-800 py-1.5 cursor-pointer"
+              className="flex items-center justify-between w-full py-1.5 cursor-pointer ds-label"
             >
               <span>Sort By</span>
               {sortOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
@@ -101,7 +101,7 @@ function FilterSidebar({
           <div className="border-t border-gray-100 pt-3">
             <button
               onClick={() => setPriceOpen(!priceOpen)}
-              className="flex items-center justify-between w-full text-sm font-medium text-gray-800 py-1.5 cursor-pointer"
+              className="flex items-center justify-between w-full py-1.5 cursor-pointer ds-label"
             >
               <span>Price Range</span>
               {priceOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
@@ -376,7 +376,7 @@ export default function ProductHuntPage() {
             className="flex-1 flex flex-col gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 md:p-5 overflow-y-auto"
           >
             <div className="flex items-center justify-between">
-              <h1 className="text-lg font-bold text-gray-900" data-testid="text-page-title">Product Hunt</h1>
+              <h1 className="ds-page-title" data-testid="text-page-title">Product Hunt</h1>
               <button
                 data-testid="button-mobile-filters"
                 onClick={() => setShowMobileFilters(!showMobileFilters)}

@@ -256,7 +256,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
       {/* Content Section */}
       <div className={`px-2.5 pt-1 pb-2.5 space-y-2 relative ${isLocked ? "pointer-events-none" : ""}`}>
         {/* Title */}
-        <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground leading-tight">
+        <h3 className="ds-card-title line-clamp-2 min-h-[2.5rem] leading-tight">
           {product.title}
         </h3>
 
@@ -293,21 +293,21 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
         </div>
 
         {/* Pricing Grid */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2">
           <div className="space-y-0.5">
-            <p className="text-muted-foreground text-[10px] uppercase tracking-wide">Buy Price</p>
-            <p className="font-semibold text-foreground">${product.buyPrice.toFixed(2)}</p>
+            <p className="ds-overline">Buy Price</p>
+            <p className="text-sm font-semibold text-foreground">${product.buyPrice.toFixed(2)}</p>
           </div>
           <div className="space-y-0.5">
-            <p className="text-muted-foreground text-[10px] uppercase tracking-wide">Sell Price</p>
-            <p className="font-semibold text-primary">${product.sellPrice.toFixed(2)}</p>
+            <p className="ds-overline">Sell Price</p>
+            <p className="text-sm font-semibold text-primary">${product.sellPrice.toFixed(2)}</p>
           </div>
         </div>
 
         {/* Profit Section */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Profit/Order</p>
+            <p className="ds-overline">Profit/Order</p>
             <p className="font-bold text-emerald-600 text-base">
               ${product.profitPerOrder.toFixed(2)}
             </p>

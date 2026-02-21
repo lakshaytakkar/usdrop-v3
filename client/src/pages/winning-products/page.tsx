@@ -338,7 +338,7 @@ export default function WinningProductsPage() {
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-4 md:-mx-6 px-4 md:px-6 pt-2 border-b border-border/50 space-y-3">
               {/* Quick Filters */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-medium text-muted-foreground">Quick Filters:</span>
+                <span className="ds-caption font-medium">Quick Filters:</span>
                 <Button
                   variant={quickFilter === 'high-revenue' ? 'default' : 'outline'}
                   size="sm"
@@ -398,7 +398,7 @@ export default function WinningProductsPage() {
                   <PopoverContent className="w-80 p-4" align="start">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm">Advanced Filters</h4>
+                        <h4 className="ds-card-title">Advanced Filters</h4>
                         {activeFilterCount > 0 && (
                           <Button
                             variant="ghost"

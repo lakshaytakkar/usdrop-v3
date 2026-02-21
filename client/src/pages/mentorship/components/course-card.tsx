@@ -58,8 +58,8 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
       </div>
       <CardContent className="flex flex-1 flex-col gap-2 p-2.5">
         <div>
-          <h3 className="text-sm font-semibold mb-0.5 line-clamp-2 leading-tight">{course.title}</h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">{course.description}</p>
+          <h3 className="ds-card-title mb-0.5 line-clamp-2 leading-tight">{course.title}</h3>
+          <p className="ds-caption line-clamp-1">{course.description}</p>
         </div>
 
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">

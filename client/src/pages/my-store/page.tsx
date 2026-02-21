@@ -109,8 +109,8 @@ function ShopifyStoresContent() {
                     className="object-contain"
                   />
                 </div>
-                <h2 className="text-2xl font-semibold mb-2">No Stores Connected</h2>
-                <p className="text-muted-foreground mb-8 max-w-md">
+                <h2 className="ds-page-title mb-2">No Stores Connected</h2>
+                <p className="ds-body mb-8 max-w-md">
                   Connect your Shopify stores to start tracking and analyzing your performance.
                 </p>
                 <Button onClick={() => setIsModalOpen(true)} size="lg">

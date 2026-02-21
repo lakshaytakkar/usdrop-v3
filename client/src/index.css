@@ -336,6 +336,114 @@
 }
 
 @layer utilities {
+  /* ═══════════════════════════════════════════════════════════
+     DESIGN SYSTEM TOKENS — Typography Scale
+     Inspired by Creatify's clean hierarchy. Use these classes
+     instead of ad-hoc text-* / font-* combos.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Page title — the main heading of each page */
+  .ds-page-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: #111827;
+  }
+
+  /* Section heading — groups within a page */
+  .ds-section-title {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+  }
+
+  /* Card title — titles inside cards/tiles */
+  .ds-card-title {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  /* Body text — default readable text */
+  .ds-body {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    font-weight: 400;
+    color: #4b5563;
+  }
+
+  /* Small body — compact UI text */
+  .ds-body-sm {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 400;
+    color: #4b5563;
+  }
+
+  /* Label — form labels, sidebar items, filter names */
+  .ds-label {
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  /* Caption — small muted text, timestamps, metadata */
+  .ds-caption {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 400;
+    color: #6b7280;
+  }
+
+  /* Overline — uppercase small labels, category tags */
+  .ds-overline {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+  }
+
+  /* Stat / KPI number — large data values */
+  .ds-stat {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #111827;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     DESIGN SYSTEM TOKENS — Text Color Roles
+     Use these instead of arbitrary gray-400/500/600/700/800/900
+     ═══════════════════════════════════════════════════════════ */
+
+  .ds-text-heading    { color: #111827; }
+  .ds-text-body       { color: #4b5563; }
+  .ds-text-muted      { color: #6b7280; }
+  .ds-text-faint      { color: #9ca3af; }
+  .ds-text-primary    { color: var(--primary); }
+
+  /* ═══════════════════════════════════════════════════════════
+     DESIGN SYSTEM TOKENS — Spacing & Layout
+     Standard page/section/card padding values
+     ═══════════════════════════════════════════════════════════ */
+
+  .ds-page-padding    { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .ds-section-gap     { gap: 1.5rem; }
+  .ds-card-padding    { padding: 1rem; }
+  .ds-card-gap        { gap: 1rem; }
+
+  @media (min-width: 768px) {
+    .ds-page-padding  { padding-left: 2rem; padding-right: 2rem; }
+  }
+
   .hover-elevate,
   .active-elevate,
   .hover-elevate-2,
