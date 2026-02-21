@@ -158,10 +158,10 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
+                      "px-2.5 py-1.5 ds-label rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1",
                       isActive
-                        ? "text-blue-600 bg-blue-50/80 font-semibold"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
+                        ? "ds-text-primary bg-blue-50/80 font-semibold"
+                        : "ds-text-body hover:text-gray-900 hover:bg-white/60"
                     )}
                   >
                     {group.iconSrc && (
@@ -178,10 +178,10 @@ export function AppTopNavigation() {
                     <button
                       data-testid="button-nav-more"
                       className={cn(
-                        "px-2.5 py-1.5 text-[13px] font-medium rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
+                        "px-2.5 py-1.5 ds-label rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1 cursor-pointer",
                         isGroupActive(moreGroup.label)
-                          ? "text-blue-600 bg-blue-50/80 font-semibold"
-                          : "text-gray-500 hover:text-gray-900 hover:bg-white/60"
+                          ? "ds-text-primary bg-blue-50/80 font-semibold"
+                          : "ds-text-body hover:text-gray-900 hover:bg-white/60"
                       )}
                     >
                       More
@@ -198,7 +198,7 @@ export function AppTopNavigation() {
                             href={item.url}
                             className={cn(
                               "flex items-center gap-2 w-full",
-                              isItemActive && "text-blue-600 font-semibold"
+                              isItemActive && "ds-text-primary font-semibold"
                             )}
                           >
                             <ItemIcon className="h-4 w-4" />
@@ -262,7 +262,7 @@ export function AppTopNavigation() {
                         <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">
+                        <span className="ds-card-title">
                           {userData?.name || fullName || "User"}
                         </span>
                         {isInternal && internalRole ? (
@@ -322,10 +322,10 @@ export function AppTopNavigation() {
                         href={item.url}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "block px-3 py-2 rounded-md text-[13px] font-medium transition-colors",
+                          "block px-3 py-2 rounded-md ds-label transition-colors",
                           isItemActive
-                            ? "bg-blue-50 text-blue-600 font-semibold"
-                            : "text-gray-600 hover:bg-gray-50"
+                            ? "bg-blue-50 ds-text-primary font-semibold"
+                            : "ds-text-body hover:bg-gray-50"
                         )}
                       >
                         {item.title}
