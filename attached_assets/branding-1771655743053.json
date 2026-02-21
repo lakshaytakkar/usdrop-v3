@@ -1,0 +1,147 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "General Sans",
+      "role": "body"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "role": "monospace"
+    },
+    {
+      "family": "Poppins",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#0000EE",
+    "accent": "#573CFF",
+    "background": "#FCFCFC",
+    "textPrimary": "#000000",
+    "link": "#573CFF"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "General Sans",
+      "heading": "Poppins"
+    },
+    "fontStacks": {
+      "heading": [
+        "General Sans",
+        "sans-serif"
+      ],
+      "body": [
+        "sans-serif"
+      ],
+      "paragraph": [
+        "General Sans",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "140px",
+      "h2": "60px",
+      "body": "16px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "8px"
+  },
+  "components": {
+    "input": {
+      "background": "transparent",
+      "textColor": "#9D968E",
+      "borderColor": null,
+      "borderRadius": "0px",
+      "borderRadiusCorners": {
+        "topLeft": "0px",
+        "topRight": "0px",
+        "bottomRight": "0px",
+        "bottomLeft": "0px"
+      },
+      "shadow": "none"
+    },
+    "buttonPrimary": {
+      "background": "#000000",
+      "textColor": "#0000EE",
+      "borderRadius": "8px",
+      "borderRadiusCorners": {
+        "topLeft": "8px",
+        "topRight": "8px",
+        "bottomRight": "8px",
+        "bottomLeft": "8px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#9CA3BD",
+      "textColor": "#111621",
+      "borderRadius": "8px",
+      "borderRadiusCorners": {
+        "topLeft": "8px",
+        "topRight": "8px",
+        "bottomRight": "8px",
+        "bottomLeft": "8px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "File saved at: attached_assets/ogImage.png",
+    "logoHref": "File saved at: attached_assets/logoHref.html",
+    "logoAlt": "Creatify AI logo"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is visible, located in the header, and has an alt text matching the brand 'Creatify'. It links to the homepage, making it the primary brand logo.",
+    "confidence": 0.95,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "CREATE YOUR FIRST AD FREE",
+      "reasoning": "Button #0, 'CREATE YOUR FIRST AD FREE', is likely the primary CTA due to its action-oriented text and prominent placement. It encourages users to start using the service immediately, which aligns with typical primary CTA goals."
+    },
+    "secondary": {
+      "index": 8,
+      "text": "Okay",
+      "reasoning": "Button #8, 'Okay', is from a different color group (#9CA3BD) and serves as a secondary action, likely related to accepting terms or cookies."
+    },
+    "confidence": 0.9
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "digital marketers and advertisers"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.9,
+    "colors": 0.95,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is visible, located in the header, and has an alt text matching the brand 'Creatify'. It links to the homepage, making it the primary brand logo.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
