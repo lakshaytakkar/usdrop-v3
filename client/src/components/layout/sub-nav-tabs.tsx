@@ -8,11 +8,17 @@ import { UnlockBadge } from "@/components/ui/unlock-badge"
 import { useUserPlan } from "@/hooks/use-user-plan"
 import { Search, PlayCircle, Download, SlidersHorizontal } from "lucide-react"
 
+interface QuickFilter {
+  id: string
+  emoji: string
+  label: string
+}
+
 interface ToolbarConfig {
   searchPlaceholder: string
   showSearch: boolean
   actions?: { label: string; icon: typeof PlayCircle; href?: string; onClick?: () => void }[]
-  filterLabel?: string
+  quickFilters?: QuickFilter[]
 }
 
 const toolbarConfigs: Record<string, ToolbarConfig> = {
@@ -23,13 +29,26 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
       { label: "Export", icon: Download },
     ],
-    filterLabel: "Dates: Last 30 Days",
+    quickFilters: [
+      { id: "last-30", emoji: "📅", label: "Last 30 Days" },
+      { id: "trending", emoji: "🔥", label: "Trending" },
+      { id: "high-profit", emoji: "💰", label: "High Profit" },
+      { id: "new-arrivals", emoji: "✨", label: "New Arrivals" },
+      { id: "top-rated", emoji: "⭐", label: "Top Rated" },
+      { id: "best-sellers", emoji: "🏆", label: "Best Sellers" },
+    ],
   },
   Framework: {
     searchPlaceholder: "Search your saved products, stores, and tools...",
     showSearch: true,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
+    ],
+    quickFilters: [
+      { id: "recent", emoji: "🕐", label: "Recently Saved" },
+      { id: "favorites", emoji: "❤️", label: "Favorites" },
+      { id: "products", emoji: "📦", label: "Products" },
+      { id: "stores", emoji: "🏪", label: "Stores" },
     ],
   },
   Ads: {
@@ -38,12 +57,24 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
     ],
+    quickFilters: [
+      { id: "top-performing", emoji: "🚀", label: "Top Performing" },
+      { id: "video-ads", emoji: "🎬", label: "Video Ads" },
+      { id: "image-ads", emoji: "🖼️", label: "Image Ads" },
+      { id: "recent", emoji: "⚡", label: "Recent" },
+    ],
   },
   Fulfilment: {
     searchPlaceholder: "Search suppliers, shipping options...",
     showSearch: true,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
+    ],
+    quickFilters: [
+      { id: "verified", emoji: "✅", label: "Verified" },
+      { id: "fast-shipping", emoji: "🚚", label: "Fast Shipping" },
+      { id: "low-moq", emoji: "📋", label: "Low MOQ" },
+      { id: "top-rated", emoji: "🌟", label: "Top Rated" },
     ],
   },
   Tools: {
@@ -52,12 +83,24 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
     ],
+    quickFilters: [
+      { id: "popular", emoji: "🎯", label: "Popular" },
+      { id: "calculators", emoji: "🧮", label: "Calculators" },
+      { id: "generators", emoji: "⚙️", label: "Generators" },
+      { id: "templates", emoji: "📝", label: "Templates" },
+    ],
   },
   Mentorship: {
     searchPlaceholder: "Search courses and lessons...",
     showSearch: true,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, href: "/mentorship" },
+    ],
+    quickFilters: [
+      { id: "beginner", emoji: "🌱", label: "Beginner" },
+      { id: "advanced", emoji: "🎓", label: "Advanced" },
+      { id: "popular", emoji: "🔥", label: "Popular" },
+      { id: "new", emoji: "🆕", label: "New Courses" },
     ],
   },
 }
@@ -67,6 +110,7 @@ export function SubNavTabs() {
   const activeGroup = findActiveGroup(pathname || "")
   const { isFree, isLoading } = useUserPlan()
   const [searchValue, setSearchValue] = useState("")
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(["last-30"]))
 
   if (!activeGroup) return null
 
@@ -74,6 +118,18 @@ export function SubNavTabs() {
   const toolbar = toolbarConfigs[activeGroup.label] || {
     searchPlaceholder: "Search...",
     showSearch: true,
+  }
+
+  const toggleFilter = (filterId: string) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev)
+      if (next.has(filterId)) {
+        next.delete(filterId)
+      } else {
+        next.add(filterId)
+      }
+      return next
+    })
   }
 
   return (
@@ -158,10 +214,28 @@ export function SubNavTabs() {
         </div>
       )}
 
-      {toolbar.filterLabel && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="font-medium text-gray-700">Filtering Conditions</span>
-          <span className="px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-500 text-xs font-medium">{toolbar.filterLabel}</span>
+      {toolbar.quickFilters && toolbar.quickFilters.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0 mr-1">Quick Filters</span>
+          {toolbar.quickFilters.map((filter) => {
+            const isActive = activeFilters.has(filter.id)
+            return (
+              <button
+                key={filter.id}
+                onClick={() => toggleFilter(filter.id)}
+                data-testid={`button-quickfilter-${filter.id}`}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer border",
+                  isActive
+                    ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
+                    : "bg-white/80 border-gray-200 text-gray-600 hover:bg-white hover:border-gray-300"
+                )}
+              >
+                <span className="text-sm leading-none">{filter.emoji}</span>
+                <span>{filter.label}</span>
+              </button>
+            )
+          })}
         </div>
       )}
     </div>
