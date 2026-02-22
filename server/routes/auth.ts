@@ -576,6 +576,18 @@ export function registerAuthRoutes(app: Express) {
         if (error.message?.includes('rate limit') || error.status === 429) {
           return res.status(429).json({ error: 'Please wait before requesting another code.' });
         }
+        if (error.message?.includes('invalid') && error.message?.includes('Email')) {
+          return res.status(400).json({
+            error: 'Unable to send verification code to this email. Please try Google sign-up or contact support.',
+            code: 'email_send_failed',
+          });
+        }
+        if (error.message?.includes('not authorized')) {
+          return res.status(400).json({
+            error: 'This email is not authorized. A custom SMTP provider is required for email sign-up.',
+            code: 'email_not_authorized',
+          });
+        }
         return res.status(400).json({ error: error.message || 'Failed to send verification code' });
       }
 
