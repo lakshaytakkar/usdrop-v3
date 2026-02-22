@@ -48,6 +48,7 @@ import AuthResetPassword from "@/pages/auth/reset-password/page";
 import AuthVerifyEmail from "@/pages/auth/verify-email/page";
 import AuthAccountSuspended from "@/pages/auth/account-suspended/page";
 import AuthCodeError from "@/pages/auth/auth-code-error/page";
+import AuthCallback from "@/pages/auth/callback/page";
 
 import HomePage from "@/pages/home/page";
 import ProductHunt from "@/pages/product-hunt/page";
@@ -161,6 +162,7 @@ function Router() {
       <Route path="/auth/verify-email" component={AuthVerifyEmail} />
       <Route path="/auth/account-suspended" component={AuthAccountSuspended} />
       <Route path="/auth/auth-code-error" component={AuthCodeError} />
+      <Route path="/auth/callback" component={AuthCallback} />
 
       {/* Admin */}
       <Route path="/admin" component={() => <AdminLayout><AdminDashboard /></AdminLayout>} />

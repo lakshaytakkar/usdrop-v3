@@ -1,7 +1,22 @@
 import { Router, type Express, type Request, type Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
+
+const ALLOWED_REDIRECT_PATHS = ['/home', '/admin', '/framework', '/product-hunt', '/mentorship', '/categories', '/suppliers', '/competitor-stores', '/tools', '/blogs', '/shipping-calculator', '/onboarding'];
+
+function sanitizeRedirectPath(path: string): string {
+  if (!path || typeof path !== 'string') return '/home';
+  const decoded = decodeURIComponent(path);
+  if (decoded.startsWith('http') || decoded.startsWith('//') || decoded.includes('\\')) return '/home';
+  if (!decoded.startsWith('/')) return '/home';
+  const basePath = decoded.split('?')[0].split('#')[0];
+  if (ALLOWED_REDIRECT_PATHS.some(p => basePath === p || basePath.startsWith(p + '/'))) {
+    return decoded;
+  }
+  return '/home';
+}
 
 function validateEmail(email: string): { valid: boolean; error?: string } {
   if (!email) {
@@ -48,6 +63,50 @@ function validatePhoneNumber(phone: string): { valid: boolean; error?: string } 
     return { valid: false, error: 'Phone number must be between 7 and 15 digits' };
   }
   return { valid: true };
+}
+
+async function findOrCreateProfile(email: string, fullName?: string | null, avatarUrl?: string | null) {
+  const { data: existing } = await supabaseRemote
+    .from('profiles')
+    .select('id, email, status, full_name')
+    .eq('email', email.toLowerCase())
+    .single();
+
+  if (existing) {
+    return existing;
+  }
+
+  const { data: freePlan } = await supabaseRemote
+    .from('subscription_plans')
+    .select('id')
+    .eq('slug', 'free')
+    .single();
+
+  const { data: newProfile, error: insertError } = await supabaseRemote
+    .from('profiles')
+    .insert({
+      email: email.toLowerCase(),
+      full_name: fullName || null,
+      avatar_url: avatarUrl || null,
+      subscription_plan_id: freePlan?.id || null,
+      status: 'active',
+      account_type: 'free',
+    })
+    .select('id, email, status, full_name')
+    .single();
+
+  if (insertError) {
+    console.error('Profile creation error:', insertError);
+    return null;
+  }
+
+  return newProfile;
+}
+
+function getAppBaseUrl(req: Request): string {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || '';
+  return `${proto}://${host}`;
 }
 
 export function registerAuthRoutes(app: Express) {
@@ -318,16 +377,120 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  router.get('/google', async (_req: Request, res: Response) => {
-    return res.status(503).json({
-      error: 'Google sign-in is currently unavailable. Please use email and password to sign in.',
-    });
+  router.get('/google', async (req: Request, res: Response) => {
+    try {
+      const redirectTo = sanitizeRedirectPath(req.query.redirectTo as string || '/home');
+      const isSignup = req.query.signup === 'true';
+      const baseUrl = getAppBaseUrl(req);
+      const callbackUrl = `${baseUrl}/api/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}&signup=${isSignup ? 'true' : 'false'}`;
+
+      const { data, error } = await supabaseAuth.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: callbackUrl,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error || !data?.url) {
+        console.error('Google OAuth error:', error);
+        return res.status(500).json({
+          error: 'Google sign-in is currently unavailable. Please ensure Google OAuth is configured in your Supabase dashboard.',
+        });
+      }
+
+      return res.redirect(data.url);
+    } catch (error) {
+      console.error('Google OAuth error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
   });
 
-  router.post('/magic-link/signup', async (_req: Request, res: Response) => {
-    return res.status(503).json({
-      error: 'Magic link signup is currently unavailable. Please use email and password to sign up.',
-    });
+  router.get('/callback', async (req: Request, res: Response) => {
+    try {
+      const code = req.query.code as string;
+      const redirectTo = sanitizeRedirectPath(req.query.redirectTo as string || '/home');
+
+      if (!code) {
+        return res.redirect(`/login?error=${encodeURIComponent('Authentication failed. No authorization code received.')}`);
+      }
+
+      const { data, error } = await supabaseAuth.auth.exchangeCodeForSession(code);
+
+      if (error || !data?.user?.email) {
+        console.error('OAuth callback error:', error);
+        return res.redirect(`/login?error=${encodeURIComponent('Authentication failed. Please try again.')}`);
+      }
+
+      const supabaseUser = data.user;
+      const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || null;
+      const avatarUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
+
+      const profile = await findOrCreateProfile(supabaseUser.email!, fullName, avatarUrl);
+      if (!profile) {
+        return res.redirect(`/login?error=${encodeURIComponent('Failed to create account. Please try again.')}`);
+      }
+
+      if (profile.status === 'suspended') {
+        return res.redirect(`/login?error=${encodeURIComponent('Your account has been suspended. Please contact support.')}`);
+      }
+
+      if (avatarUrl || fullName) {
+        await supabaseRemote
+          .from('profiles')
+          .update({
+            ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
+            ...(fullName && !profile.full_name ? { full_name: fullName } : {}),
+          })
+          .eq('id', profile.id);
+      }
+
+      const localToken = generateToken(profile.id);
+
+      return res.redirect(`/auth/callback#token=${localToken}&redirectTo=${encodeURIComponent(redirectTo)}`);
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      return res.redirect(`/login?error=${encodeURIComponent('Authentication failed. Please try again.')}`);
+    }
+  });
+
+  router.post('/magic-link/signup', async (req: Request, res: Response) => {
+    try {
+      const { email, full_name } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.valid) {
+        return res.status(400).json({ error: emailValidation.error });
+      }
+
+      const { error } = await supabaseAuth.auth.signInWithOtp({
+        email: email.toLowerCase(),
+        options: {
+          shouldCreateUser: true,
+          data: { full_name: full_name || undefined },
+        },
+      });
+
+      if (error) {
+        console.error('Magic link signup error:', error);
+        return res.status(400).json({ error: error.message || 'Failed to send verification email' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Please check your email.',
+        email: email.toLowerCase(),
+      });
+    } catch (error) {
+      console.error('Magic link signup error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
   });
 
   router.post('/onboarding', requireAuth, async (req: Request, res: Response) => {
@@ -387,12 +550,111 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
-  router.post('/otp/request', async (_req: Request, res: Response) => {
-    return res.status(503).json({ error: 'OTP authentication is currently unavailable.' });
+  router.post('/otp/request', async (req: Request, res: Response) => {
+    try {
+      const { email, full_name } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      const emailValidation = validateEmail(email);
+      if (!emailValidation.valid) {
+        return res.status(400).json({ error: emailValidation.error });
+      }
+
+      const { error } = await supabaseAuth.auth.signInWithOtp({
+        email: email.toLowerCase(),
+        options: {
+          shouldCreateUser: true,
+          data: { full_name: full_name || undefined },
+        },
+      });
+
+      if (error) {
+        console.error('OTP request error:', error);
+        if (error.message?.includes('rate limit') || error.status === 429) {
+          return res.status(429).json({ error: 'Please wait before requesting another code.' });
+        }
+        return res.status(400).json({ error: error.message || 'Failed to send verification code' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Please check your email.',
+        email: email.toLowerCase(),
+      });
+    } catch (error) {
+      console.error('OTP request error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
   });
 
-  router.post('/otp/verify', async (_req: Request, res: Response) => {
-    return res.status(503).json({ error: 'OTP verification is currently unavailable.' });
+  router.post('/otp/verify', async (req: Request, res: Response) => {
+    try {
+      const { email, token } = req.body;
+
+      if (!email || !token) {
+        return res.status(400).json({ error: 'Email and verification code are required' });
+      }
+
+      if (token.length !== 6 || !/^\d{6}$/.test(token)) {
+        return res.status(400).json({ error: 'Please enter a valid 6-digit code' });
+      }
+
+      const { data: verifyData, error: verifyError } = await supabaseAuth.auth.verifyOtp({
+        email: email.toLowerCase(),
+        token,
+        type: 'email',
+      });
+
+      if (verifyError) {
+        console.error('OTP verify error:', verifyError);
+        if (verifyError.message?.includes('expired')) {
+          return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
+        }
+        return res.status(400).json({ error: verifyError.message || 'Invalid verification code' });
+      }
+
+      const supabaseUser = verifyData?.user;
+      if (!supabaseUser?.email) {
+        return res.status(400).json({ error: 'Verification failed. Please try again.' });
+      }
+
+      const fullName = supabaseUser.user_metadata?.full_name || null;
+      const avatarUrl = supabaseUser.user_metadata?.avatar_url || null;
+
+      const profile = await findOrCreateProfile(supabaseUser.email, fullName, avatarUrl);
+      if (!profile) {
+        return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+      }
+
+      if (profile.status === 'suspended') {
+        return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
+      }
+
+      const localToken = generateToken(profile.id);
+      const fullProfile = await getUserWithPlan(profile.id);
+
+      const isInternal = fullProfile?.internal_role !== null && fullProfile?.internal_role !== undefined;
+      const requiresOnboarding = !fullProfile?.onboarding_completed && !isInternal;
+
+      return res.json({
+        message: 'Signed in successfully',
+        token: localToken,
+        user: {
+          id: profile.id,
+          email: profile.email,
+          user_metadata: { full_name: fullProfile?.full_name },
+        },
+        isInternal,
+        requiresOnboarding,
+        plan: fullProfile?.plan_slug || fullProfile?.account_type || 'free',
+        planName: fullProfile?.plan_name || 'Free',
+      });
+    } catch (error) {
+      console.error('OTP verify error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
   });
 
   router.post('/reauthenticate', requireAuth, async (req: Request, res: Response) => {

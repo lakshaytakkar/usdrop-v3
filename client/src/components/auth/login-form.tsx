@@ -36,7 +36,11 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({})
+
+  const urlError = searchParams.get("error")
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>(
+    urlError ? { general: urlError } : {}
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
