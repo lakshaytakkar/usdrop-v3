@@ -164,9 +164,6 @@ export function AppTopNavigation() {
                         : "ds-text-body hover:text-gray-900 hover:bg-white/60"
                     )}
                   >
-                    {group.iconSrc && (
-                      <img src={group.iconSrc} alt="" className="w-5 h-5 object-contain" />
-                    )}
                     {group.label}
                   </Link>
                 )
@@ -206,11 +203,7 @@ export function AppTopNavigation() {
                               )}
                             >
                               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100/60 border border-blue-100/80 flex items-center justify-center shrink-0 group-hover:shadow-sm transition-shadow">
-                                {item.iconSrc ? (
-                                  <img src={item.iconSrc} alt="" className="w-6 h-6 object-contain" />
-                                ) : (
-                                  <item.icon className="h-5 w-5 text-blue-600" />
-                                )}
+                                <item.icon className="h-5 w-5 text-blue-600" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className={cn(
