@@ -115,7 +115,7 @@ export default function MyRnDPage() {
 
   if (isLoading) {
     return (
-      <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto">
+      <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto">
         <Skeleton className="h-8 w-48 mb-6" />
         <Skeleton className="h-[400px] w-full rounded-xl" />
       </div>
@@ -123,7 +123,7 @@ export default function MyRnDPage() {
   }
 
   return (
-    <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto" data-testid="page-my-rnd">
+    <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto" data-testid="page-my-rnd">
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">

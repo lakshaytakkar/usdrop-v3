@@ -81,7 +81,7 @@ function CategoriesPageContent() {
   return (
     <>
       <>
-          <div className="flex flex-1 flex-col gap-6 px-6 md:px-10 lg:px-16 py-6 md:py-8 relative">
+          <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 relative">
 
             {/* Error State */}
             {error && (

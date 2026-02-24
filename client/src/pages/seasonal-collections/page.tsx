@@ -48,7 +48,7 @@ function SeasonalCollectionsPageContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-6 px-6 md:px-10 lg:px-16 py-6 md:py-8 relative">
+        <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 relative">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
             <p className="text-muted-foreground mb-6">

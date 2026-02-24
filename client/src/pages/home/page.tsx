@@ -216,7 +216,7 @@ function DashboardContent() {
           `,
         }}
       />
-      <div className="relative z-[1] flex flex-1 flex-col gap-6 px-6 md:px-10 lg:px-16 py-6 md:py-8">
+      <div className="relative z-[1] flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
         <WelcomeBanner />
         <HowToUseSection />
         <QuickLinksSection />
@@ -229,7 +229,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex flex-1 flex-col gap-6 px-6 md:px-10 lg:px-16 py-6 md:py-8">
+        <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
           <Skeleton className="h-40 w-full rounded-2xl" />
           <div className="space-y-2">
             <Skeleton className="h-6 w-48" />

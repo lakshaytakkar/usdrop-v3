@@ -88,7 +88,7 @@ function ShopifyStoresContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
 
           {loading ? (
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
@@ -142,7 +142,7 @@ export default function ShopifyStoresPage() {
   return (
     <Suspense fallback={
       <>
-          <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0">
+          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
               <BlueSpinner size="lg" label="Loading your stores..." />
             </div>

@@ -357,7 +357,7 @@ export default function MetaAdsPage() {
           />
 
           <div className="flex-1 min-w-0 flex flex-col">
-            <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/60 px-6 md:px-8 py-3 space-y-3">
+            <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/60 px-12 md:px-16 py-3 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -483,7 +483,7 @@ export default function MetaAdsPage() {
               )}
             </div>
 
-            <div className="flex-1 px-6 md:px-8 py-5 overflow-y-auto">
+            <div className="flex-1 px-12 md:px-16 py-5 overflow-y-auto">
               {filteredAds.length === 0 ? (
                 <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-12 text-center">
                   <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />

@@ -41,7 +41,7 @@ export default function IntelligencePage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
 
           {/* Filters */}
           <Card>

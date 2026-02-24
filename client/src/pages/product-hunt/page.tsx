@@ -360,7 +360,7 @@ export default function ProductHuntPage() {
       <div
         className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden"
       >
-        <div className="flex flex-1 gap-5 px-6 md:px-10 lg:px-16 py-6 md:py-8 overflow-hidden">
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8 overflow-hidden">
           <FilterSidebar
             sortBy={sortBy}
             setSortBy={setSortBy}

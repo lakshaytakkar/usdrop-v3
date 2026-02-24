@@ -363,7 +363,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col gap-6 px-6 md:px-10 lg:px-16 py-6 md:py-8 max-w-full overflow-x-hidden min-w-0 w-full">
+          <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 max-w-full overflow-x-hidden min-w-0 w-full">
             <div className="w-full space-y-8 min-w-0 max-w-full">
 
               {/* Product Hero: Images + Info */}

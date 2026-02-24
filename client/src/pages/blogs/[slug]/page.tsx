@@ -60,7 +60,7 @@ export default function ArticleDetailPage() {
   if (loading) {
     return (
       <>
-          <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0">
+          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
             <div className="flex items-center justify-center h-96">
               <p className="text-muted-foreground">Loading article...</p>
             </div>
@@ -72,7 +72,7 @@ export default function ArticleDetailPage() {
   if (!article) {
     return (
       <>
-          <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0">
+          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
             <div className="flex flex-col items-center justify-center h-96 gap-4">
               <h1 className="text-2xl font-bold">Article Not Found</h1>
               <p className="text-muted-foreground">
@@ -90,7 +90,7 @@ export default function ArticleDetailPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0">
+        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
           {/* Back Button */}
           <Button
             variant="ghost"

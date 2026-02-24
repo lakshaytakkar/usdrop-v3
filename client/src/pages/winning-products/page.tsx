@@ -332,10 +332,10 @@ export default function WinningProductsPage() {
   return (
     <>
       <>
-          <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0 relative">
+          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
 
             {/* Filters and Sorting Section */}
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-6 md:-mx-10 lg:-mx-16 px-6 md:px-10 lg:px-16 pt-2 border-b border-border/50 space-y-3">
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-3 -mx-6 md:-mx-10 lg:-mx-16 px-12 md:px-20 lg:px-32 pt-2 border-b border-border/50 space-y-3">
               {/* Quick Filters */}
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="ds-caption font-medium">Quick Filters:</span>

@@ -95,7 +95,7 @@ export default function MyJourneyPage() {
 
   if (isLoading) {
     return (
-      <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto">
+      <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto">
         <Skeleton className="h-8 w-48 mb-6" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -111,7 +111,7 @@ export default function MyJourneyPage() {
   }
 
   return (
-    <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto" data-testid="page-my-roadmap">
+    <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto" data-testid="page-my-roadmap">
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
