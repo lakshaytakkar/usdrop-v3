@@ -192,44 +192,62 @@ function MentorshipBanner() {
     <div
       className="relative overflow-hidden rounded-2xl text-white"
       style={{
-        background: 'linear-gradient(135deg, #0a1628 0%, #0f2847 30%, #162d50 60%, #0d2240 80%, #081a30 100%)',
+        background: 'linear-gradient(135deg, #0b1a3d 0%, #102a5c 25%, #1a3a6e 50%, #0f2952 75%, #0a1d45 100%)',
       }}
       data-testid="banner-mentorship"
     >
       <div
-        className="absolute inset-0 opacity-[0.08]"
+        className="absolute inset-0 opacity-[0.06]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'repeat',
         }}
       />
 
-      <div className="absolute inset-0 opacity-[0.06]">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-400/40 rounded-full -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-indigo-500/30 rounded-full translate-y-1/3" />
-      </div>
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-red-500 to-red-600 opacity-80" />
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-red-500 to-red-600 opacity-80" />
 
-      <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-[0.15] hidden md:block">
-        <svg viewBox="0 0 400 200" className="h-full w-full" preserveAspectRatio="xMaxYMid slice">
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid slice">
           <defs>
-            <linearGradient id="silGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+            <linearGradient id="stripeGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.04" />
             </linearGradient>
           </defs>
-          <ellipse cx="280" cy="180" rx="60" ry="80" fill="url(#silGrad)" />
-          <ellipse cx="340" cy="170" rx="50" ry="90" fill="url(#silGrad)" />
-          <circle cx="280" cy="95" r="18" fill="url(#silGrad)" />
-          <circle cx="340" cy="75" r="15" fill="url(#silGrad)" />
-          <path d="M265,120 Q280,100 295,120 L300,180 L260,180 Z" fill="url(#silGrad)" />
-          <path d="M325,100 Q340,80 355,100 L358,170 L322,170 Z" fill="url(#silGrad)" />
-          <path d="M295,140 L322,130" stroke="url(#silGrad)" strokeWidth="6" strokeLinecap="round" />
+          <rect x="0" y="0" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="28" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="56" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="84" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="112" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="140" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="168" width="800" height="8" fill="url(#stripeGrad)" />
+          <rect x="0" y="196" width="800" height="8" fill="url(#stripeGrad)" />
         </svg>
+
+        <svg className="absolute top-2 left-2 opacity-[0.12]" width="80" height="60" viewBox="0 0 80 60">
+          {[0,1,2,3,4].map(row => (
+            [0,1,2,3,4,5].map(col => (
+              <polygon key={`${row}-${col}`} points={`${col*14+7},${row*12+6} ${col*14+8.5},${row*12+10} ${col*14+12.5},${row*12+10} ${col*14+9.2},${row*12+12.5} ${col*14+10.3},${row*12+16.5} ${col*14+7},${row*12+14} ${col*14+3.7},${row*12+16.5} ${col*14+4.8},${row*12+12.5} ${col*14+1.5},${row*12+10} ${col*14+5.5},${row*12+10}`} fill="white" />
+            ))
+          ))}
+        </svg>
+      </div>
+
+      <div className="absolute right-4 top-2 bottom-2 hidden md:flex items-end gap-3 opacity-[0.18]">
+        <img src="/images/banner/statue-liberty.png" alt="" className="h-28 object-contain drop-shadow-lg" />
+        <img src="/images/banner/shopping-cart.png" alt="" className="h-16 object-contain drop-shadow-lg self-end mb-1" />
+      </div>
+      <div className="absolute right-48 top-3 hidden lg:block opacity-[0.15]">
+        <img src="/images/banner/dollar-coins.png" alt="" className="h-12 object-contain drop-shadow-lg" />
+      </div>
+      <div className="absolute right-32 bottom-2 hidden lg:block opacity-[0.15]">
+        <img src="/images/banner/us-trophy.png" alt="" className="h-14 object-contain drop-shadow-lg" />
       </div>
 
       <div className="relative flex items-center gap-5 md:gap-8 p-5 md:p-7">
         <div className="shrink-0">
-          <div className="w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-xl ring-2 ring-blue-400/30 ring-offset-2 ring-offset-transparent">
+          <div className="w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-xl ring-2 ring-red-400/30 ring-offset-2 ring-offset-transparent">
             <img
               src="/images/suprans profile.jpg"
               alt="Mr. Suprans - Your Mentor"
@@ -240,12 +258,12 @@ function MentorshipBanner() {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <Users className="h-3.5 w-3.5 text-blue-300/70" />
-            <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-300/70">Your Mentor</span>
+            <Users className="h-3.5 w-3.5 text-red-300/80" />
+            <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.12em] text-red-300/80">Your Mentor</span>
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-0.5">MY MENTOR</h2>
-          <p className="text-blue-200/60 text-sm md:text-base font-medium">Mr. Suprans</p>
-          <p className="text-blue-300/40 text-xs mt-1 hidden md:block">USA Dropshipping Mentorship Framework</p>
+          <p className="text-blue-100/70 text-sm md:text-base font-medium">Mr. Suprans</p>
+          <p className="text-blue-200/50 text-xs mt-1 hidden md:block">USA Dropshipping Mentorship Framework</p>
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-2">
