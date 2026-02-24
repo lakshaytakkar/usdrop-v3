@@ -1,7 +1,6 @@
 
 import { Suspense, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
@@ -162,40 +161,6 @@ function HowToUseSection() {
   )
 }
 
-const quickLinks = [
-  { title: "My Products", description: "Saved & bookmarked", href: "/my-products", iconSrc: "/3d-ecom-icons-blue/My_Products.png" },
-  { title: "My Store", description: "Connected Shopify stores", href: "/my-store", iconSrc: "/3d-ecom-icons-blue/My_Store.png", isPro: true },
-  { title: "My Roadmap", description: "Track your journey", href: "/my-roadmap", iconSrc: "/3d-ecom-icons-blue/Rocket_Launch.png" },
-  { title: "Winning Products", description: "Curated top sellers", href: "/winning-products", iconSrc: "/3d-ecom-icons-blue/Trophy_Star.png" },
-  { title: "Shipping Calculator", description: "Estimate costs", href: "/shipping-calculator", iconSrc: "/3d-ecom-icons-blue/Calculator_Ship.png" },
-  { title: "Important Tools", description: "Invoices, policies & more", href: "/tools", iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png" },
-]
-
-function QuickLinksSection() {
-  return (
-    <div>
-      <h2 className="ds-section-title mb-3 flex items-center gap-2">
-        <img src="/3d-ecom-icons-blue/Category_Grid.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
-        Quick Access
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-        {quickLinks.map((item) => (
-          <Link key={item.href} href={item.href} className="block group" data-testid={`link-quick-${item.title.toLowerCase().replace(/\s/g, '-')}`}>
-            <Card className="p-3 hover:border-gray-200 transition-all cursor-pointer rounded-xl hover:shadow-sm border-gray-100 text-center">
-              <img src={item.iconSrc} alt={item.title} width={32} height={32} decoding="async" className="w-8 h-8 object-contain mx-auto mb-1.5" />
-              <h4 className="text-xs font-semibold text-gray-900 truncate">{item.title}</h4>
-              <p className="text-[10px] text-gray-500 truncate mt-0.5">{item.description}</p>
-              {item.isPro && (
-                <Badge className="text-[8px] px-1 py-0 h-3 bg-amber-500 text-white border-0 leading-none mt-1 mx-auto">PRO</Badge>
-              )}
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function DashboardContent() {
   return (
     <div className="relative flex flex-1 flex-col">
@@ -219,7 +184,6 @@ function DashboardContent() {
       <div className="relative z-[1] flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
         <WelcomeBanner />
         <HowToUseSection />
-        <QuickLinksSection />
       </div>
     </div>
   )
