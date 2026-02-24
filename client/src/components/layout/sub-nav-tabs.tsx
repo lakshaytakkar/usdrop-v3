@@ -117,7 +117,7 @@ export function SubNavTabs() {
 
   return (
     <>
-      <div className="w-full px-3 pt-3 pb-1 space-y-2.5">
+      <div className="w-full px-6 md:px-10 lg:px-16 pt-3.5 pb-1.5 space-y-2.5">
         {hasTabs && <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {activeGroup.items.map((item, index) => {
             const isActive = pathname === item.url || pathname?.startsWith(item.url + "/")

@@ -145,7 +145,7 @@ export default function MyProductsPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 p-4 md:p-6 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-2 px-6 md:px-10 lg:px-16 py-6 md:py-8 min-h-0 relative">
 
             {/* Search and Filters */}
             <div className="flex items-center justify-between gap-3">

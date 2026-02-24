@@ -38,7 +38,7 @@ export default function StoreResearchPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 relative">
+        <div className="flex flex-1 flex-col gap-4 px-6 md:px-10 lg:px-16 py-6 md:py-8 relative">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <SearchIcon className="h-8 w-8 text-primary" />
