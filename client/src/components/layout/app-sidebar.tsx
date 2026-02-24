@@ -126,8 +126,8 @@ const aiLearnItems: SidebarItem[] = [
   },
 ]
 
-// USDrop AI Fulfilment items - All Pro features
-const aiFulfilmentItems: SidebarItem[] = [
+// USDrop AI Marketplaces items - All Pro features
+const aiMarketplacesItems: SidebarItem[] = [
   {
     title: "Private Supplier",
     icon: Package,
@@ -489,13 +489,13 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {/* FULFILMENT Section */}
-            {aiFulfilmentItems.length > 0 && (
+            {/* MARKETPLACES Section */}
+            {aiMarketplacesItems.length > 0 && (
               <SidebarGroup>
-                <SidebarGroupLabel className="uppercase tracking-wider font-mono">FULFILMENT</SidebarGroupLabel>
+                <SidebarGroupLabel className="uppercase tracking-wider font-mono">MARKETPLACES</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {aiFulfilmentItems.map((item) => (
+                    {aiMarketplacesItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton 
                           asChild 

@@ -87,3 +87,6 @@ script/
 - **Feb 2026**: My Roadmap page redesign. Increased font sizes throughout. Replaced team-controlled status dropdowns with user-controlled checkboxes (toggle between not_started/completed). Added generous side padding and page header with stats.
 - **Feb 2026**: My R&D workspace page. Inline-editable spreadsheet with columns: date, category enum (Learning/Products/Ads/Store/Research/Fulfilment/Other), hours, and work summary/notes. Data persisted in Supabase `rnd_entries` table via GET/PUT `/api/rnd-entries` endpoints. Category summary pills shown below table.
 - **Feb 2026**: Added colored tag pills to My Learning course cards showing course level (green=Beginner, amber=Intermediate, red=Advanced) and category (blue).
+- **Feb 2026**: My Profile page redesign. Compressed layout with important fields first (Name, Email, Contact, Website), Business Details (LLC, EIN), and collapsible "More details" section for secondary fields (Social, Enrollment IDs, Tools). Removed Card wrappers, max-width 2xl, section icons.
+- **Feb 2026**: Renamed "Fulfilment" to "Marketplaces" across all navigation surfaces (top nav, sidebar, sub-nav tabs, marketing mega menu, footer). Route URLs kept as-is.
+- **Feb 2026**: Renamed landing page "My Dashboard" button to "My Framework" (desktop + mobile).

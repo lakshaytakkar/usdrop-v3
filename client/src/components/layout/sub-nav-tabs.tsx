@@ -69,13 +69,13 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
       { id: "recent", emoji: "⚡", label: "Recent" },
     ],
   },
-  Fulfilment: {
+  Marketplaces: {
     searchPlaceholder: "",
     showSearch: false,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
-    videoTutorialTitle: "Fulfilment Page Video Tutorial",
+    videoTutorialTitle: "Marketplaces Page Video Tutorial",
   },
   Tools: {
     searchPlaceholder: "",

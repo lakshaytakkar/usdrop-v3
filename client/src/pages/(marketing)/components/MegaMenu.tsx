@@ -164,7 +164,7 @@ const menuData: MenuCategory[] = [
     },
   },
   {
-    label: "Fulfilment",
+    label: "Marketplaces",
     items: [
       {
         title: "Order Fulfilment",

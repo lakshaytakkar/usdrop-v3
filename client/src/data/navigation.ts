@@ -88,7 +88,7 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Fulfilment",
+    label: "Marketplaces",
     icon: Truck,
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [

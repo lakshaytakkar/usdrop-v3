@@ -42,7 +42,7 @@ const footerLinks = {
     links: [
       { label: "What is Dropshipping", href: "/what-is-dropshipping" },
       { label: "Shopify Integration", href: "/shopify" },
-      { label: "Fulfilment", href: "/features/fulfilment" },
+      { label: "Marketplaces", href: "/features/fulfilment" },
     ],
   },
 }

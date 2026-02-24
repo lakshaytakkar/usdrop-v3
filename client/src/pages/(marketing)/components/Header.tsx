@@ -52,7 +52,7 @@ export function Header() {
                   className="absolute font-medium leading-[23.423px] left-1/2 translate-x-[-50%] text-[14.538px] text-white top-[calc(50%-12.12px)] whitespace-nowrap"
                   style={{ textShadow: "0px 0.4px 0.6px rgba(0,0,0,0.14)" }}
                 >
-                  My Dashboard
+                  My Framework
                 </p>
                 <div className="absolute inset-0 pointer-events-none shadow-[inset_0px_-0.6px_0px_0px_rgba(255,255,255,0.14)]" />
               </div>
@@ -113,7 +113,7 @@ export function Header() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="link-mobile-dashboard"
               >
-                My Dashboard
+                My Framework
               </Link>
             ) : (
               <>
