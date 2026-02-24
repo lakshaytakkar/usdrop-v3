@@ -33,6 +33,7 @@ import {
   MoreHorizontal,
   FlaskConical,
   Building2,
+  FolderOpen,
 } from "lucide-react"
 
 export interface NavItem {
@@ -109,14 +110,22 @@ export const externalNavGroups: NavGroup[] = [
     icon: Wrench,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
     items: [
+      { title: "Model Studio", icon: User, url: "/tools/model-studio", isPro: true },
+      { title: "Whitelabelling", icon: Badge, url: "/tools/whitelabelling", isPro: true },
       { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
       { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
       { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
       { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
       { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
-      { title: "Shipping Calculator", icon: Truck, url: "/shipping-calculator", isPro: true },
-      { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
-      { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
+      { title: "Shipping Calculator", icon: Truck, url: "/tools/shipping-calculator", isPro: true },
+    ],
+  },
+  {
+    label: "Resources",
+    icon: FolderOpen,
+    iconSrc: "/3d-ecom-icons-blue/Open_Board.png",
+    items: [
+      { title: "Resources", icon: FolderOpen, url: "/resources", isPro: false },
     ],
   },
   {

@@ -102,6 +102,7 @@ import HelpPage from "@/pages/help/page";
 import WebinarsPage from "@/pages/webinars/page";
 import ModelStudio from "@/pages/studio/model-studio/page";
 import Whitelabelling from "@/pages/studio/whitelabelling/page";
+import ResourcesPage from "@/pages/resources/page";
 
 import MyProducts from "@/pages/my-products/page";
 import MyStore from "@/pages/my-store/page";
@@ -230,6 +231,10 @@ function Router() {
       <Route path="/webinars" component={() => <AppLayout><WebinarsPage /></AppLayout>} />
       <Route path="/studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
       <Route path="/studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
+      <Route path="/tools/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
+      <Route path="/tools/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
+      <Route path="/tools/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
+      <Route path="/resources" component={() => <AppLayout><ResourcesPage /></AppLayout>} />
 
       {/* Framework (personal hub) */}
       <Route path="/framework/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />

@@ -90,10 +90,12 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
   Tools: {
     searchPlaceholder: "",
     showSearch: false,
-    actions: [
-      { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
-    ],
-    videoTutorialTitle: "Tools Page Video Tutorial",
+    actions: [],
+  },
+  Resources: {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
   },
 }
 
