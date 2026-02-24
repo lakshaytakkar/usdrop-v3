@@ -7,6 +7,7 @@ import { useUserPlanContext } from "@/contexts/user-plan-context"
 import {
   ChevronRight,
   PlayCircle,
+  Play,
 } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
@@ -120,6 +121,78 @@ function WelcomeBanner() {
   )
 }
 
+const freeLearningVideos = [
+  {
+    title: "What is Dropshipping & How Does It Work?",
+    duration: "8:24",
+    thumbnail: "/thumbnails/trending-products.png",
+  },
+  {
+    title: "Finding Your First Winning Product",
+    duration: "12:15",
+    thumbnail: "/thumbnails/competitor-stores.png",
+  },
+  {
+    title: "Setting Up Your Shopify Store from Scratch",
+    duration: "15:30",
+    thumbnail: "/thumbnails/mentorship-learning.png",
+  },
+  {
+    title: "Running Your First Facebook Ad",
+    duration: "10:45",
+    thumbnail: "/thumbnails/marketing-ads.png",
+  },
+  {
+    title: "How to Price Products for Maximum Profit",
+    duration: "6:52",
+    thumbnail: "/thumbnails/suppliers-shipping.png",
+  },
+  {
+    title: "Fulfilling Your First Order Step by Step",
+    duration: "9:18",
+    thumbnail: "/thumbnails/ai-studio.png",
+  },
+]
+
+function FreeLearningSection() {
+  return (
+    <div>
+      <h2 className="ds-section-title mb-4 flex items-center gap-2">
+        <img src="/3d-ecom-icons-blue/Graduation_Book.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
+        Free Learning
+      </h2>
+      <div className="space-y-2.5">
+        {freeLearningVideos.map((video, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 bg-gradient-to-br from-blue-50/40 to-white hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer group"
+            data-testid={`card-free-video-${i}`}
+          >
+            <div className="relative w-28 h-[4.5rem] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+              <img
+                src={video.thumbnail}
+                alt={video.title}
+                className="w-full h-full object-cover"
+                decoding="async"
+              />
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
+                <div className="h-8 w-8 rounded-full bg-white/90 flex items-center justify-center">
+                  <Play className="h-3.5 w-3.5 text-blue-600 ml-0.5" />
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="ds-card-title group-hover:text-blue-600 transition-colors line-clamp-1">{video.title}</h3>
+              <p className="ds-caption mt-0.5">{video.duration}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function HowToUseSection() {
   return (
     <div>
@@ -183,6 +256,7 @@ function DashboardContent() {
       />
       <div className="relative z-[1] flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
         <WelcomeBanner />
+        <FreeLearningSection />
         <HowToUseSection />
       </div>
     </div>

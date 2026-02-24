@@ -1,213 +1,225 @@
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
-  CheckCircle2,
-  Shield,
-  FileText,
   Building2,
-  Globe,
-  Clock,
-  CreditCard,
-  Mail,
-  Star,
-  MapPin,
-  BadgeCheck,
-  Scale,
+  Lock,
+  Play,
+  X,
+  ExternalLink,
+  ShoppingCart,
   Landmark,
-  HeadphonesIcon,
+  CreditCard,
+  ShieldCheck,
+  FileText,
+  Globe,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react"
 
 export default function MyLLCPage() {
+  const [videoOpen, setVideoOpen] = useState(false)
+
+  const lockedFields = [
+    { label: "LLC Name", placeholder: "Your Business Name LLC", icon: Building2 },
+    { label: "EIN Number", placeholder: "XX-XXXXXXX", icon: FileText },
+    { label: "Articles of Organization", placeholder: "Not filed", icon: FileText },
+    { label: "Operating Agreement", placeholder: "Not created", icon: ShieldCheck },
+    { label: "Registered Agent", placeholder: "None assigned", icon: Globe },
+    { label: "State of Formation", placeholder: "Not selected", icon: Landmark },
+  ]
+
+  const benefits = [
+    {
+      icon: ShoppingCart,
+      title: "Marketplace Approvals",
+      description: "Amazon, Walmart, eBay and TikTok Shop require a US LLC and EIN to sell. Without one, you can't even apply.",
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      icon: Landmark,
+      title: "US Business Bank Account",
+      description: "Open a real US bank account with Mercury, Relay or Chase. Required for receiving payouts and managing cash flow.",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      icon: CreditCard,
+      title: "Payment Gateway Access",
+      description: "Stripe, PayPal Business and Shopify Payments all require a US LLC and EIN to process transactions for your store.",
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Personal Asset Protection",
+      description: "An LLC separates your personal assets from your business. If something goes wrong, your personal finances stay protected.",
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+    },
+    {
+      icon: Globe,
+      title: "US Business Credibility",
+      description: "Customers trust US-based businesses more. An LLC with a US address gives your brand legitimacy and higher conversion rates.",
+      color: "text-pink-600",
+      bg: "bg-pink-50",
+    },
+    {
+      icon: FileText,
+      title: "Tax Benefits & Compliance",
+      description: "Proper LLC formation in states like Wyoming or Delaware offers tax advantages and simple annual compliance requirements.",
+      color: "text-teal-600",
+      bg: "bg-teal-50",
+    },
+  ]
+
   return (
     <div className="flex flex-1 flex-col px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
       <div className="max-w-4xl mx-auto w-full space-y-10">
 
         <div className="text-center space-y-3">
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200" data-testid="badge-llc-verified">
+          <Badge className="bg-blue-50 text-blue-700 border-blue-200" data-testid="badge-llc-service">
             <Building2 className="h-3 w-3 mr-1" />
-            Official LLC Formation Service
+            LLC Formation Service
           </Badge>
           <h1 className="ds-page-title ds-text-heading" data-testid="text-llc-title">
-            Your LLC Formation
+            Form Your US LLC
           </h1>
           <p className="ds-body ds-text-muted max-w-2xl mx-auto">
-            Get your US-based LLC set up quickly and legally. We handle the entire formation process so you can focus on building your dropshipping business.
+            Every serious e-commerce business needs a US LLC. It's the foundation for marketplace approvals, payment processing, and legal protection.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { value: "100%", label: "Success Rate", icon: BadgeCheck, color: "text-emerald-600" },
-            { value: "500+", label: "LLCs Formed", icon: Building2, color: "text-blue-600" },
-            { value: "7-10 Days", label: "Processing Time", icon: Clock, color: "text-purple-600" },
-            { value: "All 50", label: "US States", icon: Globe, color: "text-orange-600" },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-gray-200/60 bg-white/60 p-4 text-center space-y-1.5" style={{ backdropFilter: 'blur(8px)' }} data-testid={`card-llc-stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}>
-              <stat.icon className={`h-5 w-5 mx-auto ${stat.color}`} />
-              <p className="text-xl font-bold ds-text-heading">{stat.value}</p>
-              <p className="text-xs ds-text-muted">{stat.label}</p>
+        <div
+          className="relative rounded-2xl overflow-hidden cursor-pointer group border border-gray-200/60 shadow-sm"
+          onClick={() => setVideoOpen(true)}
+          data-testid="button-play-llc-video"
+        >
+          <div className="aspect-video bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/60 via-indigo-900/50 to-purple-900/60" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center space-y-2">
+                <div className="h-20 w-20 mx-auto rounded-full bg-white/95 shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                  <Play className="h-8 w-8 text-blue-600 ml-1" />
+                </div>
+                <p className="text-white font-semibold text-lg drop-shadow-md">Why You Need a US LLC for Dropshipping</p>
+                <p className="text-white/70 text-sm">3 min watch</p>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="space-y-5">
-          <h2 className="ds-section-title ds-text-heading">How It Works</h2>
-          <div className="space-y-4">
-            {[
-              {
-                step: "1",
-                title: "Choose Your State",
-                description: "Select the best state for your LLC formation. We recommend Wyoming or Delaware for e-commerce businesses due to favorable tax laws and privacy protections.",
-              },
-              {
-                step: "2",
-                title: "Provide Your Details",
-                description: "Share your basic information including your desired business name, registered agent preferences, and management structure. We verify name availability instantly.",
-              },
-              {
-                step: "3",
-                title: "We File Your Documents",
-                description: "Our team prepares and files your Articles of Organization with the state. All legal documents are reviewed for accuracy before submission.",
-              },
-              {
-                step: "4",
-                title: "EIN & Tax Setup",
-                description: "We obtain your Employer Identification Number (EIN) from the IRS and set up your federal tax ID so you can open business bank accounts and process payments.",
-              },
-              {
-                step: "5",
-                title: "Operating Agreement",
-                description: "Receive a professionally drafted Operating Agreement customized for your e-commerce business, outlining ownership structure and management responsibilities.",
-              },
-              {
-                step: "6",
-                title: "Ready to Operate",
-                description: "Your LLC is officially formed. You receive all formation documents, compliance calendar, and ongoing support to keep your business in good standing.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="flex items-start gap-4 p-4 rounded-xl border border-gray-200/60 bg-white/60" style={{ backdropFilter: 'blur(8px)' }} data-testid={`card-llc-step-${item.step}`}>
-                <div className="flex-shrink-0 mt-0.5">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+        {videoOpen && (
+          <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4" onClick={() => setVideoOpen(false)}>
+            <div className="relative w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={() => setVideoOpen(false)}
+                className="absolute -top-12 right-0 text-white/80 transition-colors"
+                data-testid="button-close-llc-video"
+              >
+                <X className="h-8 w-8" />
+              </button>
+              <div className="aspect-video bg-gray-900 rounded-xl flex items-center justify-center">
+                <p className="text-white/60 text-sm">Video player will load here</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <h2 className="ds-section-title ds-text-heading">Your LLC Status</h2>
+          </div>
+          <p className="text-sm ds-text-muted -mt-2">These fields are required to operate your e-commerce business in the US.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {lockedFields.map((field) => (
+              <div
+                key={field.label}
+                className="flex items-center gap-3 p-4 rounded-xl border border-gray-200/60 bg-white/40 relative overflow-hidden"
+                style={{ backdropFilter: 'blur(8px)' }}
+                data-testid={`card-llc-field-${field.label.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <div className="h-9 w-9 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <field.icon className="h-4 w-4 text-gray-400" />
                 </div>
-                <div>
-                  <h3 className="font-semibold ds-text-heading text-[15px]">{item.title}</h3>
-                  <p className="text-sm ds-text-muted mt-1 leading-relaxed">{item.description}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-500">{field.label}</p>
+                  <p className="text-sm text-gray-300 italic">{field.placeholder}</p>
                 </div>
+                <Lock className="h-4 w-4 text-gray-300 flex-shrink-0" />
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-5">
-          <h2 className="ds-section-title ds-text-heading">What's Included</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {
-                icon: FileText,
-                title: "Articles of Organization",
-                description: "Professionally prepared and filed with the state. Includes name availability check and expedited processing.",
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-              },
-              {
-                icon: Landmark,
-                title: "EIN / Tax ID Number",
-                description: "Federal Employer Identification Number obtained from the IRS for banking, taxes, and business operations.",
-                color: "text-emerald-600",
-                bg: "bg-emerald-50",
-              },
-              {
-                icon: Scale,
-                title: "Operating Agreement",
-                description: "Custom operating agreement tailored for e-commerce and dropshipping business structures.",
-                color: "text-purple-600",
-                bg: "bg-purple-50",
-              },
-              {
-                icon: Shield,
-                title: "Registered Agent",
-                description: "First year of registered agent service included. Receive legal documents and state correspondence on your behalf.",
-                color: "text-orange-600",
-                bg: "bg-orange-50",
-              },
-              {
-                icon: CreditCard,
-                title: "Business Banking Guide",
-                description: "Step-by-step guide to opening your business bank account and setting up payment processing for your store.",
-                color: "text-pink-600",
-                bg: "bg-pink-50",
-              },
-              {
-                icon: HeadphonesIcon,
-                title: "Ongoing Compliance",
-                description: "Annual report reminders, compliance calendar, and dedicated support to keep your LLC in good standing.",
-                color: "text-teal-600",
-                bg: "bg-teal-50",
-              },
-            ].map((feature) => (
-              <div key={feature.title} className="rounded-xl border border-gray-200/60 bg-white/60 p-5 space-y-3" style={{ backdropFilter: 'blur(8px)' }} data-testid={`card-llc-feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                <div className={`h-10 w-10 rounded-lg ${feature.bg} flex items-center justify-center`}>
-                  <feature.icon className={`h-5 w-5 ${feature.color}`} />
+          <h2 className="ds-section-title ds-text-heading">Why Every Dropshipper Needs a US LLC</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {benefits.map((benefit) => (
+              <div
+                key={benefit.title}
+                className="rounded-xl border border-gray-200/60 bg-white/60 p-5 space-y-3"
+                style={{ backdropFilter: 'blur(8px)' }}
+                data-testid={`card-llc-benefit-${benefit.title.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <div className={`h-10 w-10 rounded-lg ${benefit.bg} flex items-center justify-center`}>
+                  <benefit.icon className={`h-5 w-5 ${benefit.color}`} />
                 </div>
-                <h3 className="font-semibold ds-text-heading text-[15px]">{feature.title}</h3>
-                <p className="text-sm ds-text-muted leading-relaxed">{feature.description}</p>
+                <h3 className="font-semibold ds-text-heading text-[15px]">{benefit.title}</h3>
+                <p className="text-sm ds-text-muted leading-relaxed">{benefit.description}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200/60 bg-white/70 p-6 md:p-8" style={{ backdropFilter: 'blur(8px)' }}>
-          <div className="flex flex-col md:flex-row items-center gap-6">
-            <Avatar className="h-20 w-20 border-4 border-white shadow-lg flex-shrink-0">
-              <AvatarFallback className="text-xl font-semibold bg-blue-100 text-blue-700">US</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-center md:text-left space-y-2">
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <h3 className="text-lg font-semibold ds-text-heading">USDrop LLC Services</h3>
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        <div className="space-y-4">
+          <h2 className="ds-section-title ds-text-heading">What You'll Get</h2>
+          <div className="space-y-3">
+            {[
+              "Registered LLC in your chosen state (Wyoming, Delaware, or any US state)",
+              "EIN (Employer Identification Number) from the IRS",
+              "Articles of Organization filed and approved",
+              "Custom Operating Agreement for e-commerce",
+              "Registered Agent service (first year included)",
+              "Step-by-step guide to open your US bank account",
+              "Compliance calendar and annual filing reminders",
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3 px-4 py-3 rounded-xl border border-gray-200/60 bg-white/60" style={{ backdropFilter: 'blur(8px)' }} data-testid={`card-llc-included-${i}`}>
+                <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm ds-text-body leading-relaxed">{item}</p>
               </div>
-              <p className="text-sm ds-text-muted">LLC Formation Team</p>
-              <p className="text-sm ds-text-body leading-relaxed">
-                Our experienced formation team has helped 500+ entrepreneurs set up their US-based LLCs. From filing to compliance, we handle every detail so your business is legally protected from day one.
-              </p>
-              <div className="flex items-center gap-3 justify-center md:justify-start pt-2">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-semibold">5.0</span>
-                </div>
-                <span className="text-xs ds-text-muted">&bull;</span>
-                <span className="text-sm ds-text-muted">500+ LLCs formed</span>
-                <span className="text-xs ds-text-muted">&bull;</span>
-                <span className="text-sm ds-text-muted inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  United States
-                </span>
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <Button size="lg" className="gap-2" data-testid="button-contact-llc-team">
-                <Mail className="h-4 w-4" />
-                Contact Team
-              </Button>
-            </div>
+            ))}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white space-y-4">
-          <h2 className="text-2xl font-bold">Ready to Form Your LLC?</h2>
+        <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white space-y-4" data-testid="section-llc-cta">
+          <h2 className="text-2xl font-bold">Ready to Make It Official?</h2>
           <p className="text-blue-100 max-w-lg mx-auto">
-            Protect your personal assets and establish credibility with a properly formed US LLC. Get started today with expert guidance every step of the way.
+            Stop leaving money on the table. Form your US LLC today and unlock marketplace approvals, payment gateways, and a real US business identity.
           </p>
           <div className="flex items-center justify-center gap-3">
-            <Button size="lg" variant="secondary" className="gap-2 bg-white text-blue-700" data-testid="button-start-llc">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="gap-2"
+              data-testid="button-get-llc"
+              onClick={() => window.open('https://usdrop.ai/llc', '_blank')}
+            >
               <Building2 className="h-4 w-4" />
-              Start My LLC
+              Get My LLC Now
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 border-white/30 text-white" data-testid="button-learn-more-llc">
-              <FileText className="h-4 w-4" />
-              Learn More
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 border-white/30 text-white hover:bg-white/10"
+              data-testid="button-learn-more-llc"
+              onClick={() => setVideoOpen(true)}
+            >
+              <Play className="h-4 w-4" />
+              Watch Video
             </Button>
           </div>
         </div>

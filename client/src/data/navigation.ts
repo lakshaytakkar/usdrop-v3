@@ -64,7 +64,6 @@ export const externalNavGroups: NavGroup[] = [
       { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },
       { title: "My Learning", icon: GraduationCap, url: "/framework/my-learning", isPro: false },
       { title: "My R&D", icon: FlaskConical, url: "/framework/my-rnd", isPro: false },
-      { title: "My LLC", icon: Building2, url: "/framework/my-llc", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/framework/my-credentials", isPro: false },
     ],
@@ -95,6 +94,14 @@ export const externalNavGroups: NavGroup[] = [
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [
       { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: false },
+    ],
+  },
+  {
+    label: "LLC",
+    icon: Building2,
+    iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
+    items: [
+      { title: "LLC Formation", icon: Building2, url: "/llc", isPro: false },
     ],
   },
   {

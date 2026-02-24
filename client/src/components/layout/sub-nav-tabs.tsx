@@ -74,6 +74,11 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     showSearch: false,
     actions: [],
   },
+  "LLC": {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
+  },
   Marketplaces: {
     searchPlaceholder: "",
     showSearch: false,

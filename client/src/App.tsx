@@ -238,7 +238,7 @@ function Router() {
       <Route path="/framework/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
       <Route path="/framework/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
       <Route path="/framework/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
-      <Route path="/framework/my-llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
+      <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
       <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
       <Route path="/framework/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
 
@@ -250,6 +250,7 @@ function Router() {
       <Route path="/my-learning"><Redirect to="/framework/my-learning" /></Route>
       <Route path="/my-learning/:id">{(params) => <Redirect to={`/framework/my-learning/${params.id}`} />}</Route>
       <Route path="/my-rnd"><Redirect to="/framework/my-rnd" /></Route>
+      <Route path="/framework/my-llc"><Redirect to="/llc" /></Route>
       <Route path="/my-profile"><Redirect to="/framework/my-profile" /></Route>
       <Route path="/my-credentials"><Redirect to="/framework/my-credentials" /></Route>
 
