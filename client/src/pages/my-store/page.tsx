@@ -101,8 +101,7 @@ function ShopifyStoresContent() {
                   <img
                     src="/images/logos/shopify.svg"
                     alt="Shopify logo"
-                   
-                    className="object-contain"
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <h2 className="ds-page-title mb-2">No Stores Connected</h2>
