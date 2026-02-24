@@ -8,8 +8,8 @@ import {
   Plus,
   Trash2,
   Save,
-  FlaskConical,
 } from "lucide-react"
+import { FrameworkBanner } from "@/components/framework-banner"
 
 type RnDCategory = "learning" | "products" | "ads" | "store" | "research" | "fulfilment" | "other"
 
@@ -123,17 +123,15 @@ export default function MyRnDPage() {
   }
 
   return (
-    <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto" data-testid="page-my-rnd">
+    <div className="flex flex-1 flex-col gap-4 p-2" data-testid="page-my-rnd">
+      <FrameworkBanner
+        title="My R&D Workspace"
+        description="Track your daily work, learning, and research in one place"
+        iconSrc="/images/banners/3d-rnd.png"
+        onTutorialClick={() => {}}
+      />
+      <div className="px-10 md:px-18 lg:px-30">
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FlaskConical className="h-6 w-6 text-blue-600" />
-            My R&D Workspace
-          </h1>
-          <p className="text-gray-500 mt-1 text-[15px]">
-            Track your daily work, learning, and research in one place.
-          </p>
-        </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-4 text-sm text-gray-500 mr-2">
             <span>Today: <strong className="text-gray-800">{todayHours}h</strong></span>
@@ -180,7 +178,7 @@ export default function MyRnDPage() {
               {entries.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-16 text-center text-gray-400">
-                    <FlaskConical className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                    <img src="/images/banners/3d-rnd.png" className="h-10 w-10 mx-auto mb-3 opacity-40" alt="" />
                     <p className="text-base font-medium text-gray-500 mb-1">No entries yet</p>
                     <p className="text-sm">Click "Add Entry" to start logging your daily work and learning.</p>
                   </td>
@@ -265,6 +263,7 @@ export default function MyRnDPage() {
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }

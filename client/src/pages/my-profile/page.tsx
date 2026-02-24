@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Save, ChevronDown, ChevronUp, User, Building2, Share2, Link2 } from "lucide-react"
+import { FrameworkBanner } from "@/components/framework-banner"
 
 interface UserDetails {
   email: string
@@ -104,7 +105,14 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+    <div className="flex flex-1 flex-col gap-4 p-2">
+      <FrameworkBanner
+        title="My Profile"
+        description="Manage your personal and business information"
+        iconSrc="/images/banners/3d-profile.png"
+        onTutorialClick={() => {}}
+      />
+      <div className="flex flex-col items-center px-10 md:px-18 lg:px-30">
 
       {loading ? (
         <div className="w-full max-w-3xl space-y-4">
@@ -344,6 +352,7 @@ export default function MyProfilePage() {
         </div>
       )}
 
+      </div>
     </div>
   )
 }

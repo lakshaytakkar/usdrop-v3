@@ -15,6 +15,7 @@ import { AlertCircle } from "lucide-react"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BookOpen, Sparkles } from "lucide-react"
+import { FrameworkBanner } from "@/components/framework-banner"
 import { useRouter } from "@/hooks/use-router"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
@@ -108,7 +109,14 @@ export default function AcademyPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
+        <div className="flex flex-1 flex-col gap-4 p-2">
+          <FrameworkBanner
+            title="My Learning"
+            description="Access courses, tutorials, and training to grow your business"
+            iconSrc="/images/banners/3d-learning.png"
+            onTutorialClick={() => {}}
+          />
+          <div className="px-10 md:px-18 lg:px-30">
 
           {/* All Courses */}
           <div>
@@ -201,6 +209,7 @@ export default function AcademyPage() {
           </Dialog>
         </div>
 
+          </div>
       <UpsellDialog 
         isOpen={isUpsellOpen} 
         onClose={() => setIsUpsellOpen(false)} 

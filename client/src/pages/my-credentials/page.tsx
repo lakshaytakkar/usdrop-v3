@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Eye, EyeOff, Plus, Pencil, Trash2, KeyRound, ExternalLink } from "lucide-react"
+import { FrameworkBanner } from "@/components/framework-banner"
 
 interface Credential {
   id: string
@@ -116,9 +117,16 @@ export default function MyCredentialsPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+      <div className="flex flex-1 flex-col gap-4 p-2">
+        <FrameworkBanner
+          title="My Credentials"
+          description="Securely store and manage your service logins and API keys"
+          iconSrc="/images/banners/3d-credentials.png"
+          onTutorialClick={() => {}}
+        />
+        <div className="px-10 md:px-18 lg:px-30">
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mb-2">
           <Button
             onClick={openAdd}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
@@ -315,6 +323,7 @@ export default function MyCredentialsPage() {
           </DialogContent>
         </Dialog>
 
+        </div>
       </div>
     </>
   )

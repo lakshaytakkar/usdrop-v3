@@ -12,6 +12,7 @@ import { StoreList } from "./components/store-list"
 import { ShopifyStore } from "./data/stores"
 import { useToast } from "@/hooks/use-toast"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
+import { FrameworkBanner } from "@/components/framework-banner"
 
 function ShopifyStoresContent() {
   const { showSuccess, showError } = useToast()
@@ -88,7 +89,14 @@ function ShopifyStoresContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-4 p-2">
+          <FrameworkBanner
+            title="My Store"
+            description="Manage your connected Shopify stores and track performance"
+            iconSrc="/images/banners/3d-store.png"
+            onTutorialClick={() => {}}
+          />
+          <div className="px-10 md:px-18 lg:px-30">
 
           {loading ? (
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
@@ -132,6 +140,7 @@ function ShopifyStoresContent() {
             onStoreAdded={handleStoreAdded}
           />
 
+          </div>
         </div>
     </>
   )

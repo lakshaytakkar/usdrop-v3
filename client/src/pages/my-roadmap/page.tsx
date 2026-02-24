@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 import { journeyStages } from "@/data/journey-stages";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  Rocket,
   ChevronRight,
 } from "lucide-react";
+import { FrameworkBanner } from "@/components/framework-banner";
 import { Link } from "wouter";
 
 type TaskStatus = "not_started" | "in_progress" | "completed";
@@ -111,17 +111,16 @@ export default function MyJourneyPage() {
   }
 
   return (
-    <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto" data-testid="page-my-roadmap">
-
+    <div className="flex flex-1 flex-col gap-4 p-2" data-testid="page-my-roadmap">
+      <FrameworkBanner
+        title="My Roadmap"
+        description="Track your progress through the dropshipping journey"
+        iconSrc="/images/banners/3d-roadmap.png"
+        onTutorialClick={() => {}}
+      />
+      <div className="px-10 md:px-18 lg:px-30">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Rocket className="h-6 w-6 text-blue-600" />
-          My Roadmap
-        </h1>
-        <p className="text-gray-500 mt-1 text-[15px]">
-          Track your progress through the dropshipping journey. Check off tasks as you complete them.
-        </p>
-        <div className="flex items-center gap-4 mt-3 text-sm">
+        <div className="flex items-center gap-4 text-sm">
           <span className="flex items-center gap-1.5 text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" />{completedCount} completed</span>
           <span className="flex items-center gap-1.5 text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500" />{inProgressCount} in progress</span>
           <span className="text-gray-500">{Math.round(overallProgress)}% overall</span>
@@ -241,12 +240,13 @@ export default function MyJourneyPage() {
 
       {overallProgress === 100 && (
         <Card className="p-8 mt-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center">
-          <Rocket className="h-14 w-14 mx-auto mb-3" />
+          <ChevronRight className="h-14 w-14 mx-auto mb-3" />
           <h3 className="text-2xl font-bold mb-2">Congratulations! You've completed your roadmap!</h3>
           <p className="text-white/90 text-base">You're now ready to scale your dropshipping business to new heights.</p>
         </Card>
       )}
 
+      </div>
     </div>
   );
 }

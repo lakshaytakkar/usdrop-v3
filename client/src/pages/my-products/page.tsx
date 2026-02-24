@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
+import { FrameworkBanner } from "@/components/framework-banner"
 
 interface PicklistItem {
   id: string
@@ -145,7 +146,14 @@ export default function MyProductsPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-4 p-2">
+          <FrameworkBanner
+            title="My Products"
+            description="Your saved products and picklist for quick access"
+            iconSrc="/images/banners/3d-products.png"
+            onTutorialClick={() => {}}
+          />
+          <div className="px-10 md:px-18 lg:px-30">
 
             {/* Search and Filters */}
             <div className="flex items-center justify-between gap-3">
@@ -284,6 +292,7 @@ export default function MyProductsPage() {
             )}
 
           </div>
+        </div>
     </>
   )
 }
