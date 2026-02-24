@@ -32,6 +32,7 @@ import {
   MonitorPlay,
   MoreHorizontal,
   FlaskConical,
+  Building2,
 } from "lucide-react"
 
 export interface NavItem {
@@ -63,6 +64,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },
       { title: "My Learning", icon: GraduationCap, url: "/framework/my-learning", isPro: false },
       { title: "My R&D", icon: FlaskConical, url: "/framework/my-rnd", isPro: false },
+      { title: "My LLC", icon: Building2, url: "/framework/my-llc", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/framework/my-credentials", isPro: false },
     ],
