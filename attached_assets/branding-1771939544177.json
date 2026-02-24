@@ -1,0 +1,138 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Geist",
+      "role": "body"
+    },
+    {
+      "family": "Geist Mono",
+      "role": "monospace"
+    },
+    {
+      "family": "cooperLtBT",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#615FFF",
+    "accent": "#4F39F6",
+    "background": "#FAFAF9",
+    "textPrimary": "#292524",
+    "link": "#4F39F6"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Geist",
+      "heading": "cooperLtBT"
+    },
+    "fontStacks": {
+      "heading": [
+        "cooperLtBT"
+      ],
+      "body": [
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji"
+      ],
+      "paragraph": [
+        "Geist"
+      ]
+    },
+    "fontSizes": {
+      "h1": "40px",
+      "h2": "32px",
+      "body": "18px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "4px"
+  },
+  "components": {
+    "buttonPrimary": {
+      "background": "#615FFF",
+      "textColor": "#FAFAF9",
+      "borderColor": "#4F39F6",
+      "borderRadius": "12px",
+      "borderRadiusCorners": {
+        "topLeft": "12px",
+        "topRight": "12px",
+        "bottomRight": "12px",
+        "bottomLeft": "12px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#FAFAF9",
+      "textColor": "#292524",
+      "borderRadius": "12px",
+      "borderRadiusCorners": {
+        "topLeft": "12px",
+        "topRight": "12px",
+        "bottomRight": "12px",
+        "bottomLeft": "12px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": "https://autosend.com/favicon.ico",
+    "ogImage": "https://dqy38fnwh4fqs.cloudfront.net/autosend/website/landing/autosend-og.jpg",
+    "logoHref": "File saved at: attached_assets/logoHref.html"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is visible, located in the header, links to the homepage, and matches the brand 'AutoSend'.",
+    "confidence": 0.9,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "Sign up",
+      "reasoning": "Button #0 has a vibrant brand color (#615FFF) and action-oriented text ('Sign up'), making it the primary CTA."
+    },
+    "secondary": {
+      "index": 9,
+      "text": "Talk to Founders",
+      "reasoning": "Button #9 ('Talk to Founders') has a different background color (#FAFAF9) and serves as a secondary action, complementing the primary CTA."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "developers and marketers"
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is visible, located in the header, links to the homepage, and matches the brand 'AutoSend'.",
+        "confidence": 0.9
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
