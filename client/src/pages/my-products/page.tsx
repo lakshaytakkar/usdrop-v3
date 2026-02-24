@@ -155,23 +155,23 @@ export default function MyProductsPage() {
           />
           <div className="px-10 md:px-18 lg:px-30">
 
-            {/* Search and Filters */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by product name or category..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+            {items.length > 0 && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by product name or category..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground hidden md:block">
+                  {filteredItems.length} {filteredItems.length === 1 ? "product" : "products"} saved
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground hidden md:block">
-                {filteredItems.length} {filteredItems.length === 1 ? "product" : "products"} saved
-              </p>
-            </div>
+            )}
 
-            {/* Table */}
             {isLoading ? (
               <Card>
                 <div className="p-6 space-y-4">
