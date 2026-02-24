@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
+import { useQuery } from "@tanstack/react-query"
+import { apiFetch } from "@/lib/supabase"
 import {
   ChevronRight,
   PlayCircle,
@@ -121,40 +123,40 @@ function WelcomeBanner() {
   )
 }
 
-const freeLearningVideos = [
-  {
-    title: "What is Dropshipping & How Does It Work?",
-    duration: "8:24",
-    thumbnail: "/thumbnails/trending-products.png",
-  },
-  {
-    title: "Finding Your First Winning Product",
-    duration: "12:15",
-    thumbnail: "/thumbnails/competitor-stores.png",
-  },
-  {
-    title: "Setting Up Your Shopify Store from Scratch",
-    duration: "15:30",
-    thumbnail: "/thumbnails/mentorship-learning.png",
-  },
-  {
-    title: "Running Your First Facebook Ad",
-    duration: "10:45",
-    thumbnail: "/thumbnails/marketing-ads.png",
-  },
-  {
-    title: "How to Price Products for Maximum Profit",
-    duration: "6:52",
-    thumbnail: "/thumbnails/suppliers-shipping.png",
-  },
-  {
-    title: "Fulfilling Your First Order Step by Step",
-    duration: "9:18",
-    thumbnail: "/thumbnails/ai-studio.png",
-  },
-]
+function formatDuration(minutes: number | null): string {
+  if (!minutes || minutes <= 0) return ""
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  if (h > 0) return `${h}h ${m}m`
+  return `${m} min`
+}
 
 function FreeLearningSection() {
+  const { data, isLoading } = useQuery<{ courses: any[] }>({
+    queryKey: ['/api/courses'],
+    queryFn: () => apiFetch('/api/courses?published=true&pageSize=20&sortBy=created_at&sortOrder=asc').then(r => r.json()),
+  })
+
+  const courses = data?.courses || []
+
+  if (isLoading) {
+    return (
+      <div>
+        <h2 className="ds-section-title mb-4 flex items-center gap-2">
+          <img src="/3d-ecom-icons-blue/Graduation_Book.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
+          Free Learning
+        </h2>
+        <div className="space-y-2.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[4.5rem] w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (courses.length === 0) return null
+
   return (
     <div>
       <h2 className="ds-section-title mb-4 flex items-center gap-2">
@@ -162,19 +164,24 @@ function FreeLearningSection() {
         Free Learning
       </h2>
       <div className="space-y-2.5">
-        {freeLearningVideos.map((video, i) => (
-          <div
-            key={i}
+        {courses.map((course: any) => (
+          <Link
+            key={course.id}
+            href={`/framework/my-learning/${course.id}`}
             className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 bg-gradient-to-br from-blue-50/40 to-white hover:border-blue-200 hover:shadow-sm transition-all cursor-pointer group"
-            data-testid={`card-free-video-${i}`}
+            data-testid={`card-free-video-${course.id}`}
           >
             <div className="relative w-28 h-[4.5rem] rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-              <img
-                src={video.thumbnail}
-                alt={video.title}
-                className="w-full h-full object-cover"
-                decoding="async"
-              />
+              {course.thumbnail ? (
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                  decoding="async"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100" />
+              )}
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
                 <div className="h-8 w-8 rounded-full bg-white/90 flex items-center justify-center">
                   <Play className="h-3.5 w-3.5 text-blue-600 ml-0.5" />
@@ -182,11 +189,15 @@ function FreeLearningSection() {
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="ds-card-title group-hover:text-blue-600 transition-colors line-clamp-1">{video.title}</h3>
-              <p className="ds-caption mt-0.5">{video.duration}</p>
+              <h3 className="ds-card-title group-hover:text-blue-600 transition-colors line-clamp-1" data-testid={`text-course-title-${course.id}`}>{course.title}</h3>
+              <p className="ds-caption mt-0.5">
+                {course.lessons_count ? `${course.lessons_count} modules` : ""}
+                {course.lessons_count && course.duration_minutes ? " · " : ""}
+                {formatDuration(course.duration_minutes)}
+              </p>
             </div>
             <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
-          </div>
+          </Link>
         ))}
       </div>
     </div>
