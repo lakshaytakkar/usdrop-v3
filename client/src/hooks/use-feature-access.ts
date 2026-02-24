@@ -37,13 +37,13 @@ export function useFeatureAccess(): UseFeatureAccessReturn {
  * All other paths (except admin) require Pro
  */
 export const FREE_ACCESS_PATHS = [
-  "/home",
+  "/framework",
   "/mentorship",
   "/settings",
   "/profile",
-  "/my-roadmap",
-  "/my-profile",
-  "/my-credentials",
+  "/framework/my-roadmap",
+  "/framework/my-profile",
+  "/framework/my-credentials",
 ]
 
 /**

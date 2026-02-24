@@ -41,7 +41,7 @@ export function Header() {
       <div className="hidden lg:flex items-center gap-3 shrink-0">
         {isLoggedIn ? (
           <div className="h-[42px] relative shrink-0 w-[140px]">
-            <Link href="/home" data-testid="link-dashboard">
+            <Link href="/framework" data-testid="link-dashboard">
               <div
                 className="absolute h-[42px] left-0 overflow-clip rounded-[6.462px] shadow-[0px_0px_0px_0.8px_rgba(0,0,0,0.9)] top-0 w-[140px] cursor-pointer hover:opacity-90 transition-opacity"
                 style={{
@@ -108,7 +108,7 @@ export function Header() {
           <div className="border-t border-gray-200 pt-4 mt-2 flex flex-col gap-3">
             {isLoggedIn ? (
               <Link
-                href="/home"
+                href="/framework"
                 className="bg-black text-white text-center py-3 rounded-lg font-medium text-[14.538px]"
                 onClick={() => setIsMobileMenuOpen(false)}
                 data-testid="link-mobile-dashboard"

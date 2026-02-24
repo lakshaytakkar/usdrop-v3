@@ -37,7 +37,7 @@ export default function AuthCallbackPage() {
     }
 
     const token = fragment.token
-    const redirectTo = fragment.redirectTo || "/home"
+    const redirectTo = fragment.redirectTo || "/framework"
 
     if (!token) {
       router.push("/login")
@@ -66,7 +66,7 @@ export default function AuthCallbackPage() {
             subscriptionStatus: null,
           }
           const finalRedirect = getUserRedirectPath(metadata)
-          router.push(redirectTo !== "/home" ? redirectTo : finalRedirect)
+          router.push(redirectTo !== "/framework" ? redirectTo : finalRedirect)
         } else {
           clearAccessToken()
           router.push("/login?error=" + encodeURIComponent("Session expired. Please sign in again."))

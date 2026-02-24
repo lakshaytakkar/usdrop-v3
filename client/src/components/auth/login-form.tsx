@@ -110,7 +110,7 @@ export function LoginForm({
         const redirectUrl = getUserRedirectPath(metadata)
         router.push(redirectUrl)
       } else {
-        router.push('/home')
+        router.push('/framework')
       }
       router.refresh()
     } catch (error) {
@@ -149,7 +149,7 @@ export function LoginForm({
                   onClick={async () => {
                     setGoogleLoading(true)
                     try {
-                      const redirectTo = getRedirectUrl(searchParams, "/home")
+                      const redirectTo = getRedirectUrl(searchParams, "/framework")
                       window.location.href = `/api/auth/google?redirectTo=${encodeURIComponent(redirectTo)}`
                     } catch (error) {
                       setGoogleLoading(false)

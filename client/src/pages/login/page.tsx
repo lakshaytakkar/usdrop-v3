@@ -60,7 +60,7 @@ function DevQuickLoginPanel() {
         router.push(getUserRedirectPath(userData))
         router.refresh()
       } else {
-        router.push("/home")
+        router.push("/framework")
         router.refresh()
       }
     } catch {

@@ -43,7 +43,7 @@ export function LimitedDataOverlay({
         </p>
 
         <Button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/framework")}
           className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-gray-800 hover:to-gray-900 rounded-xl px-6 h-9 text-sm font-medium shadow-lg shadow-gray-900/20 transition-all hover:shadow-xl hover:shadow-gray-900/30"
         >
           <Crown className="w-3.5 h-3.5 mr-1.5" />

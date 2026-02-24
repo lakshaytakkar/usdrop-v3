@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/auth-context";
 import { UnifiedUserProvider } from "@/contexts/unified-user-context";
@@ -194,7 +194,7 @@ function Router() {
       <Route path="/dev/tasks/:id" component={() => <DevLayout><DevTaskDetail /></DevLayout>} />
 
       {/* App pages (authenticated user pages with top nav) */}
-      <Route path="/home" component={() => <AppLayout><HomePage /></AppLayout>} />
+      <Route path="/framework" component={() => <AppLayout><HomePage /></AppLayout>} />
       <Route path="/product-hunt" component={() => <AppLayout><ProductHunt /></AppLayout>} />
       <Route path="/product-hunt/:id" component={() => <AppLayout><ProductHuntDetail /></AppLayout>} />
       <Route path="/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
@@ -231,14 +231,25 @@ function Router() {
       <Route path="/studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
 
       {/* Framework (personal hub) */}
-      <Route path="/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />
-      <Route path="/my-store" component={() => <AppLayout><MyStore /></AppLayout>} />
-      <Route path="/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
-      <Route path="/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
-      <Route path="/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
-      <Route path="/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
-      <Route path="/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
-      <Route path="/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
+      <Route path="/framework/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />
+      <Route path="/framework/my-store" component={() => <AppLayout><MyStore /></AppLayout>} />
+      <Route path="/framework/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
+      <Route path="/framework/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
+      <Route path="/framework/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
+      <Route path="/framework/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
+      <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
+      <Route path="/framework/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
+
+      {/* Legacy redirects → /framework */}
+      <Route path="/home"><Redirect to="/framework" /></Route>
+      <Route path="/my-products"><Redirect to="/framework/my-products" /></Route>
+      <Route path="/my-store"><Redirect to="/framework/my-store" /></Route>
+      <Route path="/my-roadmap"><Redirect to="/framework/my-roadmap" /></Route>
+      <Route path="/my-learning"><Redirect to="/framework/my-learning" /></Route>
+      <Route path="/my-learning/:id">{(params) => <Redirect to={`/framework/my-learning/${params.id}`} />}</Route>
+      <Route path="/my-rnd"><Redirect to="/framework/my-rnd" /></Route>
+      <Route path="/my-profile"><Redirect to="/framework/my-profile" /></Route>
+      <Route path="/my-credentials"><Redirect to="/framework/my-credentials" /></Route>
 
       {/* 404 */}
       <Route component={NotFound} />

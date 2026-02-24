@@ -82,14 +82,14 @@ export function OTPVerificationForm({
           sessionStorage.setItem("pendingOnboarding", "true")
           sessionStorage.setItem("onboardingEmail", email)
         }
-        router.push("/home?onboarding=true")
+        router.push("/framework?onboarding=true")
       } else {
         // Determine redirect based on user type
         let redirectUrl: string
         if (data.isInternal) {
           redirectUrl = "/admin/internal-users"
         } else {
-          redirectUrl = getRedirectUrl(searchParams, "/home")
+          redirectUrl = getRedirectUrl(searchParams, "/framework")
         }
         router.push(redirectUrl)
         router.refresh()

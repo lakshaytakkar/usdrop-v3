@@ -72,7 +72,7 @@ export function UpgradeOverlay({
           </p>
 
           <Button
-            onClick={() => router.push("/home")}
+            onClick={() => router.push("/framework")}
             className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-gray-800 hover:to-gray-900 rounded-xl px-8 h-11 text-sm font-medium shadow-lg shadow-gray-900/20 transition-all hover:shadow-xl hover:shadow-gray-900/30"
           >
             <Crown className="w-4 h-4 mr-2" />

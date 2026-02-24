@@ -203,7 +203,7 @@ const aiWorkspaceItems: SidebarItem[] = [
   {
     title: "Dashboard",
     icon: Home,
-    url: "/home",
+    url: "/framework",
     isPro: false,
   },
   {
@@ -215,19 +215,19 @@ const aiWorkspaceItems: SidebarItem[] = [
   {
     title: "My Roadmap",
     icon: Map,
-    url: "/my-roadmap",
+    url: "/framework/my-roadmap",
     isPro: true,
   },
   {
     title: "My Products",
     icon: Bookmark,
-    url: "/my-products",
+    url: "/framework/my-products",
     isPro: true,
   },
   {
     title: "My Shopify Store",
     icon: ShoppingBag,
-    url: "/my-store",
+    url: "/framework/my-store",
     isPro: true,
   },
 ]
