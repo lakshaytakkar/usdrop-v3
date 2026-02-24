@@ -158,10 +158,10 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-3 py-2 text-[15px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
+                      "px-3.5 py-2 text-[16px] font-bold tracking-[-0.01em] rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
                       isActive
                         ? "text-blue-700 bg-blue-50/80"
-                        : "text-gray-700 hover:text-gray-900 hover:bg-white/60"
+                        : "text-gray-800 hover:text-gray-950 hover:bg-white/60"
                     )}
                   >
                     {group.label}
@@ -175,10 +175,10 @@ export function AppTopNavigation() {
                     <button
                       data-testid="button-nav-more"
                       className={cn(
-                        "px-3 py-2 text-[15px] font-semibold rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer",
+                        "px-3.5 py-2 text-[16px] font-bold tracking-[-0.01em] rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer",
                         isGroupActive(moreGroup.label)
                           ? "text-blue-700 bg-blue-50/80"
-                          : "text-gray-700 hover:text-gray-900 hover:bg-white/60"
+                          : "text-gray-800 hover:text-gray-950 hover:bg-white/60"
                       )}
                     >
                       More
