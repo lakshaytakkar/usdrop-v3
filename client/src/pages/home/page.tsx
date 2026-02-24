@@ -20,42 +20,42 @@ import { Link } from "wouter"
 const howToCards = [
   {
     title: "Trending Products",
-    description: "What products are making money right now?",
+    points: ["Hot Sellers", "Daily Updated"],
     href: "/product-hunt",
     thumbnail: "/thumbnails/trending-products.png",
     iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
   },
   {
     title: "Competitors' List",
-    description: "Which shops in my category are selling well?",
+    points: ["Top Stores", "Sales Data"],
     href: "/competitor-stores",
     thumbnail: "/thumbnails/competitor-stores.png",
     iconSrc: "/3d-ecom-icons-blue/Competitor_Search.png",
   },
   {
     title: "Mentorship",
-    description: "Learn from experts with step-by-step courses",
+    points: ["Expert Courses", "Step-by-Step"],
     href: "/mentorship",
     thumbnail: "/thumbnails/mentorship-learning.png",
     iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
   },
   {
     title: "Marketing & Ads",
-    description: "Browse winning ad creatives and strategies",
+    points: ["Winning Ads", "Strategies"],
     href: "/meta-ads",
     thumbnail: "/thumbnails/marketing-ads.png",
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
   },
   {
     title: "Private Suppliers",
-    description: "Find reliable suppliers for your products",
+    points: ["Verified", "Fast Shipping"],
     href: "/suppliers",
     thumbnail: "/thumbnails/suppliers-shipping.png",
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
   },
   {
     title: "AI Studio",
-    description: "Create whitelabel images and branded content",
+    points: ["Whitelabel", "Branded Content"],
     href: "/studio/whitelabelling",
     thumbnail: "/thumbnails/ai-studio.png",
     iconSrc: "/3d-ecom-icons-blue/Paint_Palette.png",
@@ -213,30 +213,35 @@ function HowToUseSection() {
         <img src="/3d-ecom-icons-blue/Open_Board.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
         How to use USDrop
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {howToCards.map((card) => (
           <Link key={card.href} href={card.href} className="block group" data-testid={`link-howto-${card.title.toLowerCase().replace(/\s/g, '-')}`}>
             <Card className="overflow-hidden rounded-xl hover:shadow-md transition-all cursor-pointer border-gray-100 hover:border-blue-200 bg-gradient-to-br from-blue-50/40 to-white">
-              <div className="p-4 flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 mb-1">
-                    <h3 className="ds-card-title group-hover:text-blue-600 transition-colors">{card.title}</h3>
-                    <ChevronRight className="h-3.5 w-3.5 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
-                  </div>
-                  <p className="ds-caption leading-relaxed">{card.description}</p>
+              <div className="relative w-full h-36 overflow-hidden bg-gray-100">
+                <img
+                  src={card.thumbnail}
+                  alt={card.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  decoding="async"
+                />
+                <img
+                  src={card.iconSrc}
+                  alt=""
+                  className="absolute bottom-2 right-2 w-8 h-8 object-contain drop-shadow-md"
+                />
+              </div>
+              <div className="p-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <h3 className="text-[16px] font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{card.title}</h3>
+                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
                 </div>
-                <div className="relative w-36 h-24 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-                  <img
-                    src={card.thumbnail}
-                    alt={card.title}
-                    className="w-full h-full object-cover"
-                    decoding="async"
-                  />
-                  <img
-                    src={card.iconSrc}
-                    alt=""
-                    className="absolute bottom-1 right-1 w-7 h-7 object-contain drop-shadow-sm"
-                  />
+                <div className="flex items-center gap-3">
+                  {card.points.map((point) => (
+                    <span key={point} className="inline-flex items-center gap-1 text-[13px] text-gray-600">
+                      <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      {point}
+                    </span>
+                  ))}
                 </div>
               </div>
             </Card>
