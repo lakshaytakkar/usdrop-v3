@@ -110,6 +110,7 @@ import MyRoadmap from "@/pages/my-roadmap/page";
 import MyProfile from "@/pages/my-profile/page";
 import MyCredentials from "@/pages/my-credentials/page";
 import MyRnD from "@/pages/my-rnd/page";
+import MyPlan from "@/pages/my-plan/page";
 import MyLLC from "@/pages/my-llc/page";
 
 const queryClient = new QueryClient({
@@ -246,6 +247,7 @@ function Router() {
       <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
       <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
       <Route path="/framework/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
+      <Route path="/framework/my-plan" component={() => <AppLayout><MyPlan /></AppLayout>} />
 
       {/* Legacy redirects → /framework */}
       <Route path="/home"><Redirect to="/framework" /></Route>

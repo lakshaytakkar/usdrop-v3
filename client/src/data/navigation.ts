@@ -67,6 +67,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "My R&D", icon: FlaskConical, url: "/framework/my-rnd", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/framework/my-credentials", isPro: false },
+      { title: "My Plan", icon: Shield, url: "/framework/my-plan", isPro: false },
     ],
   },
   {
