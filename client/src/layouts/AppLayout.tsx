@@ -9,7 +9,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div
       className="min-h-screen"
       style={{
-        background: 'linear-gradient(135deg, #e8f4fd 0%, #dbeef9 20%, #c8e6f5 40%, #b8ddf0 60%, #d4ecf7 80%, #eaf5fc 100%)',
+        background: 'linear-gradient(135deg, #f3f8fc 0%, #edf5fa 25%, #f0f6fb 50%, #eef5fa 75%, #f4f9fd 100%)',
       }}
     >
       <VerifyEmailBanner />

@@ -108,6 +108,7 @@ import MyStore from "@/pages/my-store/page";
 import MyRoadmap from "@/pages/my-roadmap/page";
 import MyProfile from "@/pages/my-profile/page";
 import MyCredentials from "@/pages/my-credentials/page";
+import MyRnD from "@/pages/my-rnd/page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -233,6 +234,9 @@ function Router() {
       <Route path="/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />
       <Route path="/my-store" component={() => <AppLayout><MyStore /></AppLayout>} />
       <Route path="/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
+      <Route path="/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
+      <Route path="/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
+      <Route path="/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
       <Route path="/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
       <Route path="/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
 

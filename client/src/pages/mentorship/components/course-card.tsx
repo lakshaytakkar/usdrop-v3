@@ -37,7 +37,7 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
       onLockedClick?.()
       return
     }
-    router.push(`/mentorship/${course.id}`)
+    router.push(`/my-learning/${course.id}`)
   }
 
   return (
@@ -60,6 +60,22 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
         <div>
           <h3 className="ds-card-title mb-0.5 line-clamp-2 leading-tight">{course.title}</h3>
           <p className="ds-caption line-clamp-1">{course.description}</p>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className={cn(
+            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+            course.level === "Beginner" && "bg-green-50 text-green-700 border-green-200",
+            course.level === "Intermediate" && "bg-amber-50 text-amber-700 border-amber-200",
+            course.level === "Advanced" && "bg-red-50 text-red-700 border-red-200",
+          )}>
+            {course.level}
+          </span>
+          {course.category && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+              {course.category}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">

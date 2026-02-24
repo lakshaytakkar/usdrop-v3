@@ -9,24 +9,16 @@ import { journeyStages } from "@/data/journey-stages";
 import { useAuth } from "@/contexts/auth-context";
 import {
   Rocket,
-  ChevronDown,
   ChevronRight,
 } from "lucide-react";
 import { Link } from "wouter";
 
 type TaskStatus = "not_started" | "in_progress" | "completed";
 
-const STATUS_OPTIONS: { value: TaskStatus; label: string; dotClass: string; bgClass: string; textClass: string }[] = [
-  { value: "not_started", label: "Not Started", dotClass: "bg-red-500", bgClass: "bg-red-50 border-red-200 hover:bg-red-100", textClass: "text-red-700" },
-  { value: "in_progress", label: "In Progress", dotClass: "bg-yellow-500", bgClass: "bg-yellow-50 border-yellow-200 hover:bg-yellow-100", textClass: "text-yellow-700" },
-  { value: "completed", label: "Completed", dotClass: "bg-green-500", bgClass: "bg-green-50 border-green-200 hover:bg-green-100", textClass: "text-green-700" },
-];
-
 export default function MyJourneyPage() {
   const { user, loading: authLoading } = useAuth()
   const [taskStatuses, setTaskStatuses] = useState<Record<string, TaskStatus>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -58,22 +50,12 @@ export default function MyJourneyPage() {
     return () => { cancelled = true }
   }, [authLoading, user]);
 
-  useEffect(() => {
-    const handleClickOutside = () => setOpenDropdownId(null);
-    if (openDropdownId) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openDropdownId]);
-
   const getTaskStatus = useCallback((taskId: string): TaskStatus => {
     return taskStatuses[taskId] || "not_started";
   }, [taskStatuses]);
 
   const setTaskStatus = async (taskId: string, status: TaskStatus) => {
     setTaskStatuses(prev => ({ ...prev, [taskId]: status }));
-    setOpenDropdownId(null);
-
     try {
       await apiFetch("/api/roadmap-progress", {
         method: 'PUT',
@@ -111,180 +93,160 @@ export default function MyJourneyPage() {
     return { completed, inProgress, notStarted: stage.tasks.length - completed - inProgress, total: stage.tasks.length };
   };
 
-  const getStatusOption = (status: TaskStatus) => STATUS_OPTIONS.find(o => o.value === status)!;
-
   if (isLoading) {
     return (
-      <>
-        <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 min-h-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="border rounded-lg bg-white p-4 space-y-3">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
-            ))}
-          </div>
+      <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto">
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="border rounded-xl bg-white p-5 space-y-3">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ))}
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6 min-h-0 relative">
+    <div className="px-6 md:px-10 lg:px-16 py-8 max-w-[1200px] mx-auto" data-testid="page-my-roadmap">
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {journeyStages.map((stage) => {
-            const stats = getStageStats(stage.id);
-            const isExpanded = expandedStages.has(stage.id);
-            const stageProgress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
-            const isStageCompleted = stageProgress === 100;
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Rocket className="h-6 w-6 text-blue-600" />
+          My Roadmap
+        </h1>
+        <p className="text-gray-500 mt-1 text-[15px]">
+          Track your progress through the dropshipping journey. Check off tasks as you complete them.
+        </p>
+        <div className="flex items-center gap-4 mt-3 text-sm">
+          <span className="flex items-center gap-1.5 text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" />{completedCount} completed</span>
+          <span className="flex items-center gap-1.5 text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500" />{inProgressCount} in progress</span>
+          <span className="text-gray-500">{Math.round(overallProgress)}% overall</span>
+        </div>
+      </div>
 
-            return (
-              <div key={stage.id} className="border rounded-lg bg-white overflow-hidden self-start">
-                <button
-                  onClick={() => toggleStage(stage.id)}
-                  className={cn(
-                    "w-full flex items-center gap-2.5 px-3 py-2.5 text-left cursor-pointer transition-colors",
-                    isStageCompleted ? "bg-green-50" : "hover:bg-gray-50"
-                  )}
-                >
-                  <ChevronRight className={cn("h-3.5 w-3.5 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {journeyStages.map((stage) => {
+          const stats = getStageStats(stage.id);
+          const isExpanded = expandedStages.has(stage.id);
+          const stageProgress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
+          const isStageCompleted = stageProgress === 100;
 
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
-                    isStageCompleted ? "bg-green-500 text-white" : "bg-indigo-100 text-indigo-700"
-                  )}>
-                    {stage.number}
-                  </div>
+          return (
+            <div key={stage.id} className="border rounded-xl bg-white overflow-hidden self-start">
+              <button
+                onClick={() => toggleStage(stage.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer transition-colors",
+                  isStageCompleted ? "bg-green-50" : "hover:bg-gray-50"
+                )}
+              >
+                <ChevronRight className={cn("h-4 w-4 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
 
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-medium text-gray-400 uppercase leading-none">{stage.phase}</span>
-                    <h3 className="text-xs font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
-                  </div>
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                  isStageCompleted ? "bg-green-500 text-white" : "bg-indigo-100 text-indigo-700"
+                )}>
+                  {stage.number}
+                </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="hidden sm:flex items-center gap-1 text-[10px]">
-                      {stats.completed > 0 && (
-                        <span className="flex items-center gap-0.5 text-green-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          {stats.completed}
-                        </span>
-                      )}
-                      {stats.inProgress > 0 && (
-                        <span className="flex items-center gap-0.5 text-yellow-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-                          {stats.inProgress}
-                        </span>
-                      )}
-                      {stats.notStarted > 0 && (
-                        <span className="flex items-center gap-0.5 text-red-600">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                          {stats.notStarted}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-medium text-gray-500">{stats.completed}/{stats.total}</span>
-                  </div>
-                </button>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[11px] font-medium text-gray-400 uppercase leading-none">{stage.phase}</span>
+                  <h3 className="text-sm font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
+                </div>
 
-                {isExpanded && (
-                  <div className="border-t">
-                    <div className="divide-y">
-                      {stage.tasks.map((task) => {
-                        const status = getTaskStatus(task.id);
-                        const statusOption = getStatusOption(status);
-                        const isDropdownOpen = openDropdownId === task.id;
-
-                        return (
-                          <div
-                            key={task.id}
-                            className={cn(
-                              "flex items-center gap-2 px-3 py-1.5 text-xs",
-                              status === "completed" ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
-                            )}
-                          >
-                            <span className="text-gray-400 font-mono text-[10px] w-5 shrink-0">{task.taskNo}</span>
-                            <span className="flex-1 min-w-0 truncate">
-                              {task.link ? (
-                                <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
-                                  {task.title}
-                                </Link>
-                              ) : (
-                                <span className={cn(
-                                  "text-gray-900",
-                                  status === "completed" && "line-through text-gray-500"
-                                )}>
-                                  {task.title}
-                                </span>
-                              )}
-                            </span>
-                            <div className="relative shrink-0">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenDropdownId(isDropdownOpen ? null : task.id);
-                                }}
-                                className={cn(
-                                  "flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-medium cursor-pointer transition-colors",
-                                  statusOption.bgClass,
-                                  statusOption.textClass
-                                )}
-                              >
-                                <span className={cn("w-1.5 h-1.5 rounded-full", statusOption.dotClass)} />
-                                {statusOption.label}
-                                <ChevronDown className="h-2.5 w-2.5" />
-                              </button>
-
-                              {isDropdownOpen && (
-                                <div className="absolute top-full right-0 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                                  {STATUS_OPTIONS.map((option) => (
-                                    <button
-                                      key={option.value}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setTaskStatus(task.id, option.value);
-                                      }}
-                                      className={cn(
-                                        "flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-medium w-full text-left hover:bg-gray-50 cursor-pointer transition-colors",
-                                        status === option.value && "bg-gray-50"
-                                      )}
-                                    >
-                                      <span className={cn("w-1.5 h-1.5 rounded-full", option.dotClass)} />
-                                      <span className={option.textClass}>{option.label}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {stage.callout && (
-                      <div className="px-3 py-2 bg-red-600 text-white text-center text-[10px] font-bold uppercase tracking-wider">
-                        {stage.callout}
-                      </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="hidden sm:flex items-center gap-1.5 text-xs">
+                    {stats.completed > 0 && (
+                      <span className="flex items-center gap-0.5 text-green-600">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        {stats.completed}
+                      </span>
+                    )}
+                    {stats.inProgress > 0 && (
+                      <span className="flex items-center gap-0.5 text-yellow-600">
+                        <span className="w-2 h-2 rounded-full bg-yellow-500" />
+                        {stats.inProgress}
+                      </span>
+                    )}
+                    {stats.notStarted > 0 && (
+                      <span className="flex items-center gap-0.5 text-red-600">
+                        <span className="w-2 h-2 rounded-full bg-red-500" />
+                        {stats.notStarted}
+                      </span>
                     )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  <span className="text-xs font-medium text-gray-500">{stats.completed}/{stats.total}</span>
+                </div>
+              </button>
 
-        {overallProgress === 100 && (
-          <Card className="p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center">
-            <Rocket className="h-12 w-12 mx-auto mb-3" />
-            <h3 className="text-xl font-bold mb-2">Congratulations! You've completed your roadmap!</h3>
-            <p className="text-white/90">You're now ready to scale your dropshipping business to new heights.</p>
-          </Card>
-        )}
+              {isExpanded && (
+                <div className="border-t">
+                  <div className="divide-y">
+                    {stage.tasks.map((task) => {
+                      const status = getTaskStatus(task.id);
+                      const isCompleted = status === "completed";
 
+                      return (
+                        <div
+                          key={task.id}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 text-sm",
+                            isCompleted ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isCompleted}
+                            onChange={() => {
+                              setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
+                            }}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0 accent-blue-600"
+                            data-testid={`checkbox-task-${task.id}`}
+                          />
+                          <span className="text-gray-400 font-mono text-xs w-5 shrink-0">{task.taskNo}</span>
+                          <span className="flex-1 min-w-0 truncate">
+                            {task.link ? (
+                              <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
+                                {task.title}
+                              </Link>
+                            ) : (
+                              <span className={cn(
+                                "text-gray-900",
+                                isCompleted && "line-through text-gray-500"
+                              )}>
+                                {task.title}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {stage.callout && (
+                    <div className="px-4 py-2.5 bg-red-600 text-white text-center text-xs font-bold uppercase tracking-wider">
+                      {stage.callout}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </>
+
+      {overallProgress === 100 && (
+        <Card className="p-8 mt-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center">
+          <Rocket className="h-14 w-14 mx-auto mb-3" />
+          <h3 className="text-2xl font-bold mb-2">Congratulations! You've completed your roadmap!</h3>
+          <p className="text-white/90 text-base">You're now ready to scale your dropshipping business to new heights.</p>
+        </Card>
+      )}
+
+    </div>
   );
 }

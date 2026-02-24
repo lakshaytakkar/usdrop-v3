@@ -31,6 +31,7 @@ import {
   FileText,
   MonitorPlay,
   MoreHorizontal,
+  FlaskConical,
 } from "lucide-react"
 
 export interface NavItem {
@@ -56,20 +57,14 @@ export const externalNavGroups: NavGroup[] = [
     icon: Compass,
     iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
     items: [
-      { title: "Dashboard", icon: Home, url: "/home", isPro: false },
+      { title: "My Framework", icon: Home, url: "/home", isPro: false },
       { title: "My Products", icon: Bookmark, url: "/my-products", isPro: false },
       { title: "My Store", icon: ShoppingBag, url: "/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/my-roadmap", isPro: false },
+      { title: "My Learning", icon: GraduationCap, url: "/my-learning", isPro: false },
+      { title: "My R&D", icon: FlaskConical, url: "/my-rnd", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/my-credentials", isPro: false },
-    ],
-  },
-  {
-    label: "Mentorship",
-    icon: GraduationCap,
-    iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
-    items: [
-      { title: "Mentorship", icon: GraduationCap, url: "/mentorship", isPro: false },
     ],
   },
   {

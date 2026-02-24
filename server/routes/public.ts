@@ -2847,6 +2847,83 @@ export function registerPublicRoutes(app: Express) {
     }
   });
 
+  // ==================== R&D ENTRIES ====================
+
+  // GET /api/rnd-entries
+  app.get('/api/rnd-entries', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+
+      const { data, error } = await supabaseRemote
+        .from('rnd_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching R&D entries:', error);
+        return res.json({ entries: [] });
+      }
+
+      const entries = (data || []).map((row: any) => ({
+        id: row.id,
+        date: row.date,
+        category: row.category,
+        hours: row.hours,
+        description: row.description,
+      }));
+
+      return res.json({ entries });
+    } catch (error) {
+      console.error('Error in GET /api/rnd-entries:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // PUT /api/rnd-entries
+  app.put('/api/rnd-entries', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { entries } = req.body;
+
+      if (!Array.isArray(entries)) {
+        return res.status(400).json({ error: 'Entries must be an array' });
+      }
+
+      // Delete existing entries for this user
+      await supabaseRemote
+        .from('rnd_entries')
+        .delete()
+        .eq('user_id', user.id);
+
+      // Insert new entries
+      if (entries.length > 0) {
+        const rows = entries.map((entry: any) => ({
+          id: entry.id,
+          user_id: user.id,
+          date: entry.date,
+          category: entry.category,
+          hours: entry.hours || 0,
+          description: entry.description || '',
+        }));
+
+        const { error } = await supabaseRemote
+          .from('rnd_entries')
+          .insert(rows);
+
+        if (error) {
+          console.error('Error saving R&D entries:', error);
+          return res.status(500).json({ error: 'Failed to save entries' });
+        }
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in PUT /api/rnd-entries:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ==================== SHOPIFY STORES ====================
 
   function mapShopifyStoreFromDB(row: any) {

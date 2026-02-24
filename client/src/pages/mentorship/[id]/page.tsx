@@ -80,7 +80,7 @@ function CourseDetailContent() {
 
   const handleModuleSelect = useCallback((moduleId: string) => {
     setSelectedModuleId(moduleId)
-    router.push(`/mentorship/${courseId}?module=${moduleId}`, { scroll: false })
+    router.push(`/my-learning/${courseId}?module=${moduleId}`, { scroll: false })
   }, [courseId, router])
 
   const currentModule = course?.modules?.find(m => m.id === selectedModuleId)
@@ -103,7 +103,7 @@ function CourseDetailContent() {
   }, [getNextModule, handleModuleSelect])
 
   const handleClose = useCallback(() => {
-    router.push('/mentorship')
+    router.push('/my-learning')
   }, [router])
 
   if (loading) {

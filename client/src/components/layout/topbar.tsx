@@ -15,7 +15,6 @@ import { HotProductsModal } from "@/components/feedback/modals/hot-products-moda
 import GradientButton from "@/components/kokonutui/gradient-button"
 import { cn } from "@/lib/utils"
 import { 
-  GraduationCap, 
   LogOut,
   HelpCircle,
   Flame,
@@ -147,19 +146,6 @@ export function Topbar() {
                 </Link>
               </Button>
 
-              {/* Academy - External users only */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2 cursor-pointer"
-                asChild
-              >
-                <Link href="/mentorship">
-                  <GraduationCap className="h-4 w-4" />
-                  <span className="hidden lg:inline">Academy</span>
-                  <span className="sr-only">Academy</span>
-                </Link>
-              </Button>
             </>
           ) : (
             <>

@@ -85,14 +85,6 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
     videoTutorialTitle: "Tools Page Video Tutorial",
   },
-  Mentorship: {
-    searchPlaceholder: "",
-    showSearch: false,
-    actions: [
-      { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
-    ],
-    videoTutorialTitle: "Mentorship Page Video Tutorial",
-  },
 }
 
 export function SubNavTabs() {
@@ -127,9 +119,10 @@ export function SubNavTabs() {
     <>
       <div className="w-full px-3 pt-3 pb-1 space-y-2.5">
         {hasTabs && <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-          {activeGroup.items.map((item) => {
+          {activeGroup.items.map((item, index) => {
             const isActive = pathname === item.url || pathname?.startsWith(item.url + "/")
             const isLocked = !isLoading && isFree && item.isPro
+            const showNumbering = activeGroup.label === "Framework"
 
             return (
               <Link
@@ -144,7 +137,7 @@ export function SubNavTabs() {
                   isLocked && "opacity-50"
                 )}
               >
-                <span>{item.title}</span>
+                <span>{showNumbering ? `${index + 1}) ${item.title}` : item.title}</span>
                 {isLocked && <UnlockBadge variant="text-only" />}
               </Link>
             )
