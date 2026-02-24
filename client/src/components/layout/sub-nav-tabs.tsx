@@ -153,10 +153,10 @@ export function SubNavTabs() {
                 href={item.url}
                 data-testid={`link-subnav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
                 className={cn(
-                  "flex items-center gap-1.5 px-4 py-2 text-[14px] font-medium whitespace-nowrap transition-all rounded-lg",
+                  "flex items-center gap-1.5 px-4 py-2 text-[14px] font-semibold whitespace-nowrap transition-all rounded-lg",
                   isActive
                     ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-100/80",
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80",
                   isLocked && "opacity-50"
                 )}
               >
