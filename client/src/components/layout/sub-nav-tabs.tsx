@@ -127,7 +127,14 @@ export function SubNavTabs() {
   return (
     <>
       <div className="w-full px-12 md:px-20 lg:px-32 pt-2 pb-1.5">
-        <div className="px-1 space-y-2.5">
+        <div
+          className="rounded-xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] px-5 lg:px-6 py-2.5 space-y-2.5"
+          style={{
+            background: 'rgba(255,255,255,0.55)',
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+          }}
+        >
 
         {hasTabs && <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {activeGroup.items.map((item, index) => {

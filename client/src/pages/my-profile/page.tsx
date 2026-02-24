@@ -104,10 +104,10 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+    <div className="flex flex-1 flex-col items-center px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
 
       {loading ? (
-        <div className="max-w-2xl space-y-4">
+        <div className="w-full max-w-3xl space-y-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-1.5">
               <Skeleton className="h-4 w-24" />
@@ -116,15 +116,15 @@ export default function MyProfilePage() {
           ))}
         </div>
       ) : (
-        <div className="max-w-2xl space-y-6">
+        <div className="w-full max-w-3xl space-y-6">
 
-          <div className="flex items-center gap-2.5 ds-text-heading">
+          <div className="flex items-center gap-2.5">
             <User className="h-5 w-5 text-blue-600" />
-            <h3 className="ds-card-title">Personal Information</h3>
+            <h3 className="text-[16px] font-semibold text-gray-900">Personal Information</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="full_name" className="ds-label ds-text-muted">Full Name</Label>
+              <Label htmlFor="full_name" className="text-[13px] font-medium text-gray-700">Full Name</Label>
               <Input
                 id="full_name"
                 data-testid="input-full-name"
@@ -134,7 +134,7 @@ export default function MyProfilePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="ds-label ds-text-muted">Email</Label>
+              <Label htmlFor="email" className="text-[13px] font-medium text-gray-700">Email</Label>
               <Input
                 id="email"
                 data-testid="input-email"
@@ -144,7 +144,7 @@ export default function MyProfilePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="contact_number" className="ds-label ds-text-muted">Contact Number</Label>
+              <Label htmlFor="contact_number" className="text-[13px] font-medium text-gray-700">Contact Number</Label>
               <Input
                 id="contact_number"
                 data-testid="input-contact-number"
@@ -154,7 +154,7 @@ export default function MyProfilePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="website_name" className="ds-label ds-text-muted">Website</Label>
+              <Label htmlFor="website_name" className="text-[13px] font-medium text-gray-700">Website</Label>
               <Input
                 id="website_name"
                 data-testid="input-website-name"
@@ -167,13 +167,13 @@ export default function MyProfilePage() {
 
           <div className="border-t border-gray-200/60 my-2" />
 
-          <div className="flex items-center gap-2.5 ds-text-heading">
+          <div className="flex items-center gap-2.5">
             <Building2 className="h-5 w-5 text-blue-600" />
-            <h3 className="ds-card-title">Business Details</h3>
+            <h3 className="text-[16px] font-semibold text-gray-900">Business Details</h3>
           </div>
           <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="llc_name" className="ds-label ds-text-muted">LLC Name</Label>
+              <Label htmlFor="llc_name" className="text-[13px] font-medium text-gray-700">LLC Name</Label>
               <Input
                 id="llc_name"
                 data-testid="input-llc-name"
@@ -183,7 +183,7 @@ export default function MyProfilePage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ein_name" className="ds-label ds-text-muted">EIN</Label>
+              <Label htmlFor="ein_name" className="text-[13px] font-medium text-gray-700">EIN</Label>
               <Input
                 id="ein_name"
                 data-testid="input-ein-name"
@@ -210,13 +210,13 @@ export default function MyProfilePage() {
           {showMore && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
 
-              <div className="flex items-center gap-2.5 ds-text-heading">
+              <div className="flex items-center gap-2.5">
                 <Share2 className="h-5 w-5 text-blue-600" />
-                <h3 className="ds-card-title">Social Media</h3>
+                <h3 className="text-[16px] font-semibold text-gray-900">Social Media</h3>
               </div>
               <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="facebook_page" className="ds-label ds-text-muted">Facebook Page</Label>
+                  <Label htmlFor="facebook_page" className="text-[13px] font-medium text-gray-700">Facebook Page</Label>
                   <Input
                     id="facebook_page"
                     data-testid="input-facebook-page"
@@ -227,7 +227,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="instagram_account" className="ds-label ds-text-muted">Instagram</Label>
+                  <Label htmlFor="instagram_account" className="text-[13px] font-medium text-gray-700">Instagram</Label>
                   <Input
                     id="instagram_account"
                     data-testid="input-instagram-account"
@@ -240,13 +240,13 @@ export default function MyProfilePage() {
 
               <div className="border-t border-gray-200/60 my-2" />
 
-              <div className="flex items-center gap-2.5 ds-text-heading">
+              <div className="flex items-center gap-2.5">
                 <Link2 className="h-5 w-5 text-blue-600" />
-                <h3 className="ds-card-title">Enrollment & Tools</h3>
+                <h3 className="text-[16px] font-semibold text-gray-900">Enrollment & Tools</h3>
               </div>
               <div className="grid md:grid-cols-2 gap-x-6 gap-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="batch_id" className="ds-label ds-text-muted">Batch ID</Label>
+                  <Label htmlFor="batch_id" className="text-[13px] font-medium text-gray-700">Batch ID</Label>
                   <Input
                     id="batch_id"
                     data-testid="input-batch-id"
@@ -256,7 +256,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="enrolled_number" className="ds-label ds-text-muted">Enrolled Number</Label>
+                  <Label htmlFor="enrolled_number" className="text-[13px] font-medium text-gray-700">Enrolled Number</Label>
                   <Input
                     id="enrolled_number"
                     data-testid="input-enrolled-number"
@@ -266,7 +266,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="learning_videos_link" className="ds-label ds-text-muted">Learning Videos Link</Label>
+                  <Label htmlFor="learning_videos_link" className="text-[13px] font-medium text-gray-700">Learning Videos Link</Label>
                   <Input
                     id="learning_videos_link"
                     data-testid="input-learning-videos-link"
@@ -277,7 +277,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tools_url" className="ds-label ds-text-muted">Tools URL</Label>
+                  <Label htmlFor="tools_url" className="text-[13px] font-medium text-gray-700">Tools URL</Label>
                   <Input
                     id="tools_url"
                     data-testid="input-tools-url"
@@ -288,7 +288,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tools_username" className="ds-label ds-text-muted">Tools Username</Label>
+                  <Label htmlFor="tools_username" className="text-[13px] font-medium text-gray-700">Tools Username</Label>
                   <Input
                     id="tools_username"
                     data-testid="input-tools-username"
@@ -298,7 +298,7 @@ export default function MyProfilePage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tools_password" className="ds-label ds-text-muted">Tools Password</Label>
+                  <Label htmlFor="tools_password" className="text-[13px] font-medium text-gray-700">Tools Password</Label>
                   <div className="relative">
                     <Input
                       id="tools_password"
@@ -320,7 +320,7 @@ export default function MyProfilePage() {
                   </div>
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="useful_links" className="ds-label ds-text-muted">Useful Links</Label>
+                  <Label htmlFor="useful_links" className="text-[13px] font-medium text-gray-700">Useful Links</Label>
                   <textarea
                     id="useful_links"
                     data-testid="input-useful-links"
