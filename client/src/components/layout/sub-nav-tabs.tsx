@@ -69,6 +69,11 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
       { id: "recent", emoji: "⚡", label: "Recent" },
     ],
   },
+  "Private Supplier": {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
+  },
   Marketplaces: {
     searchPlaceholder: "",
     showSearch: false,
@@ -102,6 +107,10 @@ export function SubNavTabs() {
     searchPlaceholder: "Search...",
     showSearch: true,
   }
+
+  const hasToolbar = toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0)
+  const hasFilters = toolbar.quickFilters && toolbar.quickFilters.length > 0
+  if (!hasTabs && !hasToolbar && !hasFilters) return null
 
   const toggleFilter = (filterId: string) => {
     setActiveFilters(prev => {

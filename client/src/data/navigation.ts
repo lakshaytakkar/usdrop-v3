@@ -88,11 +88,18 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
+    label: "Private Supplier",
+    icon: Package,
+    iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
+    items: [
+      { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: false },
+    ],
+  },
+  {
     label: "Marketplaces",
     icon: Truck,
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [
-      { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: true },
       { title: "Selling Channels", icon: ExternalLink, url: "/selling-channels", isPro: true },
       { title: "Shipping Calculator", icon: Truck, url: "/shipping-calculator", isPro: true },
     ],
