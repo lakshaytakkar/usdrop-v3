@@ -250,18 +250,6 @@ export function AppTopNavigation() {
                 <span>Shopify</span>
               </Link>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 px-2.5 flex items-center gap-1.5 cursor-pointer"
-                asChild
-              >
-                <Link href="/help" data-testid="link-help">
-                  <HelpCircle className="h-5 w-5" />
-                  <span className="hidden lg:inline text-[15px]">Help</span>
-                </Link>
-              </Button>
-
               {mounted && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -315,6 +303,12 @@ export function AppTopNavigation() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href="/help" data-testid="link-help">
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Help
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
                       className="cursor-pointer"
