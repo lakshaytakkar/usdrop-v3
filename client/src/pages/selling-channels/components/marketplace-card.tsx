@@ -1,5 +1,6 @@
 
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Lock, ExternalLink, CheckCircle2 } from "lucide-react"
 import { Marketplace } from "../data/marketplaces"
@@ -12,6 +13,8 @@ interface MarketplaceCardProps {
 }
 
 export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardProps) {
+  const [imgError, setImgError] = useState(false)
+
   const initials = marketplace.name
     .split(" ")
     .map(w => w[0])
@@ -26,15 +29,30 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
     )}>
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-center justify-center h-16 mb-1">
-          <div
-            className={cn(
-              "w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl",
+          {marketplace.logoUrl && !imgError ? (
+            <div className={cn(
+              "w-14 h-14 rounded-xl flex items-center justify-center bg-white border border-gray-100 p-2",
               marketplace.isLocked && "blur-sm"
-            )}
-            style={{ backgroundColor: marketplace.brandColor }}
-          >
-            {initials}
-          </div>
+            )}>
+              <img
+                src={marketplace.logoUrl}
+                alt={`${marketplace.name} logo`}
+                className="w-full h-full object-contain"
+                onError={() => setImgError(true)}
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl",
+                marketplace.isLocked && "blur-sm"
+              )}
+              style={{ backgroundColor: marketplace.brandColor }}
+            >
+              {initials}
+            </div>
+          )}
         </div>
 
         <h3 className={cn(
@@ -78,6 +96,7 @@ export function MarketplaceCard({ marketplace, onLockedClick }: MarketplaceCardP
               window.open(marketplace.sellerPanelUrl, "_blank", "noopener,noreferrer")
             }}
             className="relative w-full h-9 rounded-md text-sm font-medium text-white cursor-pointer"
+            data-testid={`button-seller-panel-${marketplace.id}`}
           >
             <span className="absolute inset-0 rounded-md bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600"></span>
             <span className="absolute inset-0 rounded-md bg-gradient-to-b from-white/20 via-transparent to-transparent"></span>

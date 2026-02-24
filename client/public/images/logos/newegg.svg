@@ -1,0 +1,5 @@
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="12" cy="12" rx="10" ry="8" fill="#F7931E"/>
+  <ellipse cx="12" cy="12" rx="7" ry="5.5" fill="white"/>
+  <text x="4" y="15" font-family="Arial, sans-serif" font-weight="bold" font-size="8" fill="#F7931E">egg</text>
+</svg>

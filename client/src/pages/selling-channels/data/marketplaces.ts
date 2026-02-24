@@ -5,6 +5,7 @@ export interface Marketplace {
   sellerPanelUrl: string
   requirements: string[]
   isLocked: boolean
+  logoUrl?: string
 }
 
 export const marketplaces: Marketplace[] = [
@@ -13,6 +14,7 @@ export const marketplaces: Marketplace[] = [
     name: "Amazon",
     brandColor: "#FF9900",
     sellerPanelUrl: "https://sellercentral.amazon.com/",
+    logoUrl: "/images/logos/amazon.svg",
     requirements: [
       "Business License",
       "Tax ID (EIN)",
@@ -28,6 +30,7 @@ export const marketplaces: Marketplace[] = [
     name: "Chairish",
     brandColor: "#1A1A1A",
     sellerPanelUrl: "https://www.chairish.com/sell",
+    logoUrl: "/images/logos/chairish.svg",
     requirements: [
       "Business License",
       "Tax ID",
@@ -41,6 +44,7 @@ export const marketplaces: Marketplace[] = [
     name: "eBay",
     brandColor: "#E53238",
     sellerPanelUrl: "https://www.ebay.com/sh/landing",
+    logoUrl: "/images/logos/ebay.svg",
     requirements: [
       "Bank Account",
       "Credit Card",
@@ -54,6 +58,7 @@ export const marketplaces: Marketplace[] = [
     name: "Creoate",
     brandColor: "#6366F1",
     sellerPanelUrl: "https://creoate.com/sell",
+    logoUrl: "/images/logos/creoate.svg",
     requirements: [
       "Business License",
       "Tax ID",
@@ -67,6 +72,7 @@ export const marketplaces: Marketplace[] = [
     name: "FashionGo",
     brandColor: "#E91E63",
     sellerPanelUrl: "https://www.fashiongo.net/",
+    logoUrl: "/images/logos/fashiongo.svg",
     requirements: [
       "Business License",
       "Tax ID",
@@ -80,6 +86,7 @@ export const marketplaces: Marketplace[] = [
     name: "Walmart Marketplace",
     brandColor: "#0071DC",
     sellerPanelUrl: "https://marketplace.walmart.com/",
+    logoUrl: "/images/logos/walmart.svg",
     requirements: [
       "Business License",
       "Tax ID (EIN)",
@@ -95,6 +102,7 @@ export const marketplaces: Marketplace[] = [
     name: "Etsy",
     brandColor: "#F1641E",
     sellerPanelUrl: "https://www.etsy.com/sell",
+    logoUrl: "/images/logos/etsy.svg",
     requirements: [
       "Bank Account",
       "Credit Card",
@@ -108,6 +116,7 @@ export const marketplaces: Marketplace[] = [
     name: "Poshmark",
     brandColor: "#C1272D",
     sellerPanelUrl: "https://poshmark.com/sell",
+    logoUrl: "/images/logos/poshmark.svg",
     requirements: [
       "Bank Account",
       "Phone Verification",
@@ -120,6 +129,7 @@ export const marketplaces: Marketplace[] = [
     name: "Mercari",
     brandColor: "#4DC3FF",
     sellerPanelUrl: "https://www.mercari.com/sell/",
+    logoUrl: "/images/logos/mercari.svg",
     requirements: [
       "Bank Account",
       "Phone Verification",
@@ -132,6 +142,7 @@ export const marketplaces: Marketplace[] = [
     name: "Bonanza",
     brandColor: "#2E7D32",
     sellerPanelUrl: "https://www.bonanza.com/sell",
+    logoUrl: "/images/logos/bonanza.svg",
     requirements: [
       "Bank Account",
       "Credit Card",
@@ -144,6 +155,7 @@ export const marketplaces: Marketplace[] = [
     name: "Newegg",
     brandColor: "#F7931E",
     sellerPanelUrl: "https://www.newegg.com/sell",
+    logoUrl: "/images/logos/newegg.svg",
     requirements: [
       "Business License",
       "Tax ID",
@@ -158,6 +170,7 @@ export const marketplaces: Marketplace[] = [
     name: "Wayfair",
     brandColor: "#7B2D8E",
     sellerPanelUrl: "https://partners.wayfair.com/",
+    logoUrl: "/images/logos/wayfair.svg",
     requirements: [
       "Business License",
       "Tax ID (EIN)",
@@ -173,6 +186,7 @@ export const marketplaces: Marketplace[] = [
     name: "Overstock",
     brandColor: "#D32F2F",
     sellerPanelUrl: "https://www.overstock.com/partners",
+    logoUrl: "/images/logos/overstock.svg",
     requirements: [
       "Business License",
       "Tax ID",
@@ -186,6 +200,7 @@ export const marketplaces: Marketplace[] = [
     name: "Reverb",
     brandColor: "#2D4A9E",
     sellerPanelUrl: "https://reverb.com/sell",
+    logoUrl: "/images/logos/reverb.svg",
     requirements: [
       "Bank Account",
       "Phone Verification",
@@ -194,4 +209,3 @@ export const marketplaces: Marketplace[] = [
     isLocked: false
   }
 ]
-
