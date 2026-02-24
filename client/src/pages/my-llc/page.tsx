@@ -7,19 +7,52 @@ import {
   Lock,
   Play,
   X,
-  ExternalLink,
   ShoppingCart,
   Landmark,
   CreditCard,
   ShieldCheck,
   FileText,
   Globe,
-  CheckCircle2,
   AlertCircle,
+  Check,
+  Minus,
+  Star,
+  Copy,
+  Zap,
+  Crown,
+  Tag,
+  CheckCircle2,
 } from "lucide-react"
+
+const DISCOUNT_CODE = "USDROP30"
+
+const comparisonFeatures = [
+  { feature: "LLC Formation (any US state)", justLlc: true, elite: true },
+  { feature: "EIN (Tax ID) from IRS", justLlc: true, elite: true },
+  { feature: "Articles of Organization", justLlc: true, elite: true },
+  { feature: "Operating Agreement", justLlc: true, elite: true },
+  { feature: "Registered Agent (1st year)", justLlc: true, elite: true },
+  { feature: "US Mailing Address", justLlc: false, elite: true },
+  { feature: "US Phone Number", justLlc: false, elite: true },
+  { feature: "US Bank Account Setup", justLlc: false, elite: true },
+  { feature: "ITIN Application Assistance", justLlc: false, elite: true },
+  { feature: "Resale Certificate Filing", justLlc: false, elite: true },
+  { feature: "Amazon Seller Account Setup", justLlc: false, elite: true },
+  { feature: "Shopify Store Setup", justLlc: false, elite: true },
+  { feature: "Annual Compliance Reminders", justLlc: true, elite: true },
+  { feature: "Dedicated Account Manager", justLlc: false, elite: true },
+  { feature: "Priority Support", justLlc: false, elite: true },
+]
 
 export default function MyLLCPage() {
   const [videoOpen, setVideoOpen] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(DISCOUNT_CODE)
+    setCodeCopied(true)
+    setTimeout(() => setCodeCopied(false), 2000)
+  }
 
   const lockedFields = [
     { label: "LLC Name", placeholder: "Your Business Name LLC", icon: Building2 },
@@ -77,13 +110,19 @@ export default function MyLLCPage() {
 
   return (
     <div className="flex flex-1 flex-col px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
-      <div className="max-w-4xl mx-auto w-full space-y-10">
+      <div className="max-w-5xl mx-auto w-full space-y-10">
 
         <div className="text-center space-y-3">
-          <Badge className="bg-blue-50 text-blue-700 border-blue-200" data-testid="badge-llc-service">
-            <Building2 className="h-3 w-3 mr-1" />
-            LLC Formation Service
-          </Badge>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1" data-testid="badge-llc-featured">
+              <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+              Featured Service
+            </Badge>
+            <Badge className="bg-blue-50 text-blue-700 border-blue-200 gap-1" data-testid="badge-llc-legalnations">
+              <ShieldCheck className="h-3 w-3" />
+              Powered by LegalNations
+            </Badge>
+          </div>
           <h1 className="ds-page-title ds-text-heading" data-testid="text-llc-title">
             Form Your US LLC
           </h1>
@@ -128,12 +167,154 @@ export default function MyLLCPage() {
           </div>
         )}
 
+        <div className="space-y-6" data-testid="section-pricing-comparison">
+          <div className="text-center space-y-2">
+            <h2 className="ds-section-title ds-text-heading">Choose Your Plan</h2>
+            <p className="text-sm ds-text-muted max-w-xl mx-auto">
+              Compare our LLC formation packages. USDrop members save 30% compared to going directly through LegalNations.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ backdropFilter: 'blur(8px)' }} data-testid="banner-discount">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <Tag className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Exclusive USDrop Member Discount</p>
+                <p className="text-xs text-emerald-600">Save 30% off LegalNations regular pricing. Use code at checkout.</p>
+              </div>
+            </div>
+            <button
+              onClick={handleCopyCode}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-emerald-300 bg-white font-mono text-sm font-bold text-emerald-700 hover:bg-emerald-50 transition-colors flex-shrink-0"
+              data-testid="button-copy-discount-code"
+            >
+              {codeCopied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  {DISCOUNT_CODE}
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-gray-200/60 bg-white/70 overflow-hidden" style={{ backdropFilter: 'blur(8px)' }}>
+            <div className="grid grid-cols-3">
+              <div className="p-5 border-b border-r border-gray-200/60">
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Features</p>
+              </div>
+
+              <div className="p-5 border-b border-r border-gray-200/60 text-center">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Zap className="h-4 w-4 text-blue-500" />
+                    <p className="font-semibold ds-text-heading text-[15px]">Just LLC</p>
+                  </div>
+                  <p className="text-xs text-gray-400">Essential formation</p>
+                  <div className="pt-2">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-xs text-gray-400 line-through">$389</span>
+                      <span className="text-2xl font-bold ds-text-heading">$272</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-medium mt-0.5">Save 30% with USDrop</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 border-b border-gray-200/60 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Crown className="h-4 w-4 text-amber-500" />
+                    <p className="font-semibold ds-text-heading text-[15px]">Elite</p>
+                  </div>
+                  <Badge className="bg-blue-50 text-blue-600 border-blue-200 text-[10px] px-1.5 py-0">Most Popular</Badge>
+                  <div className="pt-2">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-xs text-gray-400 line-through">$699</span>
+                      <span className="text-2xl font-bold ds-text-heading">$489</span>
+                    </div>
+                    <p className="text-[10px] text-emerald-600 font-medium mt-0.5">Save 30% with USDrop</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {comparisonFeatures.map((row, i) => (
+              <div
+                key={row.feature}
+                className={`grid grid-cols-3 ${i < comparisonFeatures.length - 1 ? 'border-b border-gray-100' : ''} ${i % 2 === 0 ? 'bg-gray-50/30' : ''}`}
+                data-testid={`row-compare-${i}`}
+              >
+                <div className="px-5 py-3.5 border-r border-gray-100 flex items-center">
+                  <p className="text-sm ds-text-body">{row.feature}</p>
+                </div>
+                <div className="px-5 py-3.5 border-r border-gray-100 flex items-center justify-center">
+                  {row.justLlc ? (
+                    <div className="h-6 w-6 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <Check className="h-4 w-4 text-emerald-500" />
+                    </div>
+                  ) : (
+                    <Minus className="h-4 w-4 text-gray-300" />
+                  )}
+                </div>
+                <div className="px-5 py-3.5 flex items-center justify-center">
+                  {row.elite ? (
+                    <div className="h-6 w-6 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <Check className="h-4 w-4 text-emerald-500" />
+                    </div>
+                  ) : (
+                    <Minus className="h-4 w-4 text-gray-300" />
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="grid grid-cols-3 border-t border-gray-200/60 bg-gray-50/50">
+              <div className="p-5 border-r border-gray-200/60" />
+              <div className="p-5 border-r border-gray-200/60 flex justify-center">
+                <Button
+                  className="gap-2"
+                  variant="outline"
+                  onClick={() => window.open('https://legalnations.com/usdrop-llc', '_blank')}
+                  data-testid="button-get-just-llc"
+                >
+                  <Building2 className="h-4 w-4" />
+                  Get Just LLC
+                </Button>
+              </div>
+              <div className="p-5 flex justify-center">
+                <Button
+                  className="gap-2"
+                  onClick={() => window.open('https://legalnations.com/usdrop-elite', '_blank')}
+                  data-testid="button-get-elite"
+                >
+                  <Crown className="h-4 w-4" />
+                  Get Elite
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-xs ds-text-muted">
+              Prices shown reflect the exclusive 30% USDrop discount. Regular LegalNations pricing is $389 (Just LLC) and $699 (Elite).
+            </p>
+          </div>
+        </div>
+
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
             <h2 className="ds-section-title ds-text-heading">Your LLC Status</h2>
           </div>
-          <p className="text-sm ds-text-muted -mt-2">These fields are required to operate your e-commerce business in the US.</p>
+          <p className="text-sm ds-text-muted -mt-2">These fields are required to operate your e-commerce business in the US. View your important LLC details right here without leaving the portal.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {lockedFields.map((field) => (
               <div
@@ -200,16 +381,22 @@ export default function MyLLCPage() {
           <p className="text-blue-100 max-w-lg mx-auto">
             Stop leaving money on the table. Form your US LLC today and unlock marketplace approvals, payment gateways, and a real US business identity.
           </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            className="gap-2"
-            data-testid="button-get-llc"
-            onClick={() => window.open('https://usdrop.ai/llc', '_blank')}
-          >
-            <Building2 className="h-4 w-4" />
-            Get My LLC Now
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="gap-2"
+              data-testid="button-get-llc-cta"
+              onClick={() => window.open('https://legalnations.com/usdrop-elite', '_blank')}
+            >
+              <Crown className="h-4 w-4" />
+              Get Elite Package
+            </Button>
+            <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2.5">
+              <Tag className="h-4 w-4" />
+              <span className="text-sm font-medium">Use code: <span className="font-mono font-bold">{DISCOUNT_CODE}</span> for 30% off</span>
+            </div>
+          </div>
         </div>
 
         <div className="pb-8" />
