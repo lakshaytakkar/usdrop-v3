@@ -10,6 +10,8 @@ import {
   ChevronRight,
   PlayCircle,
   Play,
+  Mail,
+  Users,
 } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
@@ -245,6 +247,84 @@ function HowToUseSection() {
   )
 }
 
+function MentorshipBanner() {
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl text-white"
+      style={{
+        background: 'linear-gradient(135deg, #0a1628 0%, #0f2847 30%, #162d50 60%, #0d2240 80%, #081a30 100%)',
+      }}
+      data-testid="banner-mentorship"
+    >
+      <div
+        className="absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat',
+        }}
+      />
+
+      <div className="absolute inset-0 opacity-[0.06]">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-400/40 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-indigo-500/30 rounded-full translate-y-1/3" />
+      </div>
+
+      <div className="absolute right-0 top-0 bottom-0 w-1/2 opacity-[0.15] hidden md:block">
+        <svg viewBox="0 0 400 200" className="h-full w-full" preserveAspectRatio="xMaxYMid slice">
+          <defs>
+            <linearGradient id="silGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+            </linearGradient>
+          </defs>
+          <ellipse cx="280" cy="180" rx="60" ry="80" fill="url(#silGrad)" />
+          <ellipse cx="340" cy="170" rx="50" ry="90" fill="url(#silGrad)" />
+          <circle cx="280" cy="95" r="18" fill="url(#silGrad)" />
+          <circle cx="340" cy="75" r="15" fill="url(#silGrad)" />
+          <path d="M265,120 Q280,100 295,120 L300,180 L260,180 Z" fill="url(#silGrad)" />
+          <path d="M325,100 Q340,80 355,100 L358,170 L322,170 Z" fill="url(#silGrad)" />
+          <path d="M295,140 L322,130" stroke="url(#silGrad)" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+      </div>
+
+      <div className="relative flex items-center gap-5 md:gap-8 p-5 md:p-7">
+        <div className="shrink-0">
+          <div className="w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-xl ring-2 ring-blue-400/30 ring-offset-2 ring-offset-transparent">
+            <img
+              src="/images/suprans profile.jpg"
+              alt="Mr. Suprans - Your Mentor"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <Users className="h-3.5 w-3.5 text-blue-300/70" />
+            <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.12em] text-blue-300/70">Your Mentor</span>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-0.5">MY MENTOR</h2>
+          <p className="text-blue-200/60 text-sm md:text-base font-medium">Mr. Suprans</p>
+          <p className="text-blue-300/40 text-xs mt-1 hidden md:block">USA Dropshipping Mentorship Framework</p>
+        </div>
+
+        <div className="shrink-0 flex flex-col items-end gap-2">
+          <a
+            href="mailto:info@suprans.in"
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/35 border border-blue-400/30 text-sm font-medium text-white transition-all cursor-pointer whitespace-nowrap backdrop-blur-sm"
+            data-testid="button-email-mentor"
+          >
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">Send Email to Mentor</span>
+            <span className="sm:hidden">Email</span>
+          </a>
+          <span className="text-[10px] text-blue-300/40 hidden md:block">info@suprans.in</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function DashboardContent() {
   return (
     <div className="relative flex flex-1 flex-col">
@@ -267,6 +347,7 @@ function DashboardContent() {
       />
       <div className="relative z-[1] flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
         <WelcomeBanner />
+        <MentorshipBanner />
         <FreeLearningSection />
         <HowToUseSection />
       </div>
