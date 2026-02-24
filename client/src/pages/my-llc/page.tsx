@@ -200,28 +200,16 @@ export default function MyLLCPage() {
           <p className="text-blue-100 max-w-lg mx-auto">
             Stop leaving money on the table. Form your US LLC today and unlock marketplace approvals, payment gateways, and a real US business identity.
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <Button
-              size="lg"
-              variant="secondary"
-              className="gap-2"
-              data-testid="button-get-llc"
-              onClick={() => window.open('https://usdrop.ai/llc', '_blank')}
-            >
-              <Building2 className="h-4 w-4" />
-              Get My LLC Now
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 border-white/30 text-white hover:bg-white/10"
-              data-testid="button-learn-more-llc"
-              onClick={() => setVideoOpen(true)}
-            >
-              <Play className="h-4 w-4" />
-              Watch Video
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            variant="secondary"
+            className="gap-2"
+            data-testid="button-get-llc"
+            onClick={() => window.open('https://usdrop.ai/llc', '_blank')}
+          >
+            <Building2 className="h-4 w-4" />
+            Get My LLC Now
+          </Button>
         </div>
 
         <div className="pb-8" />

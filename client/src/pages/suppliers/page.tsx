@@ -242,16 +242,10 @@ export default function SuppliersPage() {
           <p className="text-blue-100 max-w-lg mx-auto">
             Connect with your private supplier today and start fulfilling orders automatically. No minimum orders, no upfront inventory costs.
           </p>
-          <div className="flex items-center justify-center gap-3">
-            <Button size="lg" variant="secondary" className="gap-2 bg-white text-blue-700" data-testid="button-get-started">
-              <Package className="h-4 w-4" />
-              Get Started
-            </Button>
-            <Button size="lg" variant="outline" className="gap-2 border-white/30 text-white" onClick={() => setVideoOpen(true)} data-testid="button-watch-video-cta">
-              <Play className="h-4 w-4" />
-              Watch Video
-            </Button>
-          </div>
+          <Button size="lg" variant="secondary" className="gap-2 bg-white text-blue-700" data-testid="button-get-started">
+            <Package className="h-4 w-4" />
+            Get Started
+          </Button>
         </div>
 
         <div className="pb-8" />
