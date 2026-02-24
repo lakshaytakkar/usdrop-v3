@@ -11,7 +11,7 @@ import {
   GraduationCap,
   Newspaper,
   Video,
-  ExternalLink,
+
   Truck,
   LucideIcon,
   Map,
@@ -105,15 +105,6 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Marketplaces",
-    icon: Truck,
-    iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
-    items: [
-      { title: "Selling Channels", icon: ExternalLink, url: "/selling-channels", isPro: true },
-      { title: "Shipping Calculator", icon: Truck, url: "/shipping-calculator", isPro: true },
-    ],
-  },
-  {
     label: "Tools",
     icon: Wrench,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
@@ -123,6 +114,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
       { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
       { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
+      { title: "Shipping Calculator", icon: Truck, url: "/shipping-calculator", isPro: true },
       { title: "Whitelabelling", icon: Badge, url: "/studio/whitelabelling", isPro: true },
       { title: "Model Studio", icon: User, url: "/studio/model-studio", isPro: true },
     ],
