@@ -322,30 +322,6 @@ export function SubNavTabs() {
           </div>
         )}
 
-        {toolbar.quickFilters && toolbar.quickFilters.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap pb-0.5">
-            <span className="text-xs font-semibold text-[#999] uppercase tracking-wider shrink-0 mr-1">Quick Filters</span>
-            {toolbar.quickFilters.map((filter) => {
-              const isActive = activeFilters.has(filter.id)
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => toggleFilter(filter.id)}
-                  data-testid={`button-quickfilter-${filter.id}`}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer border",
-                    isActive
-                      ? "bg-white border-black/[0.08] text-black shadow-sm"
-                      : "bg-transparent border-black/[0.04] text-[#666] hover:bg-white/60 hover:border-black/[0.06]"
-                  )}
-                >
-                  <span className="text-sm leading-none">{filter.emoji}</span>
-                  <span>{filter.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
         </div>
       </div>
 
