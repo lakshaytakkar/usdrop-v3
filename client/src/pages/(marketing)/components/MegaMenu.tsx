@@ -23,11 +23,7 @@ interface MenuCategory {
 
 const menuData: MenuCategory[] = [
   {
-    label: "What is Dropshipping",
-    href: "/what-is-dropshipping",
-  },
-  {
-    label: "Research",
+    label: "Products",
     items: [
       {
         title: "Winning Products",
@@ -54,34 +50,39 @@ const menuData: MenuCategory[] = [
     },
   },
   {
-    label: "Framework",
+    label: "Platform",
     items: [
       {
-        title: "Journey Roadmap",
-        href: "/features/roadmap",
-        icon3d: "/images/menu/icons/journey-roadmap.png",
-      },
-      {
-        title: "Live Dashboard",
+        title: "Dashboard",
         href: "/features/dashboard",
         icon3d: "/images/menu/icons/live-dashboard.png",
       },
       {
-        title: "Products Tracking",
-        href: "/features/products-tracking",
-        icon3d: "/images/menu/icons/products-tracking.png",
+        title: "Fulfilment",
+        href: "/features/fulfilment",
+        icon3d: "/images/menu/icons/order-fulfilment.png",
+      },
+      {
+        title: "Shopify",
+        href: "/shopify",
+        icon3d: "/images/menu/icons/shopify.png",
       },
     ],
     featured: {
-      title: "Your Personal Hub",
-      description: "Saved items, progress, and store overview.",
+      title: "Your All-in-One Hub",
+      description: "Dashboard, fulfilment, and store management in one place.",
       image: "/images/menu/framework.png",
       href: "/features/dashboard",
     },
   },
   {
-    label: "Learning",
+    label: "Learn",
     items: [
+      {
+        title: "Full Courses",
+        href: "/features/courses",
+        icon3d: "/images/menu/icons/learning-modules.png",
+      },
       {
         title: "Live Sessions",
         href: "/features/live-sessions",
@@ -89,13 +90,8 @@ const menuData: MenuCategory[] = [
         isNew: true,
       },
       {
-        title: "Full Courses",
-        href: "/features/courses",
-        icon3d: "/images/menu/icons/learning-modules.png",
-      },
-      {
-        title: "Blogs",
-        href: "/features/blog",
+        title: "What is Dropshipping",
+        href: "/what-is-dropshipping",
         icon3d: "/images/menu/icons/blogs.png",
       },
     ],
@@ -107,82 +103,8 @@ const menuData: MenuCategory[] = [
     },
   },
   {
-    label: "Integrations",
-    items: [
-      {
-        title: "Shopify",
-        href: "/shopify",
-        icon3d: "/images/menu/icons/shopify.png",
-      },
-    ],
-    featured: {
-      title: "Seamless Connections",
-      description: "Connect your store and manage everything from one place.",
-      image: "/images/menu/integrations.png",
-      href: "/shopify",
-    },
-  },
-  {
-    label: "Dropshipping Tools",
-    items: [
-      {
-        title: "Description Generator",
-        href: "/features/description-generator",
-        icon3d: "/images/menu/icons/description-generator.png",
-      },
-      {
-        title: "Email Templates",
-        href: "/features/email-templates",
-        icon3d: "/images/menu/icons/email-templates.png",
-      },
-      {
-        title: "Policy Generator",
-        href: "/features/policy-generator",
-        icon3d: "/images/menu/icons/policy-generator.png",
-      },
-      {
-        title: "Invoice Generator",
-        href: "/features/invoice-generator",
-        icon3d: "/images/menu/icons/invoice-generator.png",
-      },
-      {
-        title: "Profit Calculator",
-        href: "/features/profit-calculator",
-        icon3d: "/images/menu/icons/profit-calculator.png",
-      },
-      {
-        title: "Shipping Calculator",
-        href: "/features/shipping-calculator",
-        icon3d: "/images/menu/icons/shipping-calculator.png",
-      },
-    ],
-    featured: {
-      title: "All-in-One Toolkit",
-      description: "AI-powered tools built for dropshippers.",
-      image: "/images/menu/tools.png",
-      href: "/features/description-generator",
-    },
-  },
-  {
-    label: "Marketplaces",
-    items: [
-      {
-        title: "Order Fulfilment",
-        href: "/features/fulfilment",
-        icon3d: "/images/menu/icons/order-fulfilment.png",
-      },
-      {
-        title: "Fast Delivery",
-        href: "/features/shipping-calculator",
-        icon3d: "/images/menu/icons/fast-delivery.png",
-      },
-    ],
-    featured: {
-      title: "We Ship For You",
-      description: "Packing, handling, and delivery under 7 days.",
-      image: "/images/menu/fulfilment.png",
-      href: "/features/fulfilment",
-    },
+    label: "LLC",
+    href: "/llc",
   },
 ]
 
