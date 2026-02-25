@@ -33,7 +33,7 @@ const comparisonFeatures = [
   { feature: "ITIN Application Assistance", justLlc: false, elite: true },
   { feature: "Resale Certificate Filing", justLlc: false, elite: true },
   { feature: "Amazon Seller Account Setup", justLlc: false, elite: true },
-  { feature: "Shopify Store Setup", justLlc: false, elite: true },
+  { feature: "Shopify Website Development", justLlc: false, elite: true, highlight: true },
   { feature: "Annual Compliance Reminders", justLlc: true, elite: true },
   { feature: "Dedicated Account Manager", justLlc: false, elite: true },
   { feature: "Priority Support", justLlc: false, elite: true },
@@ -238,35 +238,41 @@ export default function MyLLCPage() {
               </div>
             </div>
 
-            {comparisonFeatures.map((row, i) => (
-              <div
-                key={row.feature}
-                className={`grid grid-cols-3 ${i < comparisonFeatures.length - 1 ? 'border-b border-black/[0.04]' : ''} ${i % 2 === 0 ? 'bg-[#FAFAFA]/50' : ''}`}
-                data-testid={`row-compare-${i}`}
-              >
-                <div className="px-5 py-3.5 border-r border-black/[0.04] flex items-center">
-                  <p className="text-[15px] text-[#333]">{row.feature}</p>
+            {comparisonFeatures.map((row, i) => {
+              const isHighlight = 'highlight' in row && row.highlight;
+              return (
+                <div
+                  key={row.feature}
+                  className={`grid grid-cols-3 ${i < comparisonFeatures.length - 1 ? 'border-b border-black/[0.04]' : ''} ${isHighlight ? 'bg-emerald-50/60' : i % 2 === 0 ? 'bg-[#FAFAFA]/50' : ''}`}
+                  data-testid={`row-compare-${i}`}
+                >
+                  <div className="px-5 py-3.5 border-r border-black/[0.04] flex items-center gap-2">
+                    <p className={`text-[15px] ${isHighlight ? 'text-emerald-700 font-semibold' : 'text-[#333]'}`}>{row.feature}</p>
+                    {isHighlight && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-600 border border-emerald-200">New</span>
+                    )}
+                  </div>
+                  <div className="px-5 py-3.5 border-r border-black/[0.04] flex items-center justify-center">
+                    {row.justLlc ? (
+                      <div className="h-6 w-6 rounded-full bg-[#FAFAFA] flex items-center justify-center">
+                        <Check className="h-4 w-4 text-black" />
+                      </div>
+                    ) : (
+                      <Minus className="h-4 w-4 text-[#ccc]" />
+                    )}
+                  </div>
+                  <div className="px-5 py-3.5 flex items-center justify-center">
+                    {row.elite ? (
+                      <div className={`h-6 w-6 rounded-full flex items-center justify-center ${isHighlight ? 'bg-emerald-100' : 'bg-[#FAFAFA]'}`}>
+                        <Check className={`h-4 w-4 ${isHighlight ? 'text-emerald-600' : 'text-black'}`} />
+                      </div>
+                    ) : (
+                      <Minus className="h-4 w-4 text-[#ccc]" />
+                    )}
+                  </div>
                 </div>
-                <div className="px-5 py-3.5 border-r border-black/[0.04] flex items-center justify-center">
-                  {row.justLlc ? (
-                    <div className="h-6 w-6 rounded-full bg-[#FAFAFA] flex items-center justify-center">
-                      <Check className="h-4 w-4 text-black" />
-                    </div>
-                  ) : (
-                    <Minus className="h-4 w-4 text-[#ccc]" />
-                  )}
-                </div>
-                <div className="px-5 py-3.5 flex items-center justify-center">
-                  {row.elite ? (
-                    <div className="h-6 w-6 rounded-full bg-[#FAFAFA] flex items-center justify-center">
-                      <Check className="h-4 w-4 text-black" />
-                    </div>
-                  ) : (
-                    <Minus className="h-4 w-4 text-[#ccc]" />
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="grid grid-cols-3 border-t border-black/[0.04] bg-[#FAFAFA]/50">
               <div className="p-5 border-r border-black/[0.04]" />
