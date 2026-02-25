@@ -10,7 +10,7 @@ const steps = [
     title: "Find products that actually sell",
     href: "/features/winning-products",
     cta: "Start Researching",
-    image: "/images/landing/step-product-research.webp",
+    image: "/images/landing/step-product-research.webp?v=2",
     bullets: [
       "AI scans thousands of products daily to surface winners",
       "See real profit margins and competitor pricing instantly",
@@ -23,7 +23,7 @@ const steps = [
     title: "Create ads that stop the scroll",
     href: "/features/winning-ads",
     cta: "Start Creating",
-    image: "/images/landing/step-ad-studio.webp",
+    image: "/images/landing/step-ad-studio.webp?v=2",
     bullets: [
       "Generate video and image ads in seconds with AI",
       "Choose your style — UGC, cinematic, or product-focused",
@@ -36,7 +36,7 @@ const steps = [
     title: "Launch your store in minutes",
     href: "/features/dashboard",
     cta: "Build Your Store",
-    image: "/images/landing/step-store-builder.webp",
+    image: "/images/landing/step-store-builder.webp?v=2",
     bullets: [
       "One-click import products directly to Shopify",
       "AI writes optimized product descriptions for you",
@@ -49,7 +49,7 @@ const steps = [
     title: "See what's working and scale it",
     href: "/features/winning-stores",
     cta: "View Analytics",
-    image: "/images/landing/step-analytics.webp",
+    image: "/images/landing/step-analytics.webp?v=2",
     bullets: [
       "Track revenue and conversions in real time",
       "Find your next winning product with data-driven insights",
@@ -89,7 +89,7 @@ export function StepsSection() {
                   data-testid={`card-step-${step.number}`}
                 >
                   <div className="w-full lg:w-[55%] flex-shrink-0">
-                    <div className="rounded-[20px] overflow-hidden bg-[#F8F8FA] border border-black/[0.04] aspect-[4/3]">
+                    <div className="rounded-[20px] overflow-hidden bg-[#F8F8FA] border border-black/[0.04] aspect-video">
                       <img
                         src={step.image}
                         alt={step.title}
