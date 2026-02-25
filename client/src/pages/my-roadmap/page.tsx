@@ -212,12 +212,11 @@ export default function MyJourneyPage() {
                             onChange={(e) => setTaskStatus(task.id, e.target.value as TaskStatus)}
                             onClick={(e) => e.stopPropagation()}
                             className={cn(
-                              "shrink-0 text-[11px] font-medium rounded-md border px-2 py-1 outline-none cursor-pointer appearance-none bg-no-repeat bg-[length:12px] bg-[right_4px_center] pr-5",
+                              "shrink-0 text-[11px] font-medium rounded-md border px-2 py-1 outline-none cursor-pointer appearance-none pr-2",
                               status === "completed" && "bg-green-50 border-green-200 text-green-700",
                               status === "in_progress" && "bg-yellow-50 border-yellow-200 text-yellow-700",
                               status === "not_started" && "bg-gray-50 border-gray-200 text-gray-500"
                             )}
-                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
                             data-testid={`select-status-${task.id}`}
                           >
                             <option value="not_started">Not Started</option>
