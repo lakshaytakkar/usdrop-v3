@@ -226,9 +226,9 @@ function MentorshipBanner() {
 
       <div className="relative flex items-center gap-5 md:gap-8 p-6 md:p-8">
         <div className="shrink-0">
-          <div className="w-20 h-20 md:w-[104px] md:h-[104px] rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-2xl">
+          <div className="w-20 h-20 md:w-[104px] md:h-[104px] rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-2xl bg-white">
             <img
-              src="/images/suprans profile.jpg"
+              src="/images/mentor-suprans.png"
               alt="Mr. Suprans - Your Mentor"
               className="w-full h-full object-cover"
             />
