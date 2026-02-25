@@ -175,27 +175,23 @@ export function HotProductsModal({ open, onOpenChange }: HotProductsModalProps) 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  {/* Floating Metrics */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-                    <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-blue-600 border border-blue-100 shadow-sm whitespace-nowrap">
-                      Buy Price: {product.buyPrice}
-                    </div>
-                    <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-purple-600 border border-purple-100 shadow-sm whitespace-nowrap">
-                      Sell Price: {product.sellPrice}
-                    </div>
-                  </div>
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-xs font-bold text-green-600 border border-green-100 shadow-sm whitespace-nowrap">
-                      Est. Profit: {product.profit}
-                    </div>
-                  </div>
                 </div>
-                <div className="h-2/5 p-6 flex flex-col justify-between">
+                <div className="h-2/5 p-5 flex flex-col justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-1">{product.name}</h3>
-                    <div className="flex gap-2 mb-4">
-                      <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Trending</span>
-                      <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">US Stock</span>
+                    <h3 className="text-lg font-bold text-black mb-2">{product.name}</h3>
+                    <div className="flex items-center gap-4 text-[13px]">
+                      <div>
+                        <span className="text-[#999]">Buy </span>
+                        <span className="font-semibold text-black">{product.buyPrice}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#999]">Sell </span>
+                        <span className="font-semibold text-black">{product.sellPrice}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#999]">Profit </span>
+                        <span className="font-semibold text-green-600">{product.profit}</span>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
