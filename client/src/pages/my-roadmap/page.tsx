@@ -229,7 +229,10 @@ export default function MyJourneyPage() {
                             onChange={() => {
                               setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
                             }}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0 accent-blue-600"
+                            className={cn(
+                              "h-4 w-4 rounded border-gray-300 cursor-pointer shrink-0",
+                              isCompleted ? "accent-green-600" : status === "in_progress" ? "accent-yellow-500" : "accent-white"
+                            )}
                             data-testid={`checkbox-task-${task.id}`}
                           />
                         </div>
