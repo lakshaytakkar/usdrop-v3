@@ -171,18 +171,15 @@ export function Topbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer" suppressHydrationWarning>
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage 
-                      src={resolvedAvatar} 
-                      alt="User avatar" 
-                    />
-                    <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
-                  </Avatar>
-                  {!isInternal && isPro && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-                      <Crown className="h-2.5 w-2.5 text-white" />
-                    </span>
-                  )}
+                  <div className={cn("rounded-full", !isInternal && isPro && "ring-2 ring-amber-400")}>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage 
+                        src={resolvedAvatar} 
+                        alt="User avatar" 
+                      />
+                      <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
+                    </Avatar>
+                  </div>
                 </Button>
               </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
