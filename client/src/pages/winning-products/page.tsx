@@ -118,6 +118,33 @@ export default function WinningProductsPage() {
   // Advanced filters open state
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false)
 
+  useEffect(() => {
+    const handleQuickFilter = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      const filter = detail?.filter as string | null
+      if (filter) {
+        if (filter === 'high-revenue' || filter === 'high-growth') {
+          applyQuickFilter(filter)
+        } else {
+          setSortBy(filter)
+          setQuickFilter(null)
+        }
+      } else {
+        setSortBy("newest")
+        setQuickFilter(null)
+        setFilters(prev => ({
+          ...prev,
+          minProfitMargin: "",
+          minRevenue: "",
+          minGrowthRate: "",
+          isLocked: null
+        }))
+      }
+    }
+    window.addEventListener('quick-filter-change', handleQuickFilter)
+    return () => window.removeEventListener('quick-filter-change', handleQuickFilter)
+  }, [quickFilter])
+
   // Fetch winning products from API
   useEffect(() => {
     const fetchProducts = async () => {

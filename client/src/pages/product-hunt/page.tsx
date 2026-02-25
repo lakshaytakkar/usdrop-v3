@@ -234,6 +234,20 @@ export default function ProductHuntPage() {
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 999])
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    const handleQuickFilter = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      const filter = detail?.filter as SortOption | null
+      if (filter) {
+        setSortBy(filter === "profit-high" ? "profit" : filter)
+      } else {
+        setSortBy("newest")
+      }
+    }
+    window.addEventListener('quick-filter-change', handleQuickFilter)
+    return () => window.removeEventListener('quick-filter-change', handleQuickFilter)
+  }, [])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
