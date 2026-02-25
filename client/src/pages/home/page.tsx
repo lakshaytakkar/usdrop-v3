@@ -11,6 +11,12 @@ import {
   Sparkles,
   GraduationCap,
   Check,
+  Building2,
+  ShoppingBag,
+  FileText,
+  Truck,
+  BarChart3,
+  Palette,
 } from "lucide-react"
 import { SiGmail } from "react-icons/si"
 import { useAuth } from "@/contexts/auth-context"
@@ -150,6 +156,92 @@ function FreeLearningSection() {
           </Link>
         </div>
       )}
+    </div>
+  )
+}
+
+const businessQuickLinks = [
+  {
+    icon: Building2,
+    label: "My LLC",
+    description: "US company formation",
+    href: "/llc",
+    iconBg: "bg-blue-50",
+    iconColor: "text-blue-600",
+  },
+  {
+    icon: ShoppingBag,
+    label: "My Shopify Store",
+    description: "Store setup & management",
+    href: "/framework/my-store",
+    iconBg: "bg-emerald-50",
+    iconColor: "text-emerald-600",
+  },
+  {
+    icon: FileText,
+    label: "My Products",
+    description: "Product list & research",
+    href: "/framework/my-products",
+    iconBg: "bg-violet-50",
+    iconColor: "text-violet-600",
+  },
+  {
+    icon: Truck,
+    label: "Private Supplier",
+    description: "Sourcing & fulfillment",
+    href: "/private-supplier",
+    iconBg: "bg-amber-50",
+    iconColor: "text-amber-600",
+  },
+  {
+    icon: BarChart3,
+    label: "Hot Products",
+    description: "Trending & bestsellers",
+    href: "/winning-products",
+    iconBg: "bg-rose-50",
+    iconColor: "text-rose-600",
+  },
+  {
+    icon: Palette,
+    label: "AI Studio",
+    description: "Whitelabelling & creatives",
+    href: "/studio/whitelabelling",
+    iconBg: "bg-cyan-50",
+    iconColor: "text-cyan-600",
+  },
+]
+
+function MyBusinessSection() {
+  return (
+    <div>
+      <h2 className="ds-section-title mb-4 flex items-center gap-2">
+        <img src="/3d-ecom-icons-blue/Toolbox_Wrench.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
+        My Business
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {businessQuickLinks.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            data-testid={`link-business-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+          >
+            <div className="group flex items-center gap-3.5 px-5 py-4 rounded-xl bg-white border border-black/[0.06] hover:border-black/[0.12] hover:shadow-sm transition-all cursor-pointer h-full">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-[10px] ${item.iconBg} flex-shrink-0`}>
+                <item.icon className={`h-[18px] w-[18px] ${item.iconColor}`} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold text-black leading-tight" data-testid={`text-business-label-${item.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                  {item.label}
+                </p>
+                <p className="text-[11px] text-[#999] leading-tight mt-0.5 hidden md:block">
+                  {item.description}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" />
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
@@ -485,6 +577,7 @@ function DashboardContent() {
     <div className="flex flex-1 flex-col">
       <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
         <MentorshipBanner />
+        <MyBusinessSection />
         <FreeLearningSection />
         <HowToUseSection />
       </div>
