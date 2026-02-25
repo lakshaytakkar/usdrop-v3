@@ -38,7 +38,7 @@ const features = [
 export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[820px] p-0 overflow-hidden gap-0 border-0 rounded-[20px]" hideDefaultClose>
+      <DialogContent className="sm:max-w-[820px] p-0 overflow-hidden gap-0 border-0 rounded-[20px]" showCloseButton={false}>
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="p-8 md:p-10 flex flex-col">
             <button
@@ -94,7 +94,7 @@ export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
             </div>
           </div>
 
-          <div className="relative hidden md:block">
+          <div className="relative hidden md:block min-h-[520px]">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors"
@@ -105,10 +105,10 @@ export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
             <img
               src="/images/ui/upsell-pro-bg.png"
               alt="USDrop Pro"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover rounded-r-[20px]"
             />
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/30 via-purple-900/20 to-violet-900/30 mix-blend-overlay" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/30 via-purple-900/20 to-violet-900/30 mix-blend-overlay rounded-r-[20px]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-r-[20px]" />
           </div>
         </div>
       </DialogContent>
