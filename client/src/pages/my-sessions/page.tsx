@@ -221,10 +221,12 @@ export default function MySessionsPage() {
                       className="relative group flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm transition-all"
                       data-testid={`session-${session.id}`}
                     >
-                      <div className="flex-shrink-0 w-14 h-16 rounded-lg bg-gray-50 border border-gray-200 flex flex-col items-center justify-center leading-none" data-testid={`date-${session.id}`}>
-                        <span className="text-lg font-bold text-gray-800">{format(session.date, "d")}</span>
-                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{format(session.date, "MMM")}</span>
-                        <span className="text-[9px] text-gray-400 mt-px">{format(session.date, "yyyy")}</span>
+                      <div className="flex-shrink-0 flex flex-col items-center justify-center leading-none" data-testid={`date-${session.id}`}>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-[22px] font-bold text-gray-800">{format(session.date, "d")}</span>
+                          <span className="text-[13px] font-semibold text-gray-500 uppercase">{format(session.date, "MMM")}</span>
+                        </div>
+                        <span className="text-[11px] text-gray-400">{format(session.date, "yyyy")}</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
