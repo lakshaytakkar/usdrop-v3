@@ -22,6 +22,7 @@ export default function MyJourneyPage() {
   const [taskStatuses, setTaskStatuses] = useState<Record<string, TaskStatus>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
   const [isLoading, setIsLoading] = useState(true);
+  const [requestedCalls, setRequestedCalls] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (authLoading) return
@@ -183,17 +184,22 @@ export default function MyJourneyPage() {
             </div>
             <a
               href={`mailto:info@suprans.in?subject=Mentor%20Call%20Request%20-%20Milestone%20${callNumber}`}
-              onClick={(e) => { if (!unlocked) e.preventDefault(); }}
+              onClick={(e) => {
+                if (!unlocked) { e.preventDefault(); return; }
+                setRequestedCalls(prev => new Set(prev).add(callNumber));
+              }}
               className={cn(
                 "inline-flex items-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap shrink-0",
-                unlocked
-                  ? "bg-white text-green-600 hover:bg-white/90 shadow-md cursor-pointer"
-                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                !unlocked
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : requestedCalls.has(callNumber)
+                    ? "bg-white/20 text-white border border-white/30 cursor-default"
+                    : "bg-white text-green-600 hover:bg-white/90 shadow-md cursor-pointer"
               )}
               data-testid={`button-request-call-${callNumber}`}
             >
               <Phone className="h-4 w-4" />
-              Request Call
+              {requestedCalls.has(callNumber) ? "Requested" : "Request Call"}
             </a>
           </div>
         </div>
