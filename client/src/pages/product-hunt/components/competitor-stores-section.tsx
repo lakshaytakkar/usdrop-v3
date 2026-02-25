@@ -1,7 +1,8 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Store, Globe, TrendingUp, Star, ExternalLink } from "lucide-react"
+import { Globe, TrendingUp, Star, ExternalLink } from "lucide-react"
+import { SiShopify } from "react-icons/si"
 import { CompetitorStore } from "@/types/products"
 
 interface CompetitorStoresSectionProps {
@@ -30,12 +31,8 @@ export function CompetitorStoresSection({ stores }: CompetitorStoresSectionProps
       {stores.slice(0, 6).map((store) => (
         <Card key={store.id} className="p-4" data-testid={`card-competitor-store-${store.id}`}>
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-lg bg-muted/50 overflow-hidden shrink-0 flex items-center justify-center">
-              {store.logo ? (
-                <img src={store.logo} alt={store.name} className="w-full h-full object-cover" />
-              ) : (
-                <Store className="h-5 w-5 text-muted-foreground" />
-              )}
+            <div className="w-10 h-10 rounded-lg bg-[#f0fdf4] overflow-hidden shrink-0 flex items-center justify-center">
+              <SiShopify className="h-5 w-5 text-[#95BF47]" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
