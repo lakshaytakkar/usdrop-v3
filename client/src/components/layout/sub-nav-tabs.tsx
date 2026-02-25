@@ -40,7 +40,7 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     showSearch: false,
     actions: [],
   },
-  "Videos and Ads": {
+  "Videos & Ads": {
     searchPlaceholder: "Search ad creatives, strategies, and campaigns...",
     showSearch: true,
     actions: [

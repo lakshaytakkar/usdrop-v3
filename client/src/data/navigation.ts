@@ -87,7 +87,7 @@ export const externalNavGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Videos and Ads",
+    label: "Videos & Ads",
     icon: BarChart3,
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
     items: [
