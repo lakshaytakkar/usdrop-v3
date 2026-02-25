@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, ArrowRight, Sparkles } from "lucide-react"
+import { Plus, ArrowRight } from "lucide-react"
 import { Link } from "wouter"
 import { FrameworkBanner } from "@/components/framework-banner"
 
@@ -94,8 +94,7 @@ export default function ShopifyStoresPage() {
             </div>
 
             <div className="flex-1 text-center md:text-left">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold text-emerald-200 uppercase tracking-wider mb-2">
-                <Sparkles className="h-3 w-3" />
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-[10px] font-bold text-black uppercase tracking-wider mb-2 shadow-sm">
                 Included in Elite Plan
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-1.5">
