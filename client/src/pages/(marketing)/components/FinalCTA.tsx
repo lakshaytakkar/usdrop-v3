@@ -5,10 +5,10 @@ import { ArrowRight } from "lucide-react"
 
 export function FinalCTA() {
   return (
-    <section className="py-20 lg:py-32 px-4" data-testid="section-final-cta">
-      <div className="max-w-4xl mx-auto">
+    <section className="py-24 lg:py-36 px-4" data-testid="section-final-cta">
+      <div className="max-w-5xl mx-auto">
         <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
-          <div className="bg-[#323140] rounded-3xl p-10 md:p-16 text-center relative overflow-hidden">
+          <div className="bg-[#323140] rounded-3xl p-14 md:p-20 text-center relative overflow-hidden">
             <div
               className="absolute inset-0 opacity-10"
               style={{
@@ -23,11 +23,11 @@ export function FinalCTA() {
               }}
             />
             <div className="relative z-10">
-              <h2 className="text-2xl sm:text-3xl md:text-[42px] font-semibold text-white tracking-[-0.03em] leading-[1.15] mb-4">
-                Start scaling your store today.
+              <h2 className="text-[32px] sm:text-[40px] md:text-[52px] font-semibold text-white tracking-[-0.03em] leading-[1.15] mb-4">
+                Ready to scale?
               </h2>
-              <p className="text-gray-400 mb-8 max-w-md mx-auto text-[16px]">
-                No credit card required. Free plan available.
+              <p className="text-gray-400 mb-8 max-w-lg mx-auto text-[17px]">
+                Join thousands of sellers growing with USDrop.
               </p>
               <Link
                 href="/signup"

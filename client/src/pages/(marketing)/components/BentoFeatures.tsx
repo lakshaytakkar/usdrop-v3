@@ -51,11 +51,11 @@ export function BentoFeatures() {
             <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
               Platform
             </p>
-            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] font-semibold text-black tracking-[-0.03em] leading-[1.15] mb-4">
-              Everything you need. One place.
+            <h2 className="text-[40px] sm:text-[52px] lg:text-[64px] font-bold text-black tracking-[-0.03em] leading-[1.1] mb-4">
+              Your Toolkit. Built In.
             </h2>
-            <p className="text-[16px] text-[#888] max-w-[480px] mx-auto">
-              Six AI-powered tools that cover your entire dropshipping workflow.
+            <p className="text-[17px] text-[#888] max-w-[480px] mx-auto">
+              Six powerful tools, one platform.
             </p>
           </div>
         </MotionFadeIn>

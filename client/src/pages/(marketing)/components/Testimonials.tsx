@@ -34,14 +34,14 @@ const metrics = [
 
 export function Testimonials() {
   return (
-    <section className="py-20 lg:py-32" data-testid="section-testimonials">
+    <section className="py-24 lg:py-36" data-testid="section-testimonials">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
           <div className="text-center mb-16 lg:mb-20">
             <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
               Results
             </p>
-            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] font-semibold text-black tracking-[-0.03em] leading-[1.15]">
+            <h2 className="text-[36px] sm:text-[48px] lg:text-[56px] font-semibold text-black tracking-[-0.03em] leading-[1.15]">
               Real sellers. Real results.
             </h2>
           </div>
@@ -55,7 +55,7 @@ export function Testimonials() {
                 className="text-center py-8 px-6 rounded-[20px] bg-[#F8F7FF]"
                 data-testid={`metric-${metric.label}`}
               >
-                <p className="text-[44px] sm:text-[52px] font-bold text-black tracking-[-0.03em] leading-none mb-2">
+                <p className="text-[56px] sm:text-[64px] font-bold text-black tracking-[-0.03em] leading-none mb-2">
                   {metric.value}
                 </p>
                 <p className="text-[14px] text-[#888] font-medium">{metric.label}</p>
