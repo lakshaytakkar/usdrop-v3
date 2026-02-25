@@ -139,7 +139,7 @@ export function AppTopNavigation() {
             </button>
 
             <Link href="/home" className="flex items-baseline gap-1 mr-4 shrink-0" data-testid="link-home-logo">
-              <span className="text-2xl font-bold tracking-tight text-foreground">USDrop</span>
+              <span className="text-2xl font-semibold tracking-tight text-foreground">USDrop</span>
               <span className="text-2xl font-bold text-blue-600">AI</span>
             </Link>
 
