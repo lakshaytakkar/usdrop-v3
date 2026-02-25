@@ -134,8 +134,8 @@ function FilterSidebar({
   onReset: () => void
 }) {
   return (
-    <aside className="w-[220px] shrink-0 hidden lg:block border-r border-gray-200/60 bg-white/50 backdrop-blur-sm overflow-y-auto">
-      <div className="p-4">
+    <aside className="w-[220px] shrink-0 hidden lg:block overflow-y-auto">
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 ds-label">
             <Filter className="h-4 w-4" />
@@ -348,16 +348,28 @@ export default function MetaAdsPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-0 relative">
-        <div className="flex flex-1 min-h-0">
+      <div className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden">
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8 overflow-hidden">
           <FilterSidebar
             filters={filters}
             setFilter={setFilter}
             onReset={resetFilters}
           />
 
-          <div className="flex-1 min-w-0 flex flex-col">
-            <div className="bg-white/70 backdrop-blur-sm border-b border-gray-200/60 px-12 md:px-20 lg:px-32 py-3 space-y-3">
+          <div className="flex-1 flex flex-col gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 md:p-5 overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h1 className="ds-page-title" data-testid="text-page-title">Meta Ads</h1>
+              <button
+                onClick={() => {}}
+                className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                data-testid="button-mobile-filters"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+              </button>
+            </div>
+
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -483,9 +495,9 @@ export default function MetaAdsPage() {
               )}
             </div>
 
-            <div className="flex-1 px-12 md:px-20 lg:px-32 py-5 overflow-y-auto">
+            <div className="flex-1">
               {filteredAds.length === 0 ? (
-                <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-12 text-center">
+                <div className="rounded-lg border border-gray-200/60 bg-gray-50/50 p-12 text-center">
                   <Search className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                   <h3 className="text-base font-semibold text-gray-700 mb-1">
                     No ads found
@@ -516,7 +528,7 @@ export default function MetaAdsPage() {
                     <div
                       key={ad.id}
                       onClick={() => handleAdClick(ad)}
-                      className="flex items-center gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-sm p-4 cursor-pointer hover:shadow-md transition-all"
+                      className="flex items-center gap-4 bg-white rounded-lg border border-gray-200/60 p-4 cursor-pointer hover:shadow-sm transition-all"
                       data-testid={`list-ad-${ad.id}`}
                     >
                       <img
