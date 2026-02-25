@@ -53,6 +53,8 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **Google Gemini API**: For AI features.
 
 ## Recent Changes
+- **LLC Page Redesign**: Major visual upgrade to match landing page premium design. Added: SVG gradient orbs behind hero, gradient "US LLC" accent text, animated gradient-bordered CTA buttons, Watch Video button, hero documents image, auto-scrolling logo marquee (Amazon, Walmart, Shopify, eBay, TikTok, Stripe, PayPal), stats bar, video thumbnail with overlay, image-enriched benefit cards with hover effects, indigo-accented pricing section, dark CTA section with noise texture. All sections wrapped in `MotionFadeIn` scroll animations. Images in `client/public/images/llc/`. FrameworkBanner added at top.
+- **Private Supplier**: Removed from Marketplaces sub-nav tabs; now a standalone page with its own FrameworkBanner.
 - **CRO Checklist**: Replaced lucide icons with 3D PNG icons (`client/public/images/cro-icons/`), added autosave to Supabase (`cro_checklist_state` table), removed export/reset buttons. API route: `server/routes/cro-checklist.ts`.
 - **Shopify Stores page**: Added FrameworkBanner, Connect Store button in header, and a green gradient cross-sell banner promoting Shopify Website Development (links to `/llc` Elite plan).
 - **LLC Elite plan**: Renamed "Shopify Store Setup" to "Shopify Website Development" with green highlight row and "New" badge in the comparison table.

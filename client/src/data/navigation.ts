@@ -100,7 +100,6 @@ export const externalNavGroups: NavGroup[] = [
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [
       { title: "Selling Channels", icon: Store, url: "/selling-channels", isPro: true },
-      { title: "Private Supplier", icon: Package, url: "/private-supplier", isPro: false },
     ],
   },
   {

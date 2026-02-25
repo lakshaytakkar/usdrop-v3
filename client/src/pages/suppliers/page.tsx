@@ -1,6 +1,7 @@
 
 import { useState } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { FrameworkBanner } from "@/components/framework-banner"
 import {
   CheckCircle2,
   Star,
@@ -96,11 +97,17 @@ export default function SuppliersPage() {
   const [videoOpen, setVideoOpen] = useState(false)
 
   return (
-    <div className="flex flex-1 flex-col px-6 md:px-12 lg:px-20 py-8 md:py-12 min-h-0 relative">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2 min-h-0 relative">
+      <FrameworkBanner
+        title="Private Supplier"
+        description="Your own supplier — products delivered to USA customers in 6-8 days under your brand"
+        iconSrc="/3d-ecom-icons-blue/Delivery_Truck.png"
+        tutorialVideoUrl=""
+      />
+
       <div className="max-w-5xl mx-auto w-full space-y-20 lg:space-y-28">
 
         <div className="text-center space-y-6">
-          <p className="text-[11px] font-bold text-[#999] uppercase tracking-[0.12em]">Private Supplier</p>
           <h1
             className="text-[40px] md:text-[52px] font-bold text-black leading-[1.08] tracking-[-1.5px] md:tracking-[-2px]"
             data-testid="text-supplier-title"

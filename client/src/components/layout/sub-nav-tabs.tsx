@@ -48,11 +48,6 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
     videoTutorialTitle: "Ads Page Video Tutorial",
   },
-  "Private Supplier": {
-    searchPlaceholder: "",
-    showSearch: false,
-    actions: [],
-  },
   "LLC": {
     searchPlaceholder: "",
     showSearch: false,
