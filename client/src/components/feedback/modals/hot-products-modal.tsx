@@ -167,13 +167,12 @@ export function HotProductsModal({ open, onOpenChange }: HotProductsModalProps) 
                 direction === 'right' ? 'translate-x-24 rotate-12 opacity-0' : ''
               )}
             >
-                <div className="h-3/5 bg-slate-50 relative">
+                <div className="h-3/5 bg-slate-50 relative overflow-hidden">
                   <div className="w-full h-full relative">
                     <img 
                       src={product.image} 
                       alt={product.name}
-                     
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   {/* Floating Metrics */}
