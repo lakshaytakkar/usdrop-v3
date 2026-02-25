@@ -207,46 +207,59 @@ function MentorshipBanner() {
   const firstName = user?.full_name?.split(" ")[0] || "there"
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      style={{
-        background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
-      }}
-      data-testid="banner-mentorship"
-    >
-      <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-        <filter id="noiseFilter">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#noiseFilter)" />
-      </svg>
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08]"
-          style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
-        />
-        <div
-          className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)' }}
-        />
-      </div>
-
-      <div className="relative grid grid-cols-1 md:grid-cols-[1fr_2fr] items-stretch gap-0 p-6 md:p-0">
-        <div className="flex flex-col items-start justify-center gap-3 md:p-8 md:pr-6">
-          <span className="text-4xl md:text-5xl leading-none" role="img" aria-label="wave">👋</span>
+    <div className="space-y-3" data-testid="banner-mentorship">
+      <div
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
+        }}
+      >
+        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <filter id="noiseFilter1">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#noiseFilter1)" />
+        </svg>
+        <div className="relative flex items-center gap-3 px-6 py-5 md:px-8 md:py-6">
+          <span className="text-3xl md:text-4xl leading-none" role="img" aria-label="wave">👋</span>
           <div>
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+            <h2 className="text-lg md:text-xl font-bold tracking-tight text-white">
               Welcome, {firstName}
             </h2>
-            <p className="text-white/50 text-sm font-medium mt-1">
+            <p className="text-white/50 text-sm font-medium mt-0.5">
               Let's build your business today
             </p>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-5 md:p-6 md:pl-6 md:border-l md:border-white/10">
+      <div
+        className="relative overflow-hidden rounded-2xl"
+        style={{
+          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
+        }}
+      >
+        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <filter id="noiseFilter2">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#noiseFilter2)" />
+        </svg>
+
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08]"
+            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)' }}
+          />
+        </div>
+
+        <div className="relative flex items-center gap-5 p-6 md:p-6">
           <div className="shrink-0">
             <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
               <img
@@ -295,7 +308,7 @@ function MentorshipBanner() {
           </div>
         </div>
 
-        <div className="flex md:hidden gap-2.5 mt-4">
+        <div className="flex md:hidden gap-2.5 px-6 pb-6">
           <a
             href="mailto:info@suprans.in"
             className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
