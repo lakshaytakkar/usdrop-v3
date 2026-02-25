@@ -109,14 +109,14 @@ export default function AcademyPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-2">
+        <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
           <FrameworkBanner
             title="My Learning"
             description="Access courses, tutorials, and training to grow your business"
             iconSrc="/images/banners/3d-learning.png"
             onTutorialClick={() => {}}
           />
-          <div className="px-10 md:px-18 lg:px-30">
+          <div>
 
           {/* All Courses */}
           <div>

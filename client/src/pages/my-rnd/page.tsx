@@ -123,9 +123,9 @@ export default function MyRnDPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 p-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
         <Skeleton className="h-16 w-full rounded-md" />
-        <div className="px-10 md:px-18 lg:px-30">
+        <div>
           <Skeleton className="h-8 w-48 mb-6" />
           <Skeleton className="h-[400px] w-full rounded-xl" />
         </div>
@@ -134,14 +134,14 @@ export default function MyRnDPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-2" data-testid="page-my-rnd">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-rnd">
       <FrameworkBanner
         title="My R&D Workspace"
         description="Track your daily work, learning, and research in one place"
         iconSrc="/images/banners/3d-rnd.png"
         onTutorialClick={() => {}}
       />
-      <div className="px-10 md:px-18 lg:px-30">
+      <div>
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
           <div className="flex items-center gap-4 text-sm ds-text-body">
             <span>Today: <strong className="ds-text-heading">{todayHours}h</strong></span>

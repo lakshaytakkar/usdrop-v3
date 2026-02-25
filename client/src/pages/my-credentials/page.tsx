@@ -117,14 +117,14 @@ export default function MyCredentialsPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 p-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
         <FrameworkBanner
           title="My Credentials"
           description="Securely store and manage your service logins and API keys"
           iconSrc="/images/banners/3d-credentials.png"
           onTutorialClick={() => {}}
         />
-        <div className="px-10 md:px-18 lg:px-30">
+        <div>
 
         <div className="flex justify-end mb-2">
           <Button

@@ -146,14 +146,14 @@ export default function MyProductsPage() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 p-2">
+        <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
           <FrameworkBanner
             title="My Products"
             description="Your saved products and picklist for quick access"
             iconSrc="/images/banners/3d-products.png"
             onTutorialClick={() => {}}
           />
-          <div className="px-10 md:px-18 lg:px-30">
+          <div>
 
             {items.length > 0 && (
               <div className="flex items-center justify-between gap-3">

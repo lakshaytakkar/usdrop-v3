@@ -106,14 +106,14 @@ export default function MyProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-2" data-testid="page-my-profile">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-profile">
       <FrameworkBanner
         title="My Profile"
         description="Manage your personal and business information"
         iconSrc="/images/banners/3d-profile.png"
         onTutorialClick={() => {}}
       />
-      <div className="px-10 md:px-18 lg:px-30">
+      <div>
 
         {loading ? (
           <div className="space-y-6">
