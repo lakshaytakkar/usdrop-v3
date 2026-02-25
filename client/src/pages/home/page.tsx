@@ -1,11 +1,11 @@
 
-import { Suspense, useState } from "react"
-import { Card } from "@/components/ui/card"
+import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import { useQuery } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/supabase"
 import {
+  ArrowRight,
   ChevronRight,
   Play,
   Mail,
@@ -163,38 +163,36 @@ function HowToUseSection() {
         <img src="/3d-ecom-icons-blue/Open_Board.png" alt="" width={24} height={24} className="w-6 h-6 object-contain" />
         How to use USDrop
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {howToCards.map((card) => (
-          <Link key={card.href} href={card.href} className="block group" data-testid={`link-howto-${card.title.toLowerCase().replace(/\s/g, '-')}`}>
-            <Card className="overflow-hidden rounded-xl hover:shadow-md transition-all cursor-pointer border-gray-100 hover:border-blue-200 bg-gradient-to-br from-blue-50/40 to-white">
-              <div className="relative w-full h-36 overflow-hidden bg-gray-100">
-                <img
-                  src={card.thumbnail}
-                  alt={card.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  decoding="async"
-                />
-                <img
-                  src={card.iconSrc}
-                  alt=""
-                  className="absolute bottom-2 right-2 w-8 h-8 object-contain drop-shadow-md"
-                />
-              </div>
-              <div className="p-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <h3 className="text-[16px] font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{card.title}</h3>
-                  <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" />
+          <Link key={card.href} href={card.href} data-testid={`link-howto-${card.title.toLowerCase().replace(/\s/g, '-')}`}>
+            <div
+              className="group relative rounded-[16px] overflow-hidden cursor-pointer h-full aspect-[16/10]"
+              data-testid={`card-howto-${card.title.toLowerCase().replace(/\s/g, '-')}`}
+            >
+              <img
+                src={card.thumbnail}
+                alt={card.title}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                decoding="async"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/5 transition-opacity duration-300 group-hover:from-black/80 group-hover:via-black/50 group-hover:to-black/30" />
+
+              <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/25" />
+
+              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-[18px] font-bold text-white tracking-[-0.01em] leading-tight">
+                    {card.title}
+                  </h3>
+                  <ArrowRight className="w-5 h-5 text-white transition-all duration-300 group-hover:text-[#6366F1] group-hover:translate-x-1" />
                 </div>
-                <div className="flex items-center gap-3">
-                  {card.points.map((point) => (
-                    <span key={point} className="inline-flex items-center gap-1 text-[13px] text-gray-600">
-                      <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                      {point}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-[13px] text-white/70 leading-[20px]">
+                  {card.points.join(" · ")}
+                </p>
               </div>
-            </Card>
+            </div>
           </Link>
         ))}
       </div>
