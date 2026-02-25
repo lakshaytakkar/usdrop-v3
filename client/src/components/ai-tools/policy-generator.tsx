@@ -1,12 +1,11 @@
-
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Shield, Wand2, Copy, Download } from "lucide-react"
+import { Shield, Wand2, Copy, Download, Store, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const POLICY_TYPES = [
@@ -28,7 +27,6 @@ export function PolicyGenerator() {
     if (!storeName) return
 
     setIsGenerating(true)
-    // Simulate AI generation
     setTimeout(() => {
       const policies: Record<string, string> = {
         "privacy": `PRIVACY POLICY\n\nLast Updated: ${new Date().toLocaleDateString()}\n\n${storeName} ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website.\n\nINFORMATION WE COLLECT\n\nWe may collect information about you in a variety of ways. The information we may collect includes:\n- Personal Data: Name, email address, phone number, billing address\n- Payment Information: Credit card details, payment history\n- Usage Data: How you interact with our website\n\nHOW WE USE YOUR INFORMATION\n\nWe use the information we collect to:\n- Process and fulfill your orders\n- Communicate with you about your orders\n- Improve our services and website\n- Send marketing communications (with your consent)\n\n${storeDetails ? `\nADDITIONAL INFORMATION:\n${storeDetails}` : ""}\n\nCONTACT US\n\nIf you have questions about this Privacy Policy, please contact us.`,
@@ -65,17 +63,19 @@ export function PolicyGenerator() {
       <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-6">
-            <Shield className="h-5 w-5 text-foreground" />
+            <Shield className="h-5 w-5 text-blue-600" />
             <h3 className="text-lg font-semibold text-foreground">Policy Generator</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Input Section */}
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-foreground mb-2 block">Policy Type</Label>
+                <Label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-foreground" />
+                  Policy Type
+                </Label>
                 <Select value={policyType} onValueChange={setPolicyType}>
-                  <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectTrigger className="bg-background border-border text-foreground" data-testid="select-policy-type">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -89,21 +89,24 @@ export function PolicyGenerator() {
               </div>
 
               <div>
-                <Label htmlFor="storeName" className="text-sm font-medium text-foreground mb-2 block">
+                <Label htmlFor="storeName" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <Store className="h-4 w-4 text-foreground" />
                   Store Name
                 </Label>
-                <input
+                <Input
                   id="storeName"
                   type="text"
                   placeholder="e.g., My Store"
                   value={storeName}
                   onChange={(e) => setStoreName(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="bg-background border-border text-foreground"
+                  data-testid="input-store-name"
                 />
               </div>
 
               <div>
-                <Label htmlFor="storeDetails" className="text-sm font-medium text-foreground mb-2 block">
+                <Label htmlFor="storeDetails" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-foreground" />
                   Additional Details (Optional)
                 </Label>
                 <Textarea
@@ -112,23 +115,21 @@ export function PolicyGenerator() {
                   value={storeDetails}
                   onChange={(e) => setStoreDetails(e.target.value)}
                   className="bg-background border-border text-foreground min-h-[100px]"
+                  data-testid="input-store-details"
                 />
               </div>
 
               <Button
                 onClick={handleGenerate}
                 disabled={!storeName || isGenerating}
-                className={cn(
-                  "w-full",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="button-generate-policy"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
                 {isGenerating ? "Generating..." : "Generate Policy"}
               </Button>
             </div>
 
-            {/* Output Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-sm font-semibold text-foreground">Generated Policy</Label>
@@ -139,6 +140,7 @@ export function PolicyGenerator() {
                       size="sm"
                       onClick={handleCopy}
                       className="h-8"
+                      data-testid="button-copy-policy"
                     >
                       <Copy className="h-3 w-3 mr-1" />
                       Copy
@@ -148,6 +150,7 @@ export function PolicyGenerator() {
                       size="sm"
                       onClick={handleDownload}
                       className="h-8"
+                      data-testid="button-download-policy"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Download
@@ -159,8 +162,8 @@ export function PolicyGenerator() {
               <div className={cn(
                 "p-4 rounded-lg border min-h-[400px] max-h-[600px] overflow-y-auto",
                 generatedPolicy
-                  ? "bg-orange-50/50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900"
-                  : "bg-muted/50 border-border"
+                  ? "bg-blue-50/50 border-blue-200"
+                  : "bg-blue-50/30 border-blue-100"
               )}>
                 {generatedPolicy ? (
                   <pre className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-sans">
@@ -179,8 +182,3 @@ export function PolicyGenerator() {
     </div>
   )
 }
-
-
-
-
-

@@ -1,5 +1,3 @@
-
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,18 +32,18 @@ export function ProfitCalculator() {
 
   const profit = calculateProfit()
   const hasValues = cost || price || shipping || fee
+  const isPositive = parseFloat(profit.netProfit) > 0
 
   return (
     <div className="w-full max-w-7xl mx-auto">
       <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-6">
-            <Calculator className="h-5 w-5 text-foreground" />
+            <Calculator className="h-5 w-5 text-blue-600" />
             <h3 className="text-lg font-semibold text-foreground">Profit Calculator</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Input Section */}
             <div className="space-y-4">
               <div>
                 <Label htmlFor="cost" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
@@ -58,7 +56,8 @@ export function ProfitCalculator() {
                   placeholder="0.00"
                   value={cost}
                   onChange={(e) => setCost(e.target.value)}
-                  className="w-full bg-background border-border text-foreground focus-visible:border-ring"
+                  className="w-full bg-background border-border text-foreground"
+                  data-testid="input-product-cost"
                 />
               </div>
 
@@ -73,7 +72,8 @@ export function ProfitCalculator() {
                   placeholder="0.00"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full bg-background border-border text-foreground focus-visible:border-ring"
+                  className="w-full bg-background border-border text-foreground"
+                  data-testid="input-selling-price"
                 />
               </div>
 
@@ -88,7 +88,8 @@ export function ProfitCalculator() {
                   placeholder="0.00"
                   value={shipping}
                   onChange={(e) => setShipping(e.target.value)}
-                  className="w-full bg-background border-border text-foreground focus-visible:border-ring"
+                  className="w-full bg-background border-border text-foreground"
+                  data-testid="input-shipping-cost"
                 />
               </div>
 
@@ -103,30 +104,34 @@ export function ProfitCalculator() {
                   placeholder="0"
                   value={fee}
                   onChange={(e) => setFee(e.target.value)}
-                  className="w-full bg-background border-border text-foreground focus-visible:border-ring"
+                  className="w-full bg-background border-border text-foreground"
+                  data-testid="input-platform-fee"
                 />
               </div>
             </div>
 
-            {/* Results Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="h-5 w-5 text-foreground" />
+                <TrendingUp className="h-5 w-5 text-blue-600" />
                 <h4 className="text-sm font-semibold text-foreground">Profit Analysis</h4>
               </div>
 
               <div className={cn(
                 "p-4 rounded-lg border transition-all duration-200",
-                hasValues 
-                  ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900" 
-                  : "bg-muted/50 border-border"
+                hasValues
+                  ? isPositive
+                    ? "bg-emerald-50/50 border-emerald-200"
+                    : "bg-red-50/50 border-red-200"
+                  : "bg-blue-50/30 border-blue-100"
               )}>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Gross Profit:</span>
                     <span className={cn(
                       "text-base font-semibold",
-                      hasValues ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
+                      hasValues
+                        ? isPositive ? "text-emerald-700" : "text-red-600"
+                        : "text-foreground"
                     )}>
                       ${profit.grossProfit}
                     </span>
@@ -146,7 +151,9 @@ export function ProfitCalculator() {
                       <span className="text-sm font-medium text-foreground">Net Profit:</span>
                       <span className={cn(
                         "text-xl font-bold",
-                        hasValues ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                        hasValues
+                          ? isPositive ? "text-emerald-600" : "text-red-600"
+                          : "text-foreground"
                       )}>
                         ${profit.netProfit}
                       </span>
@@ -155,7 +162,9 @@ export function ProfitCalculator() {
                       <span className="text-sm text-muted-foreground">Profit Margin:</span>
                       <span className={cn(
                         "text-lg font-semibold",
-                        hasValues ? "text-emerald-600 dark:text-emerald-400" : "text-foreground"
+                        hasValues
+                          ? isPositive ? "text-emerald-600" : "text-red-600"
+                          : "text-foreground"
                       )}>
                         {profit.margin}%
                       </span>
@@ -164,22 +173,21 @@ export function ProfitCalculator() {
                 </div>
               </div>
 
-              {/* Additional Metrics */}
               {hasValues && (
                 <div className="pt-4 border-t border-border">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-md bg-muted/30 border border-border">
+                    <div className="p-3 rounded-lg bg-blue-50/40 border border-blue-100">
                       <div className="text-xs text-muted-foreground mb-1">ROI</div>
-                      <div className="text-sm font-semibold text-foreground">
-                        {parseFloat(cost) > 0 
+                      <div className="text-sm font-semibold text-foreground" data-testid="text-roi">
+                        {parseFloat(cost) > 0
                           ? (((parseFloat(profit.netProfit) / parseFloat(cost)) * 100).toFixed(1))
                           : "0.0"
                         }%
                       </div>
                     </div>
-                    <div className="p-3 rounded-md bg-muted/30 border border-border">
+                    <div className="p-3 rounded-lg bg-blue-50/40 border border-blue-100">
                       <div className="text-xs text-muted-foreground mb-1">Markup</div>
-                      <div className="text-sm font-semibold text-foreground">
+                      <div className="text-sm font-semibold text-foreground" data-testid="text-markup">
                         {parseFloat(cost) > 0
                           ? ((parseFloat(price) / parseFloat(cost)).toFixed(2))
                           : "0.00"
@@ -196,21 +204,3 @@ export function ProfitCalculator() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

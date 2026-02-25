@@ -1,12 +1,11 @@
-
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Wand2, Copy, Download } from "lucide-react"
+import { Mail, Wand2, Copy, Download, User, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const EMAIL_TYPES = [
@@ -29,7 +28,6 @@ export function EmailTemplates() {
     if (!customerName) return
 
     setIsGenerating(true)
-    // Simulate AI generation
     setTimeout(() => {
       const templates: Record<string, string> = {
         "order-confirmation": `Hi ${customerName},\n\nThank you for your order! We're excited to confirm that we've received your order and it's being processed.\n\n${orderDetails || "Your order details will be included here."}\n\nWe'll send you another email once your order ships. If you have any questions, please don't hesitate to reach out.\n\nBest regards,\nThe Team`,
@@ -67,17 +65,19 @@ export function EmailTemplates() {
       <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-6">
-            <Mail className="h-5 w-5 text-foreground" />
+            <Mail className="h-5 w-5 text-blue-600" />
             <h3 className="text-lg font-semibold text-foreground">Email Templates</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Input Section */}
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium text-foreground mb-2 block">Email Type</Label>
+                <Label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-foreground" />
+                  Email Type
+                </Label>
                 <Select value={emailType} onValueChange={setEmailType}>
-                  <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectTrigger className="bg-background border-border text-foreground" data-testid="select-email-type">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -91,21 +91,24 @@ export function EmailTemplates() {
               </div>
 
               <div>
-                <Label htmlFor="customerName" className="text-sm font-medium text-foreground mb-2 block">
+                <Label htmlFor="customerName" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <User className="h-4 w-4 text-foreground" />
                   Customer Name
                 </Label>
-                <input
+                <Input
                   id="customerName"
                   type="text"
                   placeholder="e.g., John Doe"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-md text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="bg-background border-border text-foreground"
+                  data-testid="input-customer-name"
                 />
               </div>
 
               <div>
-                <Label htmlFor="orderDetails" className="text-sm font-medium text-foreground mb-2 block">
+                <Label htmlFor="orderDetails" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-foreground" />
                   Additional Details (Optional)
                 </Label>
                 <Textarea
@@ -114,23 +117,21 @@ export function EmailTemplates() {
                   value={orderDetails}
                   onChange={(e) => setOrderDetails(e.target.value)}
                   className="bg-background border-border text-foreground min-h-[100px]"
+                  data-testid="input-order-details"
                 />
               </div>
 
               <Button
                 onClick={handleGenerate}
                 disabled={!customerName || isGenerating}
-                className={cn(
-                  "w-full",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="button-generate-email"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
                 {isGenerating ? "Generating..." : "Generate Email"}
               </Button>
             </div>
 
-            {/* Output Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-sm font-semibold text-foreground">Generated Email</Label>
@@ -141,6 +142,7 @@ export function EmailTemplates() {
                       size="sm"
                       onClick={handleCopy}
                       className="h-8"
+                      data-testid="button-copy-email"
                     >
                       <Copy className="h-3 w-3 mr-1" />
                       Copy
@@ -150,6 +152,7 @@ export function EmailTemplates() {
                       size="sm"
                       onClick={handleDownload}
                       className="h-8"
+                      data-testid="button-download-email"
                     >
                       <Download className="h-3 w-3 mr-1" />
                       Download
@@ -161,8 +164,8 @@ export function EmailTemplates() {
               <div className={cn(
                 "p-4 rounded-lg border min-h-[300px]",
                 generatedEmail
-                  ? "bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-900"
-                  : "bg-muted/50 border-border"
+                  ? "bg-blue-50/50 border-blue-200"
+                  : "bg-blue-50/30 border-blue-100"
               )}>
                 {generatedEmail ? (
                   <pre className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-sans">
@@ -181,8 +184,3 @@ export function EmailTemplates() {
     </div>
   )
 }
-
-
-
-
-

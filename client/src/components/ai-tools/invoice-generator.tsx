@@ -1,11 +1,9 @@
-
-
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Receipt, Wand2, Download, Plus, X } from "lucide-react"
+import { Receipt, Wand2, Download, Plus, X, Building2, User, Percent, Hash, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface InvoiceItem {
@@ -57,7 +55,6 @@ export function InvoiceGenerator() {
     if (!businessName || !customerName || !invoiceNumber) return
 
     setIsGenerating(true)
-    // Simulate AI generation
     setTimeout(() => {
       const { subtotal, tax, total } = calculateTotal()
       const invoice = `INVOICE
@@ -111,16 +108,16 @@ Thank you for your business!`
       <Card className="bg-card border-border">
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-6">
-            <Receipt className="h-5 w-5 text-foreground" />
+            <Receipt className="h-5 w-5 text-blue-600" />
             <h3 className="text-lg font-semibold text-foreground">Invoice Generator</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Input Section */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="invoiceNumber" className="text-sm font-medium text-foreground mb-2 block">
+                  <Label htmlFor="invoiceNumber" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-foreground" />
                     Invoice #
                   </Label>
                   <Input
@@ -130,10 +127,12 @@ Thank you for your business!`
                     value={invoiceNumber}
                     onChange={(e) => setInvoiceNumber(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-invoice-number"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="invoiceDate" className="text-sm font-medium text-foreground mb-2 block">
+                  <Label htmlFor="invoiceDate" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-foreground" />
                     Date
                   </Label>
                   <Input
@@ -142,42 +141,53 @@ Thank you for your business!`
                     value={invoiceDate}
                     onChange={(e) => setInvoiceDate(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-invoice-date"
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="text-sm font-semibold text-foreground mb-2 block">Business Information</Label>
+                <Label className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-foreground" />
+                  Business Information
+                </Label>
                 <div className="space-y-2">
                   <Input
                     placeholder="Business Name"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-business-name"
                   />
                   <Input
                     placeholder="Business Address"
                     value={businessAddress}
                     onChange={(e) => setBusinessAddress(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-business-address"
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="text-sm font-semibold text-foreground mb-2 block">Customer Information</Label>
+                <Label className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                  <User className="h-4 w-4 text-foreground" />
+                  Customer Information
+                </Label>
                 <div className="space-y-2">
                   <Input
                     placeholder="Customer Name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-customer-name"
                   />
                   <Input
                     placeholder="Customer Address"
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
                     className="bg-background border-border text-foreground"
+                    data-testid="input-customer-address"
                   />
                 </div>
               </div>
@@ -192,6 +202,7 @@ Thank you for your business!`
                         value={item.description}
                         onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                         className="flex-1 bg-background border-border text-foreground"
+                        data-testid={`input-item-desc-${item.id}`}
                       />
                       <Input
                         type="number"
@@ -199,6 +210,7 @@ Thank you for your business!`
                         value={item.quantity}
                         onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
                         className="w-20 bg-background border-border text-foreground"
+                        data-testid={`input-item-qty-${item.id}`}
                       />
                       <Input
                         type="number"
@@ -207,6 +219,7 @@ Thank you for your business!`
                         value={item.price}
                         onChange={(e) => updateItem(item.id, 'price', e.target.value)}
                         className="w-24 bg-background border-border text-foreground"
+                        data-testid={`input-item-price-${item.id}`}
                       />
                       {items.length > 1 && (
                         <Button
@@ -214,6 +227,7 @@ Thank you for your business!`
                           size="icon"
                           onClick={() => removeItem(item.id)}
                           className="h-10 w-10"
+                          data-testid={`button-remove-item-${item.id}`}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -224,6 +238,7 @@ Thank you for your business!`
                     variant="outline"
                     onClick={addItem}
                     className="w-full"
+                    data-testid="button-add-item"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Item
@@ -232,7 +247,8 @@ Thank you for your business!`
               </div>
 
               <div>
-                <Label htmlFor="taxRate" className="text-sm font-medium text-foreground mb-2 block">
+                <Label htmlFor="taxRate" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                  <Percent className="h-4 w-4 text-foreground" />
                   Tax Rate (%)
                 </Label>
                 <Input
@@ -243,23 +259,21 @@ Thank you for your business!`
                   value={taxRate}
                   onChange={(e) => setTaxRate(e.target.value)}
                   className="bg-background border-border text-foreground"
+                  data-testid="input-tax-rate"
                 />
               </div>
 
               <Button
                 onClick={handleGenerate}
                 disabled={!businessName || !customerName || !invoiceNumber || isGenerating}
-                className={cn(
-                  "w-full",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
-                )}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                data-testid="button-generate-invoice"
               >
                 <Wand2 className="h-4 w-4 mr-2" />
                 {isGenerating ? "Generating..." : "Generate Invoice"}
               </Button>
             </div>
 
-            {/* Output Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between mb-2">
                 <Label className="text-sm font-semibold text-foreground">Generated Invoice</Label>
@@ -269,6 +283,7 @@ Thank you for your business!`
                     size="sm"
                     onClick={handleDownload}
                     className="h-8"
+                    data-testid="button-download-invoice"
                   >
                     <Download className="h-3 w-3 mr-1" />
                     Download
@@ -279,8 +294,8 @@ Thank you for your business!`
               <div className={cn(
                 "p-4 rounded-lg border min-h-[400px] max-h-[600px] overflow-y-auto",
                 generatedInvoice
-                  ? "bg-cyan-50/50 dark:bg-cyan-950/20 border-cyan-200 dark:border-cyan-900"
-                  : "bg-muted/50 border-border"
+                  ? "bg-blue-50/50 border-blue-200"
+                  : "bg-blue-50/30 border-blue-100"
               )}>
                 {generatedInvoice ? (
                   <pre className="text-sm text-foreground whitespace-pre-wrap leading-relaxed font-mono">
@@ -291,7 +306,7 @@ Thank you for your business!`
                     <p className="text-sm text-muted-foreground">
                       Generated invoice will appear here...
                     </p>
-                    <div className="pt-4 border-t border-border">
+                    <div className="pt-4 border-t border-blue-100">
                       <div className="text-xs text-muted-foreground mb-2">Preview Totals:</div>
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
@@ -304,7 +319,7 @@ Thank you for your business!`
                             <span className="text-foreground">${tax.toFixed(2)}</span>
                           </div>
                         )}
-                        <div className="flex justify-between pt-2 border-t border-border font-semibold">
+                        <div className="flex justify-between pt-2 border-t border-blue-100 font-semibold">
                           <span className="text-foreground">Total:</span>
                           <span className="text-foreground">${total.toFixed(2)}</span>
                         </div>
@@ -320,8 +335,3 @@ Thank you for your business!`
     </div>
   )
 }
-
-
-
-
-
