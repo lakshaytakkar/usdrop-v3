@@ -164,7 +164,6 @@ export default function MyPlanPage() {
                 ? "bg-gradient-to-r from-amber-400 to-amber-500 text-white"
                 : "bg-gray-100 text-gray-700"
             }`}>
-              <Crown className="h-4 w-4" />
               {isPro ? "Pro Plan" : "Free Plan"}
             </div>
             <span className="text-sm ds-text-muted">
