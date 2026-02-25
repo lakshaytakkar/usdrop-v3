@@ -129,7 +129,7 @@ export default function GradientButton({
         <Button
             variant="ghost"
             className={cn(
-                "group relative h-12 px-4 rounded-lg overflow-hidden transition-all duration-500",
+                "group relative h-9 px-4 rounded-lg overflow-hidden transition-all duration-500",
                 className
             )}
             {...props}
@@ -206,7 +206,7 @@ export default function GradientButton({
                             const childElement = child as React.ReactElement<{ className?: string }>
                             return React.cloneElement(childElement, {
                                 className: cn(
-                                    "bg-linear-to-b bg-clip-text text-transparent",
+                                    "text-sm font-semibold bg-linear-to-b bg-clip-text text-transparent tracking-normal",
                                     colors.light.text,
                                     colors.dark.text,
                                     `dark:drop-shadow-[0_0_12px_${colors.dark.textGlow}]`,
@@ -219,7 +219,7 @@ export default function GradientButton({
                 ) : (
                     <span
                         className={cn(
-                            "text-lg font-light bg-linear-to-b bg-clip-text text-transparent tracking-tighter",
+                            "text-sm font-semibold bg-linear-to-b bg-clip-text text-transparent tracking-normal",
                             colors.light.text,
                             colors.dark.text,
                             `dark:drop-shadow-[0_0_12px_${colors.dark.textGlow}]`
