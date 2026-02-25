@@ -157,7 +157,7 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-3.5 py-2 text-[16px] font-bold tracking-[-0.01em] rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
+                      "px-2.5 py-2 text-[14px] font-bold tracking-[-0.01em] rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
                       isActive
                         ? "text-blue-700 bg-blue-50/80"
                         : "text-gray-800 hover:text-gray-950 hover:bg-white/60"

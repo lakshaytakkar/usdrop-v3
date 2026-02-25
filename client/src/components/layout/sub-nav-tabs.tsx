@@ -100,7 +100,6 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
 }
 
 const MAX_VISIBLE_TABS: Record<string, number> = {
-  Tools: 5,
   Framework: 7,
 }
 
