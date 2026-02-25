@@ -53,6 +53,7 @@ export interface NavGroup {
   iconSrc?: string
   items: NavItem[]
   isDropdown?: boolean
+  isNew?: boolean
 }
 
 export const externalNavGroups: NavGroup[] = [
@@ -114,6 +115,7 @@ export const externalNavGroups: NavGroup[] = [
     label: "AI Studio",
     icon: Palette,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
+    isNew: true,
     items: [
       { title: "Model Studio", icon: User, url: "/ai-studio/model-studio", isPro: true, isAiStudio: true },
       { title: "Whitelabelling", icon: Badge, url: "/ai-studio/whitelabelling", isPro: true, isAiStudio: true },
@@ -123,6 +125,7 @@ export const externalNavGroups: NavGroup[] = [
     label: "Tools",
     icon: Wrench,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
+    isNew: true,
     items: [
       { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
       { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },

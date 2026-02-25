@@ -160,6 +160,11 @@ export function AppTopNavigation() {
                     )}
                   >
                     {group.label}
+                    {group.isNew && (
+                      <span className="px-1.5 py-[1px] rounded text-[9px] font-bold uppercase leading-none tracking-wide bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                        New
+                      </span>
+                    )}
                     {isActive && (
                       <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-black rounded-full" />
                     )}
