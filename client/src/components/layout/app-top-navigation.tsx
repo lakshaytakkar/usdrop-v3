@@ -121,7 +121,7 @@ export function AppTopNavigation() {
   }
 
   const primaryGroups = externalNavGroups.filter(g => !g.isDropdown)
-  const defaultAvatar = isPro ? "/images/default-pro-avatar.png" : "https://avatar.iran.liara.run/public"
+  const resolvedAvatar = userData?.avatar_url || avatarUrl || (isPro ? "/images/default-pro-avatar.png" : "https://avatar.iran.liara.run/public")
 
   return (
     <>
@@ -198,7 +198,7 @@ export function AppTopNavigation() {
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer p-0" data-testid="button-user-menu">
                       <Avatar className="h-10 w-10">
                         <AvatarImage
-                          src={userData?.avatar_url || defaultAvatar}
+                          src={resolvedAvatar}
                           alt="User avatar"
                         />
                         <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
@@ -214,7 +214,7 @@ export function AppTopNavigation() {
                     <div className="flex items-center gap-3 px-2 py-2">
                       <Avatar className="h-10 w-10">
                         <AvatarImage
-                          src={userData?.avatar_url || defaultAvatar}
+                          src={resolvedAvatar}
                           alt="User avatar"
                         />
                         <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
