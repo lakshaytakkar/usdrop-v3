@@ -51,6 +51,6 @@ VITE_GEMINI_API_KEY = "AIzaSyAL0ukM4mYV1YNxr_DyYbhXhNZBOwmA9bY"
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["node", "dist/index.cjs"]
+run = ["node", "./dist/index.cjs"]
 build = ["npm", "run", "build"]
 publicDir = "public"
