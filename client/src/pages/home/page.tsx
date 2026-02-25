@@ -233,8 +233,8 @@ function MentorshipBanner() {
         />
       </div>
 
-      <div className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-0 p-6 md:p-8">
-        <div className="flex flex-col items-start gap-2">
+      <div className="relative grid grid-cols-1 md:grid-cols-[1fr_2fr] items-stretch gap-0 p-6 md:p-0">
+        <div className="flex flex-col items-start justify-center gap-3 md:p-8 md:pr-6">
           <span className="text-4xl md:text-5xl leading-none" role="img" aria-label="wave">👋</span>
           <div>
             <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
@@ -246,9 +246,9 @@ function MentorshipBanner() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 md:px-8 md:border-x md:border-white/10">
+        <div className="flex items-center gap-5 md:p-6 md:pl-6 md:border-l md:border-white/10">
           <div className="shrink-0">
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
+            <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
               <img
                 src="/images/mentor-suprans.png"
                 alt="Mr. Suprans - Your Mentor"
@@ -256,30 +256,50 @@ function MentorshipBanner() {
               />
             </div>
           </div>
-          <div className="min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-1">
               <GraduationCap className="h-3.5 w-3.5 text-blue-300" />
               <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
             </div>
-            <h3 className="text-base md:text-lg font-bold text-white mb-2">Mr. Suprans</h3>
-            <ul className="space-y-1">
+            <h3 className="text-lg md:text-xl font-bold text-white mb-2.5">Mr. Suprans</h3>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
               {mentorAchievements.map((item) => (
                 <li key={item} className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20">
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 shrink-0">
                     <Check className="h-2.5 w-2.5 text-emerald-400" />
                   </span>
-                  <span className="text-xs text-white/70">{item}</span>
+                  <span className="text-[13px] text-white/70">{item}</span>
                 </li>
               ))}
             </ul>
           </div>
+          <div className="hidden md:flex flex-col gap-2.5 shrink-0">
+            <a
+              href="mailto:info@suprans.in"
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20"
+              data-testid="button-email-mentor"
+            >
+              <Mail className="h-4 w-4" />
+              Send Email
+            </a>
+            <a
+              href="https://www.youtube.com/@suprans"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap"
+              data-testid="button-watch-intro"
+            >
+              <Play className="h-4 w-4" />
+              Watch Introduction
+            </a>
+          </div>
         </div>
 
-        <div className="flex flex-col items-start md:items-end gap-3">
+        <div className="flex md:hidden gap-2.5 mt-4">
           <a
             href="mailto:info@suprans.in"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20"
-            data-testid="button-email-mentor"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
+            data-testid="button-email-mentor-mobile"
           >
             <Mail className="h-4 w-4" />
             Send Email
@@ -288,11 +308,11 @@ function MentorshipBanner() {
             href="https://www.youtube.com/@suprans"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap"
-            data-testid="button-watch-intro"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1"
+            data-testid="button-watch-intro-mobile"
           >
             <Play className="h-4 w-4" />
-            Watch Introduction
+            Watch Intro
           </a>
         </div>
       </div>
