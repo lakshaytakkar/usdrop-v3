@@ -64,6 +64,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "My Store", icon: ShoppingBag, url: "/framework/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },
       { title: "My Learning", icon: GraduationCap, url: "/framework/my-learning", isPro: false },
+      { title: "My Sessions", icon: MonitorPlay, url: "/framework/my-sessions", isPro: false },
       { title: "My R&D", icon: FlaskConical, url: "/framework/my-rnd", isPro: false },
       { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
       { title: "My Credentials", icon: KeyRound, url: "/framework/my-credentials", isPro: false },
@@ -136,7 +137,6 @@ export const externalNavGroups: NavGroup[] = [
     items: [
       { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true, iconSrc: "/3d-ecom-icons-blue/My_Store.png", description: "Connect and manage your Shopify stores" },
       { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true, iconSrc: "/3d-ecom-icons-blue/Open_Board.png", description: "Latest e-commerce insights and guides" },
-      { title: "Webinars", icon: Video, url: "/webinars", isPro: true, iconSrc: "/3d-ecom-icons-blue/Webinar_Video.png", description: "Live sessions with industry experts" },
     ],
   },
 ]

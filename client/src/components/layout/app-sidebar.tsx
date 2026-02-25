@@ -119,10 +119,10 @@ const aiLearnItems: SidebarItem[] = [
     isPro: true,
   },
   {
-    title: "Webinars",
+    title: "Sessions",
     icon: Video,
-    url: "/webinars",
-    isPro: true,
+    url: "/framework/my-sessions",
+    isPro: false,
   },
 ]
 

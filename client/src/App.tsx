@@ -100,6 +100,7 @@ import WhoIsThisFor from "@/pages/who-is-this-for/page";
 import HelpCenter from "@/pages/help-center/page";
 import HelpPage from "@/pages/help/page";
 import WebinarsPage from "@/pages/webinars/page";
+import MySessionsPage from "@/pages/my-sessions/page";
 import ModelStudio from "@/pages/studio/model-studio/page";
 import Whitelabelling from "@/pages/studio/whitelabelling/page";
 import ResourcesPage from "@/pages/resources/page";
@@ -229,7 +230,6 @@ function Router() {
       <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />
       <Route path="/help-center" component={() => <AppLayout><HelpCenter /></AppLayout>} />
       <Route path="/help" component={() => <AppLayout><HelpPage /></AppLayout>} />
-      <Route path="/webinars" component={() => <AppLayout><WebinarsPage /></AppLayout>} />
       <Route path="/studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
       <Route path="/studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
       <Route path="/tools/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
@@ -243,6 +243,7 @@ function Router() {
       <Route path="/framework/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
       <Route path="/framework/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
       <Route path="/framework/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
+      <Route path="/framework/my-sessions" component={() => <AppLayout><MySessionsPage /></AppLayout>} />
       <Route path="/framework/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
       <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
       <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
@@ -257,6 +258,8 @@ function Router() {
       <Route path="/my-learning"><Redirect to="/framework/my-learning" /></Route>
       <Route path="/my-learning/:id">{(params) => <Redirect to={`/framework/my-learning/${params.id}`} />}</Route>
       <Route path="/my-rnd"><Redirect to="/framework/my-rnd" /></Route>
+      <Route path="/my-sessions"><Redirect to="/framework/my-sessions" /></Route>
+      <Route path="/webinars"><Redirect to="/framework/my-sessions" /></Route>
       <Route path="/framework/my-llc"><Redirect to="/llc" /></Route>
       <Route path="/my-profile"><Redirect to="/framework/my-profile" /></Route>
       <Route path="/my-credentials"><Redirect to="/framework/my-credentials" /></Route>
