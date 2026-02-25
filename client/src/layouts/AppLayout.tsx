@@ -3,6 +3,8 @@ import { SubNavTabs } from "@/components/layout/sub-nav-tabs";
 import { Toaster } from "@/components/ui/toast";
 import { VerifyEmailBanner } from "@/components/feedback/banners/verify-email-banner";
 import { ContactTeamButton } from "@/components/ui/contact-team-button";
+import { MobileDesktopBanner } from "@/components/layout/mobile-desktop-banner";
+import { PwaInstallPrompt } from "@/components/layout/pwa-install-prompt";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -20,6 +22,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
       <Toaster />
       <ContactTeamButton />
+      <MobileDesktopBanner />
+      <PwaInstallPrompt />
     </div>
   );
 }
