@@ -129,8 +129,8 @@ function CourseDetailContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col h-[calc(100vh-4rem)] overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b bg-background">
+        <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
             <button
               onClick={handleClose}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -150,7 +150,7 @@ function CourseDetailContent() {
           </div>
 
           <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-            <div className="w-full lg:w-[400px] border-r bg-background overflow-hidden flex-shrink-0">
+            <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
               <CourseSidebar
                 course={course}
                 selectedModuleId={selectedModuleId}
@@ -158,28 +158,34 @@ function CourseDetailContent() {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-gray-50/50">
+            <div className="flex-1 flex flex-col overflow-hidden">
               {currentModule ? (
-                <div className="p-6 space-y-6">
-                  <CourseVideoPlayer
-                    module={currentModule}
-                    courseId={courseId}
-                    moduleId={selectedModuleId!}
-                  />
-
-                  <div>
-                    <h2 className="text-xl font-semibold">{currentModule.title}</h2>
-                    {currentModule.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{currentModule.description}</p>
-                    )}
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <div className="flex-shrink-0">
+                    <CourseVideoPlayer
+                      module={currentModule}
+                      courseId={courseId}
+                      moduleId={selectedModuleId!}
+                    />
                   </div>
 
-                  <CourseContentTabs
-                    module={currentModule}
-                  />
+                  <div className="flex items-center justify-between px-4 py-2 border-t">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-sm font-semibold truncate">{currentModule.title}</h2>
+                      {currentModule.description && (
+                        <p className="text-xs text-muted-foreground truncate">{currentModule.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto px-4 pb-2">
+                    <CourseContentTabs
+                      module={currentModule}
+                    />
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-full p-8">
+                <div className="flex items-center justify-center h-full p-4">
                   <p className="text-muted-foreground">Select a module to view content</p>
                 </div>
               )}

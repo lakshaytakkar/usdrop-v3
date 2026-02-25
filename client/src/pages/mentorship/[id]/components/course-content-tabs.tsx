@@ -12,16 +12,16 @@ interface CourseContentTabsProps {
 export function CourseContentTabs({ module }: CourseContentTabsProps) {
   return (
     <Tabs defaultValue="files" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="files">Files</TabsTrigger>
-        <TabsTrigger value="notes">Notes</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 h-8">
+        <TabsTrigger value="files" className="text-xs">Files</TabsTrigger>
+        <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="files" className="mt-6">
+      <TabsContent value="files" className="mt-2">
         <FilesTab module={module} />
       </TabsContent>
 
-      <TabsContent value="notes" className="mt-6">
+      <TabsContent value="notes" className="mt-2">
         <NotesTab moduleId={module.id} />
       </TabsContent>
     </Tabs>
