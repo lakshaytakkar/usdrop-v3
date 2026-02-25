@@ -11,7 +11,9 @@ import {
   Mail,
   Sparkles,
   GraduationCap,
+  Check,
 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 
 import { Link } from "wouter"
 
@@ -193,72 +195,105 @@ function HowToUseSection() {
   )
 }
 
+const mentorAchievements = [
+  "100+ Students Mentored",
+  "USA Dropshipping Expert",
+  "1-on-1 Guidance",
+  "Proven Framework",
+]
+
 function MentorshipBanner() {
+  const { user } = useAuth()
+  const firstName = user?.full_name?.split(" ")[0] || "there"
+
   return (
     <div
       className="relative overflow-hidden rounded-2xl"
       style={{
-        background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 30%, #8b5cf6 55%, #a855f7 75%, #ec4899 100%)',
+        background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
       }}
       data-testid="banner-mentorship"
     >
-      <div className="absolute inset-0 overflow-hidden">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+        <filter id="noiseFilter">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+      </svg>
+
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20"
-          style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)' }}
+          className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08]"
+          style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
         />
         <div
-          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full opacity-15"
-          style={{ background: 'radial-gradient(circle, #38bdf8 0%, transparent 70%)' }}
+          className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)' }}
         />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.07]"
-          style={{ background: 'radial-gradient(circle, white 0%, transparent 50%)' }}
-        />
-        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" viewBox="0 0 400 200">
-          <circle cx="50" cy="30" r="40" fill="white" />
-          <circle cx="350" cy="160" r="50" fill="white" />
-          <circle cx="200" cy="100" r="30" fill="white" />
-          <circle cx="320" cy="40" r="20" fill="white" />
-          <circle cx="80" cy="150" r="25" fill="white" />
-        </svg>
       </div>
 
-      <div className="relative flex items-center gap-5 md:gap-8 p-6 md:p-8">
-        <div className="shrink-0">
-          <div className="w-20 h-20 md:w-[104px] md:h-[104px] rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-2xl bg-white">
-            <img
-              src="/images/mentor-suprans.png"
-              alt="Mr. Suprans - Your Mentor"
-              className="w-full h-full object-cover"
-            />
+      <div className="relative grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-6 md:gap-0 p-6 md:p-8">
+        <div className="flex flex-col items-start gap-2">
+          <span className="text-4xl md:text-5xl leading-none" role="img" aria-label="wave">👋</span>
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white">
+              Welcome, {firstName}
+            </h2>
+            <p className="text-white/50 text-sm font-medium mt-1">
+              Let's build your business today
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-sm">
-              <GraduationCap className="h-3 w-3 text-amber-200" />
-              <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-amber-100">Your Mentor</span>
+        <div className="flex items-center gap-4 md:px-8 md:border-x md:border-white/10">
+          <div className="shrink-0">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
+              <img
+                src="/images/mentor-suprans.png"
+                alt="Mr. Suprans - Your Mentor"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">Mr. Suprans</h2>
-          <p className="text-white/70 text-sm md:text-base font-medium">
-            USA Dropshipping Mentorship
-          </p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 mb-1">
+              <GraduationCap className="h-3.5 w-3.5 text-blue-300" />
+              <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
+            </div>
+            <h3 className="text-base md:text-lg font-bold text-white mb-2">Mr. Suprans</h3>
+            <ul className="space-y-1">
+              {mentorAchievements.map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20">
+                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                  </span>
+                  <span className="text-xs text-white/70">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-3">
+        <div className="flex flex-col items-start md:items-end gap-3">
           <a
             href="mailto:info@suprans.in"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-indigo-600 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/10"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20"
             data-testid="button-email-mentor"
           >
             <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Send Email</span>
-            <span className="sm:hidden">Email</span>
+            Send Email
           </a>
-          <span className="text-[10px] text-white/40 hidden md:block">info@suprans.in</span>
+          <a
+            href="https://www.youtube.com/@suprans"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap"
+            data-testid="button-watch-intro"
+          >
+            <Play className="h-4 w-4" />
+            Watch Introduction
+          </a>
         </div>
       </div>
     </div>

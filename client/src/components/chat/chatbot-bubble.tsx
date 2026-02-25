@@ -30,7 +30,7 @@ export function ChatbotBubble() {
         <div className="relative">
           <Avatar className="h-10 w-10 ring-2 ring-primary/20">
             <AvatarImage 
-              src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
+              src="/images/default-avatar.png" 
               alt={pocName} 
             />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">

@@ -174,7 +174,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage 
-                src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
+                src="/images/default-avatar.png" 
                 alt={pocName} 
               />
               <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -203,7 +203,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
               {message.sender === "bot" && (
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage 
-                    src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
+                    src="/images/default-avatar.png" 
                     alt={pocName} 
                   />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -235,7 +235,7 @@ export function ChatbotDialog({ isOpen, onClose, relationshipManagerNumber, pocN
             <div className="flex gap-3 justify-start">
               <Avatar className="h-8 w-8 flex-shrink-0">
                 <AvatarImage 
-                  src={`https://api.dicebear.com/7.x/micah/png?seed=${encodeURIComponent(pocName)}`} 
+                  src="/images/default-avatar.png" 
                   alt={pocName} 
                 />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
