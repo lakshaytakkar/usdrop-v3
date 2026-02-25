@@ -17,45 +17,39 @@ import { Link } from "wouter"
 const howToCards = [
   {
     title: "Trending Products",
-    points: ["Hot Sellers", "Daily Updated"],
+    subtitle: "Find today's hottest selling products.",
     href: "/products/product-hunt",
     thumbnail: "/thumbnails/trending-products.png",
-    iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
   },
   {
     title: "Competitors' List",
-    points: ["Top Stores", "Sales Data"],
+    subtitle: "Spy on top stores and their best sellers.",
     href: "/products/competitor-stores",
     thumbnail: "/thumbnails/competitor-stores.png",
-    iconSrc: "/3d-ecom-icons-blue/Competitor_Search.png",
   },
   {
     title: "Mentorship",
-    points: ["Expert Courses", "Step-by-Step"],
+    subtitle: "Learn step-by-step from expert mentors.",
     href: "/mentorship",
     thumbnail: "/thumbnails/mentorship-learning.png",
-    iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
   },
   {
     title: "Marketing & Ads",
-    points: ["Winning Ads", "Strategies"],
+    subtitle: "Discover winning ad creatives and strategies.",
     href: "/ads/meta-ads",
     thumbnail: "/thumbnails/marketing-ads.png",
-    iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
   },
   {
     title: "Private Suppliers",
-    points: ["Verified", "Fast Shipping"],
+    subtitle: "Connect with verified US suppliers.",
     href: "/private-supplier",
     thumbnail: "/thumbnails/suppliers-shipping.png",
-    iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
   },
   {
     title: "AI Studio",
-    points: ["Whitelabel", "Branded Content"],
+    subtitle: "Create branded content with AI tools.",
     href: "/studio/whitelabelling",
     thumbnail: "/thumbnails/ai-studio.png",
-    iconSrc: "/3d-ecom-icons-blue/Paint_Palette.png",
   },
 ]
 
@@ -177,19 +171,17 @@ function HowToUseSection() {
                 decoding="async"
               />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/5 transition-opacity duration-300 group-hover:from-black/80 group-hover:via-black/50 group-hover:to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent transition-all duration-300 group-hover:from-black/75 group-hover:via-black/45 group-hover:to-black/25" />
 
-              <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/25" />
-
-              <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-[18px] font-bold text-white tracking-[-0.01em] leading-tight">
+              <div className="absolute bottom-0 left-0 right-0 p-6 z-10 transition-transform duration-300 ease-out group-hover:-translate-y-2">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <h3 className="text-[22px] font-extrabold text-white uppercase tracking-[0.04em] leading-none">
                     {card.title}
                   </h3>
-                  <ArrowRight className="w-5 h-5 text-white transition-all duration-300 group-hover:text-[#6366F1] group-hover:translate-x-1" />
+                  <ArrowRight className="w-6 h-6 text-white/80 transition-all duration-300 group-hover:text-white group-hover:translate-x-1" />
                 </div>
-                <p className="text-[13px] text-white/70 leading-[20px]">
-                  {card.points.join(" · ")}
+                <p className="text-[14px] text-white/70 leading-[1.4] font-normal">
+                  {card.subtitle}
                 </p>
               </div>
             </div>
