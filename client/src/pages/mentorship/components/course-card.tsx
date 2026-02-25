@@ -78,21 +78,6 @@ export function CourseCard({ course, isLocked = false, onLockedClick }: CourseCa
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <div className="flex items-center gap-0.5">
-            <Clock className="h-2.5 w-2.5" />
-            <span>{course.duration}</span>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <Book className="h-2.5 w-2.5" />
-            <span>{course.lessons}</span>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <Users className="h-2.5 w-2.5" />
-            <span>{numberFormatter.format(course.students)}</span>
-          </div>
-        </div>
-
         {progress > 0 && (
           <div>
             <div className="flex items-center justify-between text-[10px] mb-0.5">
