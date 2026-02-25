@@ -73,6 +73,7 @@ import StoreResearch from "@/pages/store-research/page";
 import ResearchTools from "@/pages/research-tools/page";
 import IntelligenceHub from "@/pages/intelligence-hub/page";
 import MetaAds from "@/pages/meta-ads/page";
+import VideosPage from "@/pages/videos/page";
 import SellingChannels from "@/pages/selling-channels/page";
 import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
@@ -204,6 +205,7 @@ function Router() {
 
       {/* Ads — /ads/* */}
       <Route path="/ads/meta-ads" component={() => <AppLayout><MetaAds /></AppLayout>} />
+      <Route path="/ads/videos" component={() => <AppLayout><VideosPage /></AppLayout>} />
 
       {/* Private Supplier */}
       <Route path="/private-supplier" component={() => <AppLayout><SuppliersPage /></AppLayout>} />

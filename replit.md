@@ -69,3 +69,5 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **Shopify Stores page**: Added FrameworkBanner, Connect Store button in header, and a green gradient cross-sell banner promoting Shopify Website Development (links to `/llc` Elite plan).
 - **LLC Elite plan**: Renamed "Shopify Store Setup" to "Shopify Website Development" with green highlight row and "New" badge in the comparison table.
 - **Dashboard background**: Removed pastel gradient overlay to match the clean `#F5F5F7` app background.
+- **Videos Page** (`/ads/videos`): Product video library in reels format (9:16 portrait cards). 30 sample videos with dropshipping product titles. Hover-to-play VideoCard component. Category filter pills + search. 5-column responsive grid. Registered under the "Ads" nav group alongside Meta Ads. Files: `client/src/pages/videos/` (page, data, components).
+- **Logo Loader**: Animated text-based loader component (`client/src/components/ui/logo-loader.tsx`) with "USDrop AI" pulsing text and bouncing dots. No background, uses the logo font. Configurable message with animated ellipsis.

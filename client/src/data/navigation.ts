@@ -92,6 +92,7 @@ export const externalNavGroups: NavGroup[] = [
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
     items: [
       { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true },
+      { title: "Videos", icon: Video, url: "/ads/videos", isPro: true },
     ],
   },
   {
