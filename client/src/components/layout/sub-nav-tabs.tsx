@@ -40,13 +40,13 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     showSearch: false,
     actions: [],
   },
-  Ads: {
+  "Videos and Ads": {
     searchPlaceholder: "Search ad creatives, strategies, and campaigns...",
     showSearch: true,
     actions: [
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
-    videoTutorialTitle: "Ads Page Video Tutorial",
+    videoTutorialTitle: "Videos & Ads Video Tutorial",
   },
   "LLC": {
     searchPlaceholder: "",
@@ -104,6 +104,9 @@ function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
         isLocked && "opacity-50"
       )}
     >
+      {item.iconSrc && (
+        <img src={item.iconSrc} alt="" className="h-4 w-4 shrink-0" />
+      )}
       <span>{showNumbering ? `${index + 1}) ${item.title}` : item.title}</span>
       {item.isAiStudio && (
         <span className={cn(
