@@ -97,7 +97,11 @@ export default function MyLLCPage() {
       <div className="max-w-5xl mx-auto w-full space-y-20 lg:space-y-28">
 
         <div className="text-center space-y-6">
-          <p className="text-[11px] font-bold text-[#999] uppercase tracking-[0.12em]">LLC Formation</p>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FAFAFA] border border-black/[0.06]">
+            <span className="text-[13px] font-bold text-black tracking-[-0.2px]">USDrop</span>
+            <span className="text-[13px] text-[#999] font-medium">×</span>
+            <span className="text-[13px] font-bold text-black tracking-[-0.2px]">LegalNations</span>
+          </div>
           <h1
             className="text-[40px] md:text-[52px] font-bold text-black leading-[1.08] tracking-[-1.5px] md:tracking-[-2px]"
             data-testid="text-llc-title"
@@ -105,8 +109,28 @@ export default function MyLLCPage() {
             Form Your US LLC
           </h1>
           <p className="text-[17px] md:text-[19px] text-[#666] max-w-xl mx-auto leading-[1.5]">
-            The foundation for marketplace approvals, payment processing, and legal protection.
+            We've partnered with LegalNations to bring you the most affordable and trusted LLC formation for dropshippers.
           </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-1">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-[13px] text-[#555] font-medium">Govt-Registered Agent</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-[13px] text-[#555] font-medium">5,000+ LLCs Formed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-[13px] text-[#555] font-medium">BBB Accredited</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span className="text-[13px] text-[#555] font-medium">Lowest Price Guarantee</span>
+            </div>
+          </div>
+
           <div className="pt-2">
             <a
               href="https://legalnations.com/usdrop-elite"
