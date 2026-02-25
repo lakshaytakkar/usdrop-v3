@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -280,6 +281,12 @@ export default function MetaAdsPage() {
   const [selectedAd, setSelectedAd] = useState<MetaAd | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showPerPage, setShowPerPage] = useState("one")
+  const [toolbarTarget, setToolbarTarget] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    const el = document.getElementById("subnav-custom-toolbar")
+    if (el) setToolbarTarget(el)
+  }, [])
 
   const setFilter = (key: keyof FilterState, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -347,8 +354,102 @@ export default function MetaAdsPage() {
     (v) => v !== "all"
   ).length
 
+  const toolbarContent = (
+    <>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+          <Search className="h-4 w-4 text-[#999] shrink-0" />
+          <input
+            type="text"
+            placeholder="Search advertisers, categories, links..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-[#999] outline-none"
+            data-testid="input-search-ads"
+          />
+        </div>
+
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-[170px] h-10 bg-white text-sm border-black/[0.06]" data-testid="select-sort-ads">
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400">↕</span>
+              <SelectValue placeholder="Sort by" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="publication">Publication date</SelectItem>
+            <SelectItem value="impressions">Impressions</SelectItem>
+            <SelectItem value="engagement">Engagement</SelectItem>
+            <SelectItem value="active-ads">Active ads count</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex rounded-lg border border-black/[0.06] bg-white overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={cn(
+              "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer",
+              viewMode === "grid"
+                ? "bg-black text-white"
+                : "text-gray-400 hover:bg-gray-50"
+            )}
+            data-testid="button-view-grid"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer border-l border-black/[0.06]",
+              viewMode === "list"
+                ? "bg-black text-white"
+                : "text-gray-400 hover:bg-gray-50"
+            )}
+            data-testid="button-view-list"
+          >
+            <List className="h-4 w-4" />
+          </button>
+        </div>
+
+        <Select value={showPerPage} onValueChange={setShowPerPage}>
+          <SelectTrigger className="h-10 w-[180px] text-[13px] bg-white border-black/[0.06]">
+            <SelectValue placeholder="Show" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="one">Show one ad per page</SelectItem>
+            <SelectItem value="multiple">Show all ads per page</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {quickFilterOptions.map((qf) => (
+          <button
+            key={qf.label}
+            onClick={() =>
+              setActiveQuickFilter(
+                activeQuickFilter === qf.label ? null : qf.label
+              )
+            }
+            className={cn(
+              "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
+              activeQuickFilter === qf.label
+                ? "bg-black text-white border-black"
+                : "bg-white text-[#666] border-black/[0.06] hover:border-black/[0.12] hover:text-black"
+            )}
+            data-testid={`button-quickfilter-${qf.label.replace(/\s/g, "-").toLowerCase()}`}
+          >
+            {(() => { const QfIcon = quickFilterIconMap[qf.icon]; return QfIcon ? <QfIcon className="h-3.5 w-3.5" /> : null })()}
+            <span>{qf.label}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+
   return (
     <>
+      {toolbarTarget && createPortal(toolbarContent, toolbarTarget)}
       <div className="flex flex-col flex-1">
         <div className="px-12 md:px-20 lg:px-32 pt-6">
           <FrameworkBanner
@@ -366,97 +467,6 @@ export default function MetaAdsPage() {
 
           <div className="flex-1 flex flex-col gap-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search advertisers, categories, links..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-10 pl-10 pr-4 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                    data-testid="input-search-ads"
-                  />
-                </div>
-
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-[170px] h-10 bg-white text-sm" data-testid="select-sort-ads">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-gray-400">↕</span>
-                      <SelectValue placeholder="Sort by" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="publication">Publication date</SelectItem>
-                    <SelectItem value="impressions">Impressions</SelectItem>
-                    <SelectItem value="engagement">Engagement</SelectItem>
-                    <SelectItem value="active-ads">Active ads count</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="flex rounded-lg border border-gray-200 bg-white overflow-hidden">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={cn(
-                      "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer",
-                      viewMode === "grid"
-                        ? "bg-black text-white"
-                        : "text-gray-400 hover:bg-gray-50"
-                    )}
-                    data-testid="button-view-grid"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={cn(
-                      "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer border-l border-gray-200",
-                      viewMode === "list"
-                        ? "bg-black text-white"
-                        : "text-gray-400 hover:bg-gray-50"
-                    )}
-                    data-testid="button-view-list"
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap">
-                {quickFilterOptions.map((qf) => (
-                  <button
-                    key={qf.label}
-                    onClick={() =>
-                      setActiveQuickFilter(
-                        activeQuickFilter === qf.label ? null : qf.label
-                      )
-                    }
-                    className={cn(
-                      "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
-                      activeQuickFilter === qf.label
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-[#666] border-black/[0.06] hover:border-black/[0.12] hover:text-black"
-                    )}
-                    data-testid={`button-quickfilter-${qf.label.replace(/\s/g, "-").toLowerCase()}`}
-                  >
-                    {(() => { const QfIcon = quickFilterIconMap[qf.icon]; return QfIcon ? <QfIcon className="h-3.5 w-3.5" /> : null })()}
-                    <span>{qf.label}</span>
-                  </button>
-                ))}
-
-                <div className="ml-auto flex items-center gap-2">
-                  <Select value={showPerPage} onValueChange={setShowPerPage}>
-                    <SelectTrigger className="h-8 w-[180px] text-[12px] bg-white border-gray-200">
-                      <SelectValue placeholder="Show" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="one">Show one ad per page</SelectItem>
-                      <SelectItem value="multiple">Show all ads per page</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               {activeFilterCount > 0 && (
                 <div className="flex items-center gap-2">
                   <span className="text-[12px] font-medium text-gray-600">

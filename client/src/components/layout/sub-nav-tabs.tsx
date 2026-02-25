@@ -136,6 +136,7 @@ export function SubNavTabs() {
   const hasTabs = activeGroup.items.length > 1
   const isDetailPage = /\/products\/product-hunt\/[^/]+$/.test(pathname || "")
   if (isDetailPage) return null
+  const isMetaAdsPage = pathname === "/ads/meta-ads"
   const hideToolbar = pathname?.includes('/categories') || pathname?.includes('/seasonal-collections')
   const toolbar = toolbarConfigs[activeGroup.label] || {
     searchPlaceholder: "Search...",
@@ -143,7 +144,8 @@ export function SubNavTabs() {
   }
 
   const hasToolbar = !hideToolbar && (toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0))
-  if (!hasTabs && !hasToolbar) return null
+  const hasCustomToolbar = isMetaAdsPage
+  if (!hasTabs && !hasToolbar && !hasCustomToolbar) return null
 
   const showNumbering = activeGroup.label === "Framework"
 
@@ -221,7 +223,9 @@ export function SubNavTabs() {
           )}
         </div>}
 
-        {toolbar.showSearch && !hideToolbar && (
+        {hasCustomToolbar ? (
+          <div id="subnav-custom-toolbar" className="space-y-2" />
+        ) : toolbar.showSearch && !hideToolbar ? (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
               <SlidersHorizontal className="h-4 w-4 text-[#999] shrink-0" />
@@ -287,7 +291,7 @@ export function SubNavTabs() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
 
         </div>
