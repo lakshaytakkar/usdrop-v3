@@ -88,18 +88,18 @@ export function StepsSection() {
                   className={`flex flex-col gap-10 lg:gap-16 items-center ${isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
                   data-testid={`card-step-${step.number}`}
                 >
-                  <div className="w-full lg:w-[55%] flex-shrink-0">
-                    <div className="rounded-[20px] overflow-hidden bg-[#F8F8FA] border border-black/[0.04] aspect-video">
+                  <div className="w-full lg:w-[60%] flex-shrink-0">
+                    <div className="rounded-[20px] overflow-hidden bg-[#F8F8FA] border border-black/[0.04] shadow-lg">
                       <img
                         src={step.image}
                         alt={step.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-auto object-contain"
                         decoding="async"
                       />
                     </div>
                   </div>
 
-                  <div className="w-full lg:w-[45%]">
+                  <div className="w-full lg:w-[40%]">
                     <p className="text-[12px] font-bold text-[#6366F1] uppercase tracking-[0.12em] mb-4">
                       Step {step.number} — {step.badge}
                     </p>
