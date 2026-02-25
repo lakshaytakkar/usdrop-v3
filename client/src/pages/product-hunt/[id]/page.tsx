@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Star,
   Share2,
-  Sparkles,
+  ExternalLink,
   ArrowUp,
   ChevronLeft,
   ChevronRight,
@@ -289,10 +289,6 @@ export default function ProductDetailPage() {
     }
   }
 
-  const handleGenerateAI = () => {
-    router.push(`/tools?productId=${productId}`)
-  }
-
   const productSlug = createProductSlug(product.title)
   const aliExpressUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(productSlug)}`
   const amazonUrl = `https://www.amazon.com/s?k=${encodeURIComponent(productSlug)}`
@@ -349,21 +345,21 @@ export default function ProductDetailPage() {
                   )}
                 </Button>
                 <Button
-                  onClick={handleGenerateAI}
+                  onClick={() => window.open(aliExpressUrl, "_blank")}
                   variant="default"
                   size="sm"
-                  className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
-                  title="AI Studio"
+                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
+                  title="Find on AliExpress"
                 >
-                  <Sparkles className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden md:inline">AI Studio</span>
+                  <ExternalLink className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden md:inline">Find Supplier</span>
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 max-w-full overflow-x-hidden min-w-0 w-full">
+          <div className="flex flex-1 flex-col gap-6 px-6 md:px-12 lg:px-20 py-6 md:py-8 max-w-full overflow-x-hidden min-w-0 w-full">
             <div className="w-full space-y-8 min-w-0 max-w-full">
 
               {/* Product Hero: Images + Info */}

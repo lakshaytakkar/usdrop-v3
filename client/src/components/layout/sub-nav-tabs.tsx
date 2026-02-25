@@ -134,6 +134,8 @@ export function SubNavTabs() {
   if (!activeGroup) return null
 
   const hasTabs = activeGroup.items.length > 1
+  const isDetailPage = /\/products\/product-hunt\/[^/]+$/.test(pathname || "")
+  if (isDetailPage) return null
   const hideToolbar = pathname?.includes('/categories') || pathname?.includes('/seasonal-collections')
   const toolbar = toolbarConfigs[activeGroup.label] || {
     searchPlaceholder: "Search...",
