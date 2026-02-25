@@ -135,7 +135,7 @@ function FilterSidebar({
 }) {
   return (
     <aside className="w-[220px] shrink-0 hidden lg:block overflow-y-auto">
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-0">
+      <div className="bg-white rounded-xl border border-black/[0.06] p-4 sticky top-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 ds-label">
             <Filter className="h-4 w-4" />
@@ -356,19 +356,7 @@ export default function MetaAdsPage() {
             onReset={resetFilters}
           />
 
-          <div className="flex-1 flex flex-col gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 md:p-5 overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h1 className="ds-page-title" data-testid="text-page-title">Meta Ads</h1>
-              <button
-                onClick={() => {}}
-                className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-                data-testid="button-mobile-filters"
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-              </button>
-            </div>
-
+          <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
@@ -404,7 +392,7 @@ export default function MetaAdsPage() {
                     className={cn(
                       "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer",
                       viewMode === "grid"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-black text-white"
                         : "text-gray-400 hover:bg-gray-50"
                     )}
                     data-testid="button-view-grid"
@@ -416,7 +404,7 @@ export default function MetaAdsPage() {
                     className={cn(
                       "h-10 w-10 flex items-center justify-center transition-colors cursor-pointer border-l border-gray-200",
                       viewMode === "list"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-black text-white"
                         : "text-gray-400 hover:bg-gray-50"
                     )}
                     data-testid="button-view-list"
@@ -438,8 +426,8 @@ export default function MetaAdsPage() {
                     className={cn(
                       "inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
                       activeQuickFilter === qf.label
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-[#666] border-black/[0.06] hover:border-black/[0.12] hover:text-black"
                     )}
                     data-testid={`button-quickfilter-${qf.label.replace(/\s/g, "-").toLowerCase()}`}
                   >
