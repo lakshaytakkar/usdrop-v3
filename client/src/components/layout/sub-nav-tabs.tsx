@@ -87,10 +87,21 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
     videoTutorialTitle: "Marketplaces Page Video Tutorial",
   },
+  "AI Studio": {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [
+      { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
+    ],
+    videoTutorialTitle: "AI Studio Video Tutorial",
+  },
   Tools: {
     searchPlaceholder: "",
     showSearch: false,
-    actions: [],
+    actions: [
+      { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
+    ],
+    videoTutorialTitle: "Tools Video Tutorial",
   },
   Resources: {
     searchPlaceholder: "",

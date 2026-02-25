@@ -115,9 +115,6 @@ export const externalNavGroups: NavGroup[] = [
     items: [
       { title: "Model Studio", icon: User, url: "/ai-studio/model-studio", isPro: true, isAiStudio: true },
       { title: "Whitelabelling", icon: Badge, url: "/ai-studio/whitelabelling", isPro: true, isAiStudio: true },
-      { title: "Description Generator", icon: PenTool, url: "/ai-studio/description-generator", isPro: true, isAiStudio: true },
-      { title: "Email Templates", icon: Mail, url: "/ai-studio/email-templates", isPro: true, isAiStudio: true },
-      { title: "Policy Generator", icon: Shield, url: "/ai-studio/policy-generator", isPro: true, isAiStudio: true },
     ],
   },
   {
@@ -125,6 +122,9 @@ export const externalNavGroups: NavGroup[] = [
     icon: Wrench,
     iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
     items: [
+      { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
+      { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
+      { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
       { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
       { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
       { title: "Shipping Calculator", icon: Truck, url: "/tools/shipping-calculator", isPro: true },

@@ -214,6 +214,9 @@ function Router() {
       <Route path="/ai-studio/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
       <Route path="/ai-studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
       <Route path="/ai-studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
+      <Route path="/tools/description-generator" component={() => <AppLayout><DescriptionGenerator /></AppLayout>} />
+      <Route path="/tools/email-templates" component={() => <AppLayout><EmailTemplates /></AppLayout>} />
+      <Route path="/tools/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
       <Route path="/tools/invoice-generator" component={() => <AppLayout><InvoiceGenerator /></AppLayout>} />
       <Route path="/tools/profit-calculator" component={() => <AppLayout><ProfitCalculator /></AppLayout>} />
       <Route path="/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
