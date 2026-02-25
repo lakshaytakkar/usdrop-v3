@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Sparkles,
   Wrench,
+  ClipboardCheck,
 } from "lucide-react"
 import { Link } from "wouter"
 
@@ -74,6 +75,13 @@ const utilityTools = [
     icon: Truck,
     href: "/tools/shipping-calculator",
     color: { bg: "bg-sky-50", text: "text-sky-600", border: "border-sky-100" },
+  },
+  {
+    title: "CRO Checklist",
+    description: "Conversion rate optimization checklist for your store",
+    icon: ClipboardCheck,
+    href: "/tools/cro-checklist",
+    color: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100" },
   },
 ]
 

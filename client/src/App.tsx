@@ -67,6 +67,7 @@ import InvoiceGenerator from "@/pages/tools/invoice-generator/page";
 import PolicyGenerator from "@/pages/tools/policy-generator/page";
 import ProfitCalculator from "@/pages/tools/profit-calculator/page";
 import ShippingCalculator from "@/pages/shipping-calculator/page";
+import CROChecklist from "@/pages/tools/cro-checklist/page";
 import PromptAnalyzer from "@/pages/prompt-analyzer/page";
 import StoreResearch from "@/pages/store-research/page";
 import ResearchTools from "@/pages/research-tools/page";
@@ -221,6 +222,7 @@ function Router() {
       <Route path="/tools/invoice-generator" component={() => <AppLayout><InvoiceGenerator /></AppLayout>} />
       <Route path="/tools/profit-calculator" component={() => <AppLayout><ProfitCalculator /></AppLayout>} />
       <Route path="/tools/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
+      <Route path="/tools/cro-checklist" component={() => <AppLayout><CROChecklist /></AppLayout>} />
 
       {/* Resources */}
       <Route path="/resources" component={() => <AppLayout><ResourcesPage /></AppLayout>} />

@@ -28,6 +28,7 @@ import {
   Compass,
   Palette,
   Wrench,
+  ClipboardCheck,
   FileText,
   MonitorPlay,
   MoreHorizontal,
@@ -129,6 +130,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Invoice Generator", icon: Receipt, url: "/tools/invoice-generator", isPro: true },
       { title: "Profit Calculator", icon: Calculator, url: "/tools/profit-calculator", isPro: true },
       { title: "Shipping Calculator", icon: Truck, url: "/tools/shipping-calculator", isPro: true },
+      { title: "CRO Checklist", icon: ClipboardCheck, url: "/tools/cro-checklist", isPro: false },
     ],
   },
   {
