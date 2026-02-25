@@ -323,7 +323,7 @@ export function SubNavTabs() {
         )}
 
         {toolbar.quickFilters && toolbar.quickFilters.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap pb-0.5">
             <span className="text-xs font-semibold text-[#999] uppercase tracking-wider shrink-0 mr-1">Quick Filters</span>
             {toolbar.quickFilters.map((filter) => {
               const isActive = activeFilters.has(filter.id)
