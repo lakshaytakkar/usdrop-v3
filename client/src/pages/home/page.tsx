@@ -9,7 +9,8 @@ import {
   ChevronRight,
   Play,
   Mail,
-  Users,
+  Sparkles,
+  GraduationCap,
 } from "lucide-react"
 
 import { Link } from "wouter"
@@ -195,64 +196,37 @@ function HowToUseSection() {
 function MentorshipBanner() {
   return (
     <div
-      className="relative overflow-hidden rounded-2xl text-white"
+      className="relative overflow-hidden rounded-2xl"
       style={{
-        background: 'linear-gradient(135deg, #0b1a3d 0%, #102a5c 25%, #1a3a6e 50%, #0f2952 75%, #0a1d45 100%)',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 30%, #8b5cf6 55%, #a855f7 75%, #ec4899 100%)',
       }}
       data-testid="banner-mentorship"
     >
-      <div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat',
-        }}
-      />
-
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-red-500 to-red-600 opacity-80" />
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-red-600 via-red-500 to-red-600 opacity-80" />
-
-        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <linearGradient id="stripeGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.12" />
-              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.04" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="28" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="56" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="84" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="112" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="140" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="168" width="800" height="8" fill="url(#stripeGrad)" />
-          <rect x="0" y="196" width="800" height="8" fill="url(#stripeGrad)" />
-        </svg>
-
-        <svg className="absolute top-2 left-2 opacity-[0.12]" width="80" height="60" viewBox="0 0 80 60">
-          {[0,1,2,3,4].map(row => (
-            [0,1,2,3,4,5].map(col => (
-              <polygon key={`${row}-${col}`} points={`${col*14+7},${row*12+6} ${col*14+8.5},${row*12+10} ${col*14+12.5},${row*12+10} ${col*14+9.2},${row*12+12.5} ${col*14+10.3},${row*12+16.5} ${col*14+7},${row*12+14} ${col*14+3.7},${row*12+16.5} ${col*14+4.8},${row*12+12.5} ${col*14+1.5},${row*12+10} ${col*14+5.5},${row*12+10}`} fill="white" />
-            ))
-          ))}
+        <div
+          className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, #fbbf24 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full opacity-15"
+          style={{ background: 'radial-gradient(circle, #38bdf8 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, white 0%, transparent 50%)' }}
+        />
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" viewBox="0 0 400 200">
+          <circle cx="50" cy="30" r="40" fill="white" />
+          <circle cx="350" cy="160" r="50" fill="white" />
+          <circle cx="200" cy="100" r="30" fill="white" />
+          <circle cx="320" cy="40" r="20" fill="white" />
+          <circle cx="80" cy="150" r="25" fill="white" />
         </svg>
       </div>
 
-      <div className="absolute right-4 top-2 bottom-2 hidden md:flex items-end gap-3 opacity-[0.18]">
-        <img src="/images/banner/statue-liberty.png" alt="" className="h-28 object-contain drop-shadow-lg" />
-        <img src="/images/banner/shopping-cart.png" alt="" className="h-16 object-contain drop-shadow-lg self-end mb-1" />
-      </div>
-      <div className="absolute right-48 top-3 hidden lg:block opacity-[0.15]">
-        <img src="/images/banner/dollar-coins.png" alt="" className="h-12 object-contain drop-shadow-lg" />
-      </div>
-      <div className="absolute right-32 bottom-2 hidden lg:block opacity-[0.15]">
-        <img src="/images/banner/us-trophy.png" alt="" className="h-14 object-contain drop-shadow-lg" />
-      </div>
-
-      <div className="relative flex items-center gap-5 md:gap-8 p-5 md:p-7">
+      <div className="relative flex items-center gap-5 md:gap-8 p-6 md:p-8">
         <div className="shrink-0">
-          <div className="w-20 h-20 md:w-28 md:h-28 rounded-xl overflow-hidden border-2 border-white/20 shadow-xl ring-2 ring-red-400/30 ring-offset-2 ring-offset-transparent">
+          <div className="w-20 h-20 md:w-[104px] md:h-[104px] rounded-2xl overflow-hidden border-[3px] border-white/30 shadow-2xl">
             <img
               src="/images/suprans profile.jpg"
               alt="Mr. Suprans - Your Mentor"
@@ -262,26 +236,30 @@ function MentorshipBanner() {
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-3.5 w-3.5 text-red-300/80" />
-            <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.12em] text-red-300/80">Your Mentor</span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/15 backdrop-blur-sm">
+              <GraduationCap className="h-3 w-3 text-amber-200" />
+              <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-amber-100">Your Mentor</span>
+            </div>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-0.5">MY MENTOR</h2>
-          <p className="text-blue-100/70 text-sm md:text-base font-medium">Mr. Suprans</p>
-          <p className="text-blue-200/50 text-xs mt-1 hidden md:block">USA Dropshipping Mentorship Framework</p>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">Mr. Suprans</h2>
+          <p className="text-white/70 text-sm md:text-base font-medium flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300/80" />
+            USA Dropshipping Mentorship
+          </p>
         </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-2">
+        <div className="shrink-0 flex flex-col items-end gap-3">
           <a
             href="mailto:info@suprans.in"
-            className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-blue-500/20 hover:bg-blue-500/35 border border-blue-400/30 text-sm font-medium text-white transition-all cursor-pointer whitespace-nowrap backdrop-blur-sm"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-indigo-600 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/10"
             data-testid="button-email-mentor"
           >
             <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Send Email to Mentor</span>
+            <span className="hidden sm:inline">Send Email</span>
             <span className="sm:hidden">Email</span>
           </a>
-          <span className="text-[10px] text-blue-300/40 hidden md:block">info@suprans.in</span>
+          <span className="text-[10px] text-white/40 hidden md:block">info@suprans.in</span>
         </div>
       </div>
     </div>
