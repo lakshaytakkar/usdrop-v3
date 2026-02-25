@@ -224,7 +224,7 @@ function FilterSidebar({
 }
 
 export default function ProductHuntPage() {
-  const PRODUCTS_PER_PAGE = 25
+  const PRODUCTS_PER_PAGE = 20
   
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
