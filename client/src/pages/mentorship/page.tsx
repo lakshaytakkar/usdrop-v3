@@ -114,7 +114,7 @@ export default function AcademyPage() {
             title="My Learning"
             description="Access courses, tutorials, and training to grow your business"
             iconSrc="/images/banners/3d-learning.png"
-            onTutorialClick={() => {}}
+            tutorialVideoUrl=""
           />
           <div>
 

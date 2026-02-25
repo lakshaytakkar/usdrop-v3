@@ -318,7 +318,7 @@ export default function MyJourneyPage() {
         title="My Roadmap"
         description="Track your progress through the dropshipping journey"
         iconSrc="/images/banners/3d-roadmap.png"
-        onTutorialClick={() => {}}
+        tutorialVideoUrl=""
       />
       <div>
       <div className="mb-6 space-y-3">

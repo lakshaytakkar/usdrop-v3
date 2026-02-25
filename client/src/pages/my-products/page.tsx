@@ -151,7 +151,7 @@ export default function MyProductsPage() {
             title="My Products"
             description="Your saved products and picklist for quick access"
             iconSrc="/images/banners/3d-products.png"
-            onTutorialClick={() => {}}
+            tutorialVideoUrl=""
           />
           <div>
 

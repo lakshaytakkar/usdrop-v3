@@ -153,7 +153,7 @@ export default function MyPlanPage() {
         title="My Plan"
         description="View your active services and subscription features"
         iconSrc="/images/banners/3d-plan.png"
-        onTutorialClick={() => {}}
+        tutorialVideoUrl=""
       />
       <div>
 

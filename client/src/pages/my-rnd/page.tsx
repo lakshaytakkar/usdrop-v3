@@ -139,7 +139,7 @@ export default function MyRnDPage() {
         title="My R&D Workspace"
         description="Track your daily work, learning, and research in one place"
         iconSrc="/images/banners/3d-rnd.png"
-        onTutorialClick={() => {}}
+        tutorialVideoUrl=""
       />
       <div>
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">

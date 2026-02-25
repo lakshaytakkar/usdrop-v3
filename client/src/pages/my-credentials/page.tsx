@@ -122,7 +122,7 @@ export default function MyCredentialsPage() {
           title="My Credentials"
           description="Securely store and manage your service logins and API keys"
           iconSrc="/images/banners/3d-credentials.png"
-          onTutorialClick={() => {}}
+          tutorialVideoUrl=""
         />
         <div>
 

@@ -112,7 +112,7 @@ export default function MyProfilePage() {
         title="My Profile"
         description="Manage your personal and business information"
         iconSrc="/images/banners/3d-profile.png"
-        onTutorialClick={() => {}}
+        tutorialVideoUrl=""
       />
       <div>
 

@@ -32,7 +32,7 @@ export default function ShopifyStoresPage() {
           title="Shopify Stores"
           description="Connect and manage your Shopify stores to track performance"
           iconSrc="/images/banners/3d-store.png"
-          onTutorialClick={() => {}}
+          tutorialVideoUrl=""
         />
 
         {loading ? (

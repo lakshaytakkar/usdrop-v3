@@ -273,24 +273,24 @@ function MentorshipBanner() {
               ))}
             </ul>
           </div>
-          <div className="hidden md:flex flex-col gap-2.5 shrink-0">
+          <div className="hidden md:flex flex-col gap-2 shrink-0 ml-auto">
             <a
               href="mailto:info@suprans.in"
-              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20"
+              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 hover:bg-white/90 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shadow-md shadow-black/15"
               data-testid="button-email-mentor"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-3.5 w-3.5" />
               Send Email
             </a>
             <a
               href="https://www.youtube.com/@suprans"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-white/20 text-white hover:bg-white/10 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
               data-testid="button-watch-intro"
             >
-              <Play className="h-4 w-4" />
-              Watch Introduction
+              <Play className="h-3.5 w-3.5" />
+              Watch Intro
             </a>
           </div>
         </div>

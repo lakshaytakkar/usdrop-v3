@@ -94,7 +94,7 @@ function ShopifyStoresContent() {
             title="My Store"
             description="Manage your connected Shopify stores and track performance"
             iconSrc="/images/banners/3d-store.png"
-            onTutorialClick={() => {}}
+            tutorialVideoUrl=""
           />
           <div>
 

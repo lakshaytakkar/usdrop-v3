@@ -8,7 +8,7 @@ export default function CROChecklistPage() {
         title="CRO Checklist"
         description="Optimize your store's conversion rate with this comprehensive checklist"
         iconSrc="/images/banners/3d-roadmap.png"
-        onTutorialClick={() => {}}
+        tutorialVideoUrl=""
       />
       <CROChecklist />
     </div>
