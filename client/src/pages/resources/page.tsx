@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import {
   FileSpreadsheet,
@@ -8,6 +7,7 @@ import {
   FileIcon,
   Film,
 } from "lucide-react"
+import { ResourcePreviewModal } from "./components/resource-preview-modal"
 
 type FileType = "all" | "spreadsheet" | "pdf" | "video" | "template"
 
@@ -164,8 +164,13 @@ function getTypeLabel(type: ResourceFile["type"]) {
 
 export default function ResourcesPage() {
   const [activeTab, setActiveTab] = useState<FileType>("all")
+  const [previewFile, setPreviewFile] = useState<ResourceFile | null>(null)
 
   const filtered = activeTab === "all" ? resources : resources.filter(r => r.type === activeTab)
+
+  const currentPreviewIndex = previewFile ? filtered.findIndex(f => f.id === previewFile.id) : -1
+  const hasPrev = currentPreviewIndex > 0
+  const hasNext = currentPreviewIndex >= 0 && currentPreviewIndex < filtered.length - 1
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
@@ -207,7 +212,8 @@ export default function ResourcesPage() {
             return (
               <div
                 key={file.id}
-                className="group flex flex-col md:grid md:grid-cols-[1fr_100px_80px_100px_90px] gap-1 md:gap-2 items-start md:items-center px-4 py-3 hover:bg-blue-50/30 transition-colors"
+                onClick={() => setPreviewFile(file)}
+                className="group flex flex-col md:grid md:grid-cols-[1fr_100px_80px_100px_90px] gap-1 md:gap-2 items-start md:items-center px-4 py-3 hover:bg-blue-50/30 transition-colors cursor-pointer"
                 data-testid={`row-resource-${file.id}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -230,6 +236,7 @@ export default function ResourcesPage() {
 
                 <div className="hidden md:flex items-center justify-end gap-1">
                   <button
+                    onClick={() => setPreviewFile(file)}
                     className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                     data-testid={`button-preview-${file.id}`}
                     title="Preview"
@@ -249,6 +256,20 @@ export default function ResourcesPage() {
           })}
         </div>
       </div>
+
+      <ResourcePreviewModal
+        file={previewFile}
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        onPrev={() => {
+          if (hasPrev) setPreviewFile(filtered[currentPreviewIndex - 1])
+        }}
+        onNext={() => {
+          if (hasNext) setPreviewFile(filtered[currentPreviewIndex + 1])
+        }}
+      />
     </div>
   )
 }
