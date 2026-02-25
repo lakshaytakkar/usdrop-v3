@@ -3,7 +3,7 @@ import { format } from "date-fns"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Play, Clock, Calendar, ExternalLink, Search, ChevronDown, ChevronRight, Video } from "lucide-react"
+import { Play, Clock, ExternalLink, Search, ChevronDown, ChevronRight, Video } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
@@ -221,8 +221,10 @@ export default function MySessionsPage() {
                       className="relative group flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm transition-all"
                       data-testid={`session-${session.id}`}
                     >
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-xs font-semibold text-gray-500 border border-gray-200">
-                        {idx + 1}
+                      <div className="flex-shrink-0 w-14 h-16 rounded-lg bg-gray-50 border border-gray-200 flex flex-col items-center justify-center leading-none" data-testid={`date-${session.id}`}>
+                        <span className="text-lg font-bold text-gray-800">{format(session.date, "d")}</span>
+                        <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{format(session.date, "MMM")}</span>
+                        <span className="text-[9px] text-gray-400 mt-px">{format(session.date, "yyyy")}</span>
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -230,10 +232,6 @@ export default function MySessionsPage() {
                           {session.title}
                         </p>
                         <div className="flex items-center gap-3 mt-0.5">
-                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {format(session.date, "MMM d, yyyy")}
-                          </span>
                           <span className="flex items-center gap-1 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
                             {session.duration}
