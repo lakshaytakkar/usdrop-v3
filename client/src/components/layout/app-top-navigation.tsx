@@ -152,13 +152,16 @@ export function AppTopNavigation() {
                     href={firstItem.url}
                     data-testid={`link-nav-${group.label.toLowerCase()}`}
                     className={cn(
-                      "px-2.5 py-2 text-[14px] font-bold tracking-[-0.01em] rounded-lg transition-all whitespace-nowrap inline-flex items-center gap-1.5",
+                      "relative px-3 py-2 text-[15px] font-medium transition-colors whitespace-nowrap inline-flex items-center gap-1.5",
                       isActive
-                        ? "text-blue-700 bg-blue-50/80"
-                        : "text-gray-800 hover:text-gray-950 hover:bg-white/60"
+                        ? "text-black"
+                        : "text-[#999] hover:text-black"
                     )}
                   >
                     {group.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-black rounded-full" />
+                    )}
                   </Link>
                 )
               })}
