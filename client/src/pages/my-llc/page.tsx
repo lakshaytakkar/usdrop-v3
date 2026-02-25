@@ -461,8 +461,8 @@ export default function MyLLCPage() {
                         <p className="text-[12px] text-[#999]">Essential formation</p>
                         <div className="pt-2">
                           <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-[13px] text-[#999] line-through">$389</span>
-                            <span className="text-[28px] font-bold text-black tracking-[-0.5px]">$272</span>
+                            <span className="text-[13px] text-[#999] line-through">₹55,000</span>
+                            <span className="text-[28px] font-bold text-black tracking-[-0.5px]">₹39,000</span>
                           </div>
                           <p className="text-[11px] text-[#666] font-medium mt-0.5">Save 30% with USDrop</p>
                         </div>
@@ -479,8 +479,8 @@ export default function MyLLCPage() {
                         <span className="inline-block bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 text-[10px] text-indigo-600 font-bold px-2 py-0.5 rounded-full uppercase tracking-[0.04em]">Most Popular</span>
                         <div className="pt-2">
                           <div className="flex items-baseline justify-center gap-1">
-                            <span className="text-[13px] text-[#999] line-through">$699</span>
-                            <span className="text-[28px] font-bold text-black tracking-[-0.5px]">$489</span>
+                            <span className="text-[13px] text-[#999] line-through">₹99,000</span>
+                            <span className="text-[28px] font-bold text-black tracking-[-0.5px]">₹69,000</span>
                           </div>
                           <p className="text-[11px] text-[#666] font-medium mt-0.5">Save 30% with USDrop</p>
                         </div>
@@ -555,7 +555,7 @@ export default function MyLLCPage() {
 
               <MotionFadeIn direction="up" distance={DISTANCE.sm} duration={DURATION.slow}>
                 <p className="text-center text-[13px] text-[#999]">
-                  Prices shown reflect the exclusive 30% USDrop discount. Regular LegalNations pricing is $389 (Just LLC) and $699 (Elite).
+                  Prices shown reflect the exclusive 30% USDrop discount. Regular pricing is ₹55,000 (Just LLC) and ₹99,000 (Elite).
                 </p>
               </MotionFadeIn>
             </div>
