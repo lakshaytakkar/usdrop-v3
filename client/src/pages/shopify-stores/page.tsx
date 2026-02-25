@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, ArrowRight, Store, Sparkles } from "lucide-react"
+import { Plus, ArrowRight, Sparkles } from "lucide-react"
 import { Link } from "wouter"
 import { FrameworkBanner } from "@/components/framework-banner"
 
@@ -90,7 +90,7 @@ export default function ShopifyStoresPage() {
 
           <div className="relative z-[1] flex flex-col md:flex-row items-center gap-6 px-8 py-8 md:py-10">
             <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10">
-              <Store className="h-8 w-8 md:h-10 md:w-10 text-white" />
+              <img src="/images/logos/shopify.svg" alt="Shopify" className="h-8 w-8 md:h-10 md:w-10 object-contain brightness-0 invert" />
             </div>
 
             <div className="flex-1 text-center md:text-left">
