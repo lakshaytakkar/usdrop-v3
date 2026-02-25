@@ -1,7 +1,7 @@
 
 
 import { apiFetch } from '@/lib/supabase'
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "@/hooks/use-router"
 
 import { Card } from "@/components/ui/card"
@@ -41,7 +41,6 @@ interface ProductCardProps {
 export function ProductCard({ product, isLocked = false, onLockedClick, isSaved: initialSaved = false }: ProductCardProps) {
   const router = useRouter()
   const [imageError, setImageError] = useState(false)
-  const [currentTagIndex, setCurrentTagIndex] = useState(0)
   const [isSaved, setIsSaved] = useState(initialSaved)
   const [isSaving, setIsSaving] = useState(false)
   const { showSuccess, showError } = useToast()
@@ -92,25 +91,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
     ? safeTrendData[safeTrendData.length - 1] > safeTrendData[0] ? "up" : "down"
     : "neutral"
 
-  // Create array of tags to rotate through
-  const tags = [
-    ...(product.trending ? [{ type: 'trending', label: 'Trending', icon: Flame, bg: 'bg-orange-500/90', text: 'text-white' }] : []),
-    { type: 'category', label: product.category || 'Uncategorized', icon: null, bg: 'bg-secondary/90', text: 'text-secondary-foreground' }
-  ]
-
-  // Rotate through tags every 3 seconds
-  useEffect(() => {
-    if (tags.length <= 1) {
-      setCurrentTagIndex(0)
-      return
-    }
-    
-    const interval = setInterval(() => {
-      setCurrentTagIndex((prev) => (prev + 1) % tags.length)
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [tags.length])
+  const isTrending = product.trending
 
   return (
     <Card className="group overflow-hidden border-border/50 p-0">
@@ -142,77 +123,26 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
           />
         )}
         
-        {/* Rotating Badges - Animated Upward Rotation */}
-        <div className="absolute top-2 left-2 z-20 flex flex-col gap-1.5">
-          {tags.length > 1 ? (
-            <div className="relative h-7 overflow-hidden">
-              {tags.map((tag, index) => {
-                const TagIcon = tag.icon
-                const isActive = index === currentTagIndex
-                const prevIndex = currentTagIndex === 0 ? tags.length - 1 : currentTagIndex - 1
-                const isPrevious = index === prevIndex
-                
-                return (
-                  <div
-                    key={`${tag.type}-${index}`}
-                    className={`absolute inset-0 ${tag.bg} ${tag.text} border-0 text-xs px-2 py-1.5 rounded-md shadow-sm transition-all duration-500 ease-in-out ${
-                      isActive 
-                        ? 'translate-y-0 opacity-100 z-10' 
-                        : isPrevious
-                          ? '-translate-y-full opacity-0 z-0'
-                          : 'translate-y-full opacity-0 z-0'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center h-full">
-                      {TagIcon ? (
-                        <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                          <TagIcon className="h-3 w-3" />
-                          <span>{tag.label}</span>
-                        </span>
-                      ) : (
-                        <span className="whitespace-nowrap">{tag.label}</span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+        {isTrending && (
+          <div className="absolute top-2 left-2 z-20">
+            <div className="bg-orange-500/90 text-white border-0 text-xs px-2 py-1.5 rounded-md shadow-sm">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <Flame className="h-3 w-3" />
+                <span>Trending</span>
+              </span>
             </div>
-          ) : (
-            tags.map((tag, index) => {
-              const TagIcon = tag.icon
-              return (
-                <div
-                  key={`${tag.type}-${index}`}
-                  className={`${tag.bg} ${tag.text} border-0 text-xs px-2 py-1.5 rounded-md shadow-sm`}
-                >
-                  {TagIcon ? (
-                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                      <TagIcon className="h-3 w-3" />
-                      <span>{tag.label}</span>
-                    </span>
-                  ) : (
-                    <span className="whitespace-nowrap">{tag.label}</span>
-                  )}
-                </div>
-              )
-            })
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Top Country Pill with US Flag */}
         <div className="absolute top-2 right-2 z-20">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/90 hover:bg-white transition-all shadow-sm backdrop-blur-sm">
-            <span className="text-xs font-medium text-foreground whitespace-nowrap">Top Country:</span>
-            <div className="relative w-4 h-3 flex-shrink-0 overflow-hidden rounded-sm">
-              <img
-                src="/images/ui/united-states.png"
-                alt="United States flag"
-                width={16}
-                height={12}
-               
-                className="object-cover"
-              />
-            </div>
+          <div className="w-7 h-7 rounded-full bg-white/90 shadow-sm backdrop-blur-sm flex items-center justify-center overflow-hidden">
+            <img
+              src="/images/ui/united-states.png"
+              alt="US"
+              width={20}
+              height={20}
+              className="object-cover w-5 h-5 rounded-full"
+            />
           </div>
         </div>
 
@@ -255,10 +185,10 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
 
       {/* Content Section */}
       <div className={`px-2.5 pt-1 pb-2.5 space-y-2 relative ${isLocked ? "pointer-events-none" : ""}`}>
-        {/* Title */}
         <h3 className="ds-card-title line-clamp-2 min-h-[2.5rem] leading-tight">
           {product.title}
         </h3>
+        <p className="text-[11px] text-muted-foreground capitalize -mt-1">{product.category || 'Uncategorized'}</p>
 
         {/* Mini Area Chart */}
         <div style={{ width: '100%', height: 52 }}>
