@@ -75,37 +75,37 @@ const aiResearchItems: SidebarItem[] = [
   {
     title: "Product Hunt",
     icon: TrendingUp,
-    url: "/product-hunt",
+    url: "/products/product-hunt",
     isPro: true,
   },
   {
     title: "Winning Products",
     icon: Trophy,
-    url: "/winning-products",
+    url: "/products/winning-products",
     isPro: true,
   },
   {
     title: "Competitor Stores",
     icon: Store,
-    url: "/competitor-stores",
+    url: "/products/competitor-stores",
     isPro: true,
   },
   {
     title: "Categories",
     icon: Grid3x3,
-    url: "/categories",
+    url: "/products/categories",
     isPro: true,
   },
   {
     title: "Seasonal Collections",
     icon: Calendar,
-    url: "/seasonal-collections",
+    url: "/products/seasonal-collections",
     isPro: true,
   },
   {
     title: "Meta Ads",
     icon: BarChart3,
-    url: "/meta-ads",
+    url: "/ads/meta-ads",
     isPro: true,
   },
 ]
@@ -131,7 +131,7 @@ const aiMarketplacesItems: SidebarItem[] = [
   {
     title: "Private Supplier",
     icon: Package,
-    url: "/suppliers",
+    url: "/private-supplier",
     isPro: true,
   },
   {
@@ -143,7 +143,7 @@ const aiMarketplacesItems: SidebarItem[] = [
   {
     title: "Shipping Calculator",
     icon: Truck,
-    url: "/shipping-calculator",
+    url: "/tools/shipping-calculator",
     isPro: true,
   },
 ]

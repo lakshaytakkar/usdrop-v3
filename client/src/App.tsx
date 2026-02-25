@@ -198,51 +198,8 @@ function Router() {
       <Route path="/dev/tasks/:id" component={() => <DevLayout><DevTaskDetail /></DevLayout>} />
 
       {/* App pages (authenticated user pages with top nav) */}
+      {/* Framework (personal hub) — /framework/* */}
       <Route path="/framework" component={() => <AppLayout><HomePage /></AppLayout>} />
-      <Route path="/product-hunt" component={() => <AppLayout><ProductHunt /></AppLayout>} />
-      <Route path="/product-hunt/:id" component={() => <AppLayout><ProductHuntDetail /></AppLayout>} />
-      <Route path="/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
-      <Route path="/suppliers" component={() => <AppLayout><SuppliersPage /></AppLayout>} />
-      <Route path="/competitor-stores" component={() => <AppLayout><CompetitorStoresPage /></AppLayout>} />
-      <Route path="/mentorship" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
-      <Route path="/mentorship/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
-      <Route path="/blogs" component={() => <AppLayout><BlogsPage /></AppLayout>} />
-      <Route path="/blogs/:slug" component={() => <AppLayout><BlogDetail /></AppLayout>} />
-      <Route path="/tools" component={() => <AppLayout><ToolsPage /></AppLayout>} />
-      <Route path="/ai-studio/description-generator" component={() => <AppLayout><DescriptionGenerator /></AppLayout>} />
-      <Route path="/ai-studio/email-templates" component={() => <AppLayout><EmailTemplates /></AppLayout>} />
-      <Route path="/ai-studio/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
-      <Route path="/ai-studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
-      <Route path="/ai-studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
-      <Route path="/tools/description-generator" component={() => <AppLayout><DescriptionGenerator /></AppLayout>} />
-      <Route path="/tools/email-templates" component={() => <AppLayout><EmailTemplates /></AppLayout>} />
-      <Route path="/tools/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
-      <Route path="/tools/invoice-generator" component={() => <AppLayout><InvoiceGenerator /></AppLayout>} />
-      <Route path="/tools/profit-calculator" component={() => <AppLayout><ProfitCalculator /></AppLayout>} />
-      <Route path="/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
-      <Route path="/prompt-analyzer" component={() => <AppLayout><PromptAnalyzer /></AppLayout>} />
-      <Route path="/store-research" component={() => <AppLayout><StoreResearch /></AppLayout>} />
-      <Route path="/research-tools" component={() => <AppLayout><ResearchTools /></AppLayout>} />
-      <Route path="/intelligence-hub" component={() => <AppLayout><IntelligenceHub /></AppLayout>} />
-      <Route path="/meta-ads" component={() => <AppLayout><MetaAds /></AppLayout>} />
-      <Route path="/selling-channels" component={() => <AppLayout><SellingChannels /></AppLayout>} />
-      <Route path="/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
-      <Route path="/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
-      <Route path="/fulfillment" component={() => <AppLayout><Fulfillment /></AppLayout>} />
-
-      <Route path="/shopify-stores" component={() => <AppLayout><ShopifyStores /></AppLayout>} />
-      <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
-      <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />
-      <Route path="/help-center" component={() => <AppLayout><HelpCenter /></AppLayout>} />
-      <Route path="/help" component={() => <AppLayout><HelpPage /></AppLayout>} />
-      <Route path="/studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
-      <Route path="/studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
-      <Route path="/tools/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
-      <Route path="/tools/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
-      <Route path="/tools/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
-      <Route path="/resources" component={() => <AppLayout><ResourcesPage /></AppLayout>} />
-
-      {/* Framework (personal hub) */}
       <Route path="/framework/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />
       <Route path="/framework/my-store" component={() => <AppLayout><MyStore /></AppLayout>} />
       <Route path="/framework/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
@@ -250,12 +207,60 @@ function Router() {
       <Route path="/framework/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
       <Route path="/framework/my-sessions" component={() => <AppLayout><MySessionsPage /></AppLayout>} />
       <Route path="/framework/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
-      <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
       <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
       <Route path="/framework/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
       <Route path="/framework/my-plan" component={() => <AppLayout><MyPlan /></AppLayout>} />
 
-      {/* Legacy redirects → /framework */}
+      {/* Products — /products/* */}
+      <Route path="/products/product-hunt" component={() => <AppLayout><ProductHunt /></AppLayout>} />
+      <Route path="/products/product-hunt/:id" component={() => <AppLayout><ProductHuntDetail /></AppLayout>} />
+      <Route path="/products/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
+      <Route path="/products/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
+      <Route path="/products/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
+      <Route path="/products/competitor-stores" component={() => <AppLayout><CompetitorStoresPage /></AppLayout>} />
+
+      {/* Ads — /ads/* */}
+      <Route path="/ads/meta-ads" component={() => <AppLayout><MetaAds /></AppLayout>} />
+
+      {/* Private Supplier */}
+      <Route path="/private-supplier" component={() => <AppLayout><SuppliersPage /></AppLayout>} />
+
+      {/* LLC */}
+      <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
+
+      {/* AI Studio — /ai-studio/* */}
+      <Route path="/ai-studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
+      <Route path="/ai-studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
+
+      {/* Tools — /tools/* */}
+      <Route path="/tools/description-generator" component={() => <AppLayout><DescriptionGenerator /></AppLayout>} />
+      <Route path="/tools/email-templates" component={() => <AppLayout><EmailTemplates /></AppLayout>} />
+      <Route path="/tools/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
+      <Route path="/tools/invoice-generator" component={() => <AppLayout><InvoiceGenerator /></AppLayout>} />
+      <Route path="/tools/profit-calculator" component={() => <AppLayout><ProfitCalculator /></AppLayout>} />
+      <Route path="/tools/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
+
+      {/* Resources */}
+      <Route path="/resources" component={() => <AppLayout><ResourcesPage /></AppLayout>} />
+
+      {/* Other app pages */}
+      <Route path="/mentorship" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
+      <Route path="/mentorship/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
+      <Route path="/blogs" component={() => <AppLayout><BlogsPage /></AppLayout>} />
+      <Route path="/blogs/:slug" component={() => <AppLayout><BlogDetail /></AppLayout>} />
+      <Route path="/prompt-analyzer" component={() => <AppLayout><PromptAnalyzer /></AppLayout>} />
+      <Route path="/store-research" component={() => <AppLayout><StoreResearch /></AppLayout>} />
+      <Route path="/research-tools" component={() => <AppLayout><ResearchTools /></AppLayout>} />
+      <Route path="/intelligence-hub" component={() => <AppLayout><IntelligenceHub /></AppLayout>} />
+      <Route path="/selling-channels" component={() => <AppLayout><SellingChannels /></AppLayout>} />
+      <Route path="/fulfillment" component={() => <AppLayout><Fulfillment /></AppLayout>} />
+      <Route path="/shopify-stores" component={() => <AppLayout><ShopifyStores /></AppLayout>} />
+      <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
+      <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />
+      <Route path="/help-center" component={() => <AppLayout><HelpCenter /></AppLayout>} />
+      <Route path="/help" component={() => <AppLayout><HelpPage /></AppLayout>} />
+
+      {/* Legacy redirects → new /menu/submenu routes */}
       <Route path="/home"><Redirect to="/framework" /></Route>
       <Route path="/my-products"><Redirect to="/framework/my-products" /></Route>
       <Route path="/my-store"><Redirect to="/framework/my-store" /></Route>
@@ -268,6 +273,23 @@ function Router() {
       <Route path="/framework/my-llc"><Redirect to="/llc" /></Route>
       <Route path="/my-profile"><Redirect to="/framework/my-profile" /></Route>
       <Route path="/my-credentials"><Redirect to="/framework/my-credentials" /></Route>
+      <Route path="/product-hunt"><Redirect to="/products/product-hunt" /></Route>
+      <Route path="/product-hunt/:id">{(params) => <Redirect to={`/products/product-hunt/${params.id}`} />}</Route>
+      <Route path="/winning-products"><Redirect to="/products/winning-products" /></Route>
+      <Route path="/categories"><Redirect to="/products/categories" /></Route>
+      <Route path="/seasonal-collections"><Redirect to="/products/seasonal-collections" /></Route>
+      <Route path="/competitor-stores"><Redirect to="/products/competitor-stores" /></Route>
+      <Route path="/meta-ads"><Redirect to="/ads/meta-ads" /></Route>
+      <Route path="/suppliers"><Redirect to="/private-supplier" /></Route>
+      <Route path="/tools" component={() => <AppLayout><ToolsPage /></AppLayout>} />
+      <Route path="/shipping-calculator"><Redirect to="/tools/shipping-calculator" /></Route>
+      <Route path="/studio/model-studio"><Redirect to="/ai-studio/model-studio" /></Route>
+      <Route path="/studio/whitelabelling"><Redirect to="/ai-studio/whitelabelling" /></Route>
+      <Route path="/tools/model-studio"><Redirect to="/ai-studio/model-studio" /></Route>
+      <Route path="/tools/whitelabelling"><Redirect to="/ai-studio/whitelabelling" /></Route>
+      <Route path="/ai-studio/description-generator"><Redirect to="/tools/description-generator" /></Route>
+      <Route path="/ai-studio/email-templates"><Redirect to="/tools/email-templates" /></Route>
+      <Route path="/ai-studio/policy-generator"><Redirect to="/tools/policy-generator" /></Route>
 
       {/* 404 */}
       <Route component={NotFound} />

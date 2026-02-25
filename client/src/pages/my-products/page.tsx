@@ -205,7 +205,7 @@ export default function MyProductsPage() {
                   </p>
                   {!searchQuery && (
                     <Button asChild>
-                      <a href="/winning-products">Browse Products</a>
+                      <a href="/products/winning-products">Browse Products</a>
                     </Button>
                   )}
                 </div>

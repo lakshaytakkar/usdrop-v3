@@ -77,11 +77,11 @@ export const externalNavGroups: NavGroup[] = [
     icon: Package,
     iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
     items: [
-      { title: "Product Hunt", icon: TrendingUp, url: "/product-hunt", isPro: true },
-      { title: "Winning Products", icon: Trophy, url: "/winning-products", isPro: true },
-      { title: "Categories", icon: Grid3x3, url: "/categories", isPro: true },
-      { title: "Seasonal Collections", icon: Calendar, url: "/seasonal-collections", isPro: true },
-      { title: "Competitor Stores", icon: Store, url: "/competitor-stores", isPro: true },
+      { title: "Product Hunt", icon: TrendingUp, url: "/products/product-hunt", isPro: true },
+      { title: "Winning Products", icon: Trophy, url: "/products/winning-products", isPro: true },
+      { title: "Categories", icon: Grid3x3, url: "/products/categories", isPro: true },
+      { title: "Seasonal Collections", icon: Calendar, url: "/products/seasonal-collections", isPro: true },
+      { title: "Competitor Stores", icon: Store, url: "/products/competitor-stores", isPro: true },
     ],
   },
   {
@@ -89,7 +89,7 @@ export const externalNavGroups: NavGroup[] = [
     icon: BarChart3,
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
     items: [
-      { title: "Meta Ads", icon: BarChart3, url: "/meta-ads", isPro: true },
+      { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true },
     ],
   },
   {
@@ -97,7 +97,7 @@ export const externalNavGroups: NavGroup[] = [
     icon: Package,
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
     items: [
-      { title: "Private Supplier", icon: Package, url: "/suppliers", isPro: false },
+      { title: "Private Supplier", icon: Package, url: "/private-supplier", isPro: false },
     ],
   },
   {

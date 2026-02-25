@@ -18,14 +18,14 @@ const howToCards = [
   {
     title: "Trending Products",
     points: ["Hot Sellers", "Daily Updated"],
-    href: "/product-hunt",
+    href: "/products/product-hunt",
     thumbnail: "/thumbnails/trending-products.png",
     iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
   },
   {
     title: "Competitors' List",
     points: ["Top Stores", "Sales Data"],
-    href: "/competitor-stores",
+    href: "/products/competitor-stores",
     thumbnail: "/thumbnails/competitor-stores.png",
     iconSrc: "/3d-ecom-icons-blue/Competitor_Search.png",
   },
@@ -39,14 +39,14 @@ const howToCards = [
   {
     title: "Marketing & Ads",
     points: ["Winning Ads", "Strategies"],
-    href: "/meta-ads",
+    href: "/ads/meta-ads",
     thumbnail: "/thumbnails/marketing-ads.png",
     iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
   },
   {
     title: "Private Suppliers",
     points: ["Verified", "Fast Shipping"],
-    href: "/suppliers",
+    href: "/private-supplier",
     thumbnail: "/thumbnails/suppliers-shipping.png",
     iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
   },

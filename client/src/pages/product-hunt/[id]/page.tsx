@@ -212,7 +212,7 @@ export default function ProductDetailPage() {
             <h1 className="text-2xl font-bold mb-4">Product not found</h1>
             <p className="text-muted-foreground mb-4">{error || 'The product you are looking for does not exist.'}</p>
             <Button 
-              onClick={() => router.push("/product-hunt")}
+              onClick={() => router.push("/products/product-hunt")}
               variant="default"
               className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-700"
             >
@@ -313,21 +313,21 @@ export default function ProductDetailPage() {
               <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-1 min-w-0 overflow-hidden">
                 <button onClick={() => router.push("/")} className="hover:text-foreground transition-colors cursor-pointer">Home</button>
                 <span>/</span>
-                <button onClick={() => router.push("/product-hunt")} className="hover:text-foreground transition-colors cursor-pointer">Product Hunt</button>
+                <button onClick={() => router.push("/products/product-hunt")} className="hover:text-foreground transition-colors cursor-pointer">Product Hunt</button>
                 <span>/</span>
                 <span className="text-foreground line-clamp-1 truncate">{product.title}</span>
               </nav>
 
               <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <div className="hidden sm:flex items-center gap-1 border-r pr-2 mr-2">
-                  <Button variant="ghost" size="sm" onClick={() => prevProduct && router.push(`/product-hunt/${prevProduct.id}`)} disabled={!prevProduct} className="h-8 w-8 p-0" title={prevProduct ? `Previous: ${prevProduct.title}` : "No previous product"}>
+                  <Button variant="ghost" size="sm" onClick={() => prevProduct && router.push(`/products/product-hunt/${prevProduct.id}`)} disabled={!prevProduct} className="h-8 w-8 p-0" title={prevProduct ? `Previous: ${prevProduct.title}` : "No previous product"}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => nextProduct && router.push(`/product-hunt/${nextProduct.id}`)} disabled={!nextProduct} className="h-8 w-8 p-0" title={nextProduct ? `Next: ${nextProduct.title}` : "No next product"}>
+                  <Button variant="ghost" size="sm" onClick={() => nextProduct && router.push(`/products/product-hunt/${nextProduct.id}`)} disabled={!nextProduct} className="h-8 w-8 p-0" title={nextProduct ? `Next: ${nextProduct.title}` : "No next product"}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => router.push("/product-hunt")} className="h-8 px-2" title="Back">
+                <Button variant="ghost" size="sm" onClick={() => router.push("/products/product-hunt")} className="h-8 px-2" title="Back">
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline ml-1">Back</span>
                 </Button>
