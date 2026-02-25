@@ -176,7 +176,22 @@ export function SubNavTabs() {
   const scrollBy = (direction: "left" | "right") => {
     const el = scrollRef.current
     if (!el) return
-    el.scrollBy({ left: direction === "left" ? -200 : 200, behavior: "smooth" })
+    const children = Array.from(el.children) as HTMLElement[]
+    if (direction === "right") {
+      const next = children.find(
+        (child) => child.offsetLeft + child.offsetWidth > el.scrollLeft + el.clientWidth + 2
+      )
+      if (next) {
+        el.scrollTo({ left: next.offsetLeft - 4, behavior: "smooth" })
+      }
+    } else {
+      const prev = [...children].reverse().find(
+        (child) => child.offsetLeft < el.scrollLeft - 2
+      )
+      if (prev) {
+        el.scrollTo({ left: prev.offsetLeft - 4, behavior: "smooth" })
+      }
+    }
   }
 
   return (
