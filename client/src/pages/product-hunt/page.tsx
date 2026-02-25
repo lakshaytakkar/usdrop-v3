@@ -58,8 +58,8 @@ function FilterSidebar({
   const [categoryOpen, setCategoryOpen] = useState(true)
 
   return (
-    <aside className="w-[220px] shrink-0 hidden lg:block">
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 sticky top-0">
+    <aside className="w-[220px] shrink-0 hidden lg:block self-start sticky top-24">
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4">
         <div className="flex items-center gap-2 mb-4 ds-label">
           <Filter className="h-4 w-4" />
           Filters
@@ -239,7 +239,6 @@ export default function ProductHuntPage() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [savedProductIds, setSavedProductIds] = useState<Set<string>>(new Set())
-  const containerRef = useRef<HTMLDivElement>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const categoriesRef = useRef<Category[]>([])
   const { isFree } = useOnboarding()
@@ -333,9 +332,7 @@ export default function ProductHuntPage() {
   useEffect(() => {
     setPage(1)
     setProducts([])
-    if (containerRef.current) {
-      containerRef.current.scrollTop = 0
-    }
+    window.scrollTo(0, 0)
   }, [selectedCategory])
   
   const generateSampleTrend = (id: string | number): number[] => {
@@ -407,7 +404,7 @@ export default function ProductHuntPage() {
         }
       },
       {
-        root: containerRef.current,
+        root: null,
         rootMargin: '200px',
         threshold: 0,
       }
@@ -425,10 +422,8 @@ export default function ProductHuntPage() {
 
   return (
     <>
-      <div
-        className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden"
-      >
-        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8 overflow-hidden">
+      <div className="flex flex-1">
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8">
           <FilterSidebar
             sortBy={sortBy}
             setSortBy={setSortBy}
@@ -440,10 +435,7 @@ export default function ProductHuntPage() {
             onReset={handleResetFilters}
           />
 
-          <div
-            ref={containerRef}
-            className="flex-1 flex flex-col gap-4 bg-white/70 backdrop-blur-sm rounded-xl border border-white/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-4 md:p-5 overflow-y-auto"
-          >
+          <div className="flex-1 flex flex-col gap-4 p-4 md:p-5">
             <div className="flex items-center justify-between">
               <h1 className="ds-page-title" data-testid="text-page-title">Product Hunt</h1>
               <button
