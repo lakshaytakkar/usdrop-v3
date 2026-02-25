@@ -1,7 +1,5 @@
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import {
   FileSpreadsheet,
   FileText,
@@ -132,13 +130,13 @@ const tabs: { id: FileType; label: string }[] = [
 function getFileIcon(type: ResourceFile["type"]) {
   switch (type) {
     case "spreadsheet":
-      return <FileSpreadsheet className="h-6 w-6" />
+      return <FileSpreadsheet className="h-4.5 w-4.5" />
     case "pdf":
-      return <FileText className="h-6 w-6" />
+      return <FileText className="h-4.5 w-4.5" />
     case "video":
-      return <Film className="h-6 w-6" />
+      return <Film className="h-4.5 w-4.5" />
     case "template":
-      return <FileIcon className="h-6 w-6" />
+      return <FileIcon className="h-4.5 w-4.5" />
   }
 }
 
@@ -194,52 +192,62 @@ export default function ResourcesPage() {
         <span className="text-xs text-gray-400 ml-2">{filtered.length} files</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map(file => {
-          const colors = getFileColor(file.type)
-          return (
-            <Card
-              key={file.id}
-              className="overflow-hidden rounded-xl border-gray-100 hover:border-blue-200 hover:shadow-md transition-all bg-white"
-              data-testid={`card-resource-${file.id}`}
-            >
-              <div className="p-5 flex gap-4">
-                <div className={`shrink-0 w-14 h-14 rounded-xl ${colors.bg} ${colors.text} border ${colors.border} flex items-center justify-center`}>
-                  {getFileIcon(file.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-[15px] font-bold text-gray-900 truncate">{file.name}</h3>
-                  <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-2">{file.description}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${colors.bg} ${colors.text}`}>
-                      {getTypeLabel(file.type)}
-                    </span>
-                    <span className="text-[11px] text-gray-400">{file.size}</span>
-                    <span className="text-[11px] text-gray-300">·</span>
-                    <span className="text-[11px] text-gray-400">{file.updatedAt}</span>
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+        <div className="hidden md:grid grid-cols-[1fr_100px_80px_100px_90px] gap-2 px-4 py-2.5 border-b border-gray-100 bg-gray-50/60 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+          <span>Name</span>
+          <span>Type</span>
+          <span>Size</span>
+          <span>Updated</span>
+          <span className="text-right">Actions</span>
+        </div>
+
+        <div className="divide-y divide-gray-50">
+          {filtered.map(file => {
+            const colors = getFileColor(file.type)
+            return (
+              <div
+                key={file.id}
+                className="group flex flex-col md:grid md:grid-cols-[1fr_100px_80px_100px_90px] gap-1 md:gap-2 items-start md:items-center px-4 py-3 hover:bg-blue-50/30 transition-colors"
+                data-testid={`row-resource-${file.id}`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`shrink-0 w-8 h-8 rounded-lg ${colors.bg} ${colors.text} border ${colors.border} flex items-center justify-center`}>
+                    {getFileIcon(file.type)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-gray-900 truncate">{file.name}</p>
+                    <p className="text-[11px] text-gray-400 truncate">{file.description}</p>
                   </div>
                 </div>
+
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} md:ml-0 ml-11`}>
+                  {getTypeLabel(file.type)}
+                </span>
+
+                <span className="text-[12px] text-gray-500 hidden md:block">{file.size}</span>
+
+                <span className="text-[12px] text-gray-400 hidden md:block">{file.updatedAt}</span>
+
+                <div className="hidden md:flex items-center justify-end gap-1">
+                  <button
+                    className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                    data-testid={`button-preview-${file.id}`}
+                    title="Preview"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    className="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
+                    data-testid={`button-download-${file.id}`}
+                    title="Download"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex border-t border-gray-100">
-                <button
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[13px] font-medium text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-colors cursor-pointer"
-                  data-testid={`button-preview-${file.id}`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  Preview
-                </button>
-                <div className="w-px bg-gray-100" />
-                <button
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[13px] font-medium text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/50 transition-colors cursor-pointer"
-                  data-testid={`button-download-${file.id}`}
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Download
-                </button>
-              </div>
-            </Card>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </div>
   )
