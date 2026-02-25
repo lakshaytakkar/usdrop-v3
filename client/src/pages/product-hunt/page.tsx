@@ -237,7 +237,6 @@ export default function ProductHuntPage() {
   const [error, setError] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [savedProductIds, setSavedProductIds] = useState<Set<string>>(new Set())
   const sentinelRef = useRef<HTMLDivElement>(null)
   const categoriesRef = useRef<Category[]>([])
@@ -435,49 +434,7 @@ export default function ProductHuntPage() {
             onReset={handleResetFilters}
           />
 
-          <div className="flex-1 flex flex-col gap-4 p-4 md:p-5">
-            <div className="flex items-center justify-between">
-              <h1 className="ds-page-title" data-testid="text-page-title">Product Hunt</h1>
-              <button
-                data-testid="button-mobile-filters"
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-              </button>
-            </div>
-
-            {showMobileFilters && (
-              <div className="lg:hidden bg-gray-50 rounded-lg border border-gray-200 p-4">
-                <div className="space-y-3">
-                  <span className="text-sm font-medium text-gray-700 block mb-2">Sort & Filter</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { value: "newest" as SortOption, label: "Newest" },
-                      { value: "price-low" as SortOption, label: "Price: Low" },
-                      { value: "price-high" as SortOption, label: "Price: High" },
-                      { value: "profit" as SortOption, label: "Profit" },
-                      { value: "rating" as SortOption, label: "Rating" },
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => setSortBy(option.value)}
-                        className={cn(
-                          "px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer",
-                          sortBy === option.value
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
+          <div className="flex-1 flex flex-col gap-4">
             {error && (
               <SectionError
                 className="max-w-2xl mx-auto"
