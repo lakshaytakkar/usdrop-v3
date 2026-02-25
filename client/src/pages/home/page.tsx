@@ -237,68 +237,58 @@ function RoadmapProgressChart() {
   return (
     <Link
       href="/framework/my-roadmap"
-      className="block"
+      className="block h-full"
       data-testid="link-roadmap-progress"
     >
       <div
-        className="relative overflow-hidden rounded-2xl h-full cursor-pointer group"
-        style={{
-          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
-        }}
+        className="relative overflow-hidden rounded-2xl h-full cursor-pointer group border border-black/[0.06] bg-white"
       >
-        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-          <filter id="noiseFilter3">
-            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noiseFilter3)" />
-        </svg>
-
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div
-            className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-[0.1]"
+            className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-[0.07]"
             style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }}
           />
           <div
-            className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full opacity-[0.08]"
+            className="absolute -bottom-16 -left-16 w-44 h-44 rounded-full opacity-[0.06]"
             style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
           />
         </div>
 
-        <div className="relative flex flex-col items-center justify-center p-5 h-full gap-3">
+        <div className="relative flex flex-col items-center justify-center p-6 h-full gap-4">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-blue-300" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">My Roadmap</span>
+            <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+            <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-indigo-500">My Roadmap</span>
           </div>
 
           <div className="relative">
             {isLoading ? (
-              <div className="w-[128px] h-[128px] rounded-full border-4 border-white/10 animate-pulse" />
+              <div className="w-[140px] h-[140px] rounded-full border-4 border-gray-100 animate-pulse" />
             ) : (
-              <svg width="128" height="128" viewBox="0 0 128 128" className="transform -rotate-90">
+              <svg width="140" height="140" viewBox="0 0 140 140" className="transform -rotate-90">
                 <defs>
                   <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#818cf8" />
-                    <stop offset="50%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#4f46e5" />
+                    <stop offset="0%" stopColor="#a78bfa" />
+                    <stop offset="35%" stopColor="#6366f1" />
+                    <stop offset="70%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#06b6d4" />
                   </linearGradient>
                   <linearGradient id="inProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#38bdf8" />
-                    <stop offset="100%" stopColor="#60a5fa" />
+                    <stop offset="0%" stopColor="#93c5fd" />
+                    <stop offset="100%" stopColor="#c4b5fd" />
                   </linearGradient>
                 </defs>
                 <circle
-                  cx="64"
-                  cy="64"
+                  cx="70"
+                  cy="70"
                   r={radius}
                   fill="none"
-                  stroke="rgba(255,255,255,0.08)"
+                  stroke="#f1f5f9"
                   strokeWidth={strokeWidth}
                 />
                 {inProgressTasks > 0 && (
                   <circle
-                    cx="64"
-                    cy="64"
+                    cx="70"
+                    cy="70"
                     r={radius}
                     fill="none"
                     stroke="url(#inProgressGradient)"
@@ -306,12 +296,12 @@ function RoadmapProgressChart() {
                     strokeDasharray={circumference}
                     strokeDashoffset={inProgressOffset}
                     strokeLinecap="round"
-                    className="opacity-40"
+                    className="opacity-50"
                   />
                 )}
                 <circle
-                  cx="64"
-                  cy="64"
+                  cx="70"
+                  cy="70"
                   r={radius}
                   fill="none"
                   stroke="url(#progressGradient)"
@@ -324,27 +314,27 @@ function RoadmapProgressChart() {
               </svg>
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[28px] font-bold text-white tracking-tight leading-none">{percentage}%</span>
-              <span className="text-[10px] text-white/40 font-medium mt-1">Complete</span>
+              <span className="text-[32px] font-bold bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent tracking-tight leading-none">{percentage}%</span>
+              <span className="text-[12px] text-[#999] font-medium mt-1">Complete</span>
             </div>
           </div>
 
-          <div className="text-center space-y-1 w-full">
-            <p className="text-[11px] text-white/50 font-medium truncate px-2">
+          <div className="text-center space-y-1.5 w-full">
+            <p className="text-[13px] text-[#555] font-medium truncate px-1">
               Stage {(currentStageIndex >= 0 ? currentStageIndex : journeyStages.length - 1) + 1}: {currentStage?.title}
             </p>
-            <div className="flex items-center justify-center gap-3 text-[10px]">
-              <span className="text-emerald-400 font-semibold">{completedTasks} done</span>
-              <span className="text-white/20">·</span>
-              <span className="text-blue-300 font-semibold">{inProgressTasks} active</span>
-              <span className="text-white/20">·</span>
-              <span className="text-white/40 font-medium">{totalTasks - completedTasks - inProgressTasks} left</span>
+            <div className="flex items-center justify-center gap-3 text-[12px]">
+              <span className="text-emerald-600 font-semibold">{completedTasks} done</span>
+              <span className="text-[#ddd]">·</span>
+              <span className="text-blue-500 font-semibold">{inProgressTasks} active</span>
+              <span className="text-[#ddd]">·</span>
+              <span className="text-[#999] font-medium">{totalTasks - completedTasks - inProgressTasks} left</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-white/50 group-hover:text-white/70 transition-colors">
-            <span className="font-medium">View Roadmap</span>
-            <ChevronRight className="h-3 w-3" />
+          <div className="flex items-center gap-1 text-[13px] text-[#999] group-hover:text-indigo-500 transition-colors font-medium">
+            <span>View Roadmap</span>
+            <ChevronRight className="h-3.5 w-3.5" />
           </div>
         </div>
       </div>
@@ -482,7 +472,7 @@ function MentorshipBanner() {
         </div>
       </div>
 
-      <div className="hidden lg:block w-[220px] shrink-0">
+      <div className="hidden lg:block w-[280px] shrink-0">
         <RoadmapProgressChart />
       </div>
     </div>
