@@ -305,7 +305,7 @@ export default function ProductDetailPage() {
               isSticky && "shadow-sm"
             )}
           >
-            <div className="flex items-center justify-between p-3 md:px-6 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
+            <div className="flex items-center justify-between py-3 px-6 md:px-12 lg:px-20 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
               <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-1 min-w-0 overflow-hidden">
                 <button onClick={() => router.push("/")} className="hover:text-foreground transition-colors cursor-pointer">Home</button>
                 <span>/</span>
