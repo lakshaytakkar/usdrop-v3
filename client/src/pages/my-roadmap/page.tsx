@@ -174,29 +174,7 @@ export default function MyJourneyPage() {
                   <h3 className="text-sm font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="hidden sm:flex items-center gap-1.5 text-xs">
-                    {stats.completed > 0 && (
-                      <span className="flex items-center gap-0.5 text-green-600">
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        {stats.completed}
-                      </span>
-                    )}
-                    {stats.inProgress > 0 && (
-                      <span className="flex items-center gap-0.5 text-yellow-600">
-                        <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                        {stats.inProgress}
-                      </span>
-                    )}
-                    {stats.notStarted > 0 && (
-                      <span className="flex items-center gap-0.5 text-red-600">
-                        <span className="w-2 h-2 rounded-full bg-red-500" />
-                        {stats.notStarted}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-xs font-medium text-gray-500">{stats.completed}/{stats.total}</span>
-                </div>
+                <span className="text-xs font-medium text-gray-500 shrink-0">{stats.completed}/{stats.total}</span>
               </button>
 
               {isExpanded && (
@@ -214,15 +192,6 @@ export default function MyJourneyPage() {
                             isCompleted ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
                           )}
                         >
-                          <input
-                            type="checkbox"
-                            checked={isCompleted}
-                            onChange={() => {
-                              setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
-                            }}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0 accent-blue-600"
-                            data-testid={`checkbox-task-${task.id}`}
-                          />
                           <span className="text-gray-400 font-mono text-xs w-5 shrink-0">{task.taskNo}</span>
                           <span className="flex-1 min-w-0 truncate">
                             {task.link ? (
@@ -238,6 +207,32 @@ export default function MyJourneyPage() {
                               </span>
                             )}
                           </span>
+                          <select
+                            value={status}
+                            onChange={(e) => setTaskStatus(task.id, e.target.value as TaskStatus)}
+                            onClick={(e) => e.stopPropagation()}
+                            className={cn(
+                              "shrink-0 text-[11px] font-medium rounded-md border px-2 py-1 outline-none cursor-pointer appearance-none bg-no-repeat bg-[length:12px] bg-[right_4px_center] pr-5",
+                              status === "completed" && "bg-green-50 border-green-200 text-green-700",
+                              status === "in_progress" && "bg-yellow-50 border-yellow-200 text-yellow-700",
+                              status === "not_started" && "bg-gray-50 border-gray-200 text-gray-500"
+                            )}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
+                            data-testid={`select-status-${task.id}`}
+                          >
+                            <option value="not_started">Not Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                          </select>
+                          <input
+                            type="checkbox"
+                            checked={isCompleted}
+                            onChange={() => {
+                              setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
+                            }}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0 accent-blue-600"
+                            data-testid={`checkbox-task-${task.id}`}
+                          />
                         </div>
                       );
                     })}
