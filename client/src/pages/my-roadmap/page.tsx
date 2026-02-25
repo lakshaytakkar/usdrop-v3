@@ -9,6 +9,8 @@ import { journeyStages } from "@/data/journey-stages";
 import { useAuth } from "@/contexts/auth-context";
 import {
   ChevronRight,
+  Phone,
+  Lock,
 } from "lucide-react";
 import { FrameworkBanner } from "@/components/framework-banner";
 import { Link } from "wouter";
@@ -93,6 +95,19 @@ export default function MyJourneyPage() {
     return { completed, inProgress, notStarted: stage.tasks.length - completed - inProgress, total: stage.tasks.length };
   };
 
+  const isStageFullyCompleted = (stageId: string) => {
+    const stage = journeyStages.find(s => s.id === stageId);
+    if (!stage) return false;
+    return stage.tasks.every(t => getTaskStatus(t.id) === "completed");
+  };
+
+  const isMentorCallUnlocked = (afterStageIndex: number) => {
+    const stage1 = journeyStages[afterStageIndex - 1];
+    const stage2 = journeyStages[afterStageIndex];
+    if (!stage1 || !stage2) return false;
+    return isStageFullyCompleted(stage1.id) && isStageFullyCompleted(stage2.id);
+  };
+
   if (isLoading) {
     return (
       <div className="px-12 md:px-20 lg:px-32 py-8 max-w-[1200px] mx-auto">
@@ -109,6 +124,187 @@ export default function MyJourneyPage() {
       </div>
     );
   }
+
+  const renderMentorCallTile = (afterStageIndex: number, callNumber: number) => {
+    const unlocked = isMentorCallUnlocked(afterStageIndex);
+    const stage1 = journeyStages[afterStageIndex - 1];
+    const stage2 = journeyStages[afterStageIndex];
+
+    return (
+      <div
+        key={`mentor-call-${callNumber}`}
+        className="col-span-1 lg:col-span-2"
+        data-testid={`mentor-call-tile-${callNumber}`}
+      >
+        <div
+          className={cn(
+            "relative rounded-xl overflow-hidden transition-all",
+            unlocked
+              ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg shadow-green-200/50"
+              : "bg-gray-100 border border-gray-200"
+          )}
+        >
+          {!unlocked && (
+            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 rounded-xl">
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-500">
+                Complete all tasks in Stage {stage1.number} & Stage {stage2.number} to unlock
+              </p>
+            </div>
+          )}
+
+          <div className={cn(
+            "flex items-center justify-between px-6 py-5",
+            !unlocked && "opacity-40"
+          )}>
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                unlocked ? "bg-white/20" : "bg-gray-200"
+              )}>
+                <Phone className={cn("h-6 w-6", unlocked ? "text-white" : "text-gray-400")} />
+              </div>
+              <div>
+                <p className={cn(
+                  "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
+                  unlocked ? "text-white/70" : "text-gray-400"
+                )}>
+                  Milestone {callNumber} Completed
+                </p>
+                <h3 className={cn(
+                  "text-lg font-bold",
+                  unlocked ? "text-white" : "text-gray-600"
+                )}>
+                  Call with Mentor (Mr. Suprans)
+                </h3>
+              </div>
+            </div>
+            <a
+              href={`mailto:info@suprans.in?subject=Mentor%20Call%20Request%20-%20Milestone%20${callNumber}`}
+              onClick={(e) => { if (!unlocked) e.preventDefault(); }}
+              className={cn(
+                "inline-flex items-center gap-2 h-10 px-5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap shrink-0",
+                unlocked
+                  ? "bg-white text-green-600 hover:bg-white/90 shadow-md cursor-pointer"
+                  : "bg-gray-200 text-gray-400 cursor-not-allowed"
+              )}
+              data-testid={`button-request-call-${callNumber}`}
+            >
+              <Phone className="h-4 w-4" />
+              Request Call
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const gridItems: JSX.Element[] = [];
+  journeyStages.forEach((stage, index) => {
+    const stats = getStageStats(stage.id);
+    const isExpanded = expandedStages.has(stage.id);
+    const stageProgress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
+    const isStageCompleted = stageProgress === 100;
+
+    gridItems.push(
+      <div key={stage.id} className="border rounded-xl bg-white overflow-hidden self-start">
+        <button
+          onClick={() => toggleStage(stage.id)}
+          className={cn(
+            "w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer transition-colors",
+            isStageCompleted ? "bg-green-50" : "hover:bg-gray-50"
+          )}
+        >
+          <ChevronRight className={cn("h-4 w-4 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
+
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+            isStageCompleted ? "bg-green-500 text-white" : "bg-indigo-100 text-indigo-700"
+          )}>
+            {stage.number}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <span className="text-[11px] font-medium text-gray-400 uppercase leading-none">{stage.phase}</span>
+            <h3 className="text-sm font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
+          </div>
+
+          <span className="text-xs font-medium text-gray-500 shrink-0">{stats.completed}/{stats.total}</span>
+        </button>
+
+        {isExpanded && (
+          <div className="border-t">
+            <div className="divide-y">
+              {stage.tasks.map((task) => {
+                const status = getTaskStatus(task.id);
+                const isCompleted = status === "completed";
+
+                return (
+                  <div
+                    key={task.id}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2.5 text-sm",
+                      isCompleted ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
+                    )}
+                  >
+                    <span className="text-gray-400 font-mono text-xs w-5 shrink-0">{task.taskNo}</span>
+                    <span className="flex-1 min-w-0 truncate">
+                      {task.link ? (
+                        <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
+                          {task.title}
+                        </Link>
+                      ) : (
+                        <span className={cn(
+                          "text-gray-900",
+                          isCompleted && "line-through text-gray-500"
+                        )}>
+                          {task.title}
+                        </span>
+                      )}
+                    </span>
+                    <select
+                      value={status}
+                      onChange={(e) => setTaskStatus(task.id, e.target.value as TaskStatus)}
+                      onClick={(e) => e.stopPropagation()}
+                      className={cn(
+                        "shrink-0 text-[11px] font-medium rounded-md border px-2 py-1 outline-none cursor-pointer appearance-none pr-2",
+                        status === "completed" && "bg-green-50 border-green-200 text-green-700",
+                        status === "in_progress" && "bg-yellow-50 border-yellow-200 text-yellow-700",
+                        status === "not_started" && "bg-gray-50 border-gray-200 text-gray-500"
+                      )}
+                      data-testid={`select-status-${task.id}`}
+                    >
+                      <option value="not_started">Not Started</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                    <input
+                      type="checkbox"
+                      checked={isCompleted}
+                      onChange={() => {
+                        setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
+                      }}
+                      className={cn(
+                        "h-4 w-4 rounded border-gray-300 cursor-pointer shrink-0",
+                        isCompleted ? "accent-green-600" : status === "in_progress" ? "accent-yellow-500" : "accent-white"
+                      )}
+                      data-testid={`checkbox-task-${task.id}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+
+    if ((index + 1) % 2 === 0) {
+      gridItems.push(renderMentorCallTile(index, (index + 1) / 2));
+    }
+  });
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-roadmap">
@@ -145,120 +341,8 @@ export default function MyJourneyPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {journeyStages.map((stage) => {
-          const stats = getStageStats(stage.id);
-          const isExpanded = expandedStages.has(stage.id);
-          const stageProgress = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
-          const isStageCompleted = stageProgress === 100;
-
-          return (
-            <div key={stage.id} className="border rounded-xl bg-white overflow-hidden self-start">
-              <button
-                onClick={() => toggleStage(stage.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer transition-colors",
-                  isStageCompleted ? "bg-green-50" : "hover:bg-gray-50"
-                )}
-              >
-                <ChevronRight className={cn("h-4 w-4 text-gray-400 transition-transform shrink-0", isExpanded && "rotate-90")} />
-
-                <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                  isStageCompleted ? "bg-green-500 text-white" : "bg-indigo-100 text-indigo-700"
-                )}>
-                  {stage.number}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <span className="text-[11px] font-medium text-gray-400 uppercase leading-none">{stage.phase}</span>
-                  <h3 className="text-sm font-semibold text-gray-900 truncate leading-tight">Stage {stage.number}: {stage.title}</h3>
-                </div>
-
-                <span className="text-xs font-medium text-gray-500 shrink-0">{stats.completed}/{stats.total}</span>
-              </button>
-
-              {isExpanded && (
-                <div className="border-t">
-                  <div className="divide-y">
-                    {stage.tasks.map((task) => {
-                      const status = getTaskStatus(task.id);
-                      const isCompleted = status === "completed";
-
-                      return (
-                        <div
-                          key={task.id}
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-2.5 text-sm",
-                            isCompleted ? "bg-green-50/50" : status === "in_progress" ? "bg-yellow-50/30" : ""
-                          )}
-                        >
-                          <span className="text-gray-400 font-mono text-xs w-5 shrink-0">{task.taskNo}</span>
-                          <span className="flex-1 min-w-0 truncate">
-                            {task.link ? (
-                              <Link href={task.link} className="text-gray-900 hover:text-indigo-600 transition-colors">
-                                {task.title}
-                              </Link>
-                            ) : (
-                              <span className={cn(
-                                "text-gray-900",
-                                isCompleted && "line-through text-gray-500"
-                              )}>
-                                {task.title}
-                              </span>
-                            )}
-                          </span>
-                          <select
-                            value={status}
-                            onChange={(e) => setTaskStatus(task.id, e.target.value as TaskStatus)}
-                            onClick={(e) => e.stopPropagation()}
-                            className={cn(
-                              "shrink-0 text-[11px] font-medium rounded-md border px-2 py-1 outline-none cursor-pointer appearance-none pr-2",
-                              status === "completed" && "bg-green-50 border-green-200 text-green-700",
-                              status === "in_progress" && "bg-yellow-50 border-yellow-200 text-yellow-700",
-                              status === "not_started" && "bg-gray-50 border-gray-200 text-gray-500"
-                            )}
-                            data-testid={`select-status-${task.id}`}
-                          >
-                            <option value="not_started">Not Started</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                          </select>
-                          <input
-                            type="checkbox"
-                            checked={isCompleted}
-                            onChange={() => {
-                              setTaskStatus(task.id, isCompleted ? "not_started" : "completed");
-                            }}
-                            className={cn(
-                              "h-4 w-4 rounded border-gray-300 cursor-pointer shrink-0",
-                              isCompleted ? "accent-green-600" : status === "in_progress" ? "accent-yellow-500" : "accent-white"
-                            )}
-                            data-testid={`checkbox-task-${task.id}`}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {stage.callout && (
-                    <div className="px-4 py-2.5 bg-red-600 text-white text-center text-xs font-bold uppercase tracking-wider">
-                      {stage.callout}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {gridItems}
       </div>
-
-      {overallProgress === 100 && (
-        <Card className="p-8 mt-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white text-center">
-          <ChevronRight className="h-14 w-14 mx-auto mb-3" />
-          <h3 className="text-2xl font-bold mb-2">Congratulations! You've completed your roadmap!</h3>
-          <p className="text-white/90 text-base">You're now ready to scale your dropshipping business to new heights.</p>
-        </Card>
-      )}
 
       </div>
     </div>
