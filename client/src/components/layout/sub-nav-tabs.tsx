@@ -9,12 +9,6 @@ import { useUserPlan } from "@/hooks/use-user-plan"
 import { Search, PlayCircle, Download, SlidersHorizontal } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
-interface QuickFilter {
-  id: string
-  emoji: string
-  label: string
-}
-
 interface ToolbarAction {
   label: string
   icon: typeof PlayCircle
@@ -27,7 +21,6 @@ interface ToolbarConfig {
   searchPlaceholder: string
   showSearch: boolean
   actions?: ToolbarAction[]
-  quickFilters?: QuickFilter[]
   videoTutorialTitle?: string
   videoTutorialUrl?: string
 }
@@ -41,14 +34,6 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
       { label: "Export", icon: Download },
     ],
     videoTutorialTitle: "Products Page Video Tutorial",
-    quickFilters: [
-      { id: "last-30", emoji: "📅", label: "Last 30 Days" },
-      { id: "trending", emoji: "🔥", label: "Trending" },
-      { id: "high-profit", emoji: "💰", label: "High Profit" },
-      { id: "new-arrivals", emoji: "✨", label: "New Arrivals" },
-      { id: "top-rated", emoji: "⭐", label: "Top Rated" },
-      { id: "best-sellers", emoji: "🏆", label: "Best Sellers" },
-    ],
   },
   Framework: {
     searchPlaceholder: "",
@@ -62,12 +47,6 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
       { label: "Video Tutorial", icon: PlayCircle, isVideoTutorial: true },
     ],
     videoTutorialTitle: "Ads Page Video Tutorial",
-    quickFilters: [
-      { id: "top-performing", emoji: "🚀", label: "Top Performing" },
-      { id: "video-ads", emoji: "🎬", label: "Video Ads" },
-      { id: "image-ads", emoji: "🖼️", label: "Image Ads" },
-      { id: "recent", emoji: "⚡", label: "Recent" },
-    ],
   },
   "Private Supplier": {
     searchPlaceholder: "",
@@ -151,7 +130,6 @@ export function SubNavTabs() {
   const activeGroup = findActiveGroup(pathname || "")
   const { isFree, isLoading } = useUserPlan()
   const [searchValue, setSearchValue] = useState("")
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(["last-30"]))
   const [videoModalOpen, setVideoModalOpen] = useState(false)
 
   if (!activeGroup) return null
@@ -164,22 +142,9 @@ export function SubNavTabs() {
   }
 
   const hasToolbar = !isOnCategories && (toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0))
-  const hasFilters = toolbar.quickFilters && toolbar.quickFilters.length > 0
-  if (!hasTabs && !hasToolbar && !hasFilters) return null
+  if (!hasTabs && !hasToolbar) return null
 
   const showNumbering = activeGroup.label === "Framework"
-
-  const toggleFilter = (filterId: string) => {
-    setActiveFilters(prev => {
-      const next = new Set(prev)
-      if (next.has(filterId)) {
-        next.delete(filterId)
-      } else {
-        next.add(filterId)
-      }
-      return next
-    })
-  }
 
   return (
     <>
