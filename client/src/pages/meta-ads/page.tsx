@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import { AdCard } from "./components/ad-card"
 import { AdDetailSheet } from "./components/ad-detail-sheet"
+import { FrameworkBanner } from "@/components/framework-banner"
 import {
   MetaAd,
   sampleAds,
@@ -348,8 +349,15 @@ export default function MetaAdsPage() {
 
   return (
     <>
-      <div className="flex flex-1 h-[calc(100vh-110px)] overflow-hidden">
-        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8 overflow-hidden">
+      <div className="flex flex-col flex-1 h-[calc(100vh-110px)] overflow-hidden">
+        <div className="px-12 md:px-20 lg:px-32 pt-6">
+          <FrameworkBanner
+            title="Meta Ads Spy"
+            description="Discover winning ad creatives, analyze competitor strategies, and find high-performing Meta ads across industries"
+            iconSrc="/images/logos/meta-white.svg"
+          />
+        </div>
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-4 md:py-6 overflow-hidden">
           <FilterSidebar
             filters={filters}
             setFilter={setFilter}
