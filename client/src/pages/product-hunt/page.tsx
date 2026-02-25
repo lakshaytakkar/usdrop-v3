@@ -228,7 +228,9 @@ export default function ProductHuntPage() {
   
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const urlParams = new URLSearchParams(window.location.search)
+  const initialCategory = urlParams.get('category') || "all"
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 999])
   const [page, setPage] = useState(1)
