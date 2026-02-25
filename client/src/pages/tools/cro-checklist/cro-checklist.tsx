@@ -227,7 +227,7 @@ export function CROChecklist() {
 
   if (isLoading) {
     return (
-      <div className="w-full max-w-5xl mx-auto space-y-4">
+      <div className="w-full space-y-4">
         {[1, 2, 3].map(i => (
           <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
         ))}
@@ -236,7 +236,7 @@ export function CROChecklist() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto space-y-5">
+    <div className="w-full space-y-5">
       <Card className="bg-white border-gray-100">
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-3">
