@@ -22,7 +22,6 @@ import {
 } from "lucide-react"
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION, STAGGER } from "@/lib/motion/constants"
-import { FrameworkBanner } from "@/components/framework-banner"
 
 const DISCOUNT_CODE = "USDROP30"
 
@@ -132,15 +131,6 @@ export default function MyLLCPage() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0 relative">
-      <div className="px-12 md:px-20 lg:px-32 py-2">
-        <FrameworkBanner
-          title="LLC Formation"
-          description="Form your US LLC and unlock marketplace approvals, banking, and payment gateways"
-          iconSrc="/3d-ecom-icons-blue/Category_Grid.png"
-          tutorialVideoUrl=""
-        />
-      </div>
-
       <div className="relative overflow-hidden">
         <div className="absolute top-[-200px] right-[-200px] size-[640px] pointer-events-none">
           <div className="absolute inset-[-65.63%]">
