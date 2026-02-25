@@ -29,33 +29,33 @@ const stats = [
 const steps = [
   {
     step: "01",
-    title: "Browse & Pick Products",
-    description: "Explore our curated catalog. Find winning products with proven demand and competitive margins.",
+    title: "Pick Your Products",
+    description: "Browse our curated catalog of winning products with proven demand.",
   },
   {
     step: "02",
-    title: "We Source & Stock for You",
-    description: "Our warehouse in Dongguan, China holds inventory ready to ship. No bulk purchasing needed.",
+    title: "We Stock It for You",
+    description: "Our Dongguan warehouse holds inventory ready to ship. No bulk buying.",
   },
   {
     step: "03",
-    title: "Customer Places an Order",
-    description: "When your customer orders, it syncs automatically to our fulfillment system within minutes.",
+    title: "Order Comes In",
+    description: "Customer orders sync to our fulfillment system automatically.",
   },
   {
     step: "04",
-    title: "Professional Packing & Labeling",
-    description: "Each order is carefully packed with your branding. Custom labels and inserts available.",
+    title: "Packed Under Your Brand",
+    description: "Custom labels, inserts, and packaging — shipped as your brand.",
   },
   {
     step: "05",
-    title: "Fast Shipping via USDrop Express",
-    description: "Orders dispatched within 1 business day. Delivered to USA customers in 6-8 days with full tracking.",
+    title: "Shipped via USDrop Express",
+    description: "Dispatched within 1 day. Delivered to USA in 6-8 days with tracking.",
   },
   {
     step: "06",
-    title: "Automatic Tracking Updates",
-    description: "Your customers receive real-time tracking. No manual work — everything is automated.",
+    title: "Tracking Sent Automatically",
+    description: "Real-time updates sent to your customers. Zero manual work.",
   },
 ]
 
@@ -63,32 +63,32 @@ const features = [
   {
     icon: Shield,
     title: "Verified & Trusted",
-    description: "Fully vetted supplier with 5-star rating and 1,250+ successful orders.",
+    description: "5-star rated with 1,250+ successful orders fulfilled.",
   },
   {
     icon: Clock,
     title: "1-Day Processing",
-    description: "Orders processed and dispatched within 1 business day.",
+    description: "Orders dispatched within 1 business day.",
   },
   {
     icon: Globe,
     title: "USA Express Delivery",
-    description: "Dedicated USDrop Express Line delivers in just 6-8 days.",
+    description: "6-8 day delivery via our dedicated express line.",
   },
   {
     icon: Zap,
-    title: "Zero Minimum Order",
-    description: "Order one piece or a thousand — no minimums required.",
+    title: "No Minimums",
+    description: "Order one piece or a thousand. No minimums ever.",
   },
   {
     icon: Award,
     title: "Whitelabel Ready",
-    description: "Custom branding and packaging so products ship under your brand.",
+    description: "Products ship under your brand with custom packaging.",
   },
   {
     icon: HeadphonesIcon,
     title: "Dedicated Support",
-    description: "Direct line to your account manager for any questions or requests.",
+    description: "Direct line to your personal account manager.",
   },
 ]
 
@@ -105,10 +105,10 @@ export default function SuppliersPage() {
             className="text-[40px] md:text-[52px] font-bold text-black leading-[1.08] tracking-[-1.5px] md:tracking-[-2px]"
             data-testid="text-supplier-title"
           >
-            Your Private Supplier
+            Source. Pack. Ship.
           </h1>
           <p className="text-[17px] md:text-[19px] text-[#666] max-w-xl mx-auto leading-[1.5]">
-            We source, pack, and ship your products directly to your customers in 6-8 days across the USA.
+            Your own private supplier. Products delivered to USA customers in 6-8 days — under your brand.
           </p>
           <div className="pt-2">
             <button
@@ -132,12 +132,13 @@ export default function SuppliersPage() {
               alt="USDrop Private Supplier Operations"
               className="absolute inset-0 w-full h-full object-cover opacity-40"
             />
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-black/40" />
             <div className="relative z-10 flex flex-col items-center gap-4">
               <div className="h-24 w-24 rounded-full bg-white shadow-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Play className="h-10 w-10 text-black ml-1" />
               </div>
-              <p className="text-white font-bold text-[20px] tracking-[-0.4px] drop-shadow-md">Watch How It Works</p>
+              <p className="text-white font-bold text-[20px] tracking-[-0.4px] drop-shadow-md">See How It Works</p>
+              <p className="text-[14px] text-white/50">2 min watch</p>
             </div>
           </div>
         </div>
@@ -165,16 +166,21 @@ export default function SuppliersPage() {
               <div className="h-11 w-11 mx-auto rounded-[12px] bg-white border border-black/[0.04] flex items-center justify-center">
                 <stat.icon className="h-5 w-5 text-black" />
               </div>
-              <p className="text-[28px] font-bold text-black tracking-[-0.5px]">{stat.value}</p>
+              <p className="text-[28px] font-bold text-black tracking-[-0.5px]" data-testid={`text-stat-value-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}>{stat.value}</p>
               <p className="text-[13px] text-[#999]">{stat.label}</p>
             </div>
           ))}
         </div>
 
         <div className="space-y-10">
-          <h2 className="text-[32px] md:text-[40px] font-bold text-black tracking-[-1.2px] leading-[1.1] text-center">
-            How It Works
-          </h2>
+          <div className="text-center space-y-3">
+            <h2 className="text-[32px] md:text-[40px] font-bold text-black tracking-[-1.2px] leading-[1.1]">
+              How It Works
+            </h2>
+            <p className="text-[15px] text-[#666] max-w-md mx-auto">
+              From product selection to doorstep delivery — fully automated.
+            </p>
+          </div>
           <div className="space-y-4">
             {steps.map((item) => (
               <div key={item.step} className="flex items-start gap-5 bg-[#FAFAFA] border border-black/[0.04] rounded-[16px] p-6 md:p-8" data-testid={`card-step-${item.step}`}>
@@ -198,9 +204,14 @@ export default function SuppliersPage() {
         </div>
 
         <div className="space-y-10">
-          <h2 className="text-[32px] md:text-[40px] font-bold text-black tracking-[-1.2px] leading-[1.1] text-center">
-            Why Choose Us
-          </h2>
+          <div className="text-center space-y-3">
+            <h2 className="text-[32px] md:text-[40px] font-bold text-black tracking-[-1.2px] leading-[1.1]">
+              Why Choose Us
+            </h2>
+            <p className="text-[15px] text-[#666] max-w-md mx-auto">
+              Built for dropshippers who want reliability without the hassle.
+            </p>
+          </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((feature) => (
               <div
@@ -216,45 +227,64 @@ export default function SuppliersPage() {
               </div>
             ))}
           </div>
+          <div className="text-center">
+            <button
+              className="inline-flex items-center gap-2.5 bg-black hover:bg-gray-900 text-white font-bold px-8 py-4 rounded-[10px] text-[15px] uppercase tracking-[0.04em] transition-colors cursor-pointer"
+              data-testid="button-features-cta"
+            >
+              Connect with Supplier
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="bg-white border border-black/[0.04] rounded-[20px] p-8 md:p-10">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <Avatar className="h-20 w-20 border-2 border-black/[0.04] flex-shrink-0">
-              <AvatarImage src="/images/suppliers/warehouse-worker-thumbnail.png" alt="Juice Chen" />
-              <AvatarFallback className="text-xl font-bold bg-[#FAFAFA] text-black">JC</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-center md:text-left space-y-3">
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <h3 className="text-[20px] font-bold text-black tracking-[-0.4px]">Juice Chen</h3>
-                <CheckCircle2 className="h-4 w-4 text-black" />
-              </div>
-              <p className="text-[13px] text-[#999]">Account Manager &bull; Dongguan, China</p>
-              <p className="text-[15px] text-[#666] leading-[1.5]">
-                Your dedicated point of contact for all supplier needs. From product sourcing to custom packaging, Juice handles everything.
-              </p>
-              <div className="flex items-center gap-3 justify-center md:justify-start pt-1">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-[14px] font-bold text-black">5.0</span>
+        <div className="space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-[32px] md:text-[40px] font-bold text-black tracking-[-1.2px] leading-[1.1]">
+              Your Account Manager
+            </h2>
+            <p className="text-[15px] text-[#666] max-w-md mx-auto">
+              One point of contact for sourcing, packaging, and fulfillment.
+            </p>
+          </div>
+          <div className="bg-[#FAFAFA] border border-black/[0.04] rounded-[20px] p-8 md:p-10">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <Avatar className="h-24 w-24 border-2 border-black/[0.04] flex-shrink-0">
+                <AvatarImage src="/images/suppliers/warehouse-worker-thumbnail.png" alt="Juice Chen" />
+                <AvatarFallback className="text-xl font-bold bg-white text-black">JC</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-center md:text-left space-y-3">
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <h3 className="text-[20px] font-bold text-black tracking-[-0.4px]">Juice Chen</h3>
+                  <CheckCircle2 className="h-5 w-5 text-black" />
                 </div>
-                <span className="text-[#ccc]">&bull;</span>
-                <span className="text-[13px] text-[#999]">1,250+ orders</span>
-                <span className="text-[#ccc]">&bull;</span>
-                <span className="text-[13px] text-[#999] inline-flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  China
-                </span>
+                <p className="text-[13px] text-[#999] uppercase tracking-[0.06em]">Account Manager &bull; Dongguan, China</p>
+                <p className="text-[15px] text-[#666] leading-[1.5]">
+                  From product sourcing to custom packaging — Juice handles everything so you can focus on selling.
+                </p>
+                <div className="flex items-center gap-3 justify-center md:justify-start pt-1">
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-[14px] font-bold text-black">5.0</span>
+                  </div>
+                  <span className="text-[#ccc]">&bull;</span>
+                  <span className="text-[13px] text-[#999]">1,250+ orders</span>
+                  <span className="text-[#ccc]">&bull;</span>
+                  <span className="text-[13px] text-[#999] inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    China
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex-shrink-0">
-              <button
-                className="inline-flex items-center gap-2 bg-black hover:bg-gray-900 text-white font-bold px-6 py-3 rounded-[10px] text-[14px] transition-colors cursor-pointer"
-                data-testid="button-contact-supplier"
-              >
-                <Mail className="h-4 w-4" />
-                Contact Supplier
-              </button>
+              <div className="flex-shrink-0">
+                <button
+                  className="inline-flex items-center gap-2 bg-black hover:bg-gray-900 text-white font-bold px-6 py-3 rounded-[10px] text-[14px] uppercase tracking-[0.04em] transition-colors cursor-pointer"
+                  data-testid="button-contact-supplier"
+                >
+                  <Mail className="h-4 w-4" />
+                  Contact
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -269,10 +299,10 @@ export default function SuppliersPage() {
           />
           <div className="relative z-10 space-y-6">
             <h2 className="text-[28px] md:text-[36px] lg:text-[44px] font-bold text-white tracking-[-1px] leading-[1.1]">
-              Ready to Start Selling?
+              Stop Searching for Suppliers
             </h2>
             <p className="text-[16px] text-[#888] max-w-lg mx-auto leading-[1.5]">
-              Connect with your private supplier today. No minimum orders, no upfront inventory costs.
+              One supplier. One contact. Zero minimum orders. Start fulfilling today.
             </p>
             <div className="pt-2">
               <button
