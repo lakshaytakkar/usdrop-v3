@@ -2,6 +2,7 @@ import { Hero } from "./components/Hero"
 import { LogoMarquee } from "./components/LogoMarquee"
 import { ImageCarousel } from "./components/ImageCarousel"
 import { StatsBar } from "./components/StatsBar"
+import { BentoFeatures } from "./components/BentoFeatures"
 import { ProductShowcase } from "./components/ProductShowcase"
 import { StepsSection } from "./components/StepsSection"
 import { Testimonials } from "./components/Testimonials"
@@ -32,6 +33,7 @@ export default function MarketingPage() {
         <LogoMarquee />
         <ImageCarousel />
         <StatsBar />
+        <BentoFeatures />
         <ProductShowcase />
         <StepsSection />
         <Testimonials />

@@ -1,6 +1,7 @@
 import { MotionFadeIn } from "@/components/motion/MotionFadeIn"
 import { DISTANCE, DURATION } from "@/lib/motion"
 import { Link } from "wouter"
+import { ArrowRight } from "lucide-react"
 
 const tools = [
   {
@@ -70,22 +71,28 @@ export function BentoFeatures() {
             >
               <Link href={tool.href} data-testid={`link-tool-${tool.title.toLowerCase().replace(/\s+/g, '-')}`}>
                 <div
-                  className="rounded-[16px] overflow-hidden bg-[#FAFAFA] border border-black/[0.04] hover-elevate cursor-pointer h-full"
+                  className="group relative rounded-[16px] overflow-hidden cursor-pointer h-full aspect-[16/10]"
                   data-testid={`card-tool-${tool.title.toLowerCase().replace(/\s+/g, '-')}`}
                 >
-                  <div className="h-[180px] overflow-hidden">
-                    <img
-                      src={tool.image}
-                      alt={tool.title}
-                      className="w-full h-full object-cover"
-                      decoding="async"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-[17px] font-semibold text-black mb-1.5 tracking-[-0.01em]">
-                      {tool.title}
-                    </h3>
-                    <p className="text-[14px] text-[#888] leading-[20px]">
+                  <img
+                    src={tool.image}
+                    alt={tool.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                    decoding="async"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/5 transition-opacity duration-300 group-hover:from-black/80 group-hover:via-black/50 group-hover:to-black/30" />
+
+                  <div className="absolute inset-0 bg-black/0 transition-all duration-300 group-hover:bg-black/25" />
+
+                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 z-10">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-[18px] sm:text-[20px] font-bold text-white tracking-[-0.01em] leading-tight">
+                        {tool.title}
+                      </h3>
+                      <ArrowRight className="w-5 h-5 text-white transition-all duration-300 group-hover:text-[#6366F1] group-hover:translate-x-1" />
+                    </div>
+                    <p className="text-[13px] sm:text-[14px] text-white/75 leading-[20px]">
                       {tool.description}
                     </p>
                   </div>

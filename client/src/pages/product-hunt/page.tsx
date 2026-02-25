@@ -39,16 +39,23 @@ function FilterSidebar({
   setSortBy,
   priceRange,
   setPriceRange,
+  selectedCategory,
+  setSelectedCategory,
+  parentCategories,
   onReset,
 }: {
   sortBy: SortOption
   setSortBy: (sort: SortOption) => void
   priceRange: [number, number]
   setPriceRange: (range: [number, number]) => void
+  selectedCategory: string
+  setSelectedCategory: (cat: string) => void
+  parentCategories: Category[]
   onReset: () => void
 }) {
   const [sortOpen, setSortOpen] = useState(true)
   const [priceOpen, setPriceOpen] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(true)
 
   return (
     <aside className="w-[220px] shrink-0 hidden lg:block">
@@ -60,6 +67,67 @@ function FilterSidebar({
 
         <div className="space-y-4">
           <div>
+            <button
+              onClick={() => setCategoryOpen(!categoryOpen)}
+              className="flex items-center justify-between w-full py-1.5 cursor-pointer ds-label"
+              data-testid="button-toggle-category"
+            >
+              <span>Category</span>
+              {categoryOpen ? <ChevronDown className="h-4 w-4 text-gray-400" /> : <ChevronRight className="h-4 w-4 text-gray-400" />}
+            </button>
+            {categoryOpen && (
+              <div className="mt-2 space-y-1 max-h-[240px] overflow-y-auto">
+                <button
+                  data-testid="button-category-all"
+                  onClick={() => setSelectedCategory("all")}
+                  className={cn(
+                    "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
+                    selectedCategory === "all"
+                      ? "bg-blue-50 text-blue-600 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  )}
+                >
+                  <div className={cn(
+                    "w-3 h-3 rounded-full border-2 flex-shrink-0",
+                    selectedCategory === "all"
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300"
+                  )} />
+                  <span>All Categories</span>
+                </button>
+                {parentCategories.map(cat => (
+                  <button
+                    key={cat.id}
+                    data-testid={`button-category-${cat.slug}`}
+                    onClick={() => setSelectedCategory(cat.slug)}
+                    className={cn(
+                      "flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm transition-colors cursor-pointer",
+                      selectedCategory === cat.slug
+                        ? "bg-blue-50 text-blue-600 font-medium"
+                        : "text-gray-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-3 h-3 rounded-full border-2 flex-shrink-0",
+                      selectedCategory === cat.slug
+                        ? "border-blue-500 bg-blue-500"
+                        : "border-gray-300"
+                    )} />
+                    {(cat.thumbnail || cat.image) && (
+                      <img
+                        src={cat.thumbnail || cat.image || ''}
+                        alt={cat.name}
+                        className="w-4 h-4 rounded-sm object-cover flex-shrink-0"
+                      />
+                    )}
+                    <span className="capitalize truncate">{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-gray-100 pt-3">
             <button
               onClick={() => setSortOpen(!sortOpen)}
               className="flex items-center justify-between w-full py-1.5 cursor-pointer ds-label"
@@ -366,6 +434,9 @@ export default function ProductHuntPage() {
             setSortBy={setSortBy}
             priceRange={priceRange}
             setPriceRange={setPriceRange}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            parentCategories={parentCategories}
             onReset={handleResetFilters}
           />
 
@@ -383,43 +454,6 @@ export default function ProductHuntPage() {
                 <Filter className="h-4 w-4" />
                 Filters
               </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2" data-testid="category-pills">
-              <button
-                data-testid="button-category-all"
-                onClick={() => setSelectedCategory("all")}
-                className={cn(
-                  "px-3.5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
-                  selectedCategory === "all"
-                    ? "bg-blue-500 text-white border-blue-500 shadow-sm"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"
-                )}
-              >
-                All Categories
-              </button>
-              {parentCategories.map(cat => (
-                <button
-                  key={cat.id}
-                  data-testid={`button-category-${cat.slug}`}
-                  onClick={() => setSelectedCategory(cat.slug)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-medium transition-all cursor-pointer border",
-                    selectedCategory === cat.slug
-                      ? "bg-blue-500 text-white border-blue-500 shadow-sm"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600"
-                  )}
-                >
-                  {(cat.thumbnail || cat.image) && (
-                    <img
-                      src={cat.thumbnail || cat.image || ''}
-                      alt={cat.name}
-                      className="w-4 h-4 rounded-sm object-cover"
-                    />
-                  )}
-                  <span className="capitalize">{cat.name}</span>
-                </button>
-              ))}
             </div>
 
             {showMobileFilters && (
