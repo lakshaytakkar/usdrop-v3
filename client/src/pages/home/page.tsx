@@ -218,7 +218,7 @@ function RoadmapProgressChart() {
     : 0
   const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
-  const radius = 54
+  const radius = 62
   const strokeWidth = 10
   const circumference = 2 * Math.PI * radius
   const completedOffset = circumference - (completedTasks / totalTasks) * circumference
@@ -255,16 +255,13 @@ function RoadmapProgressChart() {
         </div>
 
         <div className="relative flex flex-col items-center justify-center p-6 h-full gap-4">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-            <span className="text-[12px] font-bold uppercase tracking-[0.08em] text-indigo-500">My Roadmap</span>
-          </div>
+          <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-indigo-500">Progress Tracker</span>
 
           <div className="relative">
             {isLoading ? (
-              <div className="w-[140px] h-[140px] rounded-full border-4 border-gray-100 animate-pulse" />
+              <div className="w-[160px] h-[160px] rounded-full border-4 border-gray-100 animate-pulse" />
             ) : (
-              <svg width="140" height="140" viewBox="0 0 140 140" className="transform -rotate-90">
+              <svg width="160" height="160" viewBox="0 0 160 160" className="transform -rotate-90">
                 <defs>
                   <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="#a78bfa" />
@@ -278,8 +275,8 @@ function RoadmapProgressChart() {
                   </linearGradient>
                 </defs>
                 <circle
-                  cx="70"
-                  cy="70"
+                  cx="80"
+                  cy="80"
                   r={radius}
                   fill="none"
                   stroke="#f1f5f9"
@@ -287,8 +284,8 @@ function RoadmapProgressChart() {
                 />
                 {inProgressTasks > 0 && (
                   <circle
-                    cx="70"
-                    cy="70"
+                    cx="80"
+                    cy="80"
                     r={radius}
                     fill="none"
                     stroke="url(#inProgressGradient)"
@@ -300,8 +297,8 @@ function RoadmapProgressChart() {
                   />
                 )}
                 <circle
-                  cx="70"
-                  cy="70"
+                  cx="80"
+                  cy="80"
                   r={radius}
                   fill="none"
                   stroke="url(#progressGradient)"
@@ -314,8 +311,8 @@ function RoadmapProgressChart() {
               </svg>
             )}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[32px] font-bold bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent tracking-tight leading-none">{percentage}%</span>
-              <span className="text-[12px] text-[#999] font-medium mt-1">Complete</span>
+              <span className="text-[36px] font-bold bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent tracking-tight leading-none">{percentage}%</span>
+              <span className="text-[13px] text-[#999] font-medium mt-1">Complete</span>
             </div>
           </div>
 
@@ -472,7 +469,7 @@ function MentorshipBanner() {
         </div>
       </div>
 
-      <div className="hidden lg:block w-[280px] shrink-0">
+      <div className="hidden lg:block w-[300px] shrink-0">
         <RoadmapProgressChart />
       </div>
     </div>
