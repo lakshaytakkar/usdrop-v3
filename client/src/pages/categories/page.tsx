@@ -88,15 +88,15 @@ function CategoriesPageContent() {
                   <div className="group relative rounded-xl bg-white border border-black/[0.06] p-4 hover:border-black/[0.12] hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)] transition-all cursor-pointer h-full flex flex-col">
                     {isLocked && <LockOverlay onClick={() => setIsUpsellOpen(true)} />}
 
-                    <div className="h-11 w-11 rounded-lg bg-[#F5F5F7] flex items-center justify-center mb-3 overflow-hidden">
+                    <div className="w-full aspect-[16/10] rounded-lg bg-[#F5F5F7] flex items-center justify-center mb-3 overflow-hidden">
                       {category.image ? (
                         <img
                           src={category.thumbnail || category.image}
                           alt=""
-                          className="h-full w-full object-cover rounded-lg"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
-                        <Package className="h-5 w-5 text-[#999]" />
+                        <Package className="h-6 w-6 text-[#999]" />
                       )}
                     </div>
 
