@@ -349,7 +349,7 @@ export default function MetaAdsPage() {
 
   return (
     <>
-      <div className="flex flex-col flex-1 h-[calc(100vh-110px)] overflow-hidden">
+      <div className="flex flex-col flex-1">
         <div className="px-12 md:px-20 lg:px-32 pt-6">
           <FrameworkBanner
             title="Meta Ads Spy"
@@ -357,14 +357,14 @@ export default function MetaAdsPage() {
             iconSrc="/images/logos/meta-white.svg"
           />
         </div>
-        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-4 md:py-6 overflow-hidden">
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8">
           <FilterSidebar
             filters={filters}
             setFilter={setFilter}
             onReset={resetFilters}
           />
 
-          <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+          <div className="flex-1 flex flex-col gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
