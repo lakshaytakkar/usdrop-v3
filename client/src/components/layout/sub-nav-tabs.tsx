@@ -157,7 +157,7 @@ export function SubNavTabs() {
   if (!activeGroup) return null
 
   const hasTabs = activeGroup.items.length > 1
-  const isOnCategories = pathname?.includes('/categories')
+  const isOnCategories = pathname?.includes('/categories') || pathname?.includes('/seasonal-collections')
   const toolbar = toolbarConfigs[activeGroup.label] || {
     searchPlaceholder: "Search...",
     showSearch: true,

@@ -1,12 +1,9 @@
-
-
 import { useState } from "react"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalBanner } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
-// Seasonal collections data
 const seasonalCollections = [
   {
     name: "Christmas Collection",
@@ -48,43 +45,31 @@ function SeasonalCollectionsPageContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 relative">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">Seasonal Collections</h1>
-            <p className="text-muted-foreground mb-6">
-              Discover curated product collections for seasonal holidays and special occasions
-            </p>
-          </div>
+      <div className="flex flex-1 flex-col gap-3 px-12 md:px-20 lg:px-32 py-6 md:py-8 relative">
+        {seasonalCollections.map((collection, index) => {
+          const { isLocked } = getTeaserLockState(index, isFree, {
+            freeVisibleCount: 3,
+            strategy: "first-n-items"
+          })
+          return (
+            <SeasonalBanner
+              key={collection.slug}
+              name={collection.name}
+              slug={collection.slug}
+              thumbnail={collection.thumbnail}
+              dateRange={collection.dateRange}
+              marketingDateRange={collection.marketingDateRange}
+              gradient={collection.gradient}
+              isLocked={isLocked}
+              onLockedClick={() => setIsUpsellOpen(true)}
+            />
+          )
+        })}
+      </div>
 
-          {/* Seasonal Collection Banners */}
-          <div className="flex flex-col gap-4">
-            {seasonalCollections.map((collection, index) => {
-              // Show first collection fully, lock the rest for free users
-              const { isLocked } = getTeaserLockState(index, isFree, {
-                freeVisibleCount: 3,
-                strategy: "first-n-items"
-              })
-              return (
-                <SeasonalBanner
-                  key={collection.slug}
-                  name={collection.name}
-                  slug={collection.slug}
-                  thumbnail={collection.thumbnail}
-                  dateRange={collection.dateRange}
-                  marketingDateRange={collection.marketingDateRange}
-                  gradient={collection.gradient}
-                  isLocked={isLocked}
-                  onLockedClick={() => setIsUpsellOpen(true)}
-                />
-              )
-            })}
-          </div>
-        </div>
-      
-      {/* Upsell Dialog */}
-      <UpsellDialog 
-        isOpen={isUpsellOpen} 
-        onClose={() => setIsUpsellOpen(false)} 
+      <UpsellDialog
+        isOpen={isUpsellOpen}
+        onClose={() => setIsUpsellOpen(false)}
       />
     </>
   )
@@ -93,8 +78,3 @@ function SeasonalCollectionsPageContent() {
 export default function SeasonalCollectionsPage() {
   return <SeasonalCollectionsPageContent />
 }
-
-
-
-
-
