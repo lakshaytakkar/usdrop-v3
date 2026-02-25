@@ -14,6 +14,7 @@ import {
   Check,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { journeyStages } from "@/data/journey-stages"
 
 import { Link } from "wouter"
 
@@ -202,132 +203,287 @@ const mentorAchievements = [
   "Proven Framework",
 ]
 
+function RoadmapProgressChart() {
+  const { data, isLoading } = useQuery<{ statuses: Record<string, string> }>({
+    queryKey: ['/api/roadmap-progress'],
+    queryFn: () => apiFetch('/api/roadmap-progress', { credentials: 'include' }).then(r => r.json()),
+  })
+
+  const totalTasks = journeyStages.reduce((sum, s) => sum + s.tasks.length, 0)
+  const completedTasks = data?.statuses
+    ? Object.values(data.statuses).filter(s => s === 'completed').length
+    : 0
+  const inProgressTasks = data?.statuses
+    ? Object.values(data.statuses).filter(s => s === 'in_progress').length
+    : 0
+  const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+
+  const radius = 54
+  const strokeWidth = 10
+  const circumference = 2 * Math.PI * radius
+  const completedOffset = circumference - (completedTasks / totalTasks) * circumference
+  const inProgressArc = (inProgressTasks / totalTasks) * circumference
+  const completedArc = (completedTasks / totalTasks) * circumference
+  const inProgressOffset = circumference - completedArc - inProgressArc
+
+  const currentStageIndex = journeyStages.findIndex((stage) => {
+    return stage.tasks.some(t => {
+      const status = data?.statuses?.[t.id]
+      return !status || status !== 'completed'
+    })
+  })
+  const currentStage = currentStageIndex >= 0 ? journeyStages[currentStageIndex] : journeyStages[journeyStages.length - 1]
+
+  return (
+    <Link
+      href="/framework/my-roadmap"
+      className="block"
+      data-testid="link-roadmap-progress"
+    >
+      <div
+        className="relative overflow-hidden rounded-2xl h-full cursor-pointer group"
+        style={{
+          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
+        }}
+      >
+        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+          <filter id="noiseFilter3">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#noiseFilter3)" />
+        </svg>
+
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute -top-16 -right-16 w-48 h-48 rounded-full opacity-[0.1]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-12 -left-12 w-40 h-40 rounded-full opacity-[0.08]"
+            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
+          />
+        </div>
+
+        <div className="relative flex flex-col items-center justify-center p-5 h-full gap-3">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-blue-300" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">My Roadmap</span>
+          </div>
+
+          <div className="relative">
+            {isLoading ? (
+              <div className="w-[128px] h-[128px] rounded-full border-4 border-white/10 animate-pulse" />
+            ) : (
+              <svg width="128" height="128" viewBox="0 0 128 128" className="transform -rotate-90">
+                <defs>
+                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#818cf8" />
+                    <stop offset="50%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#4f46e5" />
+                  </linearGradient>
+                  <linearGradient id="inProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#38bdf8" />
+                    <stop offset="100%" stopColor="#60a5fa" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="64"
+                  cy="64"
+                  r={radius}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth={strokeWidth}
+                />
+                {inProgressTasks > 0 && (
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r={radius}
+                    fill="none"
+                    stroke="url(#inProgressGradient)"
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={circumference}
+                    strokeDashoffset={inProgressOffset}
+                    strokeLinecap="round"
+                    className="opacity-40"
+                  />
+                )}
+                <circle
+                  cx="64"
+                  cy="64"
+                  r={radius}
+                  fill="none"
+                  stroke="url(#progressGradient)"
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={completedOffset}
+                  strokeLinecap="round"
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+            )}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[28px] font-bold text-white tracking-tight leading-none">{percentage}%</span>
+              <span className="text-[10px] text-white/40 font-medium mt-1">Complete</span>
+            </div>
+          </div>
+
+          <div className="text-center space-y-1 w-full">
+            <p className="text-[11px] text-white/50 font-medium truncate px-2">
+              Stage {(currentStageIndex >= 0 ? currentStageIndex : journeyStages.length - 1) + 1}: {currentStage?.title}
+            </p>
+            <div className="flex items-center justify-center gap-3 text-[10px]">
+              <span className="text-emerald-400 font-semibold">{completedTasks} done</span>
+              <span className="text-white/20">·</span>
+              <span className="text-blue-300 font-semibold">{inProgressTasks} active</span>
+              <span className="text-white/20">·</span>
+              <span className="text-white/40 font-medium">{totalTasks - completedTasks - inProgressTasks} left</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 text-[11px] text-white/50 group-hover:text-white/70 transition-colors">
+            <span className="font-medium">View Roadmap</span>
+            <ChevronRight className="h-3 w-3" />
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 function MentorshipBanner() {
   const { user } = useAuth()
   const firstName = user?.full_name?.split(" ")[0] || "there"
 
   return (
-    <div className="space-y-3" data-testid="banner-mentorship">
-      <div
-        className="relative overflow-hidden rounded-2xl"
-        style={{
-          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
-        }}
-      >
-        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-          <filter id="noiseFilter1">
-            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noiseFilter1)" />
-        </svg>
-        <div className="relative flex items-center gap-3 px-6 py-5 md:px-8 md:py-6">
-          <span className="text-3xl md:text-4xl leading-none" role="img" aria-label="wave">👋</span>
-          <div>
-            <h2 className="text-lg md:text-xl font-bold tracking-tight text-white">
-              Welcome, {firstName}
-            </h2>
-            <p className="text-white/50 text-sm font-medium mt-0.5">
-              Let's build your business today
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="relative overflow-hidden rounded-2xl"
-        style={{
-          background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
-        }}
-      >
-        <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-          <filter id="noiseFilter2">
-            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#noiseFilter2)" />
-        </svg>
-
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08]"
-            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06]"
-            style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)' }}
-          />
-        </div>
-
-        <div className="relative flex items-center gap-5 p-6 md:p-6">
-          <div className="shrink-0">
-            <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
-              <img
-                src="/images/mentor-suprans.png"
-                alt="Mr. Suprans - Your Mentor"
-                className="w-full h-full object-cover"
-              />
+    <div className="flex gap-3" data-testid="banner-mentorship">
+      <div className="flex-1 min-w-0 space-y-3">
+        <div
+          className="relative overflow-hidden rounded-2xl"
+          style={{
+            background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
+          }}
+        >
+          <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <filter id="noiseFilter1">
+              <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter1)" />
+          </svg>
+          <div className="relative flex items-center gap-3 px-6 py-5 md:px-8 md:py-6">
+            <span className="text-3xl md:text-4xl leading-none" role="img" aria-label="wave">👋</span>
+            <div>
+              <h2 className="text-lg md:text-xl font-bold tracking-tight text-white">
+                Welcome, {firstName}
+              </h2>
+              <p className="text-white/50 text-sm font-medium mt-0.5">
+                Let's build your business today
+              </p>
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1">
-              <GraduationCap className="h-3.5 w-3.5 text-blue-300" />
-              <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
-            </div>
-            <h3 className="text-lg md:text-xl font-bold text-white mb-2.5">Mr. Suprans</h3>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-              {mentorAchievements.map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 shrink-0">
-                    <Check className="h-2.5 w-2.5 text-emerald-400" />
-                  </span>
-                  <span className="text-[13px] text-white/70">{item}</span>
-                </li>
-              ))}
-            </ul>
+        </div>
+
+        <div
+          className="relative overflow-hidden rounded-2xl"
+          style={{
+            background: 'linear-gradient(135deg, #0a1628 0%, #0f1f3d 40%, #132a4a 70%, #1a3355 100%)',
+          }}
+        >
+          <svg className="absolute inset-0 w-full h-full opacity-[0.35] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+            <filter id="noiseFilter2">
+              <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter2)" />
+          </svg>
+
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08]"
+              style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
+            />
+            <div
+              className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06]"
+              style={{ background: 'radial-gradient(circle, #60a5fa 0%, transparent 70%)' }}
+            />
           </div>
-          <div className="hidden md:flex flex-col gap-2 shrink-0 ml-auto">
+
+          <div className="relative flex items-center gap-5 p-6 md:p-6">
+            <div className="shrink-0">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl bg-white">
+                <img
+                  src="/images/mentor-suprans.png"
+                  alt="Mr. Suprans - Your Mentor"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <GraduationCap className="h-3.5 w-3.5 text-blue-300" />
+                <span className="text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
+              </div>
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2.5">Mr. Suprans</h3>
+              <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                {mentorAchievements.map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 shrink-0">
+                      <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    </span>
+                    <span className="text-[13px] text-white/70">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="hidden md:flex flex-col gap-2 shrink-0 ml-auto">
+              <a
+                href="mailto:info@suprans.in"
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 hover:bg-white/90 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shadow-md shadow-black/15"
+                data-testid="button-email-mentor"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                Send Email
+              </a>
+              <a
+                href="https://www.youtube.com/@suprans"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-white/20 text-white hover:bg-white/10 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
+                data-testid="button-watch-intro"
+              >
+                <Play className="h-3.5 w-3.5" />
+                Watch Intro
+              </a>
+            </div>
+          </div>
+
+          <div className="flex md:hidden gap-2.5 px-6 pb-6">
             <a
               href="mailto:info@suprans.in"
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 hover:bg-white/90 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shadow-md shadow-black/15"
-              data-testid="button-email-mentor"
+              className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
+              data-testid="button-email-mentor-mobile"
             >
-              <Mail className="h-3.5 w-3.5" />
+              <Mail className="h-4 w-4" />
               Send Email
             </a>
             <a
               href="https://www.youtube.com/@suprans"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-white/20 text-white hover:bg-white/10 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap"
-              data-testid="button-watch-intro"
+              className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1"
+              data-testid="button-watch-intro-mobile"
             >
-              <Play className="h-3.5 w-3.5" />
+              <Play className="h-4 w-4" />
               Watch Intro
             </a>
           </div>
         </div>
+      </div>
 
-        <div className="flex md:hidden gap-2.5 px-6 pb-6">
-          <a
-            href="mailto:info@suprans.in"
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
-            data-testid="button-email-mentor-mobile"
-          >
-            <Mail className="h-4 w-4" />
-            Send Email
-          </a>
-          <a
-            href="https://www.youtube.com/@suprans"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl border border-white/20 text-white hover:bg-white/10 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap flex-1"
-            data-testid="button-watch-intro-mobile"
-          >
-            <Play className="h-4 w-4" />
-            Watch Intro
-          </a>
-        </div>
+      <div className="hidden lg:block w-[220px] shrink-0">
+        <RoadmapProgressChart />
       </div>
     </div>
   )
