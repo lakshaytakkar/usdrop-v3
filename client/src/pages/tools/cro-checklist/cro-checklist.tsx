@@ -1,26 +1,14 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import {
   CheckCircle2,
   Circle,
   ChevronDown,
   ChevronRight,
-  RotateCcw,
-  Download,
-  ShoppingCart,
-  Palette,
-  Zap,
-  Shield,
-  CreditCard,
-  Search,
-  Smartphone,
-  Image,
-  MessageSquare,
-  TrendingUp,
-  BarChart3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { apiFetch } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
 
 interface ChecklistItem {
   id: string
@@ -32,7 +20,7 @@ interface ChecklistItem {
 interface ChecklistCategory {
   id: string
   title: string
-  icon: typeof ShoppingCart
+  icon: string
   color: { bg: string; text: string; border: string; progress: string }
   items: ChecklistItem[]
 }
@@ -41,7 +29,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "homepage",
     title: "Homepage & First Impression",
-    icon: Palette,
+    icon: "/images/cro-icons/homepage.png",
     color: { bg: "bg-purple-50", text: "text-purple-600", border: "border-purple-100", progress: "bg-purple-500" },
     items: [
       { id: "hp-1", label: "Clear value proposition above the fold", description: "Visitors should understand what you sell and why within 3 seconds of landing", priority: "critical" },
@@ -55,7 +43,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "product-pages",
     title: "Product Pages",
-    icon: ShoppingCart,
+    icon: "/images/cro-icons/product-pages.png",
     color: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100", progress: "bg-blue-500" },
     items: [
       { id: "pp-1", label: "High-quality product images (5+ per product)", description: "Multiple angles, lifestyle shots, size reference, and zoom functionality", priority: "critical" },
@@ -73,7 +61,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "trust-security",
     title: "Trust & Security",
-    icon: Shield,
+    icon: "/images/cro-icons/trust-security.png",
     color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-100", progress: "bg-emerald-500" },
     items: [
       { id: "ts-1", label: "SSL certificate active (HTTPS)", description: "Your entire site should load over HTTPS — essential for security and SEO", priority: "critical" },
@@ -88,7 +76,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "checkout",
     title: "Checkout & Payment",
-    icon: CreditCard,
+    icon: "/images/cro-icons/checkout.png",
     color: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-100", progress: "bg-orange-500" },
     items: [
       { id: "co-1", label: "Guest checkout option available", description: "Don't force account creation — it's the #1 reason for cart abandonment", priority: "critical" },
@@ -104,7 +92,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "speed-mobile",
     title: "Speed & Mobile Optimization",
-    icon: Smartphone,
+    icon: "/images/cro-icons/speed-mobile.png",
     color: { bg: "bg-cyan-50", text: "text-cyan-600", border: "border-cyan-100", progress: "bg-cyan-500" },
     items: [
       { id: "sm-1", label: "Page load time under 3 seconds", description: "Every extra second of load time reduces conversions by ~7%", priority: "critical" },
@@ -118,7 +106,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "seo-content",
     title: "SEO & Content",
-    icon: Search,
+    icon: "/images/cro-icons/seo-content.png",
     color: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100", progress: "bg-rose-500" },
     items: [
       { id: "sc-1", label: "Unique meta titles and descriptions for all pages", description: "Every page should have a unique, keyword-rich title tag and meta description", priority: "critical" },
@@ -132,7 +120,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "engagement",
     title: "Customer Engagement & Retention",
-    icon: MessageSquare,
+    icon: "/images/cro-icons/engagement.png",
     color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-100", progress: "bg-amber-500" },
     items: [
       { id: "ce-1", label: "Email capture popup (with incentive)", description: "Offer 10-15% off first order in exchange for email subscription", priority: "critical" },
@@ -146,7 +134,7 @@ const categories: ChecklistCategory[] = [
   {
     id: "analytics",
     title: "Analytics & Testing",
-    icon: BarChart3,
+    icon: "/images/cro-icons/analytics.png",
     color: { bg: "bg-indigo-50", text: "text-indigo-600", border: "border-indigo-100", progress: "bg-indigo-500" },
     items: [
       { id: "at-1", label: "Conversion tracking set up for all goals", description: "Track Add to Cart, Initiate Checkout, and Purchase events at minimum", priority: "critical" },
@@ -164,38 +152,65 @@ const priorityConfig = {
   medium: { label: "Medium", className: "bg-blue-50 text-blue-600 border-blue-100" },
 }
 
-function loadChecked(): Record<string, boolean> {
-  try {
-    const stored = localStorage.getItem("cro-checklist-checked")
-    return stored ? JSON.parse(stored) : {}
-  } catch { return {} }
-}
-
-function saveChecked(checked: Record<string, boolean>) {
-  localStorage.setItem("cro-checklist-checked", JSON.stringify(checked))
-}
-
 export function CROChecklist() {
-  const [checked, setChecked] = useState<Record<string, boolean>>(loadChecked)
+  const { user } = useAuth()
+  const [checked, setChecked] = useState<Record<string, boolean>>({})
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
     Object.fromEntries(categories.map(c => [c.id, true]))
   )
   const [filterPriority, setFilterPriority] = useState<"all" | "critical" | "high" | "medium">("all")
   const [showCompleted, setShowCompleted] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestCheckedRef = useRef<Record<string, boolean>>({})
+
+  const saveToServer = useCallback(async (data: Record<string, boolean>) => {
+    try {
+      await apiFetch('/api/cro-checklist/state', {
+        method: 'PUT',
+        body: JSON.stringify({ checked_items: data }),
+      })
+    } catch (err) {
+      console.error('Failed to save checklist state:', err)
+    }
+  }, [])
+
+  const debouncedSave = useCallback((data: Record<string, boolean>) => {
+    latestCheckedRef.current = data
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(() => {
+      saveToServer(data)
+    }, 500)
+  }, [saveToServer])
+
+  useEffect(() => {
+    if (!user) { setIsLoading(false); return }
+    apiFetch('/api/cro-checklist/state')
+      .then(res => res.json())
+      .then(data => {
+        if (data.checked_items && typeof data.checked_items === 'object') {
+          setChecked(data.checked_items)
+          latestCheckedRef.current = data.checked_items
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false))
+  }, [user])
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [])
 
   const toggleCheck = (id: string) => {
     const next = { ...checked, [id]: !checked[id] }
     setChecked(next)
-    saveChecked(next)
+    debouncedSave(next)
   }
 
   const toggleCategory = (id: string) => {
     setExpandedCategories(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  const resetAll = () => {
-    setChecked({})
-    saveChecked({})
   }
 
   const totalItems = categories.reduce((sum, c) => sum + c.items.length, 0)
@@ -210,60 +225,32 @@ export function CROChecklist() {
   }
   const score = getScore()
 
-  const exportChecklist = () => {
-    let text = "CRO CHECKLIST — Store Conversion Optimization\n"
-    text += `Score: ${overallPercent}% (${checkedCount}/${totalItems})\n`
-    text += "=".repeat(50) + "\n\n"
-    categories.forEach(cat => {
-      const catChecked = cat.items.filter(i => checked[i.id]).length
-      text += `${cat.title} (${catChecked}/${cat.items.length})\n`
-      text += "-".repeat(40) + "\n"
-      cat.items.forEach(item => {
-        text += `${checked[item.id] ? "✅" : "⬜"} [${item.priority.toUpperCase()}] ${item.label}\n`
-        text += `   ${item.description}\n\n`
-      })
-      text += "\n"
-    })
-    const blob = new Blob([text], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "cro-checklist.txt"
-    a.click()
-    URL.revokeObjectURL(url)
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-5xl mx-auto space-y-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-6">
+    <div className="w-full max-w-5xl mx-auto space-y-5">
       <Card className="bg-white border-gray-100">
         <CardContent className="p-5">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={cn("px-3 py-1 rounded-full text-sm font-bold", score.bg, score.color)} data-testid="text-cro-score">
-                  {score.label} — {overallPercent}%
-                </div>
-                <span className="text-sm text-gray-400">{checkedCount} of {totalItems} completed</span>
-              </div>
-              <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={cn("h-full rounded-full transition-all duration-500", overallPercent >= 70 ? "bg-emerald-500" : overallPercent >= 40 ? "bg-amber-500" : "bg-red-400")}
-                  style={{ width: `${overallPercent}%` }}
-                  data-testid="progress-cro-overall"
-                />
-              </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className={cn("px-3 py-1 rounded-full text-sm font-bold", score.bg, score.color)} data-testid="text-cro-score">
+              {score.label} — {overallPercent}%
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="outline" size="sm" onClick={exportChecklist} className="text-xs" data-testid="button-export-checklist">
-                <Download className="h-3.5 w-3.5 mr-1.5" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm" onClick={resetAll} className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50" data-testid="button-reset-checklist">
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                Reset
-              </Button>
-            </div>
+            <span className="text-sm text-gray-400">{checkedCount} of {totalItems} completed</span>
+          </div>
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className={cn("h-full rounded-full transition-all duration-500", overallPercent >= 70 ? "bg-emerald-500" : overallPercent >= 40 ? "bg-amber-500" : "bg-red-400")}
+              style={{ width: `${overallPercent}%` }}
+              data-testid="progress-cro-overall"
+            />
           </div>
         </CardContent>
       </Card>
@@ -312,7 +299,6 @@ export function CROChecklist() {
           const catChecked = category.items.filter(i => checked[i.id]).length
           const catPercent = Math.round((catChecked / category.items.length) * 100)
           const isExpanded = expandedCategories[category.id]
-          const CatIcon = category.icon
 
           return (
             <Card key={category.id} className="bg-white border-gray-100 overflow-hidden">
@@ -321,8 +307,8 @@ export function CROChecklist() {
                 className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
                 data-testid={`button-category-${category.id}`}
               >
-                <div className={cn("shrink-0 w-9 h-9 rounded-lg flex items-center justify-center", category.color.bg, category.color.text)}>
-                  <CatIcon className="h-4.5 w-4.5" />
+                <div className="shrink-0 w-9 h-9 flex items-center justify-center">
+                  <img src={category.icon} alt={category.title} className="w-9 h-9 object-contain" />
                 </div>
                 <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-2">
