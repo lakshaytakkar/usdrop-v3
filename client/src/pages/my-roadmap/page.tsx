@@ -119,11 +119,28 @@ export default function MyJourneyPage() {
         onTutorialClick={() => {}}
       />
       <div>
-      <div className="mb-6">
-        <div className="flex items-center gap-4 text-sm">
-          <span className="flex items-center gap-1.5 text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" />{completedCount} completed</span>
-          <span className="flex items-center gap-1.5 text-yellow-600"><span className="w-2 h-2 rounded-full bg-yellow-500" />{inProgressCount} in progress</span>
-          <span className="text-gray-500">{Math.round(overallProgress)}% overall</span>
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 text-[13px]">
+            <span className="flex items-center gap-1.5 text-green-600" data-testid="text-completed-count"><span className="w-2 h-2 rounded-full bg-green-500" />{completedCount} completed</span>
+            <span className="flex items-center gap-1.5 text-yellow-600" data-testid="text-inprogress-count"><span className="w-2 h-2 rounded-full bg-yellow-500" />{inProgressCount} in progress</span>
+            <span className="flex items-center gap-1.5 text-[#999]" data-testid="text-remaining-count"><span className="w-2 h-2 rounded-full bg-gray-300" />{totalTasks - completedCount - inProgressCount} remaining</span>
+          </div>
+          <span className="text-[13px] font-bold text-black" data-testid="text-overall-progress">{Math.round(overallProgress)}%</span>
+        </div>
+        <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden flex" data-testid="progress-bar-overall">
+          {completedCount > 0 && (
+            <div
+              className="h-full bg-green-500 transition-all duration-500"
+              style={{ width: `${(completedCount / totalTasks) * 100}%` }}
+            />
+          )}
+          {inProgressCount > 0 && (
+            <div
+              className="h-full bg-yellow-400 transition-all duration-500"
+              style={{ width: `${(inProgressCount / totalTasks) * 100}%` }}
+            />
+          )}
         </div>
       </div>
 
