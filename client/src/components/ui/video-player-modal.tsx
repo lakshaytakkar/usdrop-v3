@@ -148,7 +148,7 @@ export function VideoPlayerModal({ videoSrc, isOpen, onClose }: VideoPlayerModal
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-[95vw] w-full h-[90vh] p-0 bg-black border-none rounded-xl overflow-hidden"
+        className="max-w-[90vw] w-[900px] lg:w-[1100px] p-0 bg-black border-none rounded-xl overflow-hidden aspect-video"
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Video Player</DialogTitle>
