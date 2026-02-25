@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Save, ChevronDown, ChevronUp } from "lucide-react"
 import { FrameworkBanner } from "@/components/framework-banner"
+import { Link } from "wouter"
 
 interface UserDetails {
   email: string
@@ -141,84 +142,92 @@ export default function MyProfilePage() {
             </Card>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
 
-            <Card className="p-6 md:p-8">
-              <h3 className="ds-section-title ds-text-heading mb-6">Personal Information</h3>
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm font-medium ds-text-body">Full Name</Label>
-                  <Input
-                    id="full_name"
-                    data-testid="input-full-name"
-                    value={details.full_name}
-                    onChange={(e) => handleChange("full_name", e.target.value)}
-                    placeholder="Enter your full name"
-                    className="h-11 bg-white border-gray-200 text-[15px]"
-                  />
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-5">
+                <h3 className="ds-section-title ds-text-heading mb-4">Personal Information</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="full_name" className="text-sm font-medium ds-text-body">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      data-testid="input-full-name"
+                      value={details.full_name}
+                      onChange={(e) => handleChange("full_name", e.target.value)}
+                      placeholder="Enter your full name"
+                      className="h-10 bg-white border-gray-200 text-[14px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-sm font-medium ds-text-body">Email</Label>
+                    <Input
+                      id="email"
+                      data-testid="input-email"
+                      value={details.email}
+                      readOnly
+                      className="h-10 bg-gray-50 cursor-not-allowed text-muted-foreground text-[14px] border-gray-200"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="contact_number" className="text-sm font-medium ds-text-body">Contact Number</Label>
+                    <Input
+                      id="contact_number"
+                      data-testid="input-contact-number"
+                      value={details.contact_number}
+                      onChange={(e) => handleChange("contact_number", e.target.value)}
+                      placeholder="Enter your contact number"
+                      className="h-10 bg-white border-gray-200 text-[14px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="website_name" className="text-sm font-medium ds-text-body">Website</Label>
+                    <Input
+                      id="website_name"
+                      data-testid="input-website-name"
+                      value={details.website_name}
+                      onChange={(e) => handleChange("website_name", e.target.value)}
+                      placeholder="Enter your website name"
+                      className="h-10 bg-white border-gray-200 text-[14px]"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium ds-text-body">Email</Label>
-                  <Input
-                    id="email"
-                    data-testid="input-email"
-                    value={details.email}
-                    readOnly
-                    className="h-11 bg-gray-50 cursor-not-allowed text-muted-foreground text-[15px] border-gray-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact_number" className="text-sm font-medium ds-text-body">Contact Number</Label>
-                  <Input
-                    id="contact_number"
-                    data-testid="input-contact-number"
-                    value={details.contact_number}
-                    onChange={(e) => handleChange("contact_number", e.target.value)}
-                    placeholder="Enter your contact number"
-                    className="h-11 bg-white border-gray-200 text-[15px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="website_name" className="text-sm font-medium ds-text-body">Website</Label>
-                  <Input
-                    id="website_name"
-                    data-testid="input-website-name"
-                    value={details.website_name}
-                    onChange={(e) => handleChange("website_name", e.target.value)}
-                    placeholder="Enter your website name"
-                    className="h-11 bg-white border-gray-200 text-[15px]"
-                  />
-                </div>
-              </div>
-            </Card>
+              </Card>
 
-            <Card className="p-6 md:p-8">
-              <h3 className="ds-section-title ds-text-heading mb-6">Business Details</h3>
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="llc_name" className="text-sm font-medium ds-text-body">LLC Name</Label>
-                  <Input
-                    id="llc_name"
-                    data-testid="input-llc-name"
-                    value={details.llc_name}
-                    onChange={(e) => handleChange("llc_name", e.target.value)}
-                    placeholder="Enter your LLC name"
-                    className="h-11 bg-white border-gray-200 text-[15px]"
-                  />
+              <Card className="p-5">
+                <h3 className="ds-section-title ds-text-heading mb-4">Business Details</h3>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="llc_name" className="text-sm font-medium ds-text-body">LLC Name</Label>
+                    <Input
+                      id="llc_name"
+                      data-testid="input-llc-name"
+                      value={details.llc_name}
+                      onChange={(e) => handleChange("llc_name", e.target.value)}
+                      placeholder="Enter your LLC name"
+                      className="h-10 bg-white border-gray-200 text-[14px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ein_name" className="text-sm font-medium ds-text-body">EIN</Label>
+                    <Input
+                      id="ein_name"
+                      data-testid="input-ein-name"
+                      value={details.ein_name}
+                      onChange={(e) => handleChange("ein_name", e.target.value)}
+                      placeholder="Enter your EIN"
+                      className="h-10 bg-white border-gray-200 text-[14px]"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ein_name" className="text-sm font-medium ds-text-body">EIN</Label>
-                  <Input
-                    id="ein_name"
-                    data-testid="input-ein-name"
-                    value={details.ein_name}
-                    onChange={(e) => handleChange("ein_name", e.target.value)}
-                    placeholder="Enter your EIN"
-                    className="h-11 bg-white border-gray-200 text-[15px]"
-                  />
-                </div>
-              </div>
-            </Card>
+                <p className="text-sm text-muted-foreground mt-4">
+                  Don't have an LLC?{" "}
+                  <Link href="/llc" className="text-blue-600 hover:text-blue-700 font-medium hover:underline" data-testid="link-register-llc">
+                    Register
+                  </Link>
+                </p>
+              </Card>
+            </div>
 
             <button
               type="button"
