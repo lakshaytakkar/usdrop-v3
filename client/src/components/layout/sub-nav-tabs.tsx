@@ -192,7 +192,8 @@ export function SubNavTabs() {
           }}
         >
 
-        {hasTabs && <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
+        {hasTabs && <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto scrollbar-hide">
             {activeGroup.items.map((item, index) => {
               const isActive = pathname === item.url || (item.url !== "/framework" && pathname?.startsWith(item.url + "/"))
               const isLocked = !isLoading && isFree && item.isPro
@@ -208,27 +209,73 @@ export function SubNavTabs() {
                 />
               )
             })}
+          </div>
+          {!toolbar.showSearch && toolbar.actions && toolbar.actions.length > 0 && (
+            <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-gray-200/60 pl-2 ml-1">
+              {toolbar.actions.map((action) => {
+                const ActionIcon = action.icon
+                const buttonContent = (
+                  <>
+                    <ActionIcon className="h-4 w-4" />
+                    <span>{action.label}</span>
+                  </>
+                )
+
+                if (action.isVideoTutorial) {
+                  return (
+                    <button
+                      key={action.label}
+                      onClick={() => setVideoModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                      data-testid="button-toolbar-video-tutorial"
+                    >
+                      {buttonContent}
+                    </button>
+                  )
+                }
+
+                if (action.href) {
+                  return (
+                    <Link
+                      key={action.label}
+                      href={action.href}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all whitespace-nowrap"
+                      data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      {buttonContent}
+                    </Link>
+                  )
+                }
+                return (
+                  <button
+                    key={action.label}
+                    onClick={action.onClick}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                    data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    {buttonContent}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>}
 
-        {(toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0)) && (
+        {toolbar.showSearch && (
           <div className="flex items-center gap-2">
-            {toolbar.showSearch && (
-              <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-gray-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                <SlidersHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
-                <div className="h-5 w-px bg-gray-200 shrink-0" />
-                <Search className="h-4 w-4 text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  placeholder={toolbar.searchPlaceholder}
-                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
-                  data-testid="input-subnav-search"
-                />
-              </div>
-            )}
-
-            {!toolbar.showSearch && <div className="flex-1" />}
+            <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-gray-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+              <SlidersHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
+              <div className="h-5 w-px bg-gray-200 shrink-0" />
+              <Search className="h-4 w-4 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder={toolbar.searchPlaceholder}
+                className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                data-testid="input-subnav-search"
+              />
+            </div>
 
             {toolbar.actions && toolbar.actions.length > 0 && (
               <div className="flex items-center gap-1.5 shrink-0">
