@@ -123,10 +123,10 @@ function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
       href={item.url}
       data-testid={`link-subnav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
       className={cn(
-        "flex items-center gap-1.5 px-4 py-2 text-[14px] font-semibold whitespace-nowrap transition-all rounded-lg",
+        "flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium whitespace-nowrap transition-all rounded-lg border",
         isActive
-          ? "bg-blue-600 text-white shadow-sm"
-          : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80",
+          ? "bg-white text-black border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+          : "bg-transparent text-[#666] border-transparent hover:bg-white/60 hover:text-black hover:border-black/[0.04]",
         isLocked && "opacity-50"
       )}
     >
@@ -135,7 +135,7 @@ function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
         <span className={cn(
           "text-[9px] font-bold tracking-wide uppercase leading-none px-1 py-0.5 rounded",
           isActive
-            ? "bg-white/20 text-white"
+            ? "bg-gradient-to-r from-violet-500 to-blue-500 text-white"
             : "bg-gradient-to-r from-violet-500 to-blue-500 text-white"
         )}>
           AI
@@ -182,18 +182,11 @@ export function SubNavTabs() {
 
   return (
     <>
-      <div className="w-full px-12 md:px-20 lg:px-32 pt-2 pb-1.5">
-        <div
-          className="rounded-xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] px-5 lg:px-6 py-2.5 space-y-2.5"
-          style={{
-            background: 'rgba(255,255,255,0.55)',
-            backdropFilter: 'blur(14px)',
-            WebkitBackdropFilter: 'blur(14px)',
-          }}
-        >
+      <div className="w-full px-12 md:px-20 lg:px-32 pt-2.5 pb-1.5">
+        <div className="space-y-2.5">
 
-        {hasTabs && <div className="flex items-center gap-1">
-          <div className="flex items-center gap-1 min-w-0 flex-1 overflow-x-auto scrollbar-hide">
+        {hasTabs && <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-x-auto scrollbar-hide">
             {activeGroup.items.map((item, index) => {
               const isActive = pathname === item.url || (item.url !== "/framework" && pathname?.startsWith(item.url + "/"))
               const isLocked = !isLoading && isFree && item.isPro
@@ -211,7 +204,7 @@ export function SubNavTabs() {
             })}
           </div>
           {!toolbar.showSearch && toolbar.actions && toolbar.actions.length > 0 && (
-            <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-gray-200/60 pl-2 ml-1">
+            <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-black/[0.06] pl-3 ml-1">
               {toolbar.actions.map((action) => {
                 const ActionIcon = action.icon
                 const buttonContent = (
@@ -226,7 +219,7 @@ export function SubNavTabs() {
                     <button
                       key={action.label}
                       onClick={() => setVideoModalOpen(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-black/[0.06] bg-white text-[13px] font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all cursor-pointer whitespace-nowrap"
                       data-testid="button-toolbar-video-tutorial"
                     >
                       {buttonContent}
@@ -239,7 +232,7 @@ export function SubNavTabs() {
                     <Link
                       key={action.label}
                       href={action.href}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-black/[0.06] bg-white text-[13px] font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all whitespace-nowrap"
                       data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       {buttonContent}
@@ -250,7 +243,7 @@ export function SubNavTabs() {
                   <button
                     key={action.label}
                     onClick={action.onClick}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-[13px] font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                    className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-black/[0.06] bg-white text-[13px] font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all cursor-pointer whitespace-nowrap"
                     data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
                   >
                     {buttonContent}
@@ -263,16 +256,16 @@ export function SubNavTabs() {
 
         {toolbar.showSearch && (
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-gray-200 bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-              <SlidersHorizontal className="h-4 w-4 text-gray-400 shrink-0" />
-              <div className="h-5 w-px bg-gray-200 shrink-0" />
-              <Search className="h-4 w-4 text-gray-400 shrink-0" />
+            <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+              <SlidersHorizontal className="h-4 w-4 text-[#999] shrink-0" />
+              <div className="h-5 w-px bg-black/[0.06] shrink-0" />
+              <Search className="h-4 w-4 text-[#999] shrink-0" />
               <input
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder={toolbar.searchPlaceholder}
-                className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
+                className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-[#999] outline-none"
                 data-testid="input-subnav-search"
               />
             </div>
@@ -293,7 +286,7 @@ export function SubNavTabs() {
                       <button
                         key={action.label}
                         onClick={() => setVideoModalOpen(true)}
-                        className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white text-sm font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all cursor-pointer whitespace-nowrap"
                         data-testid="button-toolbar-video-tutorial"
                       >
                         {buttonContent}
@@ -306,7 +299,7 @@ export function SubNavTabs() {
                       <Link
                         key={action.label}
                         href={action.href}
-                        className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white text-sm font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all whitespace-nowrap"
                         data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
                       >
                         {buttonContent}
@@ -317,7 +310,7 @@ export function SubNavTabs() {
                     <button
                       key={action.label}
                       onClick={action.onClick}
-                      className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white text-sm font-medium text-[#666] hover:text-black hover:border-black/[0.1] transition-all cursor-pointer whitespace-nowrap"
                       data-testid={`button-toolbar-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
                     >
                       {buttonContent}
@@ -331,7 +324,7 @@ export function SubNavTabs() {
 
         {toolbar.quickFilters && toolbar.quickFilters.length > 0 && (
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0 mr-1">Quick Filters</span>
+            <span className="text-xs font-semibold text-[#999] uppercase tracking-wider shrink-0 mr-1">Quick Filters</span>
             {toolbar.quickFilters.map((filter) => {
               const isActive = activeFilters.has(filter.id)
               return (
@@ -342,8 +335,8 @@ export function SubNavTabs() {
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer border",
                     isActive
-                      ? "bg-blue-50 border-blue-200 text-blue-700 shadow-sm"
-                      : "bg-white/80 border-gray-200 text-gray-600 hover:bg-white hover:border-gray-300"
+                      ? "bg-white border-black/[0.08] text-black shadow-sm"
+                      : "bg-transparent border-black/[0.04] text-[#666] hover:bg-white/60 hover:border-black/[0.06]"
                   )}
                 >
                   <span className="text-sm leading-none">{filter.emoji}</span>
