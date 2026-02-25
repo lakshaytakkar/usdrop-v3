@@ -145,26 +145,26 @@ export default function MyJourneyPage() {
           )}
         >
           {!unlocked && (
-            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 rounded-xl">
-              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                <Lock className="h-5 w-5 text-gray-400" />
+            <div className="absolute inset-0 z-10 bg-white/30 flex items-center justify-end pr-6 rounded-xl">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200">
+                <Lock className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-xs font-medium text-gray-400">
+                  Complete Stage {stage1.number} & {stage2.number}
+                </span>
               </div>
-              <p className="text-sm font-medium text-gray-500">
-                Complete all tasks in Stage {stage1.number} & Stage {stage2.number} to unlock
-              </p>
             </div>
           )}
 
           <div className={cn(
             "flex items-center justify-between px-6 py-5",
-            !unlocked && "opacity-40"
+            !unlocked && "opacity-70"
           )}>
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
-                unlocked ? "bg-white/20" : "bg-gray-200"
+                unlocked ? "bg-white/20" : "bg-green-100"
               )}>
-                <Phone className={cn("h-6 w-6", unlocked ? "text-white" : "text-gray-400")} />
+                <Phone className={cn("h-6 w-6", unlocked ? "text-white" : "text-green-500")} />
               </div>
               <div>
                 <p className={cn(
