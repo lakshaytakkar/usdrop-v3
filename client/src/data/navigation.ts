@@ -131,15 +131,6 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Resources", icon: FolderOpen, url: "/resources", isPro: false },
     ],
   },
-  {
-    label: "More",
-    icon: MoreHorizontal,
-    isDropdown: true,
-    items: [
-      { title: "Shopify Integration", icon: ShoppingBag, url: "/shopify", isPro: true, iconSrc: "/3d-ecom-icons-blue/My_Store.png", description: "Connect and manage your Shopify stores" },
-      { title: "Blogs", icon: Newspaper, url: "/blogs", isPro: true, iconSrc: "/3d-ecom-icons-blue/Open_Board.png", description: "Latest e-commerce insights and guides" },
-    ],
-  },
 ]
 
 export function findActiveGroup(pathname: string): NavGroup | null {
