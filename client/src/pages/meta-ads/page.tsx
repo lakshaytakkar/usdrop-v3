@@ -450,14 +450,14 @@ export default function MetaAdsPage() {
   return (
     <>
       {toolbarTarget && createPortal(toolbarContent, toolbarTarget)}
+      <div className="px-12 md:px-20 lg:px-32 pt-6">
+        <FrameworkBanner
+          title="Meta Ads Spy"
+          description="Discover winning ad creatives, analyze competitor strategies, and find high-performing Meta ads across industries"
+          iconSrc="/images/logos/meta-white.svg"
+        />
+      </div>
       <div className="flex flex-col flex-1">
-        <div className="px-12 md:px-20 lg:px-32 pt-6">
-          <FrameworkBanner
-            title="Meta Ads Spy"
-            description="Discover winning ad creatives, analyze competitor strategies, and find high-performing Meta ads across industries"
-            iconSrc="/images/logos/meta-white.svg"
-          />
-        </div>
         <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8">
           <FilterSidebar
             filters={filters}
