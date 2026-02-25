@@ -201,15 +201,17 @@ export function HotProductsModal({ open, onOpenChange }: HotProductsModalProps) 
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => handleSwipe('left')}
-                      className="h-12 rounded-xl border-2 border-slate-200 text-slate-400 hover:border-red-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition-all"
+                      className="h-12 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 font-semibold transition-all"
                     >
-                      <X className="w-6 h-6" />
+                      <X className="w-5 h-5" />
+                      No
                     </button>
                     <button 
                       onClick={() => handleSwipe('right')}
-                      className="h-12 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 flex items-center justify-center transition-all"
+                      className="h-12 rounded-xl bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 font-semibold transition-all"
                     >
-                      <Check className="w-6 h-6" />
+                      <Check className="w-5 h-5" />
+                      Yes
                     </button>
                   </div>
                 </div>
