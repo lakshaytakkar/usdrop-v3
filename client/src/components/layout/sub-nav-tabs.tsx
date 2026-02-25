@@ -157,12 +157,13 @@ export function SubNavTabs() {
   if (!activeGroup) return null
 
   const hasTabs = activeGroup.items.length > 1
+  const isOnCategories = pathname?.includes('/categories')
   const toolbar = toolbarConfigs[activeGroup.label] || {
     searchPlaceholder: "Search...",
     showSearch: true,
   }
 
-  const hasToolbar = toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0)
+  const hasToolbar = !isOnCategories && (toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0))
   const hasFilters = toolbar.quickFilters && toolbar.quickFilters.length > 0
   if (!hasTabs && !hasToolbar && !hasFilters) return null
 
@@ -254,7 +255,7 @@ export function SubNavTabs() {
           )}
         </div>}
 
-        {toolbar.showSearch && (
+        {toolbar.showSearch && !isOnCategories && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0 h-10 px-3.5 rounded-lg border border-black/[0.06] bg-white focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
               <SlidersHorizontal className="h-4 w-4 text-[#999] shrink-0" />
