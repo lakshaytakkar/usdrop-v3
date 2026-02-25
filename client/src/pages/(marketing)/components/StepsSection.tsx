@@ -7,96 +7,127 @@ const steps = [
   {
     number: "01",
     badge: "Research",
-    title: "Winning Products",
-    description: "AI-powered product discovery that surfaces proven winners with real margin data",
+    title: "Find products that actually sell",
     href: "/features/winning-products",
     cta: "Start Researching",
     image: "/images/landing/step-product-research.webp?v=2",
+    bullets: [
+      "AI scans thousands of products daily to surface winners",
+      "See real profit margins and competitor pricing instantly",
+      "Spy on competitor bestsellers and trending niches",
+    ],
   },
   {
     number: "02",
     badge: "Create",
-    title: "Ad Studio",
-    description: "Generate scroll-stopping video and image ads in seconds, no design skills needed",
+    title: "Create ads that stop the scroll",
     href: "/features/winning-ads",
     cta: "Start Creating",
     image: "/images/landing/step-ad-studio.webp?v=2",
+    bullets: [
+      "Generate video and image ads in seconds with AI",
+      "Choose your style — UGC, cinematic, or product-focused",
+      "Batch create dozens of variations for split testing",
+    ],
   },
   {
     number: "03",
     badge: "Launch",
-    title: "Store Builder",
-    description: "One-click import to Shopify with AI-written descriptions — ready to sell instantly",
+    title: "Launch your store in minutes",
     href: "/features/dashboard",
     cta: "Build Your Store",
     image: "/images/landing/step-store-builder.webp?v=2",
+    bullets: [
+      "One-click import products directly to Shopify",
+      "AI writes optimized product descriptions for you",
+      "Professional storefront ready to sell from day one",
+    ],
   },
   {
     number: "04",
     badge: "Scale",
-    title: "Analytics & Insights",
-    description: "Track what's working in real time and follow data-driven playbooks to scale",
+    title: "See what's working and scale it",
     href: "/features/winning-stores",
     cta: "View Analytics",
     image: "/images/landing/step-analytics.webp?v=2",
+    bullets: [
+      "Track revenue and conversions in real time",
+      "Find your next winning product with data-driven insights",
+      "Follow proven scaling playbooks from top sellers",
+    ],
   },
 ]
 
 export function StepsSection() {
   return (
-    <section className="py-20 lg:py-28" data-testid="section-steps">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 lg:py-40" data-testid="section-steps">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
-          <div className="text-center mb-14 lg:mb-20">
-            <h2 className="text-[32px] sm:text-[40px] lg:text-[48px] text-black tracking-[-1px] sm:tracking-[-1.5px] lg:tracking-[-2px] font-semibold leading-[1.15]">
-              How it works
-            </h2>
-            <p className="mt-4 text-[16px] sm:text-[17px] text-[#666] max-w-lg mx-auto leading-relaxed">
-              Everything you need to find, launch, and scale winning products
+          <div className="text-center mb-20 lg:mb-28">
+            <p className="text-[13px] font-semibold text-[#6366F1] uppercase tracking-[0.1em] mb-5">
+              How It Works
             </p>
+            <h2 className="text-[36px] sm:text-[48px] lg:text-[60px] text-black tracking-[-1.4px] sm:tracking-[-2px] lg:tracking-[-2.4px] font-medium leading-[1.2] sm:leading-[1.15]">
+              Four Steps to Scale
+            </h2>
           </div>
         </MotionFadeIn>
 
-        <div className="space-y-6">
+        <div className="max-w-[1100px] mx-auto space-y-28 lg:space-y-40">
           {steps.map((step, index) => {
             const isReversed = index % 2 === 1
             return (
               <MotionFadeIn
                 key={step.number}
                 direction="up"
-                distance={DISTANCE.sm}
+                distance={DISTANCE.md}
                 duration={DURATION.slow}
-                delay={index * 0.05}
+                delay={0.05}
               >
                 <div
-                  className={`flex flex-col ${isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-8 lg:gap-0 bg-[#FAFAFA] rounded-[20px] border border-black/[0.04] overflow-hidden`}
+                  className={`flex flex-col gap-10 lg:gap-16 items-center ${isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
                   data-testid={`card-step-${step.number}`}
                 >
-                  <div className="w-full lg:w-[55%] flex-shrink-0">
-                    <img
-                      src={step.image}
-                      alt={step.title}
-                      className="w-full h-full object-cover"
-                      decoding="async"
-                    />
+                  <div className="w-full lg:w-[60%] flex-shrink-0">
+                    <div className="rounded-[20px] overflow-hidden bg-[#F8F8FA] border border-black/[0.04] shadow-lg">
+                      <img
+                        src={step.image}
+                        alt={step.title}
+                        className="w-full h-auto object-contain"
+                        decoding="async"
+                      />
+                    </div>
                   </div>
 
-                  <div className="w-full lg:w-[45%] px-8 pb-8 lg:px-12 lg:py-10">
-                    <h3 className="text-[26px] sm:text-[30px] text-black tracking-[-0.5px] font-semibold leading-[1.2] mb-3">
+                  <div className="w-full lg:w-[40%]">
+                    <p className="text-[12px] font-bold text-[#6366F1] uppercase tracking-[0.12em] mb-4">
+                      Step {step.number} — {step.badge}
+                    </p>
+
+                    <h3 className="text-[32px] lg:text-[44px] text-black tracking-[-1px] lg:tracking-[-1.6px] font-medium leading-[1.15] mb-8">
                       {step.title}
                     </h3>
 
-                    <p className="text-[15px] text-[#666] leading-[1.6] mb-6">
-                      {step.description}
-                    </p>
+                    <ul className="space-y-3.5 mb-10">
+                      {step.bullets.map((bullet, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-3 text-[15px] sm:text-[16px] text-[#555] leading-[1.5]"
+                          data-testid={`bullet-step-${step.number}-${i}`}
+                        >
+                          <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-[#6366F1] flex-shrink-0" />
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
 
                     <Link
                       href={step.href}
-                      className="inline-flex items-center gap-2 text-[13px] font-semibold text-black hover:text-[#6366F1] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-black text-white text-[13px] font-bold uppercase tracking-[0.06em] px-5 py-3 rounded-[8px] hover-elevate cursor-pointer"
                       data-testid={`link-step-${step.number}`}
                     >
+                      <ArrowRight className="w-4 h-4" />
                       <span>{step.cta}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>
