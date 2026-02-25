@@ -8,11 +8,11 @@ import {
   ArrowRight,
   ChevronRight,
   Play,
-  Mail,
   Sparkles,
   GraduationCap,
   Check,
 } from "lucide-react"
+import { SiGmail } from "react-icons/si"
 import { useAuth } from "@/contexts/auth-context"
 import { journeyStages } from "@/data/journey-stages"
 
@@ -430,7 +430,7 @@ function MentorshipBanner() {
                 className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 hover:bg-white/90 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shadow-md shadow-black/15"
                 data-testid="button-email-mentor"
               >
-                <Mail className="h-3.5 w-3.5" />
+                <SiGmail className="h-3.5 w-3.5 text-[#EA4335]" />
                 Send Email
               </a>
               <a
@@ -452,7 +452,7 @@ function MentorshipBanner() {
               className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
               data-testid="button-email-mentor-mobile"
             >
-              <Mail className="h-4 w-4" />
+              <SiGmail className="h-4 w-4 text-[#EA4335]" />
               Send Email
             </a>
             <a
