@@ -38,6 +38,7 @@ export function Topbar() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const { signOut, user } = useAuth()
   const { isInternal, internalRole, isPro, isFree, fullName, avatarUrl, loading: isMetadataLoading } = useUserMetadata()
+  const defaultAvatar = isPro ? "/images/default-pro-avatar.png" : "https://avatar.iran.liara.run/public"
 
   useEffect(() => {
     setMounted(true)
@@ -172,12 +173,11 @@ export function Topbar() {
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full cursor-pointer" suppressHydrationWarning>
                   <Avatar className="h-10 w-10">
                     <AvatarImage 
-                      src={userData?.avatar_url || "https://avatar.iran.liara.run/public"} 
+                      src={userData?.avatar_url || defaultAvatar} 
                       alt="User avatar" 
                     />
                     <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
                   </Avatar>
-                  {/* Pro badge indicator on avatar - Only for external users */}
                   {!isInternal && isPro && (
                     <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
                       <Crown className="h-2.5 w-2.5 text-white" />
@@ -186,11 +186,10 @@ export function Topbar() {
                 </Button>
               </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {/* User Info Header */}
               <div className="flex items-center gap-3 px-2 py-2">
                 <Avatar className="h-10 w-10">
                   <AvatarImage 
-                    src={userData?.avatar_url || "https://avatar.iran.liara.run/public"} 
+                    src={userData?.avatar_url || defaultAvatar} 
                     alt="User avatar" 
                   />
                   <AvatarFallback>{getInitials(userData?.name || "User")}</AvatarFallback>
