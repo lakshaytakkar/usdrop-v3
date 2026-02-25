@@ -19,6 +19,7 @@ import {
   Palette,
 } from "lucide-react"
 import { SiGmail } from "react-icons/si"
+import { LogoLoader } from "@/components/ui/logo-loader"
 import { useAuth } from "@/contexts/auth-context"
 import { journeyStages } from "@/data/journey-stages"
 
