@@ -243,8 +243,7 @@ function MentorshipBanner() {
             </div>
           </div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-0.5">Mr. Suprans</h2>
-          <p className="text-white/70 text-sm md:text-base font-medium flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-amber-300/80" />
+          <p className="text-white/70 text-sm md:text-base font-medium">
             USA Dropshipping Mentorship
           </p>
         </div>
