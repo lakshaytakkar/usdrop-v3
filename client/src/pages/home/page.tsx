@@ -427,6 +427,8 @@ function MentorshipBanner() {
             <div className="hidden md:flex flex-col gap-2 shrink-0 ml-auto">
               <a
                 href="mailto:info@suprans.in"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-white text-slate-900 hover:bg-white/90 text-xs font-semibold transition-all cursor-pointer whitespace-nowrap shadow-md shadow-black/15"
                 data-testid="button-email-mentor"
               >
@@ -449,6 +451,8 @@ function MentorshipBanner() {
           <div className="flex md:hidden gap-2.5 px-6 pb-6">
             <a
               href="mailto:info@suprans.in"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-lg shadow-black/20 flex-1"
               data-testid="button-email-mentor-mobile"
             >
