@@ -5,7 +5,7 @@ integrations = ["javascript_database:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["pngquant", "jpegoptim", "libwebp"]
+packages = ["pngquant", "jpegoptim", "libwebp", "glib", "nss", "nspr", "atk", "at-spi2-atk", "cups", "dbus", "libdrm", "gtk3", "pango", "cairo", "alsa-lib", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "xorg.libxcb", "mesa", "expat", "xorg.libX11", "libxkbcommon", "chromium"]
 
 [workflows]
 runButton = "Project"
