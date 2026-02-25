@@ -129,8 +129,8 @@ function CourseDetailContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden">
-          <div className="flex items-center justify-between px-12 md:px-20 lg:px-32 py-2 border-b bg-background">
+        <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden px-12 md:px-20 lg:px-32">
+          <div className="flex items-center justify-between py-2 border-b bg-background">
             <button
               onClick={handleClose}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -149,7 +149,7 @@ function CourseDetailContent() {
             </button>
           </div>
 
-          <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+          <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-lg border border-gray-200 bg-background mt-2 mb-4">
             <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
               <CourseSidebar
                 course={course}
