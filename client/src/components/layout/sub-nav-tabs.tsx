@@ -163,6 +163,16 @@ export function SubNavTabs() {
                 )}
               >
                 <span>{showNumbering ? `${index + 1}) ${item.title}` : item.title}</span>
+                {item.isAiStudio && (
+                  <span className={cn(
+                    "text-[9px] font-bold tracking-wide uppercase leading-none px-1 py-0.5 rounded",
+                    isActive
+                      ? "bg-white/20 text-white"
+                      : "bg-gradient-to-r from-violet-500 to-blue-500 text-white"
+                  )}>
+                    AI
+                  </span>
+                )}
                 {isLocked && <UnlockBadge variant="text-only" />}
               </Link>
             )
