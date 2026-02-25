@@ -7,6 +7,12 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 - Framework is the personal hub (everything related to the user). Other pages are libraries/tools. All saved things live inside Framework.
 - Keep images compressed and loading fast.
 
+## User Journey (Core Business Flow)
+1. **Public Pages** — Marketing/landing pages, feature pages (`/features/*`), What is Dropshipping, pricing info. No login required.
+2. **Free User Registration** — Sign up via OTP email or Google OAuth. Gets `free` plan. Access to Framework (My Products, My Roadmap, My Learning basics, My Sessions, My R&D, My Profile, My Credentials, My Plan). Teaser access to products/stores (first 3-6 items visible, rest locked). AI Tools fully locked.
+3. **Convert to Pro** — User enrolls in the mentorship dropshipping programme. Plan upgraded to `pro`. Unlocks all product research, competitor stores, suppliers, AI Studio tools, Meta Ads, Shopify integration, advanced learning content, and full sessions access.
+4. **Elite LLC Package** — Pro users can purchase the Elite LLC package (via LegalNations partnership). Includes LLC formation, EIN, US mailing address, US phone, US bank account, ITIN assistance, resale certificate, Amazon/Shopify setup, dedicated account manager. Discount code `USDROP30` for 30% off. Resources and additional unlocks come with this tier.
+
 ## System Architecture
 The platform uses a Vite + Express + Wouter stack with React 19, TypeScript, and Tailwind CSS 4. **All data lives in Supabase** (project `wecbybtxmkdkvqqahyuu`). There is NO local Neon/PostgreSQL database connection. The Supabase client (`server/lib/supabase-remote.ts`) handles all database operations via `@supabase/supabase-js`. Authentication uses local JWT tokens (bcrypt + jsonwebtoken) with profiles stored in Supabase. UI components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion. State management is handled by TanStack React Query.
 
