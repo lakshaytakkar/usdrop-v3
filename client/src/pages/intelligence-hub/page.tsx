@@ -1,18 +1,59 @@
 
-
+import { useState, useEffect } from "react";
 import { Header } from '@/components/landing-deprecated/Header';
 import { Footer } from '@/components/landing-deprecated/Footer';
 import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ArticleCard } from "@/pages/blogs/components/article-card"
-import { sampleArticles } from "@/pages/blogs/data/articles"
+import { sampleArticles, type Article } from "@/pages/blogs/data/articles"
+import { apiFetch } from "@/lib/supabase"
 import { ArrowRight, TrendingUp, Target, Zap } from "lucide-react"
 import { Link } from "wouter"
 
 export default function IntelligenceHubPage() {
-  const featuredArticle = sampleArticles.find(a => a.featured) || sampleArticles[0];
-  const recentArticles = sampleArticles.filter(a => a.id !== featuredArticle.id);
+  const [articles, setArticles] = useState<Article[]>(sampleArticles);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await apiFetch("/api/articles");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        const articlesArray = data.articles || data;
+        if (Array.isArray(articlesArray) && articlesArray.length > 0) {
+          const mapped: Article[] = articlesArray.map((a: any) => ({
+            id: String(a.id),
+            slug: a.slug || "",
+            title: a.title || "",
+            excerpt: a.excerpt || "",
+            content: a.content || "",
+            author: a.author_name || a.author || "",
+            authorAvatar: a.author_avatar || "",
+            image: a.featured_image || a.image || "",
+            category: a.category || "",
+            tags: Array.isArray(a.tags) ? a.tags : [],
+            publishedDate: a.published_date || a.publishedDate || "",
+            readTime: a.read_time ?? a.readTime ?? 5,
+            views: a.views ?? 0,
+            likes: a.likes ?? 0,
+            featured: a.featured ?? false,
+          }));
+          setArticles(mapped);
+        }
+      } catch {
+        setArticles(sampleArticles);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchArticles();
+  }, []);
+
+  const featuredArticle = articles.find(a => a.featured) || articles[0];
+  const recentArticles = articles.filter(a => a.id !== featuredArticle?.id);
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -49,13 +90,38 @@ export default function IntelligenceHubPage() {
 
             {/* Featured Article Slab */}
             <div className="mt-16">
+              {isLoading ? (
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+                  <div className="grid md:grid-cols-2 gap-0">
+                    <Skeleton className="h-64 md:h-80 w-full" />
+                    <div className="p-8 md:p-12 flex flex-col justify-center gap-4">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <div className="flex items-center gap-2 mt-4">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="flex flex-col gap-1">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : featuredArticle ? (
               <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                 <div className="grid md:grid-cols-2 gap-0">
                   <div className="relative h-64 md:h-auto overflow-hidden">
-                    <GeneratedImage 
-                      prompt="futuristic ecommerce analytics dashboard glowing on a desk, cinematic lighting, blue and purple tones" 
-                      className="h-full w-full object-cover"
-                    />
+                    {featuredArticle.image ? (
+                      <img src={featuredArticle.image} alt={featuredArticle.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <GeneratedImage 
+                        prompt="futuristic ecommerce analytics dashboard glowing on a desk, cinematic lighting, blue and purple tones" 
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                     <div className="absolute bottom-4 left-4">
                       <Badge className="bg-blue-600 text-white border-none">
@@ -78,7 +144,6 @@ export default function IntelligenceHubPage() {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-slate-200 overflow-hidden">
-                           {/* Placeholder avatar since actual image might not load without next/image setup for external domains */}
                            <div className="w-full h-full bg-slate-300" />
                         </div>
                         <div className="text-sm">
@@ -93,6 +158,7 @@ export default function IntelligenceHubPage() {
                   </div>
                 </div>
               </div>
+              ) : null}
             </div>
           </Container>
         </section>
@@ -141,11 +207,30 @@ export default function IntelligenceHubPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recentArticles.map((article) => (
-                <div key={article.id} className="h-[420px]"> {/* Fixed height container for consistency */}
-                  <ArticleCard article={article} />
-                </div>
-              ))}
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-[420px] flex flex-col rounded-xl border border-slate-200 overflow-hidden">
+                    <Skeleton className="h-48 w-full" />
+                    <div className="flex flex-col gap-3 p-4">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-5 w-full" />
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <div className="flex items-center gap-2 mt-auto">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                recentArticles.map((article) => (
+                  <div key={article.id} className="h-[420px]">
+                    <ArticleCard article={article} />
+                  </div>
+                ))
+              )}
             </div>
           </Container>
         </section>

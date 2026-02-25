@@ -52,7 +52,16 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **Recharts**: Charting library.
 - **Google Gemini API**: For AI features.
 
+## Database Tables Utilized
+- **products** (20,034 rows): Merged from `tradelle_bestsellers` (19,183) + original products. Has `in_stock`, `buy_price`, `sell_price`.
+- **competitor_stores** (35 rows): Merged from `tradelle_stores` (12) + `tradelle_competitors`.
+- **intelligence_articles** (6 rows): Seeded with dropshipping articles. API: `GET /api/articles`, `GET /api/articles/:slug`.
+- **suppliers** (8 rows): Seeded with real supplier data. API: `GET /api/suppliers`.
+- **tradelle_bestsellers** (19,183 rows): Raw scraped data. API: `GET /api/tradelle/bestsellers` (paginated, searchable).
+- **tradelle_trends** (936 rows): Trending products. API: `GET /api/tradelle/trends` (paginated, searchable).
+
 ## Recent Changes
+- **DB Data Wiring**: All pages now fetch real data from Supabase APIs instead of hardcoded arrays. Hot Products page has 3 tabs (Hot Products, Bestsellers with 19K products, Trending with 936 products). Blogs/Intelligence Hub pages fetch from `/api/articles`. Suppliers page shows Partner Suppliers section with real DB data.
 - **My Products Full CRUD**: Search bar (white bg) + "Add Product" button. Add Product choice modal (Import URL / Enter Manually). View Product centered modal shows image, title, description, buy/sell/profit cards, In Stock badge, added date, source. Edit Product modal with all fields + In Stock toggle (Switch). Table columns: Product, Category, Buy Price, Sell Price, Status (green "In Stock" / red "Out of Stock" badge), Added On, Actions (View, Shopify, Edit, Remove). Backend: `POST /api/products/create-manual`, `POST /api/products/import-url`, `PATCH /api/products/:id` (supports `in_stock`). DB: `in_stock` boolean column added to `products` table (default true), `source` column added to `user_picklist`.
 - **LLC Page Redesign**: Major visual upgrade to match landing page premium design. Added: SVG gradient orbs behind hero, gradient "US LLC" accent text, animated gradient-bordered CTA buttons, Watch Video button, hero documents image, auto-scrolling logo marquee (Amazon, Walmart, Shopify, eBay, TikTok, Stripe, PayPal), stats bar, video thumbnail with overlay, image-enriched benefit cards with hover effects, indigo-accented pricing section, dark CTA section with noise texture. All sections wrapped in `MotionFadeIn` scroll animations. Images in `client/public/images/llc/`. FrameworkBanner added at top.
 - **Private Supplier**: Removed from Marketplaces sub-nav tabs; now a standalone page with its own FrameworkBanner.

@@ -1,6 +1,7 @@
 
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { apiFetch } from "@/lib/supabase"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
@@ -17,19 +18,62 @@ import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Skeleton } from "@/components/ui/skeleton"
+
+function transformArticle(a: any): Article {
+  return {
+    id: a.id,
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt || "",
+    content: a.content || "",
+    author: a.author_name || a.author || "USDrop Team",
+    authorAvatar: a.author_avatar || a.authorAvatar || "",
+    image: a.featured_image || a.image || "",
+    category: a.category || "General",
+    tags: Array.isArray(a.tags) ? a.tags : [],
+    publishedDate: a.published_date || a.publishedDate || "",
+    readTime: a.read_time || a.readTime || 5,
+    views: a.views || 0,
+    likes: a.likes || 0,
+    featured: a.featured || false,
+  }
+}
 
 export default function IntelligencePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
+  const [articles, setArticles] = useState<Article[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { isFree } = useOnboarding()
 
-  const categories = useMemo(() => {
-    return ["all", ...Array.from(new Set(sampleArticles.map((a) => a.category)))]
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await apiFetch("/api/articles")
+        if (res.ok) {
+          const data = await res.json()
+          const dbArticles = (data.articles || []).map(transformArticle)
+          setArticles(dbArticles.length > 0 ? dbArticles : sampleArticles)
+        } else {
+          setArticles(sampleArticles)
+        }
+      } catch {
+        setArticles(sampleArticles)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchArticles()
   }, [])
 
+  const categories = useMemo(() => {
+    return ["all", ...Array.from(new Set(articles.map((a) => a.category)))]
+  }, [articles])
+
   const filteredArticles = useMemo(() => {
-    return sampleArticles.filter((article) => {
+    return articles.filter((article) => {
       const matchesSearch =
         article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -37,7 +81,7 @@ export default function IntelligencePage() {
       const matchesCategory = selectedCategory === "all" || article.category === selectedCategory
       return matchesSearch && matchesCategory
     })
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, articles])
 
   return (
     <>
@@ -73,7 +117,26 @@ export default function IntelligencePage() {
           </Card>
 
           {/* Articles */}
-          {filteredArticles.length > 0 ? (
+          {isLoading ? (
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Book className="h-5 w-5" />
+                Latest Articles
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} data-testid={`skeleton-article-${i}`}>
+                    <Skeleton className="h-48 w-full rounded-b-none" />
+                    <CardContent className="p-4 space-y-3">
+                      <Skeleton className="h-5 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : filteredArticles.length > 0 ? (
             <div>
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Book className="h-5 w-5" />

@@ -3573,6 +3573,147 @@ export function registerPublicRoutes(app: Express) {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // ==================== INTELLIGENCE ARTICLES ====================
+
+  app.get('/api/articles', async (_req: Request, res: Response) => {
+    try {
+      const { data, error } = await supabaseRemote
+        .from('intelligence_articles')
+        .select('id, slug, title, excerpt, author_name, author_avatar, featured_image, category, tags, published_date, read_time, views, likes, featured')
+        .order('published_date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching articles:', error);
+        return res.status(500).json({ error: 'Failed to fetch articles' });
+      }
+
+      return res.json({ articles: data || [] });
+    } catch (error) {
+      console.error('Error in GET /api/articles:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/articles/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('intelligence_articles')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error || !data) {
+        return res.status(404).json({ error: 'Article not found' });
+      }
+
+      return res.json({ article: data });
+    } catch (error) {
+      console.error('Error in GET /api/articles/:slug:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ==================== TRADELLE BESTSELLERS ====================
+
+  app.get('/api/tradelle/bestsellers', async (req: Request, res: Response) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = Math.min(parseInt(req.query.pageSize as string) || 50, 100);
+      const search = (req.query.search as string) || '';
+      const offset = (page - 1) * pageSize;
+
+      let query = supabaseRemote
+        .from('tradelle_bestsellers')
+        .select('id, name, url, image, price, store_url, date, variants, scraped_at', { count: 'exact' });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { data, error, count } = await query
+        .order('scraped_at', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+
+      if (error) {
+        console.error('Error fetching bestsellers:', error);
+        return res.status(500).json({ error: 'Failed to fetch bestsellers' });
+      }
+
+      return res.json({
+        products: data || [],
+        total: count || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize),
+      });
+    } catch (error) {
+      console.error('Error in GET /api/tradelle/bestsellers:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ==================== TRADELLE TRENDS ====================
+
+  app.get('/api/tradelle/trends', async (req: Request, res: Response) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = Math.min(parseInt(req.query.pageSize as string) || 50, 100);
+      const search = (req.query.search as string) || '';
+      const offset = (page - 1) * pageSize;
+
+      let query = supabaseRemote
+        .from('tradelle_trends')
+        .select('id, name, url, image, buy_price, sell_price, scraped_at', { count: 'exact' });
+
+      if (search) {
+        query = query.ilike('name', `%${search}%`);
+      }
+
+      const { data, error, count } = await query
+        .order('scraped_at', { ascending: false })
+        .range(offset, offset + pageSize - 1);
+
+      if (error) {
+        console.error('Error fetching trends:', error);
+        return res.status(500).json({ error: 'Failed to fetch trends' });
+      }
+
+      return res.json({
+        products: data || [],
+        total: count || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((count || 0) / pageSize),
+      });
+    } catch (error) {
+      console.error('Error in GET /api/tradelle/trends:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // ==================== SUPPLIERS ====================
+
+  app.get('/api/suppliers', async (_req: Request, res: Response) => {
+    try {
+      const { data, error } = await supabaseRemote
+        .from('suppliers')
+        .select('*')
+        .order('rating', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching suppliers:', error);
+        return res.status(500).json({ error: 'Failed to fetch suppliers' });
+      }
+
+      return res.json({ suppliers: data || [] });
+    } catch (error) {
+      console.error('Error in GET /api/suppliers:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 }
 
 // ==================== HELPER FUNCTIONS ====================
