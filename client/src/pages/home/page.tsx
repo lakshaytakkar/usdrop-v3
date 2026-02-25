@@ -94,6 +94,9 @@ function FreeLearningSection() {
 
   if (courses.length === 0) return null
 
+  const previewCourses = courses.slice(0, 6)
+  const hasMore = courses.length > 6
+
   return (
     <div>
       <h2 className="ds-section-title mb-4 flex items-center gap-2">
@@ -101,7 +104,7 @@ function FreeLearningSection() {
         Free Learning
       </h2>
       <div className="space-y-2.5">
-        {courses.map((course: any) => (
+        {previewCourses.map((course: any) => (
           <Link
             key={course.id}
             href={`/framework/my-learning/${course.id}`}
@@ -137,6 +140,18 @@ function FreeLearningSection() {
           </Link>
         ))}
       </div>
+      {hasMore && (
+        <div className="mt-3 flex justify-center">
+          <Link
+            href="/framework/my-learning"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+            data-testid="link-see-all-courses"
+          >
+            See all {courses.length} courses
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
