@@ -34,8 +34,10 @@ export function Header() {
         <Logo className="text-black text-lg" />
       </div>
 
-      <div className="hidden lg:flex flex-1 justify-center mx-4">
-        <DesktopMegaMenu />
+      <div className="hidden lg:flex flex-1 justify-center mx-6">
+        <div className="border border-gray-200/60 rounded-full px-5 py-1.5">
+          <DesktopMegaMenu />
+        </div>
       </div>
 
       <div className="hidden lg:flex items-center gap-3 shrink-0">

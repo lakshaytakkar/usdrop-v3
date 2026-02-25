@@ -1,121 +1,63 @@
 import { Link } from "wouter"
 import { useState, useRef, useEffect, useId } from "react"
-import { ChevronDown, Sparkles } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
-interface MenuItem {
-  title: string
-  href: string
-  icon3d: string
-  isNew?: boolean
+interface MenuColumn {
+  heading: string
+  links: { title: string; href: string }[]
 }
 
 interface MenuCategory {
   label: string
   href?: string
-  items?: MenuItem[]
-  featured?: {
-    title: string
-    description: string
-    image: string
-    href: string
-  }
+  columns?: MenuColumn[]
 }
 
 const menuData: MenuCategory[] = [
   {
     label: "Products",
-    items: [
+    columns: [
       {
-        title: "Winning Products",
-        href: "/features/winning-products",
-        icon3d: "/images/menu/icons/winning-products.png",
-      },
-      {
-        title: "Winning Ads",
-        href: "/features/winning-ads",
-        icon3d: "/images/menu/icons/winning-ads.png",
-        isNew: true,
-      },
-      {
-        title: "Winning Stores",
-        href: "/features/winning-stores",
-        icon3d: "/images/menu/icons/winning-stores.png",
+        heading: "Research",
+        links: [
+          { title: "Winning Products", href: "/features/winning-products" },
+          { title: "Winning Ads", href: "/features/winning-ads" },
+          { title: "Winning Stores", href: "/features/winning-stores" },
+        ],
       },
     ],
-    featured: {
-      title: "Live Research Data",
-      description: "Real-time data from top stores and ads worldwide.",
-      image: "/images/menu/research.png",
-      href: "/features/winning-products",
-    },
   },
   {
     label: "Platform",
-    items: [
+    columns: [
       {
-        title: "Dashboard",
-        href: "/features/dashboard",
-        icon3d: "/images/menu/icons/live-dashboard.png",
-      },
-      {
-        title: "Fulfilment",
-        href: "/features/fulfilment",
-        icon3d: "/images/menu/icons/order-fulfilment.png",
-      },
-      {
-        title: "Shopify",
-        href: "/shopify",
-        icon3d: "/images/menu/icons/shopify.png",
+        heading: "Tools",
+        links: [
+          { title: "Dashboard", href: "/features/dashboard" },
+          { title: "Fulfilment", href: "/features/fulfilment" },
+          { title: "Shopify", href: "/shopify" },
+        ],
       },
     ],
-    featured: {
-      title: "Your All-in-One Hub",
-      description: "Dashboard, fulfilment, and store management in one place.",
-      image: "/images/menu/framework.png",
-      href: "/features/dashboard",
-    },
   },
   {
     label: "Learn",
-    items: [
+    columns: [
       {
-        title: "Full Courses",
-        href: "/features/courses",
-        icon3d: "/images/menu/icons/learning-modules.png",
-      },
-      {
-        title: "Live Sessions",
-        href: "/features/live-sessions",
-        icon3d: "/images/menu/icons/live-sessions.png",
-        isNew: true,
-      },
-      {
-        title: "What is Dropshipping",
-        href: "/what-is-dropshipping",
-        icon3d: "/images/menu/icons/blogs.png",
+        heading: "Resources",
+        links: [
+          { title: "Full Courses", href: "/features/courses" },
+          { title: "Live Sessions", href: "/features/live-sessions" },
+          { title: "What is Dropshipping", href: "/what-is-dropshipping" },
+        ],
       },
     ],
-    featured: {
-      title: "Learn & Grow",
-      description: "Live sessions to full courses — master dropshipping.",
-      image: "/images/menu/learning.png",
-      href: "/features/courses",
-    },
   },
   {
     label: "LLC",
     href: "/llc",
   },
 ]
-
-function NewBadge() {
-  return (
-    <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide leading-none">
-      <Sparkles className="size-2.5" />
-      New
-    </span>
-  )
-}
 
 function DesktopDropdown({
   category,
@@ -130,11 +72,11 @@ function DesktopDropdown({
 }) {
   const panelId = useId()
 
-  if (!category.items) {
+  if (!category.columns) {
     return (
       <Link
         href={category.href || "/"}
-        className="text-[14px] text-black/80 font-semibold hover:text-black transition-colors py-2 whitespace-nowrap"
+        className="text-[14px] text-black/70 font-medium hover:text-black transition-colors py-2 whitespace-nowrap"
         data-testid={`link-menu-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
       >
         {category.label}
@@ -149,7 +91,7 @@ function DesktopDropdown({
       onMouseLeave={onMouseLeave}
     >
       <button
-        className="flex items-center gap-1 text-[14px] text-black/80 font-semibold hover:text-black transition-colors py-2 whitespace-nowrap"
+        className="flex items-center gap-1 text-[14px] text-black/70 font-medium hover:text-black transition-colors py-2 whitespace-nowrap"
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-controls={panelId}
@@ -157,78 +99,41 @@ function DesktopDropdown({
       >
         {category.label}
         <ChevronDown
-          className={`size-3.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          className={`size-3.5 opacity-50 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
       <div
         id={panelId}
         role="menu"
-        className={`absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50 transition-all duration-200 ${
+        className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 z-50 transition-all duration-200 ${
           isOpen
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 -translate-y-1 pointer-events-none"
         }`}
       >
-        <div
-          className="bg-white/95 border border-gray-200/60 rounded-2xl shadow-[0px_16px_40px_-8px_rgba(0,0,0,0.12),0px_4px_12px_-4px_rgba(0,0,0,0.06)] overflow-hidden"
-          style={{ backdropFilter: "blur(20px)" }}
-        >
-          <div className="flex">
-            <div className="p-4 min-w-[220px]">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-gray-400 mb-3 px-2">
-                {category.label}
-              </p>
-              <div className="flex flex-col gap-0.5">
-                {category.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    role="menuitem"
-                    className="group flex items-center gap-3 px-2 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-                    data-testid={`link-menu-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    <img
-                      src={item.icon3d}
-                      alt=""
-                      className="size-9 object-contain shrink-0"
-                    />
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-semibold text-gray-900 group-hover:text-black">
-                        {item.title}
-                      </span>
-                      {item.isNew && <NewBadge />}
-                    </div>
-                  </Link>
-                ))}
+        <div className="bg-white rounded-xl shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)] border border-gray-100 overflow-hidden">
+          <div className="flex gap-10 px-6 py-5">
+            {category.columns.map((col) => (
+              <div key={col.heading} className="min-w-[160px]">
+                <p className="text-[12px] font-medium text-black/40 mb-3 tracking-wide">
+                  {col.heading}
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {col.links.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      role="menuitem"
+                      className="text-[14px] text-black/80 hover:text-black py-1.5 transition-colors whitespace-nowrap"
+                      data-testid={`link-menu-item-${link.title.toLowerCase().replace(/\s+/g, "-")}`}
+                    >
+                      {link.title}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            {category.featured && (
-              <div className="p-4 border-l border-gray-100 w-[240px]">
-                <Link
-                  href={category.featured.href}
-                  role="menuitem"
-                  className="block group"
-                  data-testid={`link-featured-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  <div className="rounded-xl overflow-hidden bg-gray-50 mb-3">
-                    <img
-                      src={category.featured.image}
-                      alt={category.featured.title}
-                      className="w-full h-[130px] object-cover group-hover:scale-105 transition-transform duration-300"
-                      decoding="async"
-                    />
-                  </div>
-                  <p className="text-[13px] font-semibold text-gray-900 group-hover:text-black">
-                    {category.featured.title}
-                  </p>
-                  <p className="text-[12px] text-gray-500 leading-snug mt-1">
-                    {category.featured.description}
-                  </p>
-                </Link>
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
@@ -249,11 +154,11 @@ function MobileAccordionItem({
 }) {
   const panelId = useId()
 
-  if (!category.items) {
+  if (!category.columns) {
     return (
       <Link
         href={category.href || "/"}
-        className="text-[15px] text-black font-semibold py-3 border-b border-gray-100 block"
+        className="text-[15px] text-black font-medium py-3 border-b border-gray-100 block"
         onClick={onClose}
         data-testid={`link-mobile-menu-${category.label.toLowerCase().replace(/\s+/g, "-")}`}
       >
@@ -265,7 +170,7 @@ function MobileAccordionItem({
   return (
     <div className="border-b border-gray-100">
       <button
-        className="flex items-center justify-between w-full text-[15px] text-black font-semibold py-3"
+        className="flex items-center justify-between w-full text-[15px] text-black font-medium py-3"
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
@@ -283,29 +188,26 @@ function MobileAccordionItem({
           isOpen ? "max-h-[600px] opacity-100 pb-3" : "max-h-0 opacity-0"
         }`}
       >
-        <div className="flex flex-col gap-1 pl-1">
-          {category.items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors"
-              onClick={onClose}
-              data-testid={`link-mobile-item-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-            >
-              <img
-                src={item.icon3d}
-                alt=""
-                className="size-9 object-contain shrink-0"
-              />
-              <div className="flex items-center gap-2">
-                <span className="text-[14px] font-semibold text-gray-800">
-                  {item.title}
-                </span>
-                {item.isNew && <NewBadge />}
-              </div>
-            </Link>
-          ))}
-        </div>
+        {category.columns.map((col) => (
+          <div key={col.heading} className="pl-1 mb-2">
+            <p className="text-[11px] font-medium text-black/40 mb-1 px-3 tracking-wide">
+              {col.heading}
+            </p>
+            <div className="flex flex-col">
+              {col.links.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-[14px] text-black/80 px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                  onClick={onClose}
+                  data-testid={`link-mobile-item-${link.title.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {link.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -333,7 +235,7 @@ export function DesktopMegaMenu() {
   }, [])
 
   return (
-    <nav className="flex items-center gap-3 xl:gap-5" data-testid="nav-mega-menu-desktop">
+    <nav className="flex items-center gap-6" data-testid="nav-mega-menu-desktop">
       {menuData.map((category) => (
         <DesktopDropdown
           key={category.label}
