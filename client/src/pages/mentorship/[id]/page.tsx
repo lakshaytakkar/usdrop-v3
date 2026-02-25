@@ -130,7 +130,7 @@ function CourseDetailContent() {
   return (
     <>
         <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
+          <div className="flex items-center justify-between px-12 md:px-20 lg:px-32 py-2 border-b bg-background">
             <button
               onClick={handleClose}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -169,7 +169,7 @@ function CourseDetailContent() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between px-4 py-2 border-t">
+                  <div className="flex items-center justify-between px-6 md:px-8 py-2 border-t">
                     <div className="min-w-0 flex-1">
                       <h2 className="text-sm font-semibold truncate">{currentModule.title}</h2>
                       {currentModule.description && (
@@ -178,7 +178,7 @@ function CourseDetailContent() {
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto px-4 pb-2">
+                  <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-2">
                     <CourseContentTabs
                       module={currentModule}
                     />
