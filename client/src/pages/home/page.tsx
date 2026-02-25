@@ -347,7 +347,7 @@ function MentorshipBanner() {
   const firstName = user?.full_name?.split(" ")[0] || "there"
 
   return (
-    <div className="flex gap-3" data-testid="banner-mentorship">
+    <div className="flex gap-3 items-stretch" data-testid="banner-mentorship">
       <div className="flex-1 min-w-0 space-y-3">
         <div
           className="relative overflow-hidden rounded-2xl"
