@@ -2293,7 +2293,7 @@ export function registerPublicRoutes(app: Express) {
 
       const { data: picklistItems, error } = await supabaseRemote
         .from('user_picklist')
-        .select('id, product_id, notes, source, created_at, products(id, title, image, buy_price, sell_price, profit_per_order, category_id, categories(id, name, slug))')
+        .select('id, product_id, notes, source, created_at, products(id, title, image, description, buy_price, sell_price, profit_per_order, in_stock, category_id, categories(id, name, slug))')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -2310,10 +2310,13 @@ export function registerPublicRoutes(app: Express) {
           productId: item.product_id,
           title: p?.title || 'Unknown Product',
           image: p?.image || '/demo-products/Screenshot 2024-07-24 185228.png',
+          description: p?.description || '',
           price: p?.sell_price || 0,
           buyPrice: p?.buy_price || 0,
           profitPerOrder: p?.profit_per_order || 0,
+          inStock: p?.in_stock !== false,
           category: cat?.name || cat?.slug || 'Uncategorized',
+          categoryId: p?.category_id || null,
           addedDate: item.created_at,
           source: item.source || 'other',
         };
@@ -2682,7 +2685,7 @@ export function registerPublicRoutes(app: Express) {
       }
 
       const body = req.body;
-      const { title, image, description, category_id, buy_price, sell_price, additional_images, specifications, rating, reviews_count, trend_data, supplier_id, metadata, source } = body;
+      const { title, image, description, category_id, buy_price, sell_price, in_stock, additional_images, specifications, rating, reviews_count, trend_data, supplier_id, metadata, source } = body;
 
       const updateFields: Record<string, any> = {};
 
@@ -2692,6 +2695,7 @@ export function registerPublicRoutes(app: Express) {
       if (category_id !== undefined) updateFields.category_id = category_id;
       if (buy_price !== undefined) updateFields.buy_price = buy_price;
       if (sell_price !== undefined) updateFields.sell_price = sell_price;
+      if (in_stock !== undefined) updateFields.in_stock = in_stock;
       if (buy_price !== undefined || sell_price !== undefined) {
         const newBuy = buy_price !== undefined ? parseFloat(buy_price) : null;
         const newSell = sell_price !== undefined ? parseFloat(sell_price) : null;
