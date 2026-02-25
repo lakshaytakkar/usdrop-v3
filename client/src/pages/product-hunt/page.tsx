@@ -503,7 +503,7 @@ export default function ProductHuntPage() {
             
             <div className="relative flex-1">
               {isLoading && products.length === 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {Array.from({ length: 15 }).map((_, index) => (
                     <Card key={index} className="overflow-hidden border-border/50 p-0">
                       <Skeleton className="aspect-square w-full" />
@@ -525,7 +525,7 @@ export default function ProductHuntPage() {
               ) : (
                 <>
                   {productCardData.length > 0 ? (
-                    <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                    <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {productCardData.map((product, index) => {
                         const { isLocked } = getTeaserLockState(index, isFree, { 
                           freeVisibleCount: 6,
