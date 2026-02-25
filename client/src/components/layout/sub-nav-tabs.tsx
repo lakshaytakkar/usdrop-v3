@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { usePathname } from "@/hooks/use-router"
 import { Link } from "wouter"
 import { cn } from "@/lib/utils"
@@ -8,12 +8,6 @@ import { UnlockBadge } from "@/components/ui/unlock-badge"
 import { useUserPlan } from "@/hooks/use-user-plan"
 import { Search, PlayCircle, Download, SlidersHorizontal } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
-
-interface QuickFilter {
-  id: string
-  emoji: string
-  label: string
-}
 
 interface ToolbarAction {
   label: string
@@ -29,21 +23,6 @@ interface ToolbarConfig {
   actions?: ToolbarAction[]
   videoTutorialTitle?: string
   videoTutorialUrl?: string
-}
-
-const quickFilterConfigs: Record<string, QuickFilter[]> = {
-  "/products/product-hunt": [
-    { id: "newest", emoji: "✨", label: "Newest" },
-    { id: "price-low", emoji: "💲", label: "Lowest Price" },
-    { id: "price-high", emoji: "💰", label: "Highest Price" },
-    { id: "profit-high", emoji: "📈", label: "Best Margin" },
-  ],
-  "/products/winning-products": [
-    { id: "high-revenue", emoji: "💰", label: "High Revenue" },
-    { id: "high-growth", emoji: "🚀", label: "Fast Growing" },
-    { id: "profit-margin-high", emoji: "📈", label: "Best Margin" },
-    { id: "price-low", emoji: "💲", label: "Lowest Price" },
-  ],
 }
 
 const toolbarConfigs: Record<string, ToolbarConfig> = {
@@ -152,14 +131,6 @@ export function SubNavTabs() {
   const { isFree, isLoading } = useUserPlan()
   const [searchValue, setSearchValue] = useState("")
   const [videoModalOpen, setVideoModalOpen] = useState(false)
-  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null)
-
-  const quickFilters = pathname ? quickFilterConfigs[pathname] || [] : []
-
-  useEffect(() => {
-    setActiveQuickFilter(null)
-  }, [pathname])
-
   if (!activeGroup) return null
 
   const hasTabs = activeGroup.items.length > 1
@@ -170,16 +141,9 @@ export function SubNavTabs() {
   }
 
   const hasToolbar = !hideToolbar && (toolbar.showSearch || (toolbar.actions && toolbar.actions.length > 0))
-  const hasQuickFilters = quickFilters.length > 0
-  if (!hasTabs && !hasToolbar && !hasQuickFilters) return null
+  if (!hasTabs && !hasToolbar) return null
 
   const showNumbering = activeGroup.label === "Framework"
-
-  const handleQuickFilter = (filterId: string) => {
-    const newFilter = activeQuickFilter === filterId ? null : filterId
-    setActiveQuickFilter(newFilter)
-    window.dispatchEvent(new CustomEvent('quick-filter-change', { detail: { filter: newFilter } }))
-  }
 
   return (
     <>
@@ -323,29 +287,6 @@ export function SubNavTabs() {
           </div>
         )}
 
-        {hasQuickFilters && !hideToolbar && (
-          <div className="flex items-center gap-1.5 flex-wrap pb-0.5">
-            {quickFilters.map((filter) => {
-              const isActive = activeQuickFilter === filter.id
-              return (
-                <button
-                  key={filter.id}
-                  onClick={() => handleQuickFilter(filter.id)}
-                  data-testid={`button-quickfilter-${filter.id}`}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer border",
-                    isActive
-                      ? "bg-black text-white border-black"
-                      : "bg-white border-black/[0.06] text-[#666] hover:border-black/[0.12] hover:text-black"
-                  )}
-                >
-                  <span className="text-sm leading-none">{filter.emoji}</span>
-                  <span>{filter.label}</span>
-                </button>
-              )
-            })}
-          </div>
-        )}
 
         </div>
       </div>
