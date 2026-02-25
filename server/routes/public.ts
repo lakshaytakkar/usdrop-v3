@@ -2293,7 +2293,7 @@ export function registerPublicRoutes(app: Express) {
 
       const { data: picklistItems, error } = await supabaseRemote
         .from('user_picklist')
-        .select('id, product_id, notes, created_at, products(id, title, image, buy_price, sell_price, profit_per_order, category_id, categories(id, name, slug))')
+        .select('id, product_id, notes, source, created_at, products(id, title, image, buy_price, sell_price, profit_per_order, category_id, categories(id, name, slug))')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -2315,7 +2315,7 @@ export function registerPublicRoutes(app: Express) {
           profitPerOrder: p?.profit_per_order || 0,
           category: cat?.name || cat?.slug || 'Uncategorized',
           addedDate: item.created_at,
-          source: 'product-hunt',
+          source: item.source || 'other',
         };
       });
 
@@ -2382,6 +2382,143 @@ export function registerPublicRoutes(app: Express) {
       return res.json({ message: 'Product removed from picklist' });
     } catch (error) {
       console.error('Error in DELETE /api/picklist/[id]:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/products/create-manual - Create product manually and add to user's picklist
+  app.post('/api/products/create-manual', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { title, description, category_id, buy_price, sell_price, image } = req.body;
+
+      if (!title || !title.trim()) {
+        return res.status(400).json({ error: 'Product name is required' });
+      }
+
+      const profitPerOrder = (sell_price || 0) - (buy_price || 0);
+
+      const { data: product, error: productError } = await supabaseRemote
+        .from('products')
+        .insert({
+          title: title.trim(),
+          description: description?.trim() || null,
+          category_id: category_id || null,
+          buy_price: buy_price || 0,
+          sell_price: sell_price || 0,
+          profit_per_order: profitPerOrder,
+          image: image?.trim() || null,
+        })
+        .select()
+        .single();
+
+      if (productError) {
+        console.error('Error creating product:', productError);
+        return res.status(500).json({ error: 'Failed to create product' });
+      }
+
+      const { error: picklistError } = await supabaseRemote
+        .from('user_picklist')
+        .insert({ user_id: user.id, product_id: product.id, source: 'manual' });
+
+      if (picklistError) {
+        console.error('Error adding to picklist:', picklistError);
+      }
+
+      return res.status(201).json({ message: 'Product created and added to picklist', product });
+    } catch (error) {
+      console.error('Error in POST /api/products/create-manual:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/products/import-url - Import product from URL and add to user's picklist
+  app.post('/api/products/import-url', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { url } = req.body;
+
+      if (!url || !url.trim()) {
+        return res.status(400).json({ error: 'URL is required' });
+      }
+
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url.trim());
+      } catch {
+        return res.status(400).json({ error: 'Invalid URL format' });
+      }
+
+      let title = parsedUrl.hostname.replace('www.', '');
+      let description = '';
+      let image = '';
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
+        const response = await fetch(url.trim(), {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; USDrop/1.0)',
+            'Accept': 'text/html',
+          },
+        });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          const html = await response.text();
+
+          const ogTitle = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)?.[1]
+            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:title["']/i)?.[1]
+            || html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1];
+
+          const ogDesc = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i)?.[1]
+            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:description["']/i)?.[1]
+            || html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)?.[1];
+
+          const ogImage = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)?.[1]
+            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i)?.[1];
+
+          if (ogTitle) title = ogTitle.trim();
+          if (ogDesc) description = ogDesc.trim();
+          if (ogImage) {
+            image = ogImage.startsWith('http') ? ogImage : new URL(ogImage, parsedUrl.origin).href;
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('Could not fetch URL metadata, using defaults:', fetchErr);
+      }
+
+      const { data: product, error: productError } = await supabaseRemote
+        .from('products')
+        .insert({
+          title,
+          description: description || null,
+          image: image || null,
+          buy_price: 0,
+          sell_price: 0,
+          profit_per_order: 0,
+        })
+        .select()
+        .single();
+
+      if (productError) {
+        console.error('Error creating product from URL:', productError);
+        return res.status(500).json({ error: 'Failed to create product' });
+      }
+
+      const { error: picklistError } = await supabaseRemote
+        .from('user_picklist')
+        .insert({ user_id: user.id, product_id: product.id, source: 'url-import' });
+
+      if (picklistError) {
+        console.error('Error adding to picklist:', picklistError);
+      }
+
+      return res.status(201).json({ message: 'Product imported and added to picklist', product });
+    } catch (error) {
+      console.error('Error in POST /api/products/import-url:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
