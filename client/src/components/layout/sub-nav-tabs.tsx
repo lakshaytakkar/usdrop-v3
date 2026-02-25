@@ -1,12 +1,12 @@
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { usePathname } from "@/hooks/use-router"
 import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { findActiveGroup, NavItem } from "@/data/navigation"
 import { UnlockBadge } from "@/components/ui/unlock-badge"
 import { useUserPlan } from "@/hooks/use-user-plan"
-import { Search, PlayCircle, Download, SlidersHorizontal } from "lucide-react"
+import { Search, PlayCircle, Download, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
 interface ToolbarAction {
@@ -131,6 +131,30 @@ export function SubNavTabs() {
   const { isFree, isLoading } = useUserPlan()
   const [searchValue, setSearchValue] = useState("")
   const [videoModalOpen, setVideoModalOpen] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 2)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+  }, [])
+
+  useEffect(() => {
+    checkScroll()
+    const el = scrollRef.current
+    if (!el) return
+    el.addEventListener("scroll", checkScroll, { passive: true })
+    const ro = new ResizeObserver(checkScroll)
+    ro.observe(el)
+    return () => {
+      el.removeEventListener("scroll", checkScroll)
+      ro.disconnect()
+    }
+  }, [checkScroll, activeGroup?.label])
+
   if (!activeGroup) return null
 
   const hasTabs = activeGroup.items.length > 1
@@ -149,13 +173,32 @@ export function SubNavTabs() {
 
   const showNumbering = activeGroup.label === "Framework"
 
+  const scrollBy = (direction: "left" | "right") => {
+    const el = scrollRef.current
+    if (!el) return
+    el.scrollBy({ left: direction === "left" ? -200 : 200, behavior: "smooth" })
+  }
+
   return (
     <>
       <div className="w-full px-12 md:px-20 lg:px-32 pt-2.5 pb-1.5">
         <div className="space-y-2.5">
 
         {hasTabs && <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-x-auto scrollbar-hide">
+          {canScrollLeft && (
+            <button
+              onClick={() => scrollBy("left")}
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border border-black/[0.08] bg-white hover:bg-gray-50 text-gray-500 hover:text-black transition-all shadow-sm"
+              data-testid="button-scroll-tabs-left"
+              aria-label="Scroll tabs left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
+          <div
+            ref={scrollRef}
+            className="flex items-center gap-1.5 min-w-0 flex-1 overflow-x-hidden"
+          >
             {activeGroup.items.map((item, index) => {
               const isActive = pathname === item.url || (item.url !== "/framework" && pathname?.startsWith(item.url + "/"))
               const isLocked = !isLoading && isFree && item.isPro
@@ -172,6 +215,16 @@ export function SubNavTabs() {
               )
             })}
           </div>
+          {canScrollRight && (
+            <button
+              onClick={() => scrollBy("right")}
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border border-black/[0.08] bg-white hover:bg-gray-50 text-gray-500 hover:text-black transition-all shadow-sm"
+              data-testid="button-scroll-tabs-right"
+              aria-label="Scroll tabs right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
           {!toolbar.showSearch && toolbar.actions && toolbar.actions.length > 0 && (
             <div className="flex-shrink-0 flex items-center gap-1.5 border-l border-black/[0.06] pl-3 ml-1">
               {toolbar.actions.map((action) => {
