@@ -41,7 +41,7 @@ export const freeLearningModules: FreeLearningModule[] = [
         videoUrl: "https://www.youtube-nocookie.com/embed/fAdCYxe7e4A",
         description: "You can find endless content online about building businesses, especially about dropshipping. In this video, we share honest, uncensored experience on topics you won't find elsewhere.",
         tags: ["Dropshipping", "Entrepreneurship"],
-        thumbnail: "/images/thumbnails/part-01.png",
+        thumbnail: "/images/thumbnails/part-01.jpg",
       },
     ],
   },
