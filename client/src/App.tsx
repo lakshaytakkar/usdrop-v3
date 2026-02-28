@@ -97,6 +97,8 @@ import MySessionsPage from "@/pages/my-sessions/page";
 import ModelStudio from "@/pages/studio/model-studio/page";
 import Whitelabelling from "@/pages/studio/whitelabelling/page";
 import ResourcesPage from "@/pages/resources/page";
+import FreeLearningPage from "@/pages/free-learning/page";
+import FreeLearningLessonPage from "@/pages/free-learning/[lessonId]/page";
 
 import MyProducts from "@/pages/my-products/page";
 import MyStore from "@/pages/my-store/page";
@@ -133,6 +135,10 @@ function Router() {
       {/* Marketing / Landing */}
       <Route path="/" component={() => <MarketingLayout><MarketingPage /></MarketingLayout>} />
       <Route path="/shopify" component={ShopifyMarketingPage} />
+
+      {/* Free Learning (public) */}
+      <Route path="/free-learning" component={FreeLearningPage} />
+      <Route path="/free-learning/:lessonId" component={FreeLearningLessonPage} />
 
       {/* Feature Marketing Pages */}
       <Route path="/features/winning-products" component={WinningProductsMarketing} />

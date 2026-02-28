@@ -57,6 +57,10 @@ const menuData: MenuCategory[] = [
     label: "LLC",
     href: "/llc",
   },
+  {
+    label: "Free Learning",
+    href: "/free-learning",
+  },
 ]
 
 function DesktopDropdown({

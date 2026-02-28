@@ -58,6 +58,14 @@ export interface NavGroup {
 
 export const externalNavGroups: NavGroup[] = [
   {
+    label: "Free Learning",
+    icon: GraduationCap,
+    iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
+    items: [
+      { title: "Free Learning", icon: GraduationCap, url: "/free-learning", isPro: false },
+    ],
+  },
+  {
     label: "My Mentorship",
     icon: Compass,
     iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
