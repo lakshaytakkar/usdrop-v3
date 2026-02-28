@@ -29,8 +29,17 @@ function Sidebar({
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-gray-100">
         <h3 className="text-sm font-bold text-gray-900 truncate">{freeLearningCourse.title}</h3>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-gray-400">{currentIdx + 1} / {allLessons.length} lessons</span>
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-gray-400 font-medium">{Math.round(((currentIdx + 1) / allLessons.length) * 100)}% complete</span>
+            <span className="text-[10px] text-gray-400">{currentIdx + 1}/{allLessons.length}</span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-500 rounded-full transition-all duration-300"
+              style={{ width: `${((currentIdx + 1) / allLessons.length) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
 
