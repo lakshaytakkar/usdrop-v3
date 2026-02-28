@@ -2534,6 +2534,7 @@ export function registerPublicRoutes(app: Express) {
       const sourceType = req.query.source_type as string | undefined;
       const isWinning = req.query.is_winning as string | undefined;
       const isLocked = req.query.is_locked as string | undefined;
+      const isTrending = req.query.is_trending as string | undefined;
       const categoryId = req.query.category_id as string | undefined;
       const search = req.query.search as string | undefined;
       const page = parseInt(req.query.page as string || '1');
@@ -2542,8 +2543,9 @@ export function registerPublicRoutes(app: Express) {
       const sortOrder = (req.query.sortOrder as string) || 'desc';
       const offset = (page - 1) * pageSize;
 
+      const needsInnerMeta = isWinning !== undefined || isLocked !== undefined || isTrending !== undefined;
       const selectParts = ['*', 'categories(*)', 'suppliers(*)'];
-      if (isWinning !== undefined || isLocked !== undefined) {
+      if (needsInnerMeta) {
         selectParts.push('product_metadata!inner(*)');
       } else {
         selectParts.push('product_metadata(*)');
@@ -2561,6 +2563,7 @@ export function registerPublicRoutes(app: Express) {
       if (sourceType) query = query.eq('product_source.source_type', sourceType);
       if (isWinning !== undefined) query = query.eq('product_metadata.is_winning', isWinning === 'true');
       if (isLocked !== undefined) query = query.eq('product_metadata.is_locked', isLocked === 'true');
+      if (isTrending !== undefined) query = query.eq('product_metadata.is_trending', isTrending === 'true');
       if (categoryId) query = query.eq('category_id', categoryId);
       if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
 
@@ -2617,7 +2620,7 @@ export function registerPublicRoutes(app: Express) {
           updated_at: row.updated_at,
           metadata: meta ? {
             id: meta.id, product_id: meta.product_id, is_winning: meta.is_winning || false,
-            is_locked: meta.is_locked || false,
+            is_locked: meta.is_locked || false, is_trending: meta.is_trending || false,
             unlock_price: meta.unlock_price ? parseFloat(meta.unlock_price) : null,
             profit_margin: meta.profit_margin ? parseFloat(meta.profit_margin) : null,
             pot_revenue: meta.pot_revenue ? parseFloat(meta.pot_revenue) : null,

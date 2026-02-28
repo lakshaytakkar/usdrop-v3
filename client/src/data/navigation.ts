@@ -35,6 +35,7 @@ import {
   FlaskConical,
   Building2,
   FolderOpen,
+  Flame,
 } from "lucide-react"
 
 export interface NavItem {
@@ -91,6 +92,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Winning Products", icon: Trophy, url: "/products/winning-products", isPro: true },
       { title: "Categories", icon: Grid3x3, url: "/products/categories", isPro: true },
       { title: "Seasonal Collections", icon: Calendar, url: "/products/seasonal-collections", isPro: true },
+      { title: "Trending", icon: Flame, url: "/products/trending", isPro: true },
       { title: "Competitor Stores", icon: Store, url: "/products/competitor-stores", isPro: true },
     ],
   },

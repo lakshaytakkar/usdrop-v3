@@ -77,6 +77,7 @@ import VideosPage from "@/pages/videos/page";
 import SellingChannels from "@/pages/selling-channels/page";
 import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
+import TrendingProducts from "@/pages/trending-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
 import ShopifyStores from "@/pages/shopify-stores/page";
 import ShopifyMarketingPage from "@/pages/shopify/page";
@@ -207,6 +208,7 @@ function Router() {
       <Route path="/products/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
       <Route path="/products/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
       <Route path="/products/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
+      <Route path="/products/trending" component={() => <AppLayout><TrendingProducts /></AppLayout>} />
       <Route path="/products/competitor-stores" component={() => <AppLayout><CompetitorStoresPage /></AppLayout>} />
 
       {/* Ads — /ads/* */}

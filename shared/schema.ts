@@ -99,6 +99,7 @@ export const productMetadata = pgTable("product_metadata", {
   product_id: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }).unique(),
   is_winning: boolean("is_winning").default(false),
   is_locked: boolean("is_locked").default(false),
+  is_trending: boolean("is_trending").notNull().default(false),
   unlock_price: numeric("unlock_price"),
   profit_margin: numeric("profit_margin"),
   pot_revenue: numeric("pot_revenue"),
