@@ -136,9 +136,9 @@ function Router() {
       <Route path="/" component={() => <MarketingLayout><MarketingPage /></MarketingLayout>} />
       <Route path="/shopify" component={ShopifyMarketingPage} />
 
-      {/* Free Learning (public) */}
-      <Route path="/free-learning" component={FreeLearningPage} />
-      <Route path="/free-learning/:lessonId" component={FreeLearningLessonPage} />
+      {/* Free Learning (public, but uses app shell) */}
+      <Route path="/free-learning" component={() => <AppLayout><FreeLearningPage /></AppLayout>} />
+      <Route path="/free-learning/:lessonId" component={() => <AppLayout><FreeLearningLessonPage /></AppLayout>} />
 
       {/* Feature Marketing Pages */}
       <Route path="/features/winning-products" component={WinningProductsMarketing} />

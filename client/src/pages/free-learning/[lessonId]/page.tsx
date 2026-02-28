@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, BookOpen, PlayCircle } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson } from "../data"
-import type { FreeLearningModule } from "../data"
 
 function Sidebar({
   currentLessonId,
@@ -99,7 +98,7 @@ export default function FreeLearningLessonPage() {
 
   if (!result) {
     return (
-      <div className="min-h-screen bg-[#F5F5F7] flex items-center justify-center">
+      <div className="flex flex-1 items-center justify-center p-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Lesson not found</h1>
           <p className="text-gray-500 mb-4">This lesson doesn't exist or has been removed.</p>
@@ -116,57 +115,56 @@ export default function FreeLearningLessonPage() {
   const hasVideo = !!lesson.videoUrl
   const isYouTube = lesson.videoUrl?.includes("youtube") || lesson.videoUrl?.includes("youtu.be") || lesson.videoUrl?.includes("youtube-nocookie")
 
+  const allLessons = freeLearningModules.flatMap(m => m.lessons)
+  const currentIdx = allLessons.findIndex(l => l.id === lessonId)
+
   return (
-    <div className="min-h-screen bg-[#F5F5F7]">
-      <div className="h-screen flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-4 md:px-6 py-2.5 bg-white border-b border-gray-100 shrink-0">
-          <Link
-            href="/free-learning"
-            data-testid="link-back-to-course"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Back to course</span>
-          </Link>
+    <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden px-12 md:px-20 lg:px-32">
+      <div className="flex items-center justify-between py-2 border-b bg-background">
+        <Link
+          href="/free-learning"
+          data-testid="link-back-to-course"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Close
+        </Link>
+        <div className="text-sm text-muted-foreground">
+          Lesson {currentIdx + 1} of {allLessons.length}
+        </div>
+        <div className="flex items-center gap-1">
+          {prevLesson ? (
+            <Link
+              href={`/free-learning/${prevLesson.id}`}
+              data-testid="button-prev-lesson"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Prev
+            </Link>
+          ) : (
+            <span className="text-sm text-gray-300">Prev</span>
+          )}
+          <span className="text-gray-300 mx-1">|</span>
+          {nextLesson ? (
+            <Link
+              href={`/free-learning/${nextLesson.id}`}
+              data-testid="button-next-lesson"
+              className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+            >
+              Next Lesson
+            </Link>
+          ) : (
+            <span className="text-sm text-gray-300">Next Lesson</span>
+          )}
+        </div>
+      </div>
 
-          <div className="text-sm text-gray-500 font-medium truncate max-w-[200px] md:max-w-md text-center">
-            {module.title}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {prevLesson ? (
-              <Link
-                href={`/free-learning/${prevLesson.id}`}
-                data-testid="button-prev-lesson"
-                className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 transition-colors px-2 py-1 rounded-md hover:bg-gray-50"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Prev</span>
-              </Link>
-            ) : (
-              <span className="text-sm text-gray-300 px-2 py-1">Prev</span>
-            )}
-            {nextLesson ? (
-              <Link
-                href={`/free-learning/${nextLesson.id}`}
-                data-testid="button-next-lesson"
-                className="inline-flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 transition-colors px-2 py-1 rounded-md hover:bg-blue-50 font-medium"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            ) : (
-              <span className="text-sm text-gray-300 px-2 py-1">Next</span>
-            )}
-          </div>
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-lg border border-gray-200 bg-background mt-2 mb-4">
+        <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
+          <Sidebar currentLessonId={lessonId} />
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="hidden lg:flex w-[280px] border-r border-gray-100 bg-white shrink-0 overflow-hidden">
-            <Sidebar currentLessonId={lessonId} />
-          </div>
-
-          <div className="flex-1 flex flex-col overflow-y-auto">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-shrink-0">
             <div className="w-full bg-black" data-testid="video-player-area">
               {hasVideo ? (
                 isYouTube ? (
@@ -201,15 +199,15 @@ export default function FreeLearningLessonPage() {
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="px-6 md:px-8 py-5">
-              <h1 className="text-lg font-bold text-gray-900 mb-1" data-testid="text-lesson-title">
-                {lesson.title}
-              </h1>
-              <div className="flex items-center gap-3 text-sm text-gray-400">
+          <div className="flex items-center justify-between px-6 md:px-8 py-2 border-t">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm font-semibold truncate" data-testid="text-lesson-title">{lesson.title}</h2>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 {lesson.duration && (
                   <div className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
+                    <Clock className="h-3 w-3" />
                     <span>{lesson.duration}</span>
                   </div>
                 )}
@@ -217,41 +215,39 @@ export default function FreeLearningLessonPage() {
                 <span>{module.title}</span>
               </div>
             </div>
+          </div>
 
+          <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-4">
             {nextLesson && (
-              <div className="px-6 md:px-8 pb-6">
-                <Link
-                  href={`/free-learning/${nextLesson.id}`}
-                  data-testid="link-next-lesson-bottom"
-                  className="flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50 hover:bg-blue-50 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
-                    <Play className="h-4 w-4 text-white ml-0.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-xs text-blue-500 font-semibold uppercase">Next Lesson</span>
-                    <p className="text-sm font-medium text-gray-900 truncate">{nextLesson.title}</p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                </Link>
-              </div>
+              <Link
+                href={`/free-learning/${nextLesson.id}`}
+                data-testid="link-next-lesson-bottom"
+                className="flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50 hover:bg-blue-50 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                  <Play className="h-4 w-4 text-white ml-0.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs text-blue-500 font-semibold uppercase">Next Lesson</span>
+                  <p className="text-sm font-medium text-gray-900 truncate">{nextLesson.title}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </Link>
             )}
 
             {!nextLesson && (
-              <div className="px-6 md:px-8 pb-6">
-                <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
-                  <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                  <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
-                  <p className="text-sm text-gray-500 mb-4">Ready to take your dropshipping business to the next level?</p>
-                  <Link
-                    href="/signup"
-                    data-testid="link-signup-cta"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
-                  >
-                    Join USDrop Pro
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+              <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
+                <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
+                <p className="text-sm text-gray-500 mb-4">Ready to take your dropshipping business to the next level?</p>
+                <Link
+                  href="/signup"
+                  data-testid="link-signup-cta"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
+                >
+                  Join USDrop Pro
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Link } from "wouter"
 import { Play, Clock, Users, Star, ChevronDown, ChevronRight, BookOpen, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { FrameworkBanner } from "@/components/framework-banner"
 import { freeLearningCourse, freeLearningModules, getTotalLessons } from "./data"
 import type { FreeLearningModule } from "./data"
 
@@ -71,89 +72,54 @@ export default function FreeLearningPage() {
   const firstLessonId = freeLearningModules[0]?.lessons[0]?.id
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#16213e] p-6 md:p-10 text-white mb-8" data-testid="banner-free-learning">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="h-5 w-5 text-blue-400" />
-                <span className="text-blue-400 text-sm font-semibold uppercase tracking-wider">Free Course</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-bold mb-2">{freeLearningCourse.title}</h1>
-              <p className="text-gray-300 text-sm mb-4">{freeLearningCourse.description}</p>
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <FrameworkBanner
+        title="Free Learning"
+        description="Master the fundamentals of USA dropshipping — from product research to Shopify setup to running your first ads. Free for everyone."
+        iconSrc="/images/banners/3d-learning.png"
+        tutorialVideoUrl=""
+      />
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
-                <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          star <= Math.round(freeLearningCourse.rating)
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-gray-500"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span className="font-semibold text-white">{freeLearningCourse.rating}</span>
-                  <span className="text-gray-400">({freeLearningCourse.reviewCount})</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5" />
-                  <span>{freeLearningCourse.memberCount.toLocaleString()} members</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{freeLearningCourse.completionTime}</span>
-                </div>
-              </div>
-            </div>
-
-            {firstLessonId && (
-              <Link
-                href={`/free-learning/${firstLessonId}`}
-                data-testid="button-start-course"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors shrink-0"
-              >
-                <Play className="h-4 w-4" />
-                Start Course
-              </Link>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <h2 className="text-lg font-bold text-gray-900" data-testid="text-course-content">
             Course Content
           </h2>
-          <span className="text-sm text-gray-400 font-medium">
-            {freeLearningModules.length} modules · {totalLessons} lessons
-          </span>
+          {firstLessonId && (
+            <Link
+              href={`/free-learning/${firstLessonId}`}
+              data-testid="button-start-course"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs transition-colors"
+            >
+              <Play className="h-3 w-3" />
+              Start Course
+            </Link>
+          )}
         </div>
+        <span className="text-sm text-gray-400 font-medium">
+          {freeLearningModules.length} modules · {totalLessons} lessons
+        </span>
+      </div>
 
-        <div className="space-y-2.5">
-          {freeLearningModules.map((module, idx) => (
-            <ModuleAccordion key={module.id} module={module} defaultOpen={idx === 0} />
-          ))}
-        </div>
+      <div className="space-y-2.5">
+        {freeLearningModules.map((module, idx) => (
+          <ModuleAccordion key={module.id} module={module} defaultOpen={idx === 0} />
+        ))}
+      </div>
 
-        <div className="mt-10 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 md:p-8 text-center" data-testid="banner-cta-mentorship">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Ready for the next level?</h3>
-          <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
-            Unlock personalized mentorship, advanced strategies, and full platform access with USDrop Pro.
-          </p>
-          <Link
-            href="/signup"
-            data-testid="link-get-started"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-sm transition-all"
-          >
-            Get Started Free
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+      <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">Ready for the next level?</h3>
+        <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
+          Unlock personalized mentorship, advanced strategies, and full platform access with USDrop Pro.
+        </p>
+        <Link
+          href="/signup"
+          data-testid="link-get-started"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-sm transition-all"
+        >
+          Get Started Free
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     </div>
   )
