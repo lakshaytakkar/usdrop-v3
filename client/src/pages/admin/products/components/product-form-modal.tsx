@@ -28,6 +28,7 @@ import {
   BarChart3,
   ClipboardList,
   Eye,
+  Flame,
 } from "lucide-react"
 
 interface ProductFormModalProps {
@@ -55,6 +56,7 @@ interface FormData {
   reviews_count: string
   trend_data: string
   specifications: { key: string; value: string }[]
+  is_trending: boolean
 }
 
 const STEPS = [
@@ -76,6 +78,7 @@ const initialFormData: FormData = {
   reviews_count: "",
   trend_data: "",
   specifications: [],
+  is_trending: false,
 }
 
 export function ProductFormModal({ open, onOpenChange, product, onSuccess }: ProductFormModalProps) {
@@ -135,6 +138,7 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
           reviews_count: product.reviews_count?.toString() || "",
           trend_data: product.trend_data?.join(", ") || "",
           specifications: specs,
+          is_trending: product.is_trending || false,
         })
       }
     })
@@ -212,6 +216,10 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
         reviews_count: formData.reviews_count ? parseInt(formData.reviews_count) : 0,
         trend_data: parseTrendData(),
         specifications: parseSpecifications(),
+      }
+
+      body.metadata = {
+        is_trending: formData.is_trending,
       }
 
       if (!isEditMode) {
@@ -511,6 +519,21 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
               {renderTrendPreview(trendNumbers)}
             </div>
           )}
+        </div>
+
+        <div className="flex items-center gap-3 py-2">
+          <input
+            type="checkbox"
+            id="is_trending"
+            data-testid="checkbox-is-trending"
+            checked={formData.is_trending}
+            onChange={(e) => updateField("is_trending", e.target.checked)}
+            className="h-4 w-4 rounded border-border accent-blue-500"
+          />
+          <Label htmlFor="is_trending" className="cursor-pointer flex items-center gap-2 mb-0">
+            <Flame className="h-4 w-4 text-orange-500" />
+            Mark as Trending
+          </Label>
         </div>
 
         <div className="space-y-2">

@@ -17,6 +17,7 @@ const PUBLIC_PATHS = [
   "/who-is-this-for",
   "/shopify",
   "/auth",
+  "/free-learning",
 ]
 
 function isPublicPath(pathname: string): boolean {

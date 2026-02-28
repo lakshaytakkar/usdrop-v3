@@ -37,6 +37,7 @@ export interface ProductMetadata {
   product_id: string
   is_winning: boolean
   is_locked: boolean
+  is_trending: boolean
   unlock_price: number | null
   profit_margin: number | null
   pot_revenue: number | null

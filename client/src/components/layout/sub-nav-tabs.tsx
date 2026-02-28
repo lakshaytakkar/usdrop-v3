@@ -35,7 +35,12 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
     videoTutorialTitle: "Products Page Video Tutorial",
   },
-  Framework: {
+  "Free Learning": {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
+  },
+  "My Mentorship": {
     searchPlaceholder: "",
     showSearch: false,
     actions: [],
@@ -169,7 +174,7 @@ export function SubNavTabs() {
   const hasCustomToolbar = isMetaAdsPage
   if (!hasTabs && !hasToolbar && !hasCustomToolbar) return null
 
-  const showNumbering = activeGroup.label === "Framework"
+  const showNumbering = activeGroup.label === "My Mentorship"
 
   const scrollBy = (direction: "left" | "right") => {
     const el = scrollRef.current

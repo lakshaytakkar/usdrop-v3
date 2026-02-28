@@ -2967,11 +2967,13 @@ export function registerAdminRoutes(app: Express) {
           } : undefined,
           created_at: row.created_at,
           updated_at: row.updated_at,
+          is_trending: meta?.is_trending || false,
           metadata: meta ? {
             id: meta.id,
             product_id: meta.product_id,
             is_winning: meta.is_winning || false,
             is_locked: meta.is_locked || false,
+            is_trending: meta.is_trending || false,
             unlock_price: meta.unlock_price ? parseFloat(meta.unlock_price) : null,
             profit_margin: meta.profit_margin ? parseFloat(meta.profit_margin) : null,
             pot_revenue: meta.pot_revenue ? parseFloat(meta.pot_revenue) : null,
@@ -3069,6 +3071,7 @@ export function registerAdminRoutes(app: Express) {
           product_id: product.id,
           is_winning: metadata.is_winning || false,
           is_locked: metadata.is_locked || false,
+          is_trending: metadata.is_trending || false,
           unlock_price: metadata.unlock_price || null,
           profit_margin: metadata.profit_margin || null,
           pot_revenue: metadata.pot_revenue || null,
@@ -3197,7 +3200,7 @@ export function registerAdminRoutes(app: Express) {
       if (metadata) {
         try {
           const metaUpdate: Record<string, any> = {};
-          const metaColumns = ['is_winning', 'is_locked', 'unlock_price', 'profit_margin', 'pot_revenue', 'revenue_growth_rate', 'items_sold', 'avg_unit_price', 'revenue_trend', 'found_date', 'detailed_analysis', 'filters'];
+          const metaColumns = ['is_winning', 'is_locked', 'is_trending', 'unlock_price', 'profit_margin', 'pot_revenue', 'revenue_growth_rate', 'items_sold', 'avg_unit_price', 'revenue_trend', 'found_date', 'detailed_analysis', 'filters'];
 
           for (const col of metaColumns) {
             if (metadata[col] !== undefined) {

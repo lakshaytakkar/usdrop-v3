@@ -64,6 +64,7 @@ function mapRowToProduct(row: any) {
       product_id: row.id,
       is_winning: meta.is_winning || false,
       is_locked: meta.is_locked || false,
+      is_trending: meta.is_trending || false,
       unlock_price: meta.unlock_price ? parseFloat(meta.unlock_price) : null,
       profit_margin: meta.profit_margin ? parseFloat(meta.profit_margin) : null,
       pot_revenue: meta.pot_revenue ? parseFloat(meta.pot_revenue) : null,
@@ -212,7 +213,7 @@ export async function PATCH(
     if (metadata) {
       try {
         const metaUpdate: Record<string, any> = { product_id: id }
-        const metaColumns = ['is_winning', 'is_locked', 'unlock_price', 'profit_margin', 'pot_revenue', 'revenue_growth_rate', 'items_sold', 'avg_unit_price', 'revenue_trend', 'found_date', 'detailed_analysis', 'filters']
+        const metaColumns = ['is_winning', 'is_locked', 'is_trending', 'unlock_price', 'profit_margin', 'pot_revenue', 'revenue_growth_rate', 'items_sold', 'avg_unit_price', 'revenue_trend', 'found_date', 'detailed_analysis', 'filters']
 
         for (const col of metaColumns) {
           if (metadata[col] !== undefined) {

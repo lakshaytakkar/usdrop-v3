@@ -35,6 +35,7 @@ import {
   FlaskConical,
   Building2,
   FolderOpen,
+  Flame,
 } from "lucide-react"
 
 export interface NavItem {
@@ -58,11 +59,19 @@ export interface NavGroup {
 
 export const externalNavGroups: NavGroup[] = [
   {
-    label: "Framework",
+    label: "Free Learning",
+    icon: GraduationCap,
+    iconSrc: "/3d-ecom-icons-blue/Graduation_Book.png",
+    items: [
+      { title: "Free Learning", icon: GraduationCap, url: "/free-learning", isPro: false },
+    ],
+  },
+  {
+    label: "My Mentorship",
     icon: Compass,
     iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
     items: [
-      { title: "My Framework", icon: Home, url: "/framework", isPro: false },
+      { title: "Framework", icon: Home, url: "/framework", isPro: false },
       { title: "My Products", icon: Bookmark, url: "/framework/my-products", isPro: false },
       { title: "My Store", icon: ShoppingBag, url: "/framework/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },
@@ -83,6 +92,7 @@ export const externalNavGroups: NavGroup[] = [
       { title: "Winning Products", icon: Trophy, url: "/products/winning-products", isPro: true },
       { title: "Categories", icon: Grid3x3, url: "/products/categories", isPro: true },
       { title: "Seasonal Collections", icon: Calendar, url: "/products/seasonal-collections", isPro: true },
+      { title: "Trending", icon: Flame, url: "/products/trending", isPro: true },
       { title: "Competitor Stores", icon: Store, url: "/products/competitor-stores", isPro: true },
     ],
   },

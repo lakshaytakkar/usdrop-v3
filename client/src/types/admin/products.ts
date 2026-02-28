@@ -31,6 +31,7 @@ export interface ProductPick {
   supplier_id: string | null
   additional_images: string[] | null
   specifications: Record<string, any> | null
+  is_trending?: boolean
   created_at: string
   updated_at: string
   // Joined data

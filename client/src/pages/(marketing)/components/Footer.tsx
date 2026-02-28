@@ -11,7 +11,7 @@ const footerLinks = {
     ],
   },
   framework: {
-    title: "Framework",
+    title: "My Mentorship",
     links: [
       { label: "Journey Roadmap", href: "/features/roadmap" },
       { label: "Live Dashboard", href: "/features/dashboard" },

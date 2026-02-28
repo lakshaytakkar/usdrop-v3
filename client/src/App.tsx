@@ -77,6 +77,7 @@ import VideosPage from "@/pages/videos/page";
 import SellingChannels from "@/pages/selling-channels/page";
 import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
+import TrendingProducts from "@/pages/trending-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
 import ShopifyStores from "@/pages/shopify-stores/page";
 import ShopifyMarketingPage from "@/pages/shopify/page";
@@ -97,6 +98,8 @@ import MySessionsPage from "@/pages/my-sessions/page";
 import ModelStudio from "@/pages/studio/model-studio/page";
 import Whitelabelling from "@/pages/studio/whitelabelling/page";
 import ResourcesPage from "@/pages/resources/page";
+import FreeLearningPage from "@/pages/free-learning/page";
+import FreeLearningLessonPage from "@/pages/free-learning/[lessonId]/page";
 
 import MyProducts from "@/pages/my-products/page";
 import MyStore from "@/pages/my-store/page";
@@ -133,6 +136,10 @@ function Router() {
       {/* Marketing / Landing */}
       <Route path="/" component={() => <MarketingLayout><MarketingPage /></MarketingLayout>} />
       <Route path="/shopify" component={ShopifyMarketingPage} />
+
+      {/* Free Learning (public, but uses app shell) */}
+      <Route path="/free-learning" component={() => <AppLayout><FreeLearningPage /></AppLayout>} />
+      <Route path="/free-learning/:lessonId" component={() => <AppLayout><FreeLearningLessonPage /></AppLayout>} />
 
       {/* Feature Marketing Pages */}
       <Route path="/features/winning-products" component={WinningProductsMarketing} />
@@ -201,6 +208,7 @@ function Router() {
       <Route path="/products/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
       <Route path="/products/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
       <Route path="/products/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
+      <Route path="/products/trending" component={() => <AppLayout><TrendingProducts /></AppLayout>} />
       <Route path="/products/competitor-stores" component={() => <AppLayout><CompetitorStoresPage /></AppLayout>} />
 
       {/* Ads — /ads/* */}
