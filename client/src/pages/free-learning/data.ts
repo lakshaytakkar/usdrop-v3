@@ -254,3 +254,34 @@ export function getPrevLesson(currentLessonId: string): FreeLearningLesson | nul
 export function getTotalLessons(): number {
   return freeLearningModules.reduce((acc, m) => acc + m.lessons.length, 0)
 }
+
+const STORAGE_KEY = "free-learning-completed"
+
+export function markLessonCompleted(lessonId: string): void {
+  const completed = getCompletedLessons()
+  if (!completed.includes(lessonId)) {
+    completed.push(lessonId)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(completed))
+  }
+}
+
+export function getCompletedLessons(): string[] {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch {}
+  return []
+}
+
+export function getCompletionCount(): number {
+  const completed = getCompletedLessons()
+  const allIds = freeLearningModules.flatMap(m => m.lessons.map(l => l.id))
+  return allIds.filter(id => completed.includes(id)).length
+}
+
+export function isAllCompleted(): boolean {
+  const total = getTotalLessons()
+  return getCompletionCount() >= total
+}

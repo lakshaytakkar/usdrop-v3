@@ -1,14 +1,17 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson } from "../data"
+import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
+import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
 
 function Sidebar({
   currentLessonId,
+  completionVersion,
 }: {
   currentLessonId: string
+  completionVersion: number
 }) {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
     const result = findLesson(currentLessonId)
@@ -23,7 +26,8 @@ function Sidebar({
   }
 
   const allLessons = freeLearningModules.flatMap(m => m.lessons)
-  const currentIdx = allLessons.findIndex(l => l.id === currentLessonId)
+  const completedCount = getCompletionCount()
+  const completedSet = new Set(getCompletedLessons())
 
   return (
     <div className="flex flex-col h-full">
@@ -31,13 +35,13 @@ function Sidebar({
         <h3 className="text-sm font-bold text-gray-900 truncate">{freeLearningCourse.title}</h3>
         <div className="mt-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-gray-400 font-medium">{Math.round(((currentIdx + 1) / allLessons.length) * 100)}% complete</span>
-            <span className="text-[10px] text-gray-400">{currentIdx + 1}/{allLessons.length}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{Math.round((completedCount / allLessons.length) * 100)}% complete</span>
+            <span className="text-[10px] text-gray-400">{completedCount}/{allLessons.length}</span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-500 rounded-full transition-all duration-300"
-              style={{ width: `${((currentIdx + 1) / allLessons.length) * 100}%` }}
+              style={{ width: `${(completedCount / allLessons.length) * 100}%` }}
             />
           </div>
         </div>
@@ -79,7 +83,11 @@ function Sidebar({
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                         )}
                       >
-                        <PlayCircle className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-blue-500" : "text-gray-400")} />
+                        {completedSet.has(lesson.id) && !isActive ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                        ) : (
+                          <PlayCircle className={cn("h-3.5 w-3.5 shrink-0", isActive ? "text-blue-500" : "text-gray-400")} />
+                        )}
                         <span className="truncate flex-1">{lesson.title}</span>
                         {lesson.duration && (
                           <span className={cn("text-[10px] shrink-0", isActive ? "text-blue-400" : "text-gray-400")}>{lesson.duration}</span>
@@ -100,10 +108,21 @@ function Sidebar({
 export default function FreeLearningLessonPage() {
   const params = useParams()
   const lessonId = params.lessonId as string
+  const [showActivation, setShowActivation] = useState(false)
+  const [completionVersion, setCompletionVersion] = useState(0)
 
   const result = useMemo(() => findLesson(lessonId), [lessonId])
   const nextLesson = useMemo(() => getNextLesson(lessonId), [lessonId])
   const prevLesson = useMemo(() => getPrevLesson(lessonId), [lessonId])
+
+  useEffect(() => {
+    if (lessonId) {
+      markLessonCompleted(lessonId)
+      setCompletionVersion(v => v + 1)
+    }
+  }, [lessonId])
+
+  const allCompleted = useMemo(() => isAllCompleted(), [completionVersion])
 
   if (!result) {
     return (
@@ -170,7 +189,7 @@ export default function FreeLearningLessonPage() {
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-black/[0.04] bg-background mt-2 mb-4">
         <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
-          <Sidebar currentLessonId={lessonId} />
+          <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
@@ -265,17 +284,33 @@ export default function FreeLearningLessonPage() {
               </Link>
             )}
 
-            {!nextLesson && (
+            {!nextLesson && allCompleted && (
+              <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
+                <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <h3 className="text-base font-bold text-gray-900 mb-1">Congratulations! You've completed the course!</h3>
+                <p className="text-sm text-gray-500 mb-4">You're ready to activate your personalized mentorship program.</p>
+                <button
+                  onClick={() => setShowActivation(true)}
+                  data-testid="button-activate-mentorship-end"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Activate Mentorship
+                </button>
+              </div>
+            )}
+
+            {!nextLesson && !allCompleted && (
               <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
                 <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
-                <p className="text-sm text-gray-500 mb-4">Ready to take your dropshipping business to the next level?</p>
+                <p className="text-sm text-gray-500 mb-4">Complete all lessons to unlock your personalized mentorship program.</p>
                 <Link
-                  href="/signup"
-                  data-testid="link-signup-cta"
+                  href="/free-learning"
+                  data-testid="link-back-to-course-end"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
                 >
-                  Join USDrop Pro
+                  Back to Course
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -283,6 +318,8 @@ export default function FreeLearningLessonPage() {
           </div>
         </div>
       </div>
+
+      <MentorshipActivationModal open={showActivation} onOpenChange={setShowActivation} />
     </div>
   )
 }
