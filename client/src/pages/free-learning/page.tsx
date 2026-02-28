@@ -1,9 +1,8 @@
 import { useState } from "react"
 import { Link } from "wouter"
-import { Play, Clock, Users, Star, ChevronDown, ChevronRight, BookOpen, ArrowRight, Sparkles } from "lucide-react"
+import { Play, ChevronDown, ChevronRight, ArrowRight, Sparkles, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { FrameworkBanner } from "@/components/framework-banner"
-import { freeLearningCourse, freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount } from "./data"
+import { freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount } from "./data"
 import type { FreeLearningModule } from "./data"
 import { MentorshipActivationModal } from "./components/mentorship-activation-modal"
 
@@ -39,7 +38,7 @@ function ModuleAccordion({ module, defaultOpen }: { module: FreeLearningModule; 
 
       {isOpen && (
         <div className="border-t border-black/[0.04]">
-          {module.lessons.map((lesson, idx) => (
+          {module.lessons.map((lesson) => (
             <Link
               key={lesson.id}
               href={`/free-learning/${lesson.id}`}
@@ -68,6 +67,20 @@ function ModuleAccordion({ module, defaultOpen }: { module: FreeLearningModule; 
   )
 }
 
+const mentorStats = [
+  { icon: Video, label: "25 Video Lessons" },
+  { icon: Layers, label: "6 Modules" },
+  { icon: BookOpen, label: "Beginner Friendly" },
+  { icon: BadgeCheck, label: "100% Free" },
+]
+
+const mentorCredentials = [
+  "USA Dropshipping Expert",
+  "100+ Students Mentored",
+  "1-on-1 Guidance",
+  "Proven Framework",
+]
+
 export default function FreeLearningPage() {
   const totalLessons = getTotalLessons()
   const firstLessonId = freeLearningModules[0]?.lessons[0]?.id
@@ -77,12 +90,99 @@ export default function FreeLearningPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
-      <FrameworkBanner
-        title="Free Learning"
-        description="Master the fundamentals of USA dropshipping — from product research to Shopify setup to running your first ads. Free for everyone."
-        iconSrc="/images/banners/3d-learning.png"
-        tutorialVideoUrl=""
-      />
+      <div
+        className="relative overflow-hidden rounded-xl w-full"
+        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
+        data-testid="banner-free-learning-hero"
+      >
+        <div
+          className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none"
+          style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06] pointer-events-none"
+          style={{ background: "radial-gradient(circle, #60a5fa 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.04] pointer-events-none"
+          style={{ background: "radial-gradient(circle, #818cf8 0%, transparent 70%)" }}
+        />
+
+        <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10 p-6 md:p-8">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-[11px] font-semibold uppercase tracking-wider text-blue-300">
+                <GraduationCap className="h-3 w-3" />
+                Free Course
+              </span>
+            </div>
+
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight" data-testid="text-hero-title">
+              Learn USA Dropshipping<br className="hidden md:block" /> From Zero to Pro
+            </h1>
+            <p className="text-sm md:text-[15px] text-white/60 mb-5 max-w-lg leading-relaxed">
+              Master the fundamentals of USA dropshipping — from product research to Shopify setup to running your first ads. Guided by an industry expert, completely free.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm">
+              {mentorStats.map((stat) => (
+                <div key={stat.label} className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.08] shrink-0">
+                    <stat.icon className="h-3.5 w-3.5 text-blue-400" />
+                  </div>
+                  <span className="text-xs text-white/70 font-medium">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {allCompleted ? (
+              <button
+                onClick={() => setShowActivation(true)}
+                data-testid="button-activate-mentorship-hero"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-blue-500/25"
+              >
+                <Sparkles className="h-4 w-4" />
+                Activate Mentorship
+              </button>
+            ) : firstLessonId ? (
+              <Link
+                href={`/free-learning/${firstLessonId}`}
+                data-testid="button-start-course-hero"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all shadow-lg shadow-black/20"
+              >
+                <Play className="h-4 w-4" />
+                {completedCount > 0 ? "Continue Course" : "Start Course"}
+              </Link>
+            ) : null}
+          </div>
+
+          <div className="shrink-0 flex flex-col items-center">
+            <div className="w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border-2 border-white/15 shadow-2xl bg-white mb-3">
+              <img
+                src="/images/mentor-suprans.png"
+                alt="Mr. Suprans - Your Mentor"
+                className="w-full h-full object-cover"
+                data-testid="img-mentor-photo"
+              />
+            </div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <GraduationCap className="h-3 w-3 text-blue-300" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
+            </div>
+            <h3 className="text-base font-bold text-white mb-2.5">Mr. Suprans</h3>
+            <ul className="space-y-1.5">
+              {mentorCredentials.map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 shrink-0">
+                    <Check className="h-2.5 w-2.5 text-emerald-400" />
+                  </span>
+                  <span className="text-[12px] text-white/60">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
