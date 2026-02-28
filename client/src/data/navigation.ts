@@ -58,11 +58,11 @@ export interface NavGroup {
 
 export const externalNavGroups: NavGroup[] = [
   {
-    label: "Framework",
+    label: "My Mentorship",
     icon: Compass,
     iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
     items: [
-      { title: "My Framework", icon: Home, url: "/framework", isPro: false },
+      { title: "My Mentorship", icon: Home, url: "/framework", isPro: false },
       { title: "My Products", icon: Bookmark, url: "/framework/my-products", isPro: false },
       { title: "My Store", icon: ShoppingBag, url: "/framework/my-store", isPro: true },
       { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },

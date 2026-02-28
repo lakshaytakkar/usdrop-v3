@@ -41,7 +41,7 @@ interface ServiceItem {
 function getServices(isPro: boolean): { category: string; services: ServiceItem[] }[] {
   return [
     {
-      category: "Framework",
+      category: "My Mentorship",
       services: [
         { name: "My Products", description: "Save and organize products for quick access", icon: Bookmark, enabled: true },
         { name: "My Store", description: "Connect and manage your Shopify stores", icon: ShoppingBag, enabled: isPro },
