@@ -119,7 +119,7 @@ export default function FreeLearningLessonPage() {
   const currentIdx = allLessons.findIndex(l => l.id === lessonId)
 
   return (
-    <div className="flex flex-1 flex-col h-[calc(100vh-8.5rem)] overflow-hidden px-12 md:px-20 lg:px-32">
+    <div className="flex flex-1 flex-col h-[calc(100vh-5.5rem)] overflow-hidden px-4 md:px-8 lg:px-12">
       <div className="flex items-center justify-between py-2 border-b bg-background">
         <Link
           href="/free-learning"
@@ -158,7 +158,7 @@ export default function FreeLearningLessonPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-lg border border-gray-200 bg-background mt-2 mb-4">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-black/[0.04] bg-background mt-2 mb-4">
         <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
           <Sidebar currentLessonId={lessonId} />
         </div>

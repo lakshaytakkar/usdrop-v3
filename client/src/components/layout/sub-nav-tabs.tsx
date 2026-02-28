@@ -35,6 +35,11 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     ],
     videoTutorialTitle: "Products Page Video Tutorial",
   },
+  "Free Learning": {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
+  },
   "My Mentorship": {
     searchPlaceholder: "",
     showSearch: false,
