@@ -326,107 +326,89 @@ function RoadmapProgressChart() {
   })
   const currentStage = currentStageIndex >= 0 ? journeyStages[currentStageIndex] : journeyStages[journeyStages.length - 1]
 
+  const remainingTasks = totalTasks - completedTasks - inProgressTasks
+  const chartSize = 180
+  const cx = chartSize / 2
+  const cy = chartSize / 2
+  const outerR = 82
+  const innerR = 45
+
+  const completedAngle = totalTasks > 0 ? (completedTasks / totalTasks) * 360 : 0
+  const inProgressAngle = totalTasks > 0 ? (inProgressTasks / totalTasks) * 360 : 0
+  const remainingAngle = totalTasks > 0 ? (remainingTasks / totalTasks) * 360 : 360
+
+  function describeArc(startAngle: number, endAngle: number, outerRadius: number, innerRadius: number) {
+    const startRad = ((startAngle - 90) * Math.PI) / 180
+    const endRad = ((endAngle - 90) * Math.PI) / 180
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0
+
+    const x1 = cx + outerRadius * Math.cos(startRad)
+    const y1 = cy + outerRadius * Math.sin(startRad)
+    const x2 = cx + outerRadius * Math.cos(endRad)
+    const y2 = cy + outerRadius * Math.sin(endRad)
+    const x3 = cx + innerRadius * Math.cos(endRad)
+    const y3 = cy + innerRadius * Math.sin(endRad)
+    const x4 = cx + innerRadius * Math.cos(startRad)
+    const y4 = cy + innerRadius * Math.sin(startRad)
+
+    if (endAngle - startAngle >= 360) {
+      return [
+        `M ${cx + outerRadius} ${cy}`,
+        `A ${outerRadius} ${outerRadius} 0 1 1 ${cx - outerRadius} ${cy}`,
+        `A ${outerRadius} ${outerRadius} 0 1 1 ${cx + outerRadius} ${cy}`,
+        `M ${cx + innerRadius} ${cy}`,
+        `A ${innerRadius} ${innerRadius} 0 1 0 ${cx - innerRadius} ${cy}`,
+        `A ${innerRadius} ${innerRadius} 0 1 0 ${cx + innerRadius} ${cy}`,
+        'Z'
+      ].join(' ')
+    }
+
+    return [
+      `M ${x1} ${y1}`,
+      `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2} ${y2}`,
+      `L ${x3} ${y3}`,
+      `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4}`,
+      'Z'
+    ].join(' ')
+  }
+
+  let offset = 0
+  const segments: { color: string; angle: number }[] = []
+  if (completedAngle > 0) segments.push({ color: '#22c55e', angle: completedAngle })
+  if (inProgressAngle > 0) segments.push({ color: '#eab308', angle: inProgressAngle })
+  if (remainingAngle > 0) segments.push({ color: '#ef4444', angle: remainingAngle })
+
   return (
     <Link
       href="/framework/my-roadmap"
-      className="block h-full"
+      className="flex flex-col items-center justify-center h-full cursor-pointer group"
       data-testid="link-roadmap-progress"
     >
-      <div
-        className="relative overflow-hidden rounded-2xl h-full cursor-pointer group border border-black/[0.06] bg-white"
-      >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-20 -right-20 w-56 h-56 rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }}
-          />
-          <div
-            className="absolute -bottom-16 -left-16 w-44 h-44 rounded-full opacity-[0.06]"
-            style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }}
-          />
-        </div>
-
-        <div className="relative flex flex-col items-center justify-center p-6 h-full gap-4">
-          <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-indigo-500">Progress Tracker</span>
-
-          <div className="relative">
-            {isLoading ? (
-              <div className="w-[160px] h-[160px] rounded-full border-4 border-gray-100 animate-pulse" />
-            ) : (
-              <svg width="160" height="160" viewBox="0 0 160 160" className="transform -rotate-90">
-                <defs>
-                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#a78bfa" />
-                    <stop offset="35%" stopColor="#6366f1" />
-                    <stop offset="70%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                  <linearGradient id="inProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#93c5fd" />
-                    <stop offset="100%" stopColor="#c4b5fd" />
-                  </linearGradient>
-                </defs>
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  fill="none"
-                  stroke="#f1f5f9"
-                  strokeWidth={strokeWidth}
-                />
-                {inProgressTasks > 0 && (
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="none"
-                    stroke="url(#inProgressGradient)"
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={circumference}
-                    strokeDashoffset={inProgressOffset}
-                    strokeLinecap="round"
-                    className="opacity-50"
-                  />
-                )}
-                <circle
-                  cx="80"
-                  cy="80"
-                  r={radius}
-                  fill="none"
-                  stroke="url(#progressGradient)"
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={circumference}
-                  strokeDashoffset={completedOffset}
-                  strokeLinecap="round"
+      <div className="relative">
+        {isLoading ? (
+          <div className="w-[180px] h-[180px] rounded-full border-4 border-gray-100 animate-pulse" />
+        ) : (
+          <svg width={chartSize} height={chartSize} viewBox={`0 0 ${chartSize} ${chartSize}`}>
+            {segments.map((seg, i) => {
+              const startAngle = offset
+              const endAngle = offset + seg.angle
+              offset = endAngle
+              return (
+                <path
+                  key={i}
+                  d={describeArc(startAngle, endAngle, outerR, innerR)}
+                  fill={seg.color}
                   className="transition-all duration-700 ease-out"
                 />
-              </svg>
-            )}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[36px] font-bold bg-gradient-to-br from-indigo-600 to-blue-500 bg-clip-text text-transparent tracking-tight leading-none">{percentage}%</span>
-              <span className="text-[13px] text-[#999] font-medium mt-1">Complete</span>
-            </div>
-          </div>
-
-          <div className="text-center space-y-1.5 w-full">
-            <p className="text-[13px] text-[#555] font-medium truncate px-1">
-              Stage {(currentStageIndex >= 0 ? currentStageIndex : journeyStages.length - 1) + 1}: {currentStage?.title}
-            </p>
-            <div className="flex items-center justify-center gap-3 text-[12px]">
-              <span className="text-emerald-600 font-semibold">{completedTasks} done</span>
-              <span className="text-[#ddd]">·</span>
-              <span className="text-blue-500 font-semibold">{inProgressTasks} active</span>
-              <span className="text-[#ddd]">·</span>
-              <span className="text-[#999] font-medium">{totalTasks - completedTasks - inProgressTasks} left</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1 text-[13px] text-[#999] group-hover:text-indigo-500 transition-colors font-medium">
-            <span>View Roadmap</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </div>
+              )
+            })}
+          </svg>
+        )}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-[32px] font-bold text-gray-900 tracking-tight leading-none">{percentage}%</span>
         </div>
       </div>
+      <span className="text-[13px] font-bold uppercase tracking-[0.08em] text-gray-900 mt-3">Progress Tracker</span>
     </Link>
   )
 }
