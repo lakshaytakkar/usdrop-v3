@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson } from "../data"
 
@@ -113,6 +113,7 @@ export default function FreeLearningLessonPage() {
   const { lesson, module } = result
 
   const hasVideo = !!lesson.videoUrl
+  const hasExternalUrl = !!lesson.externalUrl
   const isYouTube = lesson.videoUrl?.includes("youtube") || lesson.videoUrl?.includes("youtu.be") || lesson.videoUrl?.includes("youtube-nocookie")
 
   const allLessons = freeLearningModules.flatMap(m => m.lessons)
@@ -187,6 +188,26 @@ export default function FreeLearningLessonPage() {
                     />
                   </div>
                 )
+              ) : hasExternalUrl ? (
+                <div className="relative w-full flex items-center justify-center" style={{ paddingTop: "56.25%" }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+                    <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4">
+                      <ExternalLink className="h-7 w-7 text-blue-400" />
+                    </div>
+                    <p className="text-white text-base font-semibold mb-2">{lesson.title}</p>
+                    <p className="text-white/50 text-sm mb-5">This lesson opens as an external document</p>
+                    <a
+                      href={lesson.externalUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="link-external-resource"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
+                    >
+                      Open Document
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
               ) : (
                 <div className="relative w-full flex items-center justify-center" style={{ paddingTop: "56.25%" }}>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white/60">
