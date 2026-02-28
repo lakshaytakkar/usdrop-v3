@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils"
 import {
   User, Mail, Phone, ChevronLeft, ChevronRight, Check,
   Rocket, Store, GraduationCap, TrendingUp, HelpCircle,
-  DollarSign, Youtube, Users, Search, Share2, Sparkles,
-  CheckCircle2
+  DollarSign, Youtube, Users, Search, Share2,
+  CheckCircle2, Loader2
 } from "lucide-react"
 
 interface MentorshipActivationModalProps {
@@ -473,18 +473,15 @@ export function MentorshipActivationModal({ open, onOpenChange }: MentorshipActi
                 onClick={handleSubmit}
                 disabled={submitting}
                 data-testid="button-submit-application"
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                className="bg-blue-500 hover:bg-blue-600"
               >
                 {submitting ? (
                   <>
-                    <Sparkles className="h-4 w-4 mr-1 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                     Submitting...
                   </>
                 ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-1" />
-                    Submit Application
-                  </>
+                  "Submit Application"
                 )}
               </Button>
             )}

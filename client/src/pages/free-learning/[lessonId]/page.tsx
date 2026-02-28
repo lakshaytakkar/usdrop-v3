@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, Sparkles, LockOpen } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, LockOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
 import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
@@ -40,7 +40,7 @@ function Sidebar({
           <button
             onClick={onActivate}
             data-testid="button-activate-mentorship-sidebar"
-            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-semibold transition-all cursor-pointer"
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold transition-colors cursor-pointer"
           >
             <LockOpen className="h-3.5 w-3.5" />
             Activate Mentorship
@@ -299,30 +299,29 @@ export default function FreeLearningLessonPage() {
             )}
 
             {!nextLesson && allCompleted && (
-              <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
+              <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
                 <h3 className="text-base font-bold text-gray-900 mb-1">Congratulations! You've completed the course!</h3>
                 <p className="text-sm text-gray-500 mb-4">You're ready to activate your personalized mentorship program.</p>
                 <button
                   onClick={() => setShowActivation(true)}
                   data-testid="button-activate-mentorship-end"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer"
                 >
-                  <Sparkles className="h-4 w-4" />
                   Activate Mentorship
                 </button>
               </div>
             )}
 
             {!nextLesson && !allCompleted && (
-              <div className="p-6 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 text-center">
+              <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
                 <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
                 <p className="text-sm text-gray-500 mb-4">Complete all lessons to unlock your personalized mentorship program.</p>
                 <Link
                   href="/free-learning"
                   data-testid="link-back-to-course-end"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
                 >
                   Back to Course
                   <ArrowRight className="h-4 w-4" />

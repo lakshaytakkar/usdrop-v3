@@ -6,6 +6,8 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 ## User Preferences
 - Framework is the personal hub (everything related to the user). Other pages are libraries/tools. All saved things live inside Framework.
 - Keep images compressed and loading fast.
+- **Never use the Sparkles icon** from lucide-react. It looks AI-generated and gimmicky.
+- **Never use gradient buttons** (e.g., `bg-gradient-to-r from-blue-500 to-indigo-500`). Always use solid `bg-blue-500 hover:bg-blue-600` for primary buttons. Gradients look artificial.
 
 ## System Architecture
 The platform utilizes a modern web stack: Vite for frontend bundling, Express for the backend API, and Wouter for client-side routing. It is built with React 19, TypeScript, and Tailwind CSS 4.

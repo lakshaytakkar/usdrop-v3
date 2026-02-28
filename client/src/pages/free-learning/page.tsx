@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link } from "wouter"
-import { Play, ChevronDown, ChevronRight, ArrowRight, Sparkles, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck } from "lucide-react"
+import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount } from "./data"
 import type { FreeLearningModule } from "./data"
@@ -139,9 +139,8 @@ export default function FreeLearningPage() {
               <button
                 onClick={() => setShowActivation(true)}
                 data-testid="button-activate-mentorship-hero"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-sm font-semibold transition-all cursor-pointer shadow-lg shadow-blue-500/25"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer shadow-lg shadow-black/20"
               >
-                <Sparkles className="h-4 w-4" />
                 Activate Mentorship
               </button>
             ) : firstLessonId ? (
@@ -193,9 +192,8 @@ export default function FreeLearningPage() {
             <button
               onClick={() => setShowActivation(true)}
               data-testid="button-activate-mentorship"
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium text-xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs transition-colors cursor-pointer"
             >
-              <Sparkles className="h-3 w-3" />
               Activate Mentorship
             </button>
           ) : firstLessonId ? (
@@ -227,8 +225,8 @@ export default function FreeLearningPage() {
       </div>
 
       {allCompleted ? (
-        <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
-          <Sparkles className="h-8 w-8 text-blue-500 mx-auto mb-3" />
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
+          <GraduationCap className="h-8 w-8 text-blue-500 mx-auto mb-3" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">You've completed the course!</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
             You're now eligible for personalized mentorship. Apply now to get matched with an expert mentor.
@@ -236,14 +234,13 @@ export default function FreeLearningPage() {
           <button
             onClick={() => setShowActivation(true)}
             data-testid="button-activate-mentorship-bottom"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-sm transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors cursor-pointer"
           >
-            <Sparkles className="h-4 w-4" />
             Activate Mentorship
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
           <h3 className="text-xl font-bold text-gray-900 mb-2">Ready for the next level?</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
             Complete all lessons to unlock your personalized mentorship program with expert guidance.
@@ -252,7 +249,7 @@ export default function FreeLearningPage() {
             <Link
               href={`/free-learning/${firstLessonId}`}
               data-testid="link-get-started"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold text-sm transition-all"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors"
             >
               {completedCount > 0 ? "Continue Learning" : "Get Started Free"}
               <ArrowRight className="h-4 w-4" />
