@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, Sparkles } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, Sparkles, LockOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
 import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
@@ -9,9 +9,11 @@ import { MentorshipActivationModal } from "../components/mentorship-activation-m
 function Sidebar({
   currentLessonId,
   completionVersion,
+  onActivate,
 }: {
   currentLessonId: string
   completionVersion: number
+  onActivate: () => void
 }) {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
     const result = findLesson(currentLessonId)
@@ -28,23 +30,35 @@ function Sidebar({
   const allLessons = freeLearningModules.flatMap(m => m.lessons)
   const completedCount = getCompletionCount()
   const completedSet = new Set(getCompletedLessons())
+  const allDone = completedCount === allLessons.length
 
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-gray-100">
         <h3 className="text-sm font-bold text-gray-900 truncate">{freeLearningCourse.title}</h3>
-        <div className="mt-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-gray-400 font-medium">{Math.round((completedCount / allLessons.length) * 100)}% complete</span>
-            <span className="text-[10px] text-gray-400">{completedCount}/{allLessons.length}</span>
+        {allDone ? (
+          <button
+            onClick={onActivate}
+            data-testid="button-activate-mentorship-sidebar"
+            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-semibold transition-all cursor-pointer"
+          >
+            <LockOpen className="h-3.5 w-3.5" />
+            Activate Mentorship
+          </button>
+        ) : (
+          <div className="mt-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-gray-400 font-medium">{Math.round((completedCount / allLessons.length) * 100)}% complete</span>
+              <span className="text-[10px] text-gray-400">{completedCount}/{allLessons.length}</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                style={{ width: `${(completedCount / allLessons.length) * 100}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 rounded-full transition-all duration-300"
-              style={{ width: `${(completedCount / allLessons.length) * 100}%` }}
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -189,7 +203,7 @@ export default function FreeLearningLessonPage() {
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-black/[0.04] bg-background mt-2 mb-4">
         <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
-          <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} />
+          <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} onActivate={() => setShowActivation(true)} />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
