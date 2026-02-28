@@ -7,7 +7,7 @@ import type { FreeLearningModule, FreeLearningLesson } from "./data"
 import { MentorshipActivationModal } from "./components/mentorship-activation-modal"
 
 function LessonCard({ lesson, index, moduleIndex, completedIds }: { lesson: FreeLearningLesson; index: number; moduleIndex: number; completedIds: string[] }) {
-  const thumbnail = getYouTubeThumbnail(lesson.videoUrl)
+  const thumbnail = lesson.thumbnail || getYouTubeThumbnail(lesson.videoUrl)
   const [imgError, setImgError] = useState(false)
   const isCompleted = completedIds.includes(lesson.id)
   const lessonNumber = index + 1
