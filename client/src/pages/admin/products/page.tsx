@@ -1,5 +1,3 @@
-
-
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { useRouter } from "@/hooks/use-router"
@@ -28,19 +26,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, MoreHorizontal, Eye, Package, Edit, Download, RefreshCw, Search, Upload, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Folder } from "lucide-react"
-
+import {
+  Plus,
+  Trash2,
+  MoreHorizontal,
+  Eye,
+  Package,
+  Edit,
+  Download,
+  RefreshCw,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Folder,
+  Star,
+  TrendingUp,
+  Flame,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react"
 import { ProductFormModal } from "./components/product-form-modal"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
-import { Loader } from "@/components/ui/loader"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
+import {
+  AdminPageHeader,
+  AdminStatCards,
+  AdminFilterBar,
+  AdminActionBar,
+  AdminEmptyState,
+} from "@/components/admin"
 
 type SortField = "title" | "created_at" | "sell_price" | "profit_per_order" | "rating"
 type SortOrder = "asc" | "desc"
+type ProductTab = "all" | "hand-picked" | "trending"
 
 export default function AdminProductsPage() {
   const router = useRouter()
@@ -65,6 +89,7 @@ export default function AdminProductsPage() {
   const [productFormOpen, setProductFormOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [activeTab, setActiveTab] = useState<ProductTab>("all")
 
   const totalPages = Math.ceil(total / pageSize)
 
@@ -86,6 +111,12 @@ export default function AdminProductsPage() {
         params.set("category_id", categoryFilter)
       }
 
+      if (activeTab === "hand-picked") {
+        params.set("source_type", "hand_picked")
+      } else if (activeTab === "trending") {
+        params.set("is_trending", "true")
+      }
+
       const response = await apiFetch(`/api/admin/products?${params.toString()}`)
       if (!response.ok) throw new Error("Failed to fetch products")
       const data = await response.json()
@@ -96,7 +127,7 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, pageSize, sortField, sortOrder, searchQuery, categoryFilter, showError])
+  }, [page, pageSize, sortField, sortOrder, searchQuery, categoryFilter, activeTab, showError])
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -121,7 +152,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     setPage(1)
     setSelectedIds(new Set())
-  }, [searchQuery, categoryFilter])
+  }, [searchQuery, categoryFilter, activeTab])
 
   useEffect(() => {
     if (page > 1 && page > totalPages && totalPages > 0) {
@@ -238,21 +269,87 @@ export default function AdminProductsPage() {
     setProductFormOpen(true)
   }
 
+  const handleToggleTrending = async (product: Product) => {
+    if (!canEdit) {
+      showError("You don't have permission to edit products")
+      return
+    }
+    try {
+      const isTrending = product.metadata?.is_trending ?? false
+      const response = await apiFetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ metadata: { is_trending: !isTrending } }),
+      })
+      if (!response.ok) throw new Error("Failed to update product")
+      showSuccess(isTrending ? "Removed from trending" : "Marked as trending")
+      fetchProducts()
+    } catch {
+      showError("Failed to update product")
+    }
+  }
+
+  const handleTogglePick = async (product: Product) => {
+    if (!canEdit) {
+      showError("You don't have permission to edit products")
+      return
+    }
+    try {
+      const isWinning = product.metadata?.is_winning ?? false
+      const response = await apiFetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ metadata: { is_winning: !isWinning } }),
+      })
+      if (!response.ok) throw new Error("Failed to update product")
+      showSuccess(isWinning ? "Removed from picks" : "Marked as picked")
+      fetchProducts()
+    } catch {
+      showError("Failed to update product")
+    }
+  }
+
+  const handleBulkMarkPicked = async () => {
+    if (!canEdit) {
+      showError("You don't have permission to edit products")
+      return
+    }
+    try {
+      const promises = Array.from(selectedIds).map((id) =>
+        apiFetch(`/api/admin/products/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ metadata: { is_winning: true } }),
+        })
+      )
+      const results = await Promise.allSettled(promises)
+      const failed = results.filter((r) => r.status === "rejected").length
+      const succeeded = selectedIds.size - failed
+      if (succeeded > 0) showSuccess(`${succeeded} product(s) marked as picked`)
+      if (failed > 0) showError(`Failed to update ${failed} product(s)`)
+      setSelectedIds(new Set())
+      fetchProducts()
+    } catch {
+      showError("Failed to update products")
+    }
+  }
+
   const handleExport = () => {
     const exportProducts = selectedIds.size > 0
       ? products.filter((p) => selectedIds.has(p.id))
       : products
 
-    const headers = ["Title", "Category", "Buy Price", "Sell Price", "Profit", "Rating", "Created"]
-    const rows = exportProducts.map((p) => [
-      p.title,
-      p.category?.name || "",
-      `$${p.buy_price?.toFixed(2) || "0.00"}`,
-      `$${p.sell_price?.toFixed(2) || "0.00"}`,
-      `$${p.profit_per_order?.toFixed(2) || "0.00"}`,
-      p.rating?.toFixed(1) || "",
-      new Date(p.created_at).toLocaleDateString(),
-    ])
+    const headers = ["Title", "Category", "Buy Price", "Sell Price", "Profit", "Margin%", "Rating", "Created"]
+    const rows = exportProducts.map((p) => {
+      const margin = p.sell_price > 0 ? ((p.profit_per_order / p.sell_price) * 100).toFixed(1) : "0.0"
+      return [
+        p.title,
+        p.category?.name || "",
+        `$${p.buy_price?.toFixed(2) || "0.00"}`,
+        `$${p.sell_price?.toFixed(2) || "0.00"}`,
+        `$${p.profit_per_order?.toFixed(2) || "0.00"}`,
+        `${margin}%`,
+        p.rating?.toFixed(1) || "",
+        new Date(p.created_at).toLocaleDateString(),
+      ]
+    })
 
     const csv = [
       headers.map((h) => `"${h}"`).join(","),
@@ -278,128 +375,134 @@ export default function AdminProductsPage() {
     return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
+  const statCards = useMemo(() => [
+    {
+      label: "Total Products",
+      value: total,
+      icon: Package,
+      description: "All products in catalog",
+    },
+    {
+      label: "Categories",
+      value: categories.length,
+      icon: Folder,
+      description: "Product categories",
+    },
+    {
+      label: "On This Page",
+      value: products.length,
+      icon: Eye,
+      description: "Products on current page",
+    },
+  ], [total, categories.length, products.length])
+
+  const tabs = [
+    { value: "all", label: "All Products" },
+    { value: "hand-picked", label: "Hand-Picked Winners" },
+    { value: "trending", label: "Trending" },
+  ]
+
   return (
-    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <h1 className="text-xl font-semibold leading-[1.35] tracking-tight text-foreground">Products</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your product catalog</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Total Products</span>
-            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-              <Package className="h-[18px] w-[18px] text-primary" />
-            </div>
-          </div>
-          <div className="mt-1">
-            <span className="text-2xl font-semibold">{total}</span>
-          </div>
-          <div className="mt-2">
-            <span className="text-xs text-muted-foreground">All products in catalog</span>
-          </div>
-        </div>
-        <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Categories</span>
-            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-              <Folder className="h-[18px] w-[18px] text-primary" />
-            </div>
-          </div>
-          <div className="mt-1">
-            <span className="text-2xl font-semibold">{categories.length}</span>
-          </div>
-          <div className="mt-2">
-            <span className="text-xs text-muted-foreground">Product categories</span>
-          </div>
-        </div>
-        <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">On This Page</span>
-            <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-              <Eye className="h-[18px] w-[18px] text-primary" />
-            </div>
-          </div>
-          <div className="mt-1">
-            <span className="text-2xl font-semibold">{products.length}</span>
-          </div>
-          <div className="mt-2">
-            <span className="text-xs text-muted-foreground">Products on current page</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-8 text-sm"
-          />
-        </div>
-
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="h-9 w-[160px] text-sm">
-            <SelectValue placeholder="All categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {selectedIds.size > 0 && (
-          <>
-            <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
-              <Download className="h-4 w-4 mr-1.5" />
-              Export ({selectedIds.size})
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9"
-              onClick={() => setBulkDeleteConfirmOpen(true)}
-            >
-              <Trash2 className="h-4 w-4 mr-1.5" />
-              Delete ({selectedIds.size})
-            </Button>
-          </>
-        )}
-
-        <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-1.5" />
-            Export
-          </Button>
-          <Button
-            size="sm"
-            className="h-9"
-            disabled={!canCreate}
-            onClick={() => {
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden" data-testid="admin-products-page">
+      <AdminPageHeader
+        title="Products"
+        description="Manage your product catalog"
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Products" },
+        ]}
+        actions={[
+          {
+            label: "Export",
+            icon: <Download className="h-4 w-4" />,
+            onClick: handleExport,
+            variant: "outline",
+          },
+          {
+            label: "Add Product",
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => {
               if (!canCreate) {
                 showError("You don't have permission to create products")
                 return
               }
               setEditingProduct(null)
               setProductFormOpen(true)
-            }}
+            },
+            disabled: !canCreate,
+          },
+        ]}
+        className="mb-4"
+      />
+
+      <AdminStatCards stats={statCards} loading={false} columns={3} />
+
+      <div className="mt-4">
+        <AdminFilterBar
+          search={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search products..."
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={(v) => setActiveTab(v as ProductTab)}
+        >
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="h-9 w-[160px] text-sm" data-testid="filter-category">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => fetchProducts()}
+            data-testid="button-refresh"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add product
+            <RefreshCw className="h-4 w-4" />
           </Button>
-        </div>
+        </AdminFilterBar>
       </div>
 
-      <Card className="flex-1 overflow-hidden border rounded-lg">
+      {selectedIds.size > 0 && (
+        <div className="mt-3">
+          <AdminActionBar
+            selectedCount={selectedIds.size}
+            onClearSelection={() => setSelectedIds(new Set())}
+            actions={[
+              {
+                label: "Export",
+                icon: <Download className="h-4 w-4" />,
+                onClick: handleExport,
+                variant: "outline",
+              },
+              {
+                label: "Mark as Picked",
+                icon: <Star className="h-4 w-4" />,
+                onClick: handleBulkMarkPicked,
+                variant: "outline",
+                disabled: !canEdit,
+              },
+              {
+                label: "Delete",
+                icon: <Trash2 className="h-4 w-4" />,
+                onClick: () => setBulkDeleteConfirmOpen(true),
+                variant: "destructive",
+                disabled: !canDelete,
+              },
+            ]}
+          />
+        </div>
+      )}
+
+      <Card className="flex-1 overflow-hidden border rounded-lg mt-3">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -408,6 +511,7 @@ export default function AdminProductsPage() {
                   <Checkbox
                     checked={products.length > 0 && selectedIds.size === products.length}
                     onCheckedChange={toggleSelectAll}
+                    data-testid="checkbox-select-all"
                   />
                 </th>
                 <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-16"></th>
@@ -415,6 +519,7 @@ export default function AdminProductsPage() {
                   <button
                     className="flex items-center font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("title")}
+                    data-testid="sort-title"
                   >
                     Product
                     <SortIcon field="title" />
@@ -426,6 +531,7 @@ export default function AdminProductsPage() {
                   <button
                     className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("sell_price")}
+                    data-testid="sort-price"
                   >
                     Price
                     <SortIcon field="sell_price" />
@@ -435,24 +541,29 @@ export default function AdminProductsPage() {
                   <button
                     className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("profit_per_order")}
+                    data-testid="sort-profit"
                   >
                     Profit
                     <SortIcon field="profit_per_order" />
                   </button>
                 </th>
+                <th className="px-3 py-2.5 text-center font-medium text-muted-foreground">Margin%</th>
                 <th className="px-3 py-2.5 text-right">
                   <button
                     className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("rating")}
+                    data-testid="sort-rating"
                   >
                     Rating
                     <SortIcon field="rating" />
                   </button>
                 </th>
+                <th className="px-3 py-2.5 text-center font-medium text-muted-foreground">Picked</th>
                 <th className="px-3 py-2.5 text-right">
                   <button
                     className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("created_at")}
+                    data-testid="sort-date"
                   >
                     Date
                     <SortIcon field="created_at" />
@@ -464,142 +575,198 @@ export default function AdminProductsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-16 text-center">
-                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                      <Loader size="sm" />
-                      <span>Loading products...</span>
+                  <td colSpan={12} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <RefreshCw className="h-5 w-5 animate-spin" />
+                      <span className="text-sm">Loading products...</span>
                     </div>
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <Package className="h-10 w-10 opacity-40" />
-                      <p className="text-sm font-medium">No products found</p>
-                      <p className="text-xs">Try adjusting your search or filters, or add a new product.</p>
-                      <Button
-                        size="sm"
-                        className="mt-2"
-                        disabled={!canCreate}
-                        onClick={() => {
-                          setEditingProduct(null)
-                          setProductFormOpen(true)
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-1.5" />
-                        Add product
-                      </Button>
-                    </div>
+                  <td colSpan={12}>
+                    <AdminEmptyState
+                      icon={Package}
+                      title="No products found"
+                      description="Try adjusting your search or filters, or add a new product."
+                      actionLabel={canCreate ? "Add Product" : undefined}
+                      onAction={canCreate ? () => {
+                        setEditingProduct(null)
+                        setProductFormOpen(true)
+                      } : undefined}
+                    />
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
-                  <tr
-                    key={product.id}
-                    className="border-b hover:bg-muted/30 transition-colors group"
-                  >
-                    <td className="px-3 py-2.5">
-                      <Checkbox
-                        checked={selectedIds.has(product.id)}
-                        onCheckedChange={() => toggleSelect(product.id)}
-                      />
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
-                        {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
-                          <img
-                            src={product.image}
-                            alt={product.title}
-                           
-                            className="object-cover"
-                           
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <div className="min-w-0">
-                        <button
-                          className="font-medium truncate max-w-[280px] text-left hover:text-primary hover:underline transition-colors cursor-pointer block"
-                          onClick={() => router.push(`/admin/products/${product.id}`)}
-                        >
-                          {product.title}
-                        </button>
-                        {product.description && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[280px] mt-0.5">
-                            {product.description}
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <Badge variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200">
-                        Active
-                      </Badge>
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <span className="text-sm text-muted-foreground">
-                        {product.category?.name || "—"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
-                      {formatPrice(product.sell_price)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
-                      <span className="text-emerald-600 font-medium">
-                        {formatPrice(product.profit_per_order)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">
-                      {product.rating ? (
-                        <span>{Number(product.rating).toFixed(1)}</span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-muted-foreground text-xs whitespace-nowrap">
-                      {formatDate(product.created_at)}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem
+                products.map((product) => {
+                  const margin = product.sell_price > 0
+                    ? ((product.profit_per_order / product.sell_price) * 100).toFixed(1)
+                    : "0.0"
+                  const isPicked = product.metadata?.is_winning ?? false
+                  const isTrending = product.metadata?.is_trending ?? false
+
+                  return (
+                    <tr
+                      key={product.id}
+                      className="border-b hover:bg-muted/30 transition-colors group"
+                      data-testid={`row-product-${product.id}`}
+                    >
+                      <td className="px-3 py-2.5">
+                        <Checkbox
+                          checked={selectedIds.has(product.id)}
+                          onCheckedChange={() => toggleSelect(product.id)}
+                          data-testid={`checkbox-product-${product.id}`}
+                        />
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
+                          {product.image && (product.image.startsWith('http') || product.image.startsWith('/')) ? (
+                            <img
+                              src={product.image}
+                              alt={product.title}
+                              className="object-cover w-full h-full"
+                              data-testid={`img-product-${product.id}`}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="min-w-0">
+                          <button
+                            className="font-medium truncate max-w-[280px] text-left hover:text-primary hover:underline transition-colors cursor-pointer block"
                             onClick={() => router.push(`/admin/products/${product.id}`)}
-                            className="cursor-pointer"
+                            data-testid={`link-product-${product.id}`}
                           >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleEdit(product)}
-                            className="cursor-pointer"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(product)}
-                            className="cursor-pointer text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
-                  </tr>
-                ))
+                            {product.title}
+                          </button>
+                          {product.description && (
+                            <p className="text-xs text-muted-foreground truncate max-w-[280px] mt-0.5">
+                              {product.description}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                            Active
+                          </Badge>
+                          {isTrending && (
+                            <Badge variant="outline" className="text-xs font-normal bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20">
+                              <Flame className="h-3 w-3 mr-0.5" />
+                              Trending
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span className="text-sm text-muted-foreground">
+                          {product.category?.name || "\u2014"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {formatPrice(product.sell_price)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          {formatPrice(product.profit_per_order)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-center tabular-nums">
+                        <span className="text-sm text-muted-foreground">{margin}%</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {product.rating ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-sm">{Number(product.rating).toFixed(1)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">{"\u2014"}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-center">
+                        <button
+                          onClick={() => handleTogglePick(product)}
+                          className="inline-flex items-center justify-center cursor-pointer"
+                          data-testid={`button-toggle-pick-${product.id}`}
+                          disabled={!canEdit}
+                        >
+                          <Star className={`h-4 w-4 transition-colors ${isPicked ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40 hover:text-yellow-400"}`} />
+                        </button>
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-muted-foreground text-xs whitespace-nowrap">
+                        {formatDate(product.created_at)}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              data-testid={`button-actions-${product.id}`}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/admin/products/${product.id}`)}
+                              className="cursor-pointer"
+                              data-testid={`action-view-${product.id}`}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(product)}
+                              className="cursor-pointer"
+                              disabled={!canEdit}
+                              data-testid={`action-edit-${product.id}`}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleTogglePick(product)}
+                              className="cursor-pointer"
+                              disabled={!canEdit}
+                              data-testid={`action-toggle-pick-${product.id}`}
+                            >
+                              <Star className="h-4 w-4 mr-2" />
+                              {isPicked ? "Remove Pick" : "Mark as Picked"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleToggleTrending(product)}
+                              className="cursor-pointer"
+                              disabled={!canEdit}
+                              data-testid={`action-toggle-trending-${product.id}`}
+                            >
+                              <TrendingUp className="h-4 w-4 mr-2" />
+                              {isTrending ? "Remove Trending" : "Mark as Trending"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(product)}
+                              className="cursor-pointer text-destructive focus:text-destructive"
+                              disabled={!canDelete}
+                              data-testid={`action-delete-${product.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -608,8 +775,8 @@ export default function AdminProductsPage() {
         {!loading && products.length > 0 && (
           <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/20">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>
-                {((page - 1) * pageSize) + 1}–{Math.min(page * pageSize, total)} of {total} products
+              <span data-testid="text-pagination-info">
+                {((page - 1) * pageSize) + 1}&ndash;{Math.min(page * pageSize, total)} of {total} products
               </span>
               <Select
                 value={pageSize.toString()}
@@ -618,7 +785,7 @@ export default function AdminProductsPage() {
                   setPage(1)
                 }}
               >
-                <SelectTrigger className="h-7 w-[70px] text-xs">
+                <SelectTrigger className="h-7 w-[70px] text-xs" data-testid="select-page-size">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -633,40 +800,40 @@ export default function AdminProductsPage() {
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
+                size="icon"
                 onClick={() => setPage(1)}
                 disabled={page === 1}
+                data-testid="button-first-page"
               >
                 <ChevronsLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
+                size="icon"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                data-testid="button-prev-page"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm px-2 text-muted-foreground">
+              <span className="text-sm px-2 text-muted-foreground" data-testid="text-page-number">
                 Page {page} of {totalPages || 1}
               </span>
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
+                size="icon"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
+                data-testid="button-next-page"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
+                size="icon"
                 onClick={() => setPage(totalPages)}
                 disabled={page >= totalPages}
+                data-testid="button-last-page"
               >
                 <ChevronsRight className="h-4 w-4" />
               </Button>
@@ -687,21 +854,21 @@ export default function AdminProductsPage() {
             <div className="flex items-center gap-3 py-2">
               <div className="relative w-10 h-10 rounded-md overflow-hidden bg-muted border flex-shrink-0">
                 {productToDelete.image && (productToDelete.image.startsWith('http') || productToDelete.image.startsWith('/')) ? (
-                  <img src={productToDelete.image} alt={productToDelete.title} className="object-cover" />
+                  <img src={productToDelete.image} alt={productToDelete.title} className="object-cover w-full h-full" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <p className="text-sm font-medium">{productToDelete.title}</p>
+              <p className="text-sm font-medium" data-testid="text-delete-product-name">{productToDelete.title}</p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)} data-testid="button-cancel-delete">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button variant="destructive" onClick={confirmDelete} data-testid="button-confirm-delete">
               Delete
             </Button>
           </DialogFooter>
@@ -717,10 +884,10 @@ export default function AdminProductsPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkDeleteConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setBulkDeleteConfirmOpen(false)} data-testid="button-cancel-bulk-delete">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleBulkDelete}>
+            <Button variant="destructive" onClick={handleBulkDelete} data-testid="button-confirm-bulk-delete">
               Delete {selectedIds.size} products
             </Button>
           </DialogFooter>

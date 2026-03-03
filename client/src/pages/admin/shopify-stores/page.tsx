@@ -1,7 +1,7 @@
-
-
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
+import { useRouter } from "@/hooks/use-router"
+import { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,29 +11,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Plus, Users, RefreshCw, Link2, Trash2, Download, Copy, Check, ShoppingBag, Filter, X, CheckCircle2 } from "lucide-react"
-import { AdminShopifyStoreCard } from "./components/admin-shopify-store-card"
-import { Input } from "@/components/ui/input"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { cn } from "@/lib/utils"
-import { Loader } from "@/components/ui/loader"
+  Plus,
+  RefreshCw,
+  Link2,
+  Trash2,
+  Download,
+  ShoppingBag,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react"
+import { DataTable } from "@/components/data-table/data-table"
+import { createShopifyStoresColumns } from "./components/shopify-stores-columns"
+import { AdminPageHeader, AdminStatCards, AdminFilterBar, AdminActionBar, AdminEmptyState } from "@/components/admin"
 import { ShopifyStore, StoreProduct } from "@/pages/shopify-stores/data/stores"
 import { getAllStoreProducts } from "./data/products"
-import type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { StoreDetailDrawer } from "./components/store-detail-drawer"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-
 import { useToast } from "@/hooks/use-toast"
+import { useHasPermission } from "@/hooks/use-has-permission"
 
 export default function AdminShopifyStoresPage() {
+  const router = useRouter()
   const { showSuccess, showError, showInfo } = useToast()
+
+  const { hasPermission: canView } = useHasPermission("shopify-stores.view")
+  const { hasPermission: canEdit } = useHasPermission("shopify-stores.edit")
+  const { hasPermission: canCreate } = useHasPermission("shopify-stores.create")
+  const { hasPermission: canDelete } = useHasPermission("shopify-stores.delete")
+
   const [stores, setStores] = useState<ShopifyStore[]>([])
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
@@ -42,48 +48,47 @@ export default function AdminShopifyStoresPage() {
   const [pageSize, setPageSize] = useState(10)
   const [pageCount, setPageCount] = useState(0)
   const [sorting, setSorting] = useState<SortingState>([])
-  const [filters, setFilters] = useState<ColumnFiltersState>([])
-  const [search, setSearch] = useState("")
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [searchQuery, setSearchQuery] = useState("")
   const [selectedStores, setSelectedStores] = useState<ShopifyStore[]>([])
-  const [statusTab, setStatusTab] = useState<"all" | "connected" | "disconnected" | "syncing" | "error">("all")
+  const [statusTab, setStatusTab] = useState("all")
   const [quickFilter, setQuickFilter] = useState<string | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [storeToDelete, setStoreToDelete] = useState<ShopifyStore | null>(null)
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
   const [selectedStore, setSelectedStore] = useState<ShopifyStore | null>(null)
   const [storeProducts, setStoreProducts] = useState<Record<string, StoreProduct[]>>({})
-  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
+  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
 
-  // Fetch stores from API
   const fetchStores = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      
+
       const params = new URLSearchParams()
       if (statusTab !== "all") {
         params.append("status", statusTab)
       }
-      if (search) {
-        params.append("search", search)
+      if (searchQuery) {
+        params.append("search", searchQuery)
       }
       params.append("page", page.toString())
       params.append("pageSize", pageSize.toString())
-      
+
       const response = await apiFetch(`/api/admin/shopify-stores?${params.toString()}`)
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || "Failed to fetch stores")
       }
-      
+
       const data = await response.json()
       const storesData: ShopifyStore[] = data.stores || []
-      
+
       setStores(storesData)
       setPageCount(data.totalPages || 0)
     } catch (err) {
       console.error("Error fetching stores:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to load stores. Please check your connection and try again."
+      const errorMessage = err instanceof Error ? err.message : "Failed to load stores."
       setError(errorMessage)
       if (!initialLoading) {
         showError(errorMessage)
@@ -92,20 +97,17 @@ export default function AdminShopifyStoresPage() {
       setLoading(false)
       setInitialLoading(false)
     }
-  }, [statusTab, search, page, pageSize, initialLoading, showError])
+  }, [statusTab, searchQuery, page, pageSize, initialLoading, showError])
 
-  // Initial fetch
   useEffect(() => {
     fetchStores()
   }, [fetchStores])
 
-  // Load products for all stores
   useEffect(() => {
     const products = getAllStoreProducts(stores.map(s => s.id))
     setStoreProducts(products)
   }, [stores])
 
-  // Calculate status counts
   const statusCounts = useMemo(() => {
     return {
       all: stores.length,
@@ -116,16 +118,13 @@ export default function AdminShopifyStoresPage() {
     }
   }, [stores])
 
-  // Filter stores based on search, filters, status tab, and quick filter
   const filteredStores = useMemo(() => {
     let result = stores
 
-    // Apply status tab filter
     if (statusTab !== "all") {
       result = result.filter(store => store.status === statusTab)
     }
 
-    // Apply quick filters
     if (quickFilter) {
       switch (quickFilter) {
         case "connected":
@@ -158,9 +157,8 @@ export default function AdminShopifyStoresPage() {
       }
     }
 
-    // Apply search
-    if (search) {
-      const searchLower = search.toLowerCase()
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase()
       result = result.filter(
         (store) =>
           store.name.toLowerCase().includes(searchLower) ||
@@ -170,8 +168,7 @@ export default function AdminShopifyStoresPage() {
       )
     }
 
-    // Apply column filters
-    filters.forEach((filter) => {
+    columnFilters.forEach((filter) => {
       if (filter.id === "status" && Array.isArray(filter.value) && filter.value.length > 0) {
         const filterValues = filter.value as string[]
         result = result.filter((store) => filterValues.includes(store.status))
@@ -183,50 +180,102 @@ export default function AdminShopifyStoresPage() {
     })
 
     return result
-  }, [stores, search, filters, statusTab, quickFilter])
+  }, [stores, searchQuery, columnFilters, statusTab, quickFilter])
 
-  // Paginate filtered stores
-  const paginatedStores = useMemo(() => {
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    return filteredStores.slice(start, end)
-  }, [filteredStores, page, pageSize])
+  const statCards = useMemo(() => [
+    {
+      label: "Total Stores",
+      value: stores.length,
+      icon: ShoppingBag,
+      description: "All Shopify stores",
+    },
+    {
+      label: "Connected",
+      value: statusCounts.connected,
+      icon: CheckCircle2,
+      badge: stores.length > 0 ? `${Math.round((statusCounts.connected / stores.length) * 100)}%` : "0%",
+      badgeVariant: "success" as const,
+      description: "Currently active",
+    },
+    {
+      label: "Syncing / Errors",
+      value: statusCounts.syncing + statusCounts.error,
+      icon: statusCounts.error > 0 ? AlertTriangle : Loader2,
+      badge: statusCounts.error > 0 ? `${statusCounts.error} errors` : undefined,
+      badgeVariant: statusCounts.error > 0 ? "danger" as const : "info" as const,
+      description: "Require attention",
+    },
+    {
+      label: "Disconnected",
+      value: statusCounts.disconnected,
+      icon: Link2,
+      description: "Not currently linked",
+    },
+  ], [stores.length, statusCounts])
 
-  // Remove this useEffect as pageCount is now set from API response
+  const statusTabs = useMemo(() => [
+    { value: "all", label: "All", count: statusCounts.all },
+    { value: "connected", label: "Connected", count: statusCounts.connected },
+    { value: "disconnected", label: "Disconnected", count: statusCounts.disconnected },
+    { value: "syncing", label: "Syncing", count: statusCounts.syncing },
+    { value: "error", label: "Error", count: statusCounts.error },
+  ], [statusCounts])
 
-  // Handlers
+  const quickFilters = useMemo(() => [
+    { id: "connected", label: "Connected", count: statusCounts.connected },
+    { id: "high-revenue", label: "High Revenue", count: stores.filter(s => (s.monthly_revenue || 0) > 50000).length },
+    { id: "high-traffic", label: "High Traffic", count: stores.filter(s => (s.monthly_traffic || 0) > 10000).length },
+    { id: "recently-synced", label: "Recently Synced", count: 0 },
+    { id: "needs-sync", label: "Needs Sync", count: 0 },
+  ], [statusCounts, stores])
+
+  const filterConfig = [
+    {
+      columnId: "status",
+      title: "Status",
+      options: [
+        { label: "Connected", value: "connected" },
+        { label: "Disconnected", value: "disconnected" },
+        { label: "Syncing", value: "syncing" },
+        { label: "Error", value: "error" },
+      ],
+    },
+    {
+      columnId: "sync_status",
+      title: "Sync Status",
+      options: [
+        { label: "Success", value: "success" },
+        { label: "Failed", value: "failed" },
+        { label: "Pending", value: "pending" },
+        { label: "Never", value: "never" },
+      ],
+    },
+  ]
+
   const handleViewDetails = (store: ShopifyStore) => {
     setSelectedStore(store)
     setDetailDrawerOpen(true)
   }
 
-  const handleRowClick = (store: ShopifyStore) => {
-    handleViewDetails(store)
-  }
-
   const handleEdit = (store: ShopifyStore) => {
     showInfo(`Editing ${store.name}`)
-    // TODO: Open edit modal
   }
 
   const handleSync = async (store: ShopifyStore) => {
     try {
       setLoading(true)
       showInfo(`Syncing ${store.name}...`)
-      
+
       const response = await apiFetch(`/api/shopify-stores/${store.id}/sync`, {
         method: 'POST',
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to sync store')
       }
-      
-      const data = await response.json()
+
       showSuccess(`${store.name} has been synced successfully`)
-      
-      // Refresh stores list
       await fetchStores()
     } catch (err) {
       console.error("Error syncing store:", err)
@@ -239,33 +288,29 @@ export default function AdminShopifyStoresPage() {
 
   const handleAddProducts = (store: ShopifyStore) => {
     showInfo(`Adding products to ${store.name}`)
-    // TODO: Open add products modal
   }
 
   const handleViewProducts = (store: ShopifyStore) => {
     handleViewDetails(store)
-    // TODO: Switch to products tab in drawer
   }
 
   const handleDisconnect = async (store: ShopifyStore) => {
     try {
       setLoading(true)
       showInfo(`Disconnecting ${store.name}...`)
-      
+
       const response = await apiFetch(`/api/admin/shopify-stores/${store.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'disconnected' }),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to disconnect store')
       }
-      
+
       showSuccess(`${store.name} has been disconnected`)
-      
-      // Refresh stores list
       await fetchStores()
     } catch (err) {
       console.error("Error disconnecting store:", err)
@@ -283,30 +328,27 @@ export default function AdminShopifyStoresPage() {
 
   const confirmDelete = async () => {
     if (!storeToDelete) return
-    
+
     try {
       setLoading(true)
-      
-      // Delete all selected stores
+
       const storesToDelete = selectedStores.length > 0 ? selectedStores : [storeToDelete]
-      
+
       for (const store of storesToDelete) {
         const response = await apiFetch(`/api/admin/shopify-stores/${store.id}`, {
           method: 'DELETE',
         })
-        
+
         if (!response.ok) {
           const errorData = await response.json()
           throw new Error(errorData.error || `Failed to delete ${store.name}`)
         }
       }
-      
+
       setDeleteConfirmOpen(false)
       setStoreToDelete(null)
       setSelectedStores([])
       showSuccess(`${storesToDelete.length} store${storesToDelete.length !== 1 ? 's' : ''} deleted successfully`)
-      
-      // Refresh stores list
       await fetchStores()
     } catch (err) {
       console.error("Error deleting store:", err)
@@ -332,40 +374,36 @@ export default function AdminShopifyStoresPage() {
     window.open(url, "_blank")
   }
 
-  // Bulk actions
   const handleBulkSync = async () => {
     if (selectedStores.length === 0) return
-    
+
     try {
-      setLoading(true)
+      setBulkActionLoading("sync")
       showInfo(`Syncing ${selectedStores.length} stores...`)
-      
+
       const syncPromises = selectedStores.map(store =>
         apiFetch(`/api/shopify-stores/${store.id}/sync`, { method: 'POST' })
       )
-      
       await Promise.all(syncPromises)
-      
+
       setSelectedStores([])
       showSuccess(`${selectedStores.length} stores synced successfully`)
-      
-      // Refresh stores list
       await fetchStores()
     } catch (err) {
       console.error("Error syncing stores:", err)
       showError("Failed to sync some stores")
     } finally {
-      setLoading(false)
+      setBulkActionLoading(null)
     }
   }
 
   const handleBulkDisconnect = async () => {
     if (selectedStores.length === 0) return
-    
+
     try {
-      setLoading(true)
+      setBulkActionLoading("disconnect")
       showInfo(`Disconnecting ${selectedStores.length} stores...`)
-      
+
       const disconnectPromises = selectedStores.map(store =>
         apiFetch(`/api/admin/shopify-stores/${store.id}`, {
           method: 'PATCH',
@@ -373,378 +411,184 @@ export default function AdminShopifyStoresPage() {
           body: JSON.stringify({ status: 'disconnected' }),
         })
       )
-      
       await Promise.all(disconnectPromises)
-      
+
       setSelectedStores([])
       showSuccess(`${selectedStores.length} stores disconnected`)
-      
-      // Refresh stores list
       await fetchStores()
     } catch (err) {
       console.error("Error disconnecting stores:", err)
       showError("Failed to disconnect some stores")
     } finally {
-      setLoading(false)
+      setBulkActionLoading(null)
     }
   }
 
   const handleBulkDelete = () => {
     if (selectedStores.length === 0) return
-    setStoreToDelete(selectedStores[0]) // For confirmation, but will delete all
+    setStoreToDelete(selectedStores[0])
     setDeleteConfirmOpen(true)
   }
 
   const handleBulkExport = () => {
     if (selectedStores.length === 0) return
     showInfo(`Exporting ${selectedStores.length} stores to CSV...`)
-    // TODO: Implement CSV export
   }
 
+  const columns = useMemo(() => createShopifyStoresColumns({
+    onViewDetails: handleViewDetails,
+    onEdit: handleEdit,
+    onSync: handleSync,
+    onAddProducts: handleAddProducts,
+    onViewProducts: handleViewProducts,
+    onDisconnect: handleDisconnect,
+    onDelete: handleDelete,
+    onCopyStoreId: handleCopyStoreId,
+    onCopyUrl: handleCopyUrl,
+    onVisitStore: handleVisitStore,
+  }), [])
 
-  const filterConfig = [
+  const bulkActions = [
     {
-      columnId: "status",
-      title: "Status",
-      options: [
-        { label: "Connected", value: "connected" },
-        { label: "Disconnected", value: "disconnected" },
-        { label: "Syncing", value: "syncing" },
-        { label: "Error", value: "error" },
-      ],
+      label: "Sync Selected",
+      icon: <RefreshCw className="h-4 w-4" />,
+      onClick: handleBulkSync,
+      variant: "outline" as const,
+      loading: bulkActionLoading === "sync",
+      disabled: bulkActionLoading !== null,
     },
     {
-      columnId: "sync_status",
-      title: "Sync Status",
-      options: [
-        { label: "Success", value: "success" },
-        { label: "Failed", value: "failed" },
-        { label: "Pending", value: "pending" },
-        { label: "Never", value: "never" },
-      ],
+      label: "Disconnect",
+      icon: <Link2 className="h-4 w-4" />,
+      onClick: handleBulkDisconnect,
+      variant: "outline" as const,
+      loading: bulkActionLoading === "disconnect",
+      disabled: bulkActionLoading !== null,
+    },
+    {
+      label: "Export CSV",
+      icon: <Download className="h-4 w-4" />,
+      onClick: handleBulkExport,
+      variant: "outline" as const,
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleBulkDelete,
+      variant: "destructive" as const,
     },
   ]
-
-  const quickFilters = [
-    { id: "connected", label: "Connected", count: 0 },
-    { id: "high-revenue", label: "High Revenue", count: 0 },
-    { id: "high-traffic", label: "High Traffic", count: 0 },
-    { id: "recently-synced", label: "Recently Synced", count: 0 },
-    { id: "needs-sync", label: "Needs Sync", count: 0 },
-  ]
-
-  const secondaryButtons: Array<{
-    label: string
-    icon?: React.ReactNode
-    onClick: () => void
-    variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'destructive' | 'link'
-    disabled?: boolean
-    tooltip?: string
-  }> = []
 
   return (
-    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <h1 className="text-xl font-semibold leading-[1.35] tracking-tight text-foreground">Shopify Stores</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor client Shopify stores</p>
-        </div>
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden gap-4" data-testid="admin-shopify-stores-page">
+      <AdminPageHeader
+        title="Shopify Stores"
+        description="Monitor and manage client Shopify store connections"
+        breadcrumbs={[
+          { label: "Admin", href: "/admin" },
+          { label: "Shopify Stores" },
+        ]}
+        actions={[
+          {
+            label: "Refresh",
+            icon: <RefreshCw className="h-4 w-4" />,
+            onClick: fetchStores,
+            variant: "outline",
+            disabled: loading,
+          },
+          ...(canCreate ? [{
+            label: "Connect Store",
+            icon: <Plus className="h-4 w-4" />,
+            onClick: () => showInfo("Connect store flow coming soon"),
+          }] : []),
+        ]}
+      />
+
+      <AdminStatCards
+        stats={statCards}
+        loading={initialLoading}
+        columns={4}
+      />
+
+      <AdminActionBar
+        selectedCount={selectedStores.length}
+        onClearSelection={() => setSelectedStores([])}
+        actions={bulkActions}
+      />
+
+      <AdminFilterBar
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search stores, URLs, owners..."
+        tabs={statusTabs}
+        activeTab={statusTab}
+        onTabChange={setStatusTab}
+      />
+
+      <div className="flex-1 min-h-0 flex flex-col">
+        <DataTable
+          columns={columns}
+          data={filteredStores}
+          pageCount={pageCount || Math.ceil(filteredStores.length / pageSize)}
+          onPaginationChange={(newPage, newPageSize) => {
+            setPage(newPage)
+            setPageSize(newPageSize)
+          }}
+          onSortingChange={setSorting}
+          onFilterChange={setColumnFilters}
+          onSearchChange={setSearchQuery}
+          loading={loading && !initialLoading}
+          initialLoading={initialLoading}
+          page={page}
+          pageSize={pageSize}
+          searchPlaceholder="Search stores..."
+          enableRowSelection={true}
+          onRowSelectionChange={(rows) => setSelectedStores(rows as ShopifyStore[])}
+          onRowClick={handleViewDetails}
+          filterConfig={filterConfig}
+          quickFilters={quickFilters}
+          selectedQuickFilter={quickFilter}
+          onQuickFilterChange={setQuickFilter}
+        />
       </div>
 
-      {!initialLoading && stores.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Total Stores</span>
-              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <ShoppingBag className="h-[18px] w-[18px] text-primary" />
-              </div>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-semibold">{stores.length.toLocaleString()}</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-xs text-muted-foreground">All Shopify stores</span>
-            </div>
-          </div>
-          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Connected</span>
-              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <CheckCircle2 className="h-[18px] w-[18px] text-primary" />
-              </div>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-semibold">{stores.filter(s => s.status === 'connected').length.toLocaleString()}</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-xs text-muted-foreground">Currently connected stores</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Status Tabs */}
-      <div className="mb-4 flex-shrink-0">
-        <Tabs value={statusTab} onValueChange={(v) => setStatusTab(v as typeof statusTab)}>
-          <TabsList>
-            <TabsTrigger value="all">
-              All
-              <Badge variant="secondary" className="ml-2">
-                {statusCounts.all}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="connected">
-              Connected
-              <Badge variant="secondary" className="ml-2">
-                {statusCounts.connected}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="disconnected">
-              Disconnected
-              <Badge variant="secondary" className="ml-2">
-                {statusCounts.disconnected}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="syncing">
-              Syncing
-              <Badge variant="secondary" className="ml-2">
-                {statusCounts.syncing}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="error">
-              Error
-              <Badge variant="secondary" className="ml-2">
-                {statusCounts.error}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {/* Bulk Actions Bar */}
-      {selectedStores.length > 0 && (
-        <div className="mb-4 p-3 bg-muted rounded-lg flex items-center justify-between flex-shrink-0">
-          <span className="text-sm font-medium">
-            {selectedStores.length} store{selectedStores.length !== 1 ? "s" : ""} selected
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkSync}
-              disabled={loading}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Sync Selected
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkDisconnect}
-              disabled={loading}
-            >
-              <Link2 className="h-4 w-4 mr-2" />
-              Disconnect Selected
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkExport}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBulkDelete}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Selected
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedStores([])}
-            >
-              Clear
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Toolbar */}
-      <div className="mb-4 flex items-center gap-1.5 flex-wrap">
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <Input
-            placeholder="Search stores, URLs, users, niches..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 w-full sm:w-[140px] flex-shrink-0 text-sm"
-          />
-          {quickFilters.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant={quickFilter ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 px-2"
-                >
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                {quickFilters.map((filter) => (
-                  <DropdownMenuItem
-                    key={filter.id}
-                    onClick={() => setQuickFilter(quickFilter === filter.id ? null : filter.id)}
-                    className={cn(
-                      "cursor-pointer",
-                      quickFilter === filter.id && "bg-accent"
-                    )}
-                  >
-                    <span>{filter.label}</span>
-                    {quickFilter === filter.id && (
-                      <Check className="h-4 w-4 ml-auto" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-                {quickFilter && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setQuickFilter(null)}
-                      className="cursor-pointer"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Clear Filter
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {secondaryButtons.map((button, index) => (
-            <Button
-              key={index}
-              variant={button.variant || "outline"}
-              size="sm"
-              onClick={button.onClick}
-              disabled={button.disabled}
-              className="h-8"
-            >
-              {button.icon}
-              {button.label}
-            </Button>
-          ))}
-          <Button
-            onClick={() => {
-              showInfo("Opening add store dialog...")
-              // TODO: Open add store modal
-            }}
-            size="sm"
-            className="h-8"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Store
-          </Button>
-        </div>
-      </div>
-
-      {/* Grid View */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        {initialLoading ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader size="sm" />
-              <span>Loading stores...</span>
-            </div>
-          </div>
-        ) : paginatedStores.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <ShoppingBag className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-            <p className="text-sm text-muted-foreground">No stores found</p>
-            <p className="text-xs text-muted-foreground mt-1">Try adjusting your search or filters</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {paginatedStores.map((store) => (
-              <AdminShopifyStoreCard
-                key={store.id}
-                store={store}
-                onEdit={handleEdit}
-                onViewDetails={handleViewDetails}
-                onSync={handleSync}
-                onDelete={handleDelete}
-                canEdit={true}
-                canDelete={true}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {!initialLoading && paginatedStores.length > 0 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredStores.length)} of {filteredStores.length} stores
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              Previous
-            </Button>
-            <div className="text-sm text-muted-foreground">
-              Page {page} of {pageCount}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.min(pageCount, p + 1))}
-              disabled={page === pageCount}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Store{selectedStores.length > 1 ? "s" : ""}</DialogTitle>
+            <DialogTitle data-testid="delete-dialog-title">
+              Delete Store{selectedStores.length > 1 ? "s" : ""}
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to delete {selectedStores.length > 1 ? `these ${selectedStores.length} stores` : "this Shopify store"}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           {storeToDelete && (
             <div className="space-y-2">
-              <p className="text-sm">
+              <p className="text-sm" data-testid="delete-store-name">
                 <span className="font-medium">Store:</span> {storeToDelete.name}
               </p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              data-testid="button-cancel-delete"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={loading}
+              data-testid="button-confirm-delete"
+            >
               Delete
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Detail Drawer */}
       {selectedStore && (
         <StoreDetailDrawer
           open={detailDrawerOpen}
@@ -758,39 +602,6 @@ export default function AdminShopifyStoresPage() {
           onEdit={handleEdit}
         />
       )}
-
-      {/* Assignee Modal - TODO: Implement full assignee management */}
-      <Dialog open={assigneeModalOpen} onOpenChange={setAssigneeModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Assignee</DialogTitle>
-            <DialogDescription>
-              Assign owner and members to selected stores
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              Assignee management functionality will be implemented here.
-              {selectedStores.length > 0 && (
-                <span className="block mt-2">
-                  {selectedStores.length} store{selectedStores.length !== 1 ? "s" : ""} selected
-                </span>
-              )}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAssigneeModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              showSuccess("Assignee management coming soon")
-              setAssigneeModalOpen(false)
-            }}>
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

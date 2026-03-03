@@ -1944,6 +1944,476 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // EXTERNAL USER JOURNEY, SESSIONS, ACTIVITY & NOTES
+  // =============================================
+
+  router.get('/external-users/:id/journey', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const [
+        enrollmentsResult,
+        picklistResult,
+        roadmapResult,
+        onboardingResult,
+        shopifyResult,
+        credentialsResult,
+      ] = await Promise.all([
+        supabaseRemote
+          .from('course_enrollments')
+          .select('id, course_id, enrolled_at, completed_at, progress_percentage, courses(id, title)')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('user_picklist')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', id),
+        supabaseRemote
+          .from('roadmap_progress')
+          .select('id, task_id, status, created_at, updated_at')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('onboarding_progress')
+          .select('id, video_id, module_id, completed, completed_at, watch_duration')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('shopify_stores')
+          .select('id, store_name, store_url, status, created_at')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('user_credentials')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', id),
+      ]);
+
+      const enrollments = enrollmentsResult.data || [];
+      const coursesStarted = enrollments.length;
+      const coursesCompleted = enrollments.filter((e: any) => e.completed_at !== null).length;
+
+      const roadmapItems = roadmapResult.data || [];
+      const roadmapTotal = roadmapItems.length;
+      const roadmapCompleted = roadmapItems.filter((r: any) => r.status === 'completed').length;
+
+      const onboardingItems = onboardingResult.data || [];
+      const onboardingTotal = onboardingItems.length;
+      const onboardingCompleted = onboardingItems.filter((o: any) => o.completed).length;
+
+      return res.json({
+        userId: id,
+        onboarding: {
+          completed: row.onboarding_completed || false,
+          completedAt: row.onboarding_completed_at || null,
+          progress: row.onboarding_progress || 0,
+          steps: onboardingItems.map((o: any) => ({
+            id: o.id,
+            videoId: o.video_id,
+            moduleId: o.module_id,
+            completed: o.completed,
+            completedAt: o.completed_at,
+            watchDuration: o.watch_duration,
+          })),
+          totalSteps: onboardingTotal,
+          completedSteps: onboardingCompleted,
+        },
+        courses: {
+          enrollments: enrollments.map((e: any) => ({
+            id: e.id,
+            courseId: e.course_id,
+            courseTitle: e.courses?.title || 'Unknown',
+            enrolledAt: e.enrolled_at,
+            completedAt: e.completed_at,
+            progressPercentage: e.progress_percentage ? parseFloat(e.progress_percentage) : 0,
+          })),
+          started: coursesStarted,
+          completed: coursesCompleted,
+        },
+        productsSaved: picklistResult.count ?? 0,
+        roadmap: {
+          items: roadmapItems.map((r: any) => ({
+            id: r.id,
+            taskId: r.task_id,
+            status: r.status,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          })),
+          total: roadmapTotal,
+          completed: roadmapCompleted,
+          progressPercent: roadmapTotal > 0 ? Math.round((roadmapCompleted / roadmapTotal) * 100) : 0,
+        },
+        shopifyStores: (shopifyResult.data || []).map((s: any) => ({
+          id: s.id,
+          storeName: s.store_name,
+          storeUrl: s.store_url,
+          status: s.status,
+          createdAt: s.created_at,
+        })),
+        shopifyConnected: (shopifyResult.data || []).length > 0,
+        credentialsCount: credentialsResult.count ?? 0,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/external-users/:id/journey:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/external-users/:id/sessions', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { data: overrides, error } = await supabaseRemote
+        .from('user_module_overrides')
+        .select('*')
+        .eq('user_id', id);
+
+      if (error) {
+        console.error('Error fetching module overrides:', error);
+        return res.status(500).json({ error: 'Failed to fetch session data' });
+      }
+
+      const modules = [
+        { id: 'winning-products', name: 'Winning Products' },
+        { id: 'product-hunt', name: 'Product Hunt' },
+        { id: 'categories', name: 'Categories' },
+        { id: 'my-products', name: 'My Products' },
+        { id: 'suppliers', name: 'Suppliers' },
+        { id: 'competitor-stores', name: 'Competitor Stores' },
+        { id: 'store-research', name: 'Store Research' },
+        { id: 'shopify-stores', name: 'Shopify Stores' },
+        { id: 'courses', name: 'Academy / Courses' },
+        { id: 'mentorship', name: 'Mentorship' },
+        { id: 'intelligence-hub', name: 'Intelligence Hub' },
+        { id: 'meta-ads', name: 'Meta Ads Research' },
+        { id: 'my-store', name: 'My Store' },
+        { id: 'fulfillment', name: 'Fulfillment' },
+        { id: 'studio', name: 'AI Studio' },
+        { id: 'tools', name: 'Tools' },
+        { id: 'selling-channels', name: 'Selling Channels' },
+        { id: 'my-roadmap', name: 'My Roadmap' },
+        { id: 'my-credentials', name: 'My Credentials' },
+        { id: 'seasonal-collections', name: 'Seasonal Collections' },
+      ];
+
+      const overridesMap = new Map(
+        (overrides || []).map((o: any) => [o.module_id, o])
+      );
+
+      const sessionData = modules.map((mod) => {
+        const override = overridesMap.get(mod.id);
+        return {
+          moduleId: mod.id,
+          moduleName: mod.name,
+          accessLevel: override?.access_level || null,
+          hasOverride: !!override,
+          overriddenBy: override?.overridden_by || null,
+          overriddenAt: override?.updated_at || null,
+        };
+      });
+
+      return res.json({
+        userId: id,
+        modules: sessionData,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/external-users/:id/sessions:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/external-users/:id/sessions', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { modules } = req.body;
+
+      if (!modules || !Array.isArray(modules)) {
+        return res.status(400).json({ error: 'modules array is required' });
+      }
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const adminId = (req as any).user?.id || null;
+      const validAccessLevels = ['full_access', 'limited_access', 'locked', 'hidden'];
+      const now = new Date().toISOString();
+
+      const results = [];
+
+      for (const mod of modules) {
+        if (!mod.moduleId) continue;
+
+        if (mod.accessLevel === null || mod.accessLevel === undefined) {
+          await supabaseRemote
+            .from('user_module_overrides')
+            .delete()
+            .eq('user_id', id)
+            .eq('module_id', mod.moduleId);
+
+          results.push({ moduleId: mod.moduleId, action: 'removed' });
+          continue;
+        }
+
+        if (!validAccessLevels.includes(mod.accessLevel)) {
+          return res.status(400).json({
+            error: `Invalid access level "${mod.accessLevel}" for module "${mod.moduleId}". Must be one of: ${validAccessLevels.join(', ')}`,
+          });
+        }
+
+        const { data, error } = await supabaseRemote
+          .from('user_module_overrides')
+          .upsert(
+            {
+              user_id: id,
+              module_id: mod.moduleId,
+              access_level: mod.accessLevel,
+              overridden_by: adminId,
+              updated_at: now,
+            },
+            { onConflict: 'user_id,module_id' }
+          )
+          .select()
+          .single();
+
+        if (error) {
+          console.error(`Error upserting module override for ${mod.moduleId}:`, error);
+          return res.status(500).json({ error: `Failed to update module ${mod.moduleId}` });
+        }
+
+        results.push({ moduleId: mod.moduleId, action: 'updated', data });
+      }
+
+      return res.json({ success: true, results });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/external-users/:id/sessions:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/external-users/:id/activity', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const activities: any[] = [];
+
+      activities.push({
+        id: `signup-${id}`,
+        type: 'login',
+        description: 'Account created',
+        timestamp: row.created_at,
+        metadata: { email: row.email },
+      });
+
+      if (row.onboarding_completed && row.onboarding_completed_at) {
+        activities.push({
+          id: `onboarding-${id}`,
+          type: 'feature_usage',
+          description: 'Completed onboarding',
+          timestamp: row.onboarding_completed_at,
+          metadata: {},
+        });
+      }
+
+      const [enrollmentsResult, roadmapResult, shopifyResult, notesResult, overridesResult] = await Promise.all([
+        supabaseRemote
+          .from('course_enrollments')
+          .select('id, course_id, enrolled_at, completed_at, courses(title)')
+          .eq('user_id', id)
+          .order('enrolled_at', { ascending: false }),
+        supabaseRemote
+          .from('roadmap_progress')
+          .select('id, task_id, status, updated_at')
+          .eq('user_id', id)
+          .eq('status', 'completed')
+          .order('updated_at', { ascending: false })
+          .limit(20),
+        supabaseRemote
+          .from('shopify_stores')
+          .select('id, store_name, created_at')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('user_admin_notes')
+          .select('id, note, created_at, admin_id')
+          .eq('user_id', id)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabaseRemote
+          .from('user_module_overrides')
+          .select('id, module_id, access_level, updated_at, overridden_by')
+          .eq('user_id', id)
+          .order('updated_at', { ascending: false })
+          .limit(20),
+      ]);
+
+      for (const e of (enrollmentsResult.data || [])) {
+        activities.push({
+          id: `enroll-${e.id}`,
+          type: 'feature_usage',
+          description: `Enrolled in course: ${(e as any).courses?.title || 'Unknown'}`,
+          timestamp: e.enrolled_at,
+          metadata: { courseId: e.course_id },
+        });
+        if (e.completed_at) {
+          activities.push({
+            id: `course-complete-${e.id}`,
+            type: 'feature_usage',
+            description: `Completed course: ${(e as any).courses?.title || 'Unknown'}`,
+            timestamp: e.completed_at,
+            metadata: { courseId: e.course_id },
+          });
+        }
+      }
+
+      for (const r of (roadmapResult.data || [])) {
+        activities.push({
+          id: `roadmap-${r.id}`,
+          type: 'feature_usage',
+          description: `Completed roadmap task: ${r.task_id}`,
+          timestamp: r.updated_at,
+          metadata: { taskId: r.task_id },
+        });
+      }
+
+      for (const s of (shopifyResult.data || [])) {
+        activities.push({
+          id: `shopify-${s.id}`,
+          type: 'feature_usage',
+          description: `Connected Shopify store: ${s.store_name || 'Unknown'}`,
+          timestamp: s.created_at,
+          metadata: { storeId: s.id },
+        });
+      }
+
+      for (const n of (notesResult.data || [])) {
+        activities.push({
+          id: `note-${n.id}`,
+          type: 'other',
+          description: `Admin note added: ${n.note.substring(0, 100)}${n.note.length > 100 ? '...' : ''}`,
+          timestamp: n.created_at,
+          metadata: { noteId: n.id, adminId: n.admin_id },
+        });
+      }
+
+      for (const o of (overridesResult.data || [])) {
+        activities.push({
+          id: `override-${o.id}`,
+          type: 'visibility_change',
+          description: `Module access changed: ${o.module_id} set to ${o.access_level}`,
+          timestamp: o.updated_at,
+          metadata: { moduleId: o.module_id, accessLevel: o.access_level, overriddenBy: o.overridden_by },
+        });
+      }
+
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      return res.json({
+        userId: id,
+        activities,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/external-users/:id/activity:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.post('/external-users/:id/notes', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { note } = req.body;
+
+      if (!note || typeof note !== 'string' || note.trim() === '') {
+        return res.status(400).json({ error: 'note is required and must be a non-empty string' });
+      }
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const adminId = (req as any).user?.id || null;
+
+      const { data, error } = await supabaseRemote
+        .from('user_admin_notes')
+        .insert({
+          user_id: id,
+          admin_id: adminId,
+          note: note.trim(),
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        console.error('Error creating admin note:', error);
+        return res.status(500).json({ error: 'Failed to create note' });
+      }
+
+      return res.status(201).json({
+        id: data.id,
+        userId: data.user_id,
+        adminId: data.admin_id,
+        note: data.note,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      });
+    } catch (error) {
+      console.error('Error in POST /api/admin/external-users/:id/notes:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/external-users/:id/notes', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const row = await fetchUserWithPlan(id);
+      if (!row) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { data, error } = await supabaseRemote
+        .from('user_admin_notes')
+        .select('*, profiles!user_admin_notes_admin_id_fkey(id, full_name, email, avatar_url)')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching admin notes:', error);
+        return res.status(500).json({ error: 'Failed to fetch notes' });
+      }
+
+      const notes = (data || []).map((n: any) => ({
+        id: n.id,
+        userId: n.user_id,
+        adminId: n.admin_id,
+        adminName: n.profiles?.full_name || 'Unknown Admin',
+        adminEmail: n.profiles?.email || null,
+        adminAvatarUrl: n.profiles?.avatar_url || null,
+        note: n.note,
+        createdAt: n.created_at,
+        updatedAt: n.updated_at,
+      }));
+
+      return res.json({ userId: id, notes });
+    } catch (error) {
+      console.error('Error in GET /api/admin/external-users/:id/notes:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // INTERNAL USERS
   // =============================================
   router.get('/internal-users', async (req: Request, res: Response) => {

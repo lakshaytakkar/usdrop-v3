@@ -1,11 +1,9 @@
-
-
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { useRouter } from "@/hooks/use-router"
-import { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -15,28 +13,34 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
-import { Plus, Trash2, CheckCircle2, Star, Copy, Edit, RefreshCw, Download, X, UserPlus, Search, Globe, ExternalLink, TrendingUp, DollarSign, ArrowUpRight, AlertCircle, Package, Check, Store } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Filter } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Plus, Trash2, MoreHorizontal, Eye, Store, Edit, Download,
+  Search, Globe, ExternalLink, TrendingUp, DollarSign,
+  Package, CheckCircle2, X, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw,
+} from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { useHasPermission } from "@/hooks/use-has-permission"
 import { Loader } from "@/components/ui/loader"
 import { CompetitorStore as CompetitorStoreType } from "@/types/competitor-stores"
 import { Category } from "@/types/categories"
-import { DataTable } from "@/components/data-table/data-table"
-import { createCompetitorStoresColumns } from "./components/competitor-stores-columns"
+import { AdminStatCards } from "@/components/admin"
 
-// Transform API CompetitorStore to match UI CompetitorStore interface
 interface CompetitorStore {
   id: string
   name: string
@@ -53,18 +57,9 @@ interface CompetitorStore {
   created_at: string
   updated_at: string
 }
-import { QuickViewModal } from "@/components/ui/quick-view-modal"
-import { DetailDrawer } from "@/components/ui/detail-drawer"
-import { useToast } from "@/hooks/use-toast"
-import { useHasPermission } from "@/hooks/use-has-permission"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getAvatarUrl } from "@/lib/utils/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { sampleInternalUsers } from "@/pages/admin/internal-users/data/users"
 
+type SortField = "name" | "monthly_traffic" | "monthly_revenue" | "growth" | "products_count"
+type SortOrder = "asc" | "desc"
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -80,44 +75,27 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 export default function AdminCompetitorStoresPage() {
   const router = useRouter()
-  const { showSuccess, showError, showInfo } = useToast()
-  
-  // Permission checks
-  const { hasPermission: canView } = useHasPermission("competitor_stores.view")
+  const { showSuccess, showError } = useToast()
+
   const { hasPermission: canEdit } = useHasPermission("competitor_stores.edit")
   const { hasPermission: canCreate } = useHasPermission("competitor_stores.create")
   const { hasPermission: canDelete } = useHasPermission("competitor_stores.delete")
   const { hasPermission: canVerify } = useHasPermission("competitor_stores.verify")
-  
+
   const [stores, setStores] = useState<CompetitorStore[]>([])
   const [availableCategories, setAvailableCategories] = useState<Category[]>([])
-  const [selectedStores, setSelectedStores] = useState<CompetitorStore[]>([])
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [statusTab, setStatusTab] = useState<"all" | "high_traffic" | "high_revenue" | "high_growth">("all")
-  const [quickFilter, setQuickFilter] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined })
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [pageCount, setPageCount] = useState(0)
-  const [quickViewOpen, setQuickViewOpen] = useState(false)
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false)
-  const [selectedStore, setSelectedStore] = useState<CompetitorStore | null>(null)
+  const [sortField, setSortField] = useState<SortField>("name")
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [storeToDelete, setStoreToDelete] = useState<CompetitorStore | null>(null)
-  const [bulkActionLoading, setBulkActionLoading] = useState<string | null>(null)
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editingStore, setEditingStore] = useState<CompetitorStore | null>(null)
-  const [assigneeModalOpen, setAssigneeModalOpen] = useState(false)
-  const [assignedOwner, setAssignedOwner] = useState<string | null>(null)
-  const [assignedMembers, setAssignedMembers] = useState<string[]>([])
-  const [memberSearch, setMemberSearch] = useState("")
-  const [tempOwner, setTempOwner] = useState<string | null>(null)
-  const [tempMembers, setTempMembers] = useState<string[]>([])
   const [formData, setFormData] = useState({
     name: "",
     url: "",
@@ -134,14 +112,9 @@ export default function AdminCompetitorStoresPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [formLoading, setFormLoading] = useState(false)
 
-  const internalUsers = sampleInternalUsers
-
-  // Fetch categories for dropdown
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await apiFetch("/api/admin/categories", {
-        credentials: 'include'
-      })
+      const response = await apiFetch("/api/admin/categories", { credentials: 'include' })
       if (!response.ok) throw new Error("Failed to fetch categories")
       const data = await response.json()
       setAvailableCategories(data.categories || [])
@@ -150,266 +123,17 @@ export default function AdminCompetitorStoresPage() {
     }
   }, [])
 
-  const categories = useMemo(() => {
-    // Use available categories from API, fallback to store categories
-    if (availableCategories.length > 0) {
-      return availableCategories.map(c => c.name)
-    }
-    const categorySet = new Set(stores.map((s) => s.category))
-    return Array.from(categorySet)
-  }, [stores, availableCategories])
-
-  const countries = useMemo(() => {
-    const countrySet = new Set(stores.map((s) => s.country).filter(Boolean))
-    return Array.from(countrySet)
-  }, [stores])
-
-  // Filter members based on search
-  const filteredMembers = useMemo(() => {
-    if (!memberSearch) return internalUsers
-    const searchLower = memberSearch.toLowerCase()
-    return internalUsers.filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower)
-    )
-  }, [memberSearch, internalUsers])
-  
-  // Available members (excluding owner and already selected members)
-  const availableMembers = useMemo(() => {
-    return filteredMembers.filter(
-      (user) => user.id !== tempOwner && !tempMembers.includes(user.id)
-    )
-  }, [filteredMembers, tempOwner, tempMembers])
-
-  const handleOpenAssigneeModal = () => {
-    setTempOwner(assignedOwner)
-    setTempMembers([...assignedMembers])
-    setMemberSearch("")
-    setAssigneeModalOpen(true)
-  }
-  
-  const handleSaveAssignees = () => {
-    setAssignedOwner(tempOwner)
-    setAssignedMembers(tempMembers)
-    setAssigneeModalOpen(false)
-    showSuccess("Assignees updated successfully")
-  }
-  
-  const handleAddMember = (memberId: string) => {
-    if (!tempMembers.includes(memberId)) {
-      setTempMembers([...tempMembers, memberId])
-    }
-    setMemberSearch("")
-  }
-  
-  const handleRemoveMember = (memberId: string) => {
-    setTempMembers(tempMembers.filter(id => id !== memberId))
-  }
-
-  // Get status counts for tabs
-  const getStatusCount = useCallback((tab: typeof statusTab) => {
-    switch (tab) {
-      case "all":
-        return stores.length
-      case "high_traffic":
-        return stores.filter(s => s.monthly_traffic >= 100000).length
-      case "high_revenue":
-        return stores.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000).length
-      case "high_growth":
-        return stores.filter(s => s.growth >= 15).length
-      default:
-        return 0
-    }
-  }, [stores])
-
-  // Quick filters with counts
-  const quickFilters = useMemo(() => [
-    { id: "high_traffic", label: "High Traffic", count: stores.filter(s => s.monthly_traffic >= 100000).length },
-    { id: "high_revenue", label: "High Revenue", count: stores.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000).length },
-    { id: "high_growth", label: "High Growth", count: stores.filter(s => s.growth >= 15).length },
-    { id: "verified", label: "Verified", count: stores.filter(s => s.verified).length },
-  ], [stores])
-
-  // Filter stores based on search, filters, status tab, date range, and quick filters
-  const filteredStores = useMemo(() => {
-    let result = stores
-
-    // Status tab filter
-    if (statusTab !== "all") {
-      switch (statusTab) {
-        case "high_traffic":
-          result = result.filter(s => s.monthly_traffic >= 100000)
-          break
-        case "high_revenue":
-          result = result.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000)
-          break
-        case "high_growth":
-          result = result.filter(s => s.growth >= 15)
-          break
-      }
-    }
-
-    // Date range filter
-    if (dateRange.from || dateRange.to) {
-      result = result.filter((store) => {
-        const storeDate = new Date(store.created_at)
-        if (dateRange.from && storeDate < dateRange.from) return false
-        if (dateRange.to) {
-          const toDate = new Date(dateRange.to)
-          toDate.setHours(23, 59, 59, 999)
-          if (storeDate > toDate) return false
-        }
-        return true
-      })
-    }
-
-    // Quick filter
-    if (quickFilter) {
-      switch (quickFilter) {
-        case "high_traffic":
-          result = result.filter(s => s.monthly_traffic >= 100000)
-          break
-        case "high_revenue":
-          result = result.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000)
-          break
-        case "high_growth":
-          result = result.filter(s => s.growth >= 15)
-          break
-        case "verified":
-          result = result.filter(s => s.verified)
-          break
-      }
-    }
-
-    // Search filter
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase()
-      result = result.filter((store) =>
-        store.name.toLowerCase().includes(searchLower) ||
-        store.url.toLowerCase().includes(searchLower) ||
-        store.category.toLowerCase().includes(searchLower) ||
-        (store.country && store.country.toLowerCase().includes(searchLower))
-      )
-    }
-
-    // Column filters
-    columnFilters.forEach((filter) => {
-      if (!filter.value) return
-      
-      const filterValues = Array.isArray(filter.value) ? filter.value : [filter.value]
-      if (filterValues.length === 0) return
-
-      if (filter.id === "category") {
-        result = result.filter((store) => filterValues.includes(store.category))
-      }
-      
-      if (filter.id === "country") {
-        result = result.filter((store) => store.country && filterValues.includes(store.country))
-      }
-
-      if (filter.id === "verified") {
-        const isVerified = filterValues.includes("verified")
-        const isUnverified = filterValues.includes("unverified")
-        if (isVerified) result = result.filter(s => s.verified)
-        if (isUnverified) result = result.filter(s => !s.verified)
-      }
-    })
-
-    return result
-  }, [stores, searchQuery, columnFilters, statusTab, quickFilter, dateRange])
-
-  // Apply sorting
-  const sortedStores = useMemo(() => {
-    if (!sorting || sorting.length === 0) {
-      return filteredStores
-    }
-
-    const sorted = [...filteredStores]
-    sorting.forEach((sort) => {
-      const { id, desc } = sort
-      sorted.sort((a, b) => {
-        let aValue: any
-        let bValue: any
-
-        switch (id) {
-          case "name":
-            aValue = a.name.toLowerCase()
-            bValue = b.name.toLowerCase()
-            break
-          case "url":
-            aValue = a.url.toLowerCase()
-            bValue = b.url.toLowerCase()
-            break
-          case "category":
-            aValue = a.category.toLowerCase()
-            bValue = b.category.toLowerCase()
-            break
-          case "monthly_traffic":
-            aValue = a.monthly_traffic
-            bValue = b.monthly_traffic
-            break
-          case "monthly_revenue":
-            aValue = a.monthly_revenue || 0
-            bValue = b.monthly_revenue || 0
-            break
-          case "growth":
-            aValue = a.growth
-            bValue = b.growth
-            break
-          case "country":
-            aValue = (a.country || "").toLowerCase()
-            bValue = (b.country || "").toLowerCase()
-            break
-          case "rating":
-            aValue = a.rating || 0
-            bValue = b.rating || 0
-            break
-          default:
-            return 0
-        }
-
-        if (aValue < bValue) return desc ? 1 : -1
-        if (aValue > bValue) return desc ? -1 : 1
-        return 0
-      })
-    })
-
-    return sorted
-  }, [filteredStores, sorting])
-
-  // Paginate sorted stores
-  const paginatedStores = useMemo(() => {
-    const start = (page - 1) * pageSize
-    const end = start + pageSize
-    return sortedStores.slice(start, end)
-  }, [sortedStores, page, pageSize])
-
-  useEffect(() => {
-    setPageCount(Math.ceil(sortedStores.length / pageSize))
-    setInitialLoading(false)
-  }, [sortedStores.length, pageSize])
-
   const fetchStores = useCallback(async () => {
     try {
       setLoading(true)
-      setError(null)
-      
-      const params = new URLSearchParams()
-      params.append("pageSize", "1000") // Get all stores for admin
-      
-      const response = await apiFetch(`/api/admin/competitor-stores?${params.toString()}`, {
+      const response = await apiFetch("/api/admin/competitor-stores?pageSize=1000", {
         credentials: 'include'
       })
-
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || "Failed to fetch stores")
       }
-
       const data = await response.json()
-      
-      // Transform API response to match UI format
       const transformedStores: CompetitorStore[] = (data.stores || []).map((store: CompetitorStoreType) => ({
         id: store.id,
         name: store.name,
@@ -426,199 +150,135 @@ export default function AdminCompetitorStoresPage() {
         created_at: store.created_at,
         updated_at: store.updated_at,
       }))
-
       setStores(transformedStores)
     } catch (err) {
-      console.error("Error fetching stores:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to load stores. Please try again."
-      setError(errorMessage)
-      showError(errorMessage)
+      const msg = err instanceof Error ? err.message : "Failed to load stores"
+      showError(msg)
     } finally {
       setLoading(false)
-      setInitialLoading(false)
     }
   }, [showError])
 
-  useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
+  useEffect(() => { fetchCategories() }, [fetchCategories])
+  useEffect(() => { fetchStores() }, [fetchStores])
+  useEffect(() => { setSelectedIds(new Set()) }, [searchQuery, categoryFilter, statusFilter])
 
-  useEffect(() => {
-    fetchStores()
-  }, [fetchStores])
+  const filteredStores = useMemo(() => {
+    let result = stores
 
-  const handleViewDetails = useCallback((store: CompetitorStore) => {
-    router.push(`/admin/competitor-stores/${store.id}`)
-  }, [router])
+    if (statusFilter === "verified") result = result.filter(s => s.verified)
+    else if (statusFilter === "unverified") result = result.filter(s => !s.verified)
+    else if (statusFilter === "high_traffic") result = result.filter(s => s.monthly_traffic >= 100000)
+    else if (statusFilter === "high_revenue") result = result.filter(s => s.monthly_revenue !== null && s.monthly_revenue >= 400000)
 
-  const handleQuickView = useCallback((store: CompetitorStore) => {
-    setSelectedStore(store)
-    setQuickViewOpen(true)
-  }, [])
-
-  const handleDelete = useCallback((store: CompetitorStore) => {
-    if (!canDelete) {
-      showError("You don't have permission to delete stores")
-      return
+    if (categoryFilter && categoryFilter !== "all") {
+      result = result.filter(s => s.category === categoryFilter)
     }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.url.toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q) ||
+        (s.country && s.country.toLowerCase().includes(q))
+      )
+    }
+
+    result.sort((a, b) => {
+      let aVal: any, bVal: any
+      switch (sortField) {
+        case "name": aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); break
+        case "monthly_traffic": aVal = a.monthly_traffic; bVal = b.monthly_traffic; break
+        case "monthly_revenue": aVal = a.monthly_revenue || 0; bVal = b.monthly_revenue || 0; break
+        case "growth": aVal = a.growth; bVal = b.growth; break
+        case "products_count": aVal = a.products_count || 0; bVal = b.products_count || 0; break
+        default: return 0
+      }
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+
+    return result
+  }, [stores, searchQuery, statusFilter, categoryFilter, sortField, sortOrder])
+
+  const verifiedCount = stores.filter(s => s.verified).length
+  const avgTraffic = stores.length > 0 ? stores.reduce((sum, s) => sum + s.monthly_traffic, 0) / stores.length : 0
+  const totalRevenue = stores.reduce((sum, s) => sum + (s.monthly_revenue || 0), 0)
+
+  const statCards = [
+    { label: "Total Stores", value: stores.length, icon: Store, description: "All competitor stores tracked" },
+    { label: "Verified", value: verifiedCount, icon: CheckCircle2, badge: `${stores.length > 0 ? ((verifiedCount / stores.length) * 100).toFixed(0) : 0}%`, badgeVariant: "success" as const, description: "Verified stores" },
+    { label: "Avg Traffic", value: numberFormatter.format(avgTraffic), icon: TrendingUp, description: "Average monthly traffic" },
+    { label: "Total Revenue", value: currencyFormatter.format(totalRevenue), icon: DollarSign, description: "Combined monthly revenue" },
+  ]
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortField(field)
+      setSortOrder("asc")
+    }
+  }
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 ml-1 opacity-40" />
+    return sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 ml-1" /> : <ArrowDown className="h-3.5 w-3.5 ml-1" />
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredStores.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredStores.map(s => s.id)))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedIds(next)
+  }
+
+  const handleDelete = (store: CompetitorStore) => {
+    if (!canDelete) { showError("You don't have permission to delete stores"); return }
     setStoreToDelete(store)
     setDeleteConfirmOpen(true)
-  }, [canDelete, showError])
+  }
 
   const confirmDelete = async () => {
     if (!storeToDelete) return
-    setBulkActionLoading("delete")
     try {
       const response = await apiFetch(`/api/admin/competitor-stores/${storeToDelete.id}`, {
-        method: "DELETE",
-        credentials: 'include'
+        method: "DELETE", credentials: 'include'
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to delete store")
-      }
-
-      setStores((prev) => prev.filter((s) => s.id !== storeToDelete.id))
-      setSelectedStores((prev) => prev.filter((s) => s.id !== storeToDelete.id))
+      if (!response.ok) throw new Error("Failed to delete store")
+      showSuccess(`"${storeToDelete.name}" deleted`)
       setDeleteConfirmOpen(false)
-      const deletedStoreName = storeToDelete.name
       setStoreToDelete(null)
-      showSuccess(`Store "${deletedStoreName}" deleted successfully`)
-      await fetchStores()
-    } catch (err: any) {
-      showError(err.message || "Failed to delete store")
-    } finally {
-      setBulkActionLoading(null)
-    }
+      fetchStores()
+    } catch { showError("Failed to delete store") }
   }
 
   const handleBulkDelete = async () => {
-    if (selectedStores.length === 0) return
-    if (!canDelete) {
-      showError("You don't have permission to delete stores")
-      return
-    }
-    setBulkActionLoading("bulk-delete")
+    if (!canDelete) { showError("You don't have permission to delete stores"); return }
     try {
-      const deletePromises = selectedStores.map(store =>
-        apiFetch(`/api/admin/competitor-stores/${store.id}`, {
-          method: "DELETE",
-          credentials: 'include'
-        })
+      const promises = Array.from(selectedIds).map(id =>
+        apiFetch(`/api/admin/competitor-stores/${id}`, { method: "DELETE", credentials: 'include' })
       )
-
-      const results = await Promise.allSettled(deletePromises)
-      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
-      
-      if (failed.length > 0) {
-        throw new Error(`Failed to delete ${failed.length} store(s)`)
-      }
-
-      const deletedCount = selectedStores.length
-      setSelectedStores([])
-      showSuccess(`${deletedCount} store(s) deleted successfully`)
-      await fetchStores()
-    } catch (err: any) {
-      showError(err.message || "Failed to delete stores")
-    } finally {
-      setBulkActionLoading(null)
-    }
+      await Promise.allSettled(promises)
+      showSuccess(`${selectedIds.size} store(s) deleted`)
+      setSelectedIds(new Set())
+      setBulkDeleteConfirmOpen(false)
+      fetchStores()
+    } catch { showError("Failed to delete stores") }
   }
 
-  const handleBulkVerify = async () => {
-    if (selectedStores.length === 0) return
-    if (!canVerify) {
-      showError("You don't have permission to verify stores")
-      return
-    }
-    setBulkActionLoading("bulk-verify")
-    try {
-      const verifyPromises = selectedStores.map(store =>
-        apiFetch(`/api/admin/competitor-stores/${store.id}/verify`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include',
-          body: JSON.stringify({ verified: true })
-        })
-      )
-
-      const results = await Promise.allSettled(verifyPromises)
-      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
-      
-      if (failed.length > 0) {
-        throw new Error(`Failed to verify ${failed.length} store(s)`)
-      }
-
-      const verifiedCount = selectedStores.length
-      setSelectedStores([])
-      showSuccess(`${verifiedCount} store(s) verified successfully`)
-      await fetchStores()
-    } catch (err: any) {
-      showError(err.message || "Failed to verify stores")
-    } finally {
-      setBulkActionLoading(null)
-    }
-  }
-
-  const handleBulkUnverify = async () => {
-    if (selectedStores.length === 0) return
-    if (!canVerify) {
-      showError("You don't have permission to unverify stores")
-      return
-    }
-    setBulkActionLoading("bulk-unverify")
-    try {
-      const unverifyPromises = selectedStores.map(store =>
-        apiFetch(`/api/admin/competitor-stores/${store.id}/verify`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include',
-          body: JSON.stringify({ verified: false })
-        })
-      )
-
-      const results = await Promise.allSettled(unverifyPromises)
-      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.ok))
-      
-      if (failed.length > 0) {
-        throw new Error(`Failed to unverify ${failed.length} store(s)`)
-      }
-
-      const unverifiedCount = selectedStores.length
-      setSelectedStores([])
-      showSuccess(`${unverifiedCount} store(s) unverified successfully`)
-      await fetchStores()
-    } catch (err: any) {
-      showError(err.message || "Failed to unverify stores")
-    } finally {
-      setBulkActionLoading(null)
-    }
-  }
-
-  const handleCopyStoreId = useCallback(async (store: CompetitorStore) => {
-    try {
-      await navigator.clipboard.writeText(store.id)
-      showSuccess("Store ID copied to clipboard")
-    } catch (err) {
-      showError("Failed to copy Store ID")
-    }
-  }, [showSuccess, showError])
-
-  const handleCopyUrl = useCallback(async (store: CompetitorStore) => {
-    try {
-      await navigator.clipboard.writeText(store.url)
-      showSuccess("Store URL copied to clipboard")
-    } catch (err) {
-      showError("Failed to copy URL")
-    }
-  }, [showSuccess, showError])
-
-  const handleToggleVerify = useCallback(async (store: CompetitorStore) => {
-    if (!canVerify) {
-      showError("You don't have permission to verify/unverify stores")
-      return
-    }
+  const handleToggleVerify = async (store: CompetitorStore) => {
+    if (!canVerify) { showError("You don't have permission to verify stores"); return }
     try {
       const response = await apiFetch(`/api/admin/competitor-stores/${store.id}/verify`, {
         method: "PATCH",
@@ -626,1053 +286,480 @@ export default function AdminCompetitorStoresPage() {
         credentials: 'include',
         body: JSON.stringify({ verified: !store.verified })
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to update verification status")
-      }
-
+      if (!response.ok) throw new Error("Failed to update verification")
       showSuccess(`Store ${!store.verified ? "verified" : "unverified"} successfully`)
-      await fetchStores()
-    } catch (err: any) {
-      showError(err.message || "Failed to update store")
-    }
-  }, [canVerify, showSuccess, showError, fetchStores])
+      fetchStores()
+    } catch (err: any) { showError(err.message || "Failed to update store") }
+  }
 
-  const handleVisitStore = useCallback((store: CompetitorStore) => {
-    const url = store.url.startsWith("http") ? store.url : `https://${store.url}`
-    window.open(url, "_blank", "noopener,noreferrer")
-  }, [])
+  const handleBulkVerify = async (verify: boolean) => {
+    if (!canVerify) { showError("You don't have permission"); return }
+    try {
+      const promises = Array.from(selectedIds).map(id =>
+        apiFetch(`/api/admin/competitor-stores/${id}/verify`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: 'include',
+          body: JSON.stringify({ verified: verify })
+        })
+      )
+      await Promise.allSettled(promises)
+      showSuccess(`${selectedIds.size} store(s) ${verify ? "verified" : "unverified"}`)
+      setSelectedIds(new Set())
+      fetchStores()
+    } catch { showError("Failed to update stores") }
+  }
 
-  const handleViewProducts = useCallback((store: CompetitorStore) => {
-    router.push(`/admin/products?store=${store.id}`)
-  }, [router])
+  const handleCreate = () => {
+    if (!canCreate) { showError("You don't have permission to create stores"); return }
+    setEditingStore(null)
+    setFormData({ name: "", url: "", category: "", country: "", monthly_traffic: 0, monthly_revenue: null, growth: 0, products_count: undefined, rating: undefined, verified: false, logo: "" })
+    setFormErrors({})
+    setFormOpen(true)
+  }
 
-  const handleEdit = useCallback((store: CompetitorStore) => {
-    if (!canEdit) {
-      showError("You don't have permission to edit stores")
-      return
-    }
+  const handleEdit = (store: CompetitorStore) => {
+    if (!canEdit) { showError("You don't have permission to edit stores"); return }
     setEditingStore(store)
     setFormData({
-      name: store.name,
-      url: store.url,
-      category: store.category,
-      country: store.country || "",
-      monthly_traffic: store.monthly_traffic,
-      monthly_revenue: store.monthly_revenue,
-      growth: store.growth,
-      products_count: store.products_count,
-      rating: store.rating,
-      verified: store.verified,
-      logo: store.logo || "",
+      name: store.name, url: store.url, category: store.category,
+      country: store.country || "", monthly_traffic: store.monthly_traffic,
+      monthly_revenue: store.monthly_revenue, growth: store.growth,
+      products_count: store.products_count, rating: store.rating,
+      verified: store.verified, logo: store.logo || "",
     })
     setFormErrors({})
     setFormOpen(true)
-  }, [canEdit, showError])
-
-  const handleDuplicate = useCallback(async (store: CompetitorStore) => {
-    if (!canCreate) {
-      showError("You don't have permission to create stores")
-      return
-    }
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      const duplicatedStore: CompetitorStore = {
-        ...store,
-        id: `cs_${Date.now()}`,
-        name: `${store.name} (Copy)`,
-        verified: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
-      setStores((prev) => [...prev, duplicatedStore])
-      showSuccess(`Store "${duplicatedStore.name}" duplicated successfully`)
-      await fetchStores()
-    } catch (err) {
-      showError("Failed to duplicate store")
-    }
-  }, [canCreate, showSuccess, showError, fetchStores])
-
-  const handleCreate = useCallback(() => {
-    if (!canCreate) {
-      showError("You don't have permission to create stores")
-      return
-    }
-    setEditingStore(null)
-    setFormData({
-      name: "",
-      url: "",
-      category: "",
-      country: "",
-      monthly_traffic: 0,
-      monthly_revenue: null,
-      growth: 0,
-      products_count: undefined,
-      rating: undefined,
-      verified: false,
-      logo: "",
-    })
-    setFormErrors({})
-    setFormOpen(true)
-  }, [canCreate, showError])
+  }
 
   const handleFormSubmit = async () => {
-    if (!canEdit && !canCreate) {
-      showError("You don't have permission to create or edit stores")
-      return
-    }
-
     const errors: Record<string, string> = {}
     if (!formData.name.trim()) errors.name = "Name is required"
     if (!formData.url.trim()) errors.url = "URL is required"
     if (!formData.category.trim()) errors.category = "Category is required"
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors)
-      return
-    }
+    if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
 
     setFormLoading(true)
     try {
-      // Find category_id from category name
       const category = availableCategories.find(c => c.name === formData.category)
-      const category_id = category?.id || null
-
       const payload = {
-        name: formData.name.trim(),
-        url: formData.url.trim(),
-        logo: formData.logo || null,
-        category_id: category_id,
-        country: formData.country || null,
-        monthly_traffic: formData.monthly_traffic,
-        monthly_revenue: formData.monthly_revenue,
-        growth: formData.growth,
-        products_count: formData.products_count || null,
-        rating: formData.rating || null,
-        verified: formData.verified,
+        name: formData.name.trim(), url: formData.url.trim(), logo: formData.logo || null,
+        category_id: category?.id || null, country: formData.country || null,
+        monthly_traffic: formData.monthly_traffic, monthly_revenue: formData.monthly_revenue,
+        growth: formData.growth, products_count: formData.products_count || null,
+        rating: formData.rating || null, verified: formData.verified,
       }
-
-      const url = editingStore
-        ? `/api/admin/competitor-stores/${editingStore.id}`
-        : `/api/admin/competitor-stores`
-      const method = editingStore ? "PATCH" : "POST"
-
-      const response = await fetch(url, {
-        method,
+      const url = editingStore ? `/api/admin/competitor-stores/${editingStore.id}` : `/api/admin/competitor-stores`
+      const response = await apiFetch(url, {
+        method: editingStore ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         credentials: 'include',
         body: JSON.stringify(payload)
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to save store")
-      }
-
+      if (!response.ok) { const d = await response.json(); throw new Error(d.error || "Failed to save") }
       setFormOpen(false)
-      setEditingStore(null)
-      setFormErrors({})
-      showSuccess(editingStore ? `Store "${formData.name}" updated successfully` : `Store "${formData.name}" created successfully`)
-      await fetchStores()
-    } catch (err) {
-      console.error("Error saving store:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to save store. Please try again."
-      setError(errorMessage)
-      showError(errorMessage)
-    } finally {
-      setFormLoading(false)
-    }
+      showSuccess(editingStore ? `"${formData.name}" updated` : `"${formData.name}" created`)
+      fetchStores()
+    } catch (err: any) { showError(err.message || "Failed to save store") }
+    finally { setFormLoading(false) }
   }
 
-  const handleBulkExport = useCallback(() => {
-    if (selectedStores.length === 0) {
-      showError("No stores selected for export")
-      return
-    }
-    try {
-      const csv = [
-        ["Store ID", "Name", "URL", "Category", "Country", "Monthly Traffic", "Monthly Revenue", "Growth", "Products", "Rating", "Verified"],
-        ...selectedStores.map((store) => [
-          store.id,
-          store.name,
-          store.url,
-          store.category,
-          store.country || "",
-          store.monthly_traffic.toString(),
-          store.monthly_revenue?.toString() || "",
-          store.growth.toFixed(1),
-          store.products_count?.toString() || "",
-          store.rating?.toFixed(1) || "",
-          store.verified ? "Yes" : "No",
-        ]),
-      ]
-        .map((row) => row.map((cell) => `"${cell}"`).join(","))
-        .join("\n")
+  const handleExport = () => {
+    const exportStores = selectedIds.size > 0 ? filteredStores.filter(s => selectedIds.has(s.id)) : filteredStores
+    const headers = ["Name", "URL", "Category", "Country", "Traffic", "Revenue", "Growth", "Products", "Verified"]
+    const rows = exportStores.map(s => [
+      s.name, s.url, s.category, s.country || "", s.monthly_traffic.toString(),
+      s.monthly_revenue?.toString() || "", s.growth.toFixed(1),
+      s.products_count?.toString() || "", s.verified ? "Yes" : "No",
+    ])
+    const csv = [headers.map(h => `"${h}"`).join(","), ...rows.map(r => r.map(c => `"${c}"`).join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const a = document.createElement("a")
+    a.href = URL.createObjectURL(blob)
+    a.download = `competitor-stores-${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+    showSuccess(`Exported ${exportStores.length} store(s)`)
+  }
 
-      const blob = new Blob([csv], { type: "text/csv" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `selected-stores-${new Date().toISOString().split("T")[0]}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
-      showSuccess(`Exported ${selectedStores.length} store(s) to CSV`)
-    } catch (err) {
-      showError("Failed to export stores")
-    }
-  }, [selectedStores, showSuccess, showError])
-
-  const handleRowClick = useCallback((store: CompetitorStore) => {
-    setSelectedStore(store)
-    setQuickViewOpen(true)
-  }, [])
-
-  const columns = useMemo(() => {
-    return createCompetitorStoresColumns({
-      onViewDetails: handleViewDetails,
-      onQuickView: handleQuickView,
-      onEdit: handleEdit,
-      onDelete: handleDelete,
-      onCopyStoreId: handleCopyStoreId,
-      onCopyUrl: handleCopyUrl,
-      onToggleVerify: handleToggleVerify,
-      onVisitStore: handleVisitStore,
-      onViewProducts: handleViewProducts,
-      canEdit,
-      canDelete,
-      canVerify,
-    })
-  }, [
-    handleViewDetails,
-    handleQuickView,
-    handleEdit,
-    handleDelete,
-    handleCopyStoreId,
-    handleCopyUrl,
-    handleToggleVerify,
-    handleVisitStore,
-    handleViewProducts,
-    canEdit,
-    canDelete,
-    canVerify,
-  ])
-
-
-  const categoryOptions = categories
-    .filter((cat): cat is string => !!cat)
-    .map((cat) => ({
-      label: cat,
-      value: cat,
-    }))
-
-  const countryOptions = countries
-    .filter((country): country is string => !!country)
-    .map((country) => ({
-      label: country,
-      value: country,
-    }))
-
-  const filterConfig = [
-    {
-      columnId: "category",
-      title: "Category",
-      options: categoryOptions,
-    },
-    {
-      columnId: "country",
-      title: "Country",
-      options: countryOptions,
-    },
-    {
-      columnId: "verified",
-      title: "Verification",
-      options: [
-        { label: "Verified", value: "verified" },
-        { label: "Unverified", value: "unverified" },
-      ],
-    },
-  ]
-
-  const secondaryButtons = useMemo(() => {
-    if (selectedStores.length > 0) {
-      return [
-        {
-          label: bulkActionLoading === "bulk-verify" ? "Verifying..." : "Verify Selected",
-          icon: bulkActionLoading === "bulk-verify" ? <Loader size="sm" className="mr-2" /> : <CheckCircle2 className="h-4 w-4" />,
-          onClick: handleBulkVerify,
-          variant: "outline" as const,
-          disabled: !canVerify || bulkActionLoading !== null,
-          tooltip: !canVerify ? "You don't have permission to verify stores" : undefined,
-        },
-        {
-          label: bulkActionLoading === "bulk-unverify" ? "Unverifying..." : "Unverify Selected",
-          icon: bulkActionLoading === "bulk-unverify" ? <Loader size="sm" className="mr-2" /> : <X className="h-4 w-4" />,
-          onClick: handleBulkUnverify,
-          variant: "outline" as const,
-          disabled: !canVerify || bulkActionLoading !== null,
-          tooltip: !canVerify ? "You don't have permission to unverify stores" : undefined,
-        },
-        {
-          label: "Export Selected",
-          icon: <Download className="h-4 w-4" />,
-          onClick: handleBulkExport,
-          variant: "outline" as const,
-        },
-        {
-          label: bulkActionLoading === "bulk-delete" ? "Deleting..." : "Delete Selected",
-          icon: bulkActionLoading === "bulk-delete" ? <Loader size="sm" className="mr-2" /> : <Trash2 className="h-4 w-4" />,
-          onClick: handleBulkDelete,
-          variant: "destructive" as const,
-          disabled: !canDelete || bulkActionLoading !== null,
-          tooltip: !canDelete ? "You don't have permission to delete stores" : undefined,
-        },
-        {
-          label: "Clear Selection",
-          onClick: () => setSelectedStores([]),
-          variant: "ghost" as const,
-        },
-      ]
-    } else {
-      return [
-        {
-          label: "Add Store",
-          icon: <Plus className="h-4 w-4" />,
-          onClick: handleCreate,
-          variant: "default" as const,
-          disabled: !canCreate,
-          tooltip: !canCreate ? "You don't have permission to create stores" : undefined,
-        },
-      ]
-    }
-  }, [selectedStores, bulkActionLoading, canEdit, canDelete, canVerify, canCreate, handleBulkVerify, handleBulkUnverify, handleBulkDelete, handleBulkExport, handleCreate])
+  const categories = useMemo(() => {
+    if (availableCategories.length > 0) return availableCategories.map(c => c.name)
+    return Array.from(new Set(stores.map(s => s.category)))
+  }, [stores, availableCategories])
 
   return (
-    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden" data-testid="admin-competitor-stores-page">
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h1 className="text-xl font-semibold leading-[1.35] tracking-tight text-foreground">Competitors</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor competitor stores</p>
+          <h1 className="text-xl font-semibold leading-[1.35] tracking-tight text-foreground" data-testid="page-title">Competitor Stores</h1>
+          <p className="text-sm text-muted-foreground mt-1" data-testid="page-description">Monitor and manage competitor stores</p>
         </div>
       </div>
 
-      {!initialLoading && stores.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Total Stores</span>
-              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <Store className="h-[18px] w-[18px] text-primary" />
-              </div>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-semibold">{stores.length.toLocaleString()}</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-xs text-muted-foreground">All competitor stores tracked</span>
-            </div>
-          </div>
-          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Avg Traffic</span>
-              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <TrendingUp className="h-[18px] w-[18px] text-primary" />
-              </div>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-semibold">{stores.length > 0 ? numberFormatter.format(stores.reduce((sum, s) => sum + s.monthly_traffic, 0) / stores.length) : '0'}</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-xs text-muted-foreground">Average monthly traffic</span>
-            </div>
-          </div>
-          <div className="bg-card border rounded-lg p-4 shadow-[0px_1px_2px_0px_rgba(13,13,18,0.06)] dark:shadow-none">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Avg Rating</span>
-              <div className="w-9 h-9 rounded-lg border flex items-center justify-center">
-                <Star className="h-[18px] w-[18px] text-primary" />
-              </div>
-            </div>
-            <div className="mt-1">
-              <span className="text-2xl font-semibold">{(() => { const rated = stores.filter(s => s.rating); return rated.length > 0 ? (rated.reduce((sum, s) => sum + (s.rating || 0), 0) / rated.length).toFixed(1) : '0'; })()}</span>
-            </div>
-            <div className="mt-2">
-              <span className="text-xs text-muted-foreground">Average store rating</span>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="mb-4">
+        <AdminStatCards stats={statCards} loading={loading} />
+      </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchStores}
-            className="mt-2 cursor-pointer"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search stores..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 pl-8 text-sm"
+            data-testid="search-input"
+          />
+        </div>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 w-[140px] text-sm" data-testid="filter-status">
+            <SelectValue placeholder="All Stores" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Stores</SelectItem>
+            <SelectItem value="verified">Verified</SelectItem>
+            <SelectItem value="unverified">Unverified</SelectItem>
+            <SelectItem value="high_traffic">High Traffic</SelectItem>
+            <SelectItem value="high_revenue">High Revenue</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="h-9 w-[160px] text-sm" data-testid="filter-category">
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map(cat => (
+              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {selectedIds.size > 0 && (
+          <>
+            <Button variant="outline" size="sm" className="h-9" onClick={() => handleBulkVerify(true)} disabled={!canVerify} data-testid="bulk-verify">
+              <CheckCircle2 className="h-4 w-4 mr-1.5" />
+              Verify ({selectedIds.size})
+            </Button>
+            <Button variant="outline" size="sm" className="h-9" onClick={() => handleBulkVerify(false)} disabled={!canVerify} data-testid="bulk-unverify">
+              <X className="h-4 w-4 mr-1.5" />
+              Unverify ({selectedIds.size})
+            </Button>
+            <Button variant="outline" size="sm" className="h-9" onClick={handleExport} data-testid="bulk-export">
+              <Download className="h-4 w-4 mr-1.5" />
+              Export ({selectedIds.size})
+            </Button>
+            <Button variant="destructive" size="sm" className="h-9" onClick={() => setBulkDeleteConfirmOpen(true)} disabled={!canDelete} data-testid="bulk-delete">
+              <Trash2 className="h-4 w-4 mr-1.5" />
+              Delete ({selectedIds.size})
+            </Button>
+          </>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-9" onClick={handleExport} data-testid="action-export">
+            <Download className="h-4 w-4 mr-1.5" />
+            Export
+          </Button>
+          <Button size="sm" className="h-9" disabled={!canCreate} onClick={handleCreate} data-testid="action-add-store">
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Store
           </Button>
         </div>
-      )}
+      </div>
 
-      {initialLoading ? (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-muted-foreground">Loading stores...</div>
-        </div>
-      ) : (
-        <>
-          {/* Status Tabs */}
-          <div className="mb-3">
-            <Tabs value={statusTab} onValueChange={(v) => setStatusTab(v as typeof statusTab)}>
-              <TabsList className="h-9">
-                <TabsTrigger value="all" className="cursor-pointer">
-                  All
-                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                    {getStatusCount("all")}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="high_traffic" className="cursor-pointer">
-                  High Traffic
-                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                    {getStatusCount("high_traffic")}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="high_revenue" className="cursor-pointer">
-                  High Revenue
-                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                    {getStatusCount("high_revenue")}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="high_growth" className="cursor-pointer">
-                  High Growth
-                  <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs">
-                    {getStatusCount("high_growth")}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* DataTable */}
-          <div className="flex-1 overflow-hidden min-h-0">
-            <DataTable
-              columns={columns}
-              data={paginatedStores}
-              pageCount={pageCount}
-              onPaginationChange={(p, s) => {
-                setPage(p)
-                setPageSize(s)
-              }}
-              onSortingChange={setSorting}
-              onFilterChange={setColumnFilters}
-              onSearchChange={setSearchQuery}
-              loading={loading}
-              initialLoading={initialLoading}
-              filterConfig={filterConfig}
-              searchPlaceholder="Search stores..."
-              page={page}
-              pageSize={pageSize}
-              enableRowSelection={true}
-              onRowSelectionChange={setSelectedStores}
-              onRowClick={handleRowClick}
-              onDateRangeChange={setDateRange}
-              quickFilters={quickFilters}
-              selectedQuickFilter={quickFilter}
-              onQuickFilterChange={(filterId) => setQuickFilter(quickFilter === filterId ? null : filterId)}
-              secondaryButtons={secondaryButtons}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Quick View Modal - Enhanced */}
-      {selectedStore && (
-        <Dialog 
-          open={quickViewOpen} 
-          onOpenChange={(open) => {
-            setQuickViewOpen(open)
-            if (!open) {
-              setSelectedStore(null)
-            }
-          }}
-        >
-          <DialogContent className="max-w-xs p-4">
-            <DialogHeader className="pb-3 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
-                  {selectedStore.logo ? (
-                    <img
-                      src={selectedStore.logo}
-                      alt={selectedStore.name}
-                     
-                      className="object-cover"
-                     
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <Globe className="h-6 w-6 text-muted-foreground" />
+      <Card className="flex-1 overflow-hidden border rounded-lg">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/40">
+                <th className="w-10 px-3 py-2.5">
+                  <Checkbox
+                    checked={filteredStores.length > 0 && selectedIds.size === filteredStores.length}
+                    onCheckedChange={toggleSelectAll}
+                    data-testid="select-all"
+                  />
+                </th>
+                <th className="px-3 py-2.5 text-left">
+                  <button className="flex items-center font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => handleSort("name")}>
+                    Store Name
+                    <SortIcon field="name" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">URL</th>
+                <th className="px-3 py-2.5 text-right">
+                  <button className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => handleSort("monthly_revenue")}>
+                    Revenue
+                    <SortIcon field="monthly_revenue" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-right">
+                  <button className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => handleSort("monthly_traffic")}>
+                    Traffic
+                    <SortIcon field="monthly_traffic" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-right">
+                  <button className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors" onClick={() => handleSort("products_count")}>
+                    Products
+                    <SortIcon field="products_count" />
+                  </button>
+                </th>
+                <th className="px-3 py-2.5 text-center font-medium text-muted-foreground">Verified</th>
+                <th className="w-12 px-3 py-2.5"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                      <Loader size="sm" />
+                      <span>Loading stores...</span>
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <DialogTitle className="text-base truncate">{selectedStore.name}</DialogTitle>
-                  <DialogDescription className="text-xs truncate">{selectedStore.url}</DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            <div className="space-y-2 py-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">Category</span>
-                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                  {selectedStore.category}
-                </Badge>
-              </div>
-              {selectedStore.country && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">Country</span>
-                  <Badge variant="outline" className="text-xs px-2 py-0.5">
-                    {selectedStore.country}
-                  </Badge>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">Monthly Traffic</span>
-                <span className="text-xs font-medium">{numberFormatter.format(selectedStore.monthly_traffic)}</span>
-              </div>
-              {selectedStore.monthly_revenue && (
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-muted-foreground">Monthly Revenue</span>
-                  <span className="text-xs font-medium">{currencyFormatter.format(selectedStore.monthly_revenue)}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">Growth</span>
-                <span className={`text-xs font-medium ${selectedStore.growth > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                  {selectedStore.growth > 0 ? "+" : ""}{selectedStore.growth.toFixed(1)}%
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">Status</span>
-                <Badge variant={selectedStore.verified ? "default" : "outline"} className="text-xs px-2 py-0.5">
-                  {selectedStore.verified ? (
-                    <>
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Verified
-                    </>
-                  ) : (
-                    "Unverified"
-                  )}
-                </Badge>
-              </div>
-            </div>
-            <DialogFooter className="pt-3 border-t mt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setQuickViewOpen(false)
-                  handleViewDetails(selectedStore)
-                }}
-                className="w-full text-sm h-8 cursor-pointer"
-              >
-                View More Details
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Detail Drawer */}
-      {selectedStore && (
-        <DetailDrawer
-          open={detailDrawerOpen}
-          onOpenChange={setDetailDrawerOpen}
-          title={selectedStore.name}
-          tabs={[
-            {
-              value: "overview",
-              label: "Overview",
-              content: (
-                <div className="space-y-6">
-                  {selectedStore.logo && (
-                    <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={selectedStore.logo}
-                        alt={selectedStore.name}
-                       
-                        className="object-cover"
-                       
+                  </td>
+                </tr>
+              ) : filteredStores.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Store className="h-10 w-10 opacity-40" />
+                      <p className="text-sm font-medium">No stores found</p>
+                      <p className="text-xs">Try adjusting your search or filters, or add a new store.</p>
+                      <Button size="sm" className="mt-2" disabled={!canCreate} onClick={handleCreate} data-testid="empty-add-store">
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        Add Store
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredStores.map(store => (
+                  <tr key={store.id} className="border-b hover:bg-muted/30 transition-colors group" data-testid={`row-store-${store.id}`}>
+                    <td className="px-3 py-2.5">
+                      <Checkbox
+                        checked={selectedIds.has(store.id)}
+                        onCheckedChange={() => toggleSelect(store.id)}
+                        data-testid={`select-store-${store.id}`}
                       />
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">URL</p>
-                      <a href={`https://${selectedStore.url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
-                        <Globe className="h-4 w-4" />
-                        {selectedStore.url}
-                      </a>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Category</p>
-                      <Badge variant="outline">{selectedStore.category}</Badge>
-                    </div>
-                    {selectedStore.country && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Country</p>
-                        <p className="text-sm font-mono">{selectedStore.country}</p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Status</p>
-                      <Badge variant={selectedStore.verified ? "default" : "outline"}>
-                        {selectedStore.verified ? "Verified" : "Unverified"}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Monthly Traffic</p>
-                      <p className="text-lg font-semibold">{numberFormatter.format(selectedStore.monthly_traffic)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Monthly Revenue</p>
-                      <p className="text-lg font-semibold">
-                        {selectedStore.monthly_revenue ? currencyFormatter.format(selectedStore.monthly_revenue) : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Growth</p>
-                      <p className={`text-lg font-semibold ${selectedStore.growth > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                        {selectedStore.growth > 0 ? "+" : ""}{selectedStore.growth.toFixed(1)}%
-                      </p>
-                    </div>
-                    {selectedStore.products_count !== undefined && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Products</p>
-                        <p className="text-lg font-semibold">{selectedStore.products_count.toLocaleString()}</p>
-                      </div>
-                    )}
-                    {selectedStore.rating !== undefined && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">Rating</p>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-lg font-semibold">{selectedStore.rating.toFixed(1)}</span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-md overflow-hidden bg-muted border flex-shrink-0 flex items-center justify-center">
+                          {store.logo ? (
+                            <img src={store.logo} alt={store.name} className="object-cover w-full h-full" />
+                          ) : (
+                            <Store className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <button
+                            className="font-medium truncate max-w-[240px] text-left hover:text-primary hover:underline transition-colors cursor-pointer block"
+                            onClick={() => router.push(`/admin/competitor-stores/${store.id}`)}
+                            data-testid={`link-store-${store.id}`}
+                          >
+                            {store.name}
+                          </button>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">{store.category}</Badge>
+                            {store.country && <span className="text-[10px] text-muted-foreground">{store.country}</span>}
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              ),
-            },
-            {
-              value: "metrics",
-              label: "Metrics",
-              content: (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Monthly Traffic</p>
-                    <p className="text-2xl font-bold">{numberFormatter.format(selectedStore.monthly_traffic)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Monthly Revenue</p>
-                    <p className="text-2xl font-bold">
-                      {selectedStore.monthly_revenue ? currencyFormatter.format(selectedStore.monthly_revenue) : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Growth Percentage</p>
-                    <p className={`text-2xl font-bold ${selectedStore.growth > 0 ? "text-emerald-600" : "text-destructive"}`}>
-                      {selectedStore.growth > 0 ? "+" : ""}{selectedStore.growth.toFixed(1)}%
-                    </p>
-                  </div>
-                  {selectedStore.products_count !== undefined && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Product Count</p>
-                      <p className="text-2xl font-bold">{selectedStore.products_count.toLocaleString()}</p>
-                    </div>
-                  )}
-                  {selectedStore.rating !== undefined && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Rating</p>
-                      <div className="flex items-center gap-2">
-                        <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                        <span className="text-2xl font-bold">{selectedStore.rating.toFixed(1)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ),
-            },
-            {
-              value: "products",
-              label: "Products",
-              content: (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">View products from this store</p>
-                  <Button onClick={() => handleViewProducts(selectedStore)} variant="outline">
-                    <Package className="h-4 w-4 mr-2" />
-                    View Products
-                  </Button>
-                </div>
-              ),
-            },
-          ]}
-          headerActions={
-            <Button variant="destructive" size="sm" onClick={() => handleDelete(selectedStore)}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          }
-        />
-      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <a
+                        href={store.url.startsWith("http") ? store.url : `https://${store.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 max-w-[200px] truncate"
+                        data-testid={`link-url-${store.id}`}
+                      >
+                        {store.url}
+                        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                      </a>
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums" data-testid={`text-revenue-${store.id}`}>
+                      {store.monthly_revenue ? (
+                        <span className="text-emerald-600 font-medium">{currencyFormatter.format(store.monthly_revenue)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums" data-testid={`text-traffic-${store.id}`}>
+                      {numberFormatter.format(store.monthly_traffic)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right tabular-nums" data-testid={`text-products-${store.id}`}>
+                      {store.products_count !== undefined ? numberFormatter.format(store.products_count) : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-center" data-testid={`status-verified-${store.id}`}>
+                      {store.verified ? (
+                        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs text-muted-foreground">Unverified</Badge>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`actions-store-${store.id}`}>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={() => router.push(`/admin/competitor-stores/${store.id}`)} className="cursor-pointer" data-testid={`action-view-${store.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/admin/products?store=${store.id}`)} className="cursor-pointer" data-testid={`action-products-${store.id}`}>
+                            <Package className="h-4 w-4 mr-2" />
+                            View Products
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { const u = store.url.startsWith("http") ? store.url : `https://${store.url}`; window.open(u, "_blank", "noopener,noreferrer") }} className="cursor-pointer" data-testid={`action-visit-${store.id}`}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Visit Store
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {canEdit && (
+                            <DropdownMenuItem onClick={() => handleEdit(store)} className="cursor-pointer" data-testid={`action-edit-${store.id}`}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+                          {canVerify && (
+                            <DropdownMenuItem onClick={() => handleToggleVerify(store)} className="cursor-pointer" data-testid={`action-verify-${store.id}`}>
+                              {store.verified ? (
+                                <><X className="h-4 w-4 mr-2" />Unverify</>
+                              ) : (
+                                <><CheckCircle2 className="h-4 w-4 mr-2" />Verify</>
+                              )}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
+                          {canDelete && (
+                            <DropdownMenuItem onClick={() => handleDelete(store)} className="text-destructive cursor-pointer" data-testid={`action-delete-${store.id}`}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
-      {/* Delete Confirmation Dialog */}
+      <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
+        <span>{filteredStores.length} store(s) {selectedIds.size > 0 && `· ${selectedIds.size} selected`}</span>
+      </div>
+
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Store</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this competitor store? This action cannot be undone.
+              Are you sure you want to delete "{storeToDelete?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {storeToDelete && (
-            <div className="space-y-2">
-              <p className="text-sm">
-                <span className="font-medium">Store:</span> {storeToDelete.name}
-              </p>
-            </div>
-          )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
-              Delete
-            </Button>
+            <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDelete} data-testid="confirm-delete">Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Add Assignee Modal */}
-      <Dialog open={assigneeModalOpen} onOpenChange={setAssigneeModalOpen}>
-        <DialogContent className="max-w-md">
+      <Dialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Page Access Control</DialogTitle>
+            <DialogTitle>Delete {selectedIds.size} Store(s)</DialogTitle>
             <DialogDescription>
-              Manage ownership and access for this page
+              Are you sure you want to delete {selectedIds.size} store(s)? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Owner Section */}
-            <div className="space-y-2">
-              <Label htmlFor="owner">Owner</Label>
-              <Select value={tempOwner || ""} onValueChange={setTempOwner}>
-                <SelectTrigger id="owner" className="w-full">
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {internalUsers.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                The owner is responsible for maintaining this page
-              </p>
-            </div>
-
-            {/* Members Section */}
-            <div className="space-y-2">
-              <Label htmlFor="members">Members</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-start"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    {memberSearch || "Search users to add..."}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Search users..." 
-                      value={memberSearch}
-                      onValueChange={setMemberSearch}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No users found.</CommandEmpty>
-                      <CommandGroup>
-                        {availableMembers.map((user) => (
-                          <CommandItem
-                            key={user.id}
-                            value={user.id}
-                            onSelect={() => handleAddMember(user.id)}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={getAvatarUrl(user.id, user.email)} />
-                                <AvatarFallback className="text-xs">
-                                  {user.name.charAt(0)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium">{user.name}</p>
-                                <p className="text-xs text-muted-foreground">{user.email}</p>
-                              </div>
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              
-              {/* Selected Members */}
-              {tempMembers.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {tempMembers.map((memberId) => {
-                    const member = internalUsers.find(u => u.id === memberId)
-                    if (!member) return null
-                    return (
-                      <Badge key={memberId} variant="secondary" className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={getAvatarUrl(memberId, member.email)} />
-                          <AvatarFallback className="text-xs">
-                            {member.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.name}
-                        <button
-                          onClick={() => handleRemoveMember(memberId)}
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAssigneeModalOpen(false)} className="cursor-pointer">
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAssignees} className="cursor-pointer">
-              Save Changes
-            </Button>
+            <Button variant="outline" onClick={() => setBulkDeleteConfirmOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleBulkDelete} data-testid="confirm-bulk-delete">Delete All</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Create/Edit Store Form Modal */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4">
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
             <DialogTitle>{editingStore ? "Edit Store" : "Add Store"}</DialogTitle>
             <DialogDescription>
-              {editingStore
-                ? "Update competitor store information and details."
-                : "Create a new competitor store with all relevant information."}
+              {editingStore ? "Update competitor store details." : "Add a new competitor store to track."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/* Name */}
-            <div className="space-y-2">
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
               <Label htmlFor="store-name">Name *</Label>
-              <Input
-                id="store-name"
-                value={formData.name}
-                onChange={(e) => {
-                  setFormData({ ...formData, name: e.target.value })
-                  if (formErrors.name) setFormErrors({ ...formErrors, name: "" })
-                }}
-                placeholder="Enter store name"
-                className={formErrors.name ? "border-destructive" : ""}
-              />
+              <Input id="store-name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Store name" data-testid="input-store-name" />
               {formErrors.name && <p className="text-xs text-destructive">{formErrors.name}</p>}
             </div>
-
-            {/* URL */}
-            <div className="space-y-2">
+            <div className="grid gap-2">
               <Label htmlFor="store-url">URL *</Label>
-              <Input
-                id="store-url"
-                value={formData.url}
-                onChange={(e) => {
-                  setFormData({ ...formData, url: e.target.value })
-                  if (formErrors.url) setFormErrors({ ...formErrors, url: "" })
-                }}
-                placeholder="example.com"
-                className={formErrors.url ? "border-destructive" : ""}
-              />
+              <Input id="store-url" value={formData.url} onChange={(e) => setFormData({ ...formData, url: e.target.value })} placeholder="example.com" data-testid="input-store-url" />
               {formErrors.url && <p className="text-xs text-destructive">{formErrors.url}</p>}
             </div>
-
             <div className="grid grid-cols-2 gap-4">
-              {/* Category */}
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 <Label htmlFor="store-category">Category *</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, category: value })
-                    if (formErrors.category) setFormErrors({ ...formErrors, category: "" })
-                  }}
-                >
-                  <SelectTrigger className={formErrors.category ? "border-destructive" : ""}>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
+                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                  <SelectTrigger data-testid="select-store-category"><SelectValue placeholder="Select..." /></SelectTrigger>
                   <SelectContent>
-                    {availableCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {formErrors.category && <p className="text-xs text-destructive">{formErrors.category}</p>}
               </div>
-
-              {/* Country */}
-              <div className="space-y-2">
+              <div className="grid gap-2">
                 <Label htmlFor="store-country">Country</Label>
-                <Input
-                  id="store-country"
-                  value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="Enter country"
-                />
+                <Input id="store-country" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="US" data-testid="input-store-country" />
               </div>
             </div>
-
             <div className="grid grid-cols-3 gap-4">
-              {/* Monthly Traffic */}
-              <div className="space-y-2">
-                <Label htmlFor="store-traffic">Monthly Traffic</Label>
-                <Input
-                  id="store-traffic"
-                  type="number"
-                  min="0"
-                  value={formData.monthly_traffic}
-                  onChange={(e) => setFormData({ ...formData, monthly_traffic: parseInt(e.target.value) || 0 })}
-                  placeholder="0"
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="store-traffic">Traffic</Label>
+                <Input id="store-traffic" type="number" value={formData.monthly_traffic} onChange={(e) => setFormData({ ...formData, monthly_traffic: Number(e.target.value) })} data-testid="input-store-traffic" />
               </div>
-
-              {/* Monthly Revenue */}
-              <div className="space-y-2">
-                <Label htmlFor="store-revenue">Monthly Revenue ($)</Label>
-                <Input
-                  id="store-revenue"
-                  type="number"
-                  min="0"
-                  value={formData.monthly_revenue || ""}
-                  onChange={(e) => setFormData({ ...formData, monthly_revenue: e.target.value ? parseInt(e.target.value) : null })}
-                  placeholder="0"
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="store-revenue">Revenue</Label>
+                <Input id="store-revenue" type="number" value={formData.monthly_revenue ?? ""} onChange={(e) => setFormData({ ...formData, monthly_revenue: e.target.value ? Number(e.target.value) : null })} data-testid="input-store-revenue" />
               </div>
-
-              {/* Growth */}
-              <div className="space-y-2">
-                <Label htmlFor="store-growth">Growth (%)</Label>
-                <Input
-                  id="store-growth"
-                  type="number"
-                  step="0.1"
-                  value={formData.growth}
-                  onChange={(e) => setFormData({ ...formData, growth: parseFloat(e.target.value) || 0 })}
-                  placeholder="0.0"
-                />
+              <div className="grid gap-2">
+                <Label htmlFor="store-growth">Growth %</Label>
+                <Input id="store-growth" type="number" step="0.1" value={formData.growth} onChange={(e) => setFormData({ ...formData, growth: Number(e.target.value) })} data-testid="input-store-growth" />
               </div>
             </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              {/* Products Count */}
-              <div className="space-y-2">
-                <Label htmlFor="store-products">Products Count</Label>
-                <Input
-                  id="store-products"
-                  type="number"
-                  min="0"
-                  value={formData.products_count || ""}
-                  onChange={(e) => setFormData({ ...formData, products_count: e.target.value ? parseInt(e.target.value) : undefined })}
-                  placeholder="0"
-                />
-              </div>
-
-              {/* Rating */}
-              <div className="space-y-2">
-                <Label htmlFor="store-rating">Rating</Label>
-                <Input
-                  id="store-rating"
-                  type="number"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  value={formData.rating || ""}
-                  onChange={(e) => setFormData({ ...formData, rating: e.target.value ? parseFloat(e.target.value) : undefined })}
-                  placeholder="0.0"
-                />
-              </div>
-
-              {/* Logo URL */}
-              <div className="space-y-2">
-                <Label htmlFor="store-logo">Logo URL</Label>
-                <Input
-                  id="store-logo"
-                  type="url"
-                  value={formData.logo}
-                  onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  placeholder="https://example.com/logo.png"
-                />
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="store-logo">Logo URL</Label>
+              <Input id="store-logo" value={formData.logo} onChange={(e) => setFormData({ ...formData, logo: e.target.value })} placeholder="https://..." data-testid="input-store-logo" />
             </div>
-
-            {/* Verified */}
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="store-verified"
                 checked={formData.verified}
-                onChange={(e) => setFormData({ ...formData, verified: e.target.checked })}
-                className="h-4 w-4"
+                onCheckedChange={(checked) => setFormData({ ...formData, verified: !!checked })}
+                data-testid="input-store-verified"
               />
-              <Label htmlFor="store-verified" className="cursor-pointer">
-                Verified Store
-              </Label>
+              <Label htmlFor="store-verified" className="text-sm">Verified store</Label>
             </div>
           </div>
-          <DialogFooter className="pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFormOpen(false)
-                setEditingStore(null)
-                setFormErrors({})
-              }}
-              disabled={formLoading}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleFormSubmit} disabled={formLoading} className="cursor-pointer">
-              {formLoading ? (
-                <>
-                  <Loader size="sm" className="mr-2" />
-                  {editingStore ? "Updating..." : "Creating..."}
-                </>
-              ) : (
-                editingStore ? "Update" : "Create"
-              )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFormOpen(false)} disabled={formLoading}>Cancel</Button>
+            <Button onClick={handleFormSubmit} disabled={formLoading} data-testid="button-submit-store">
+              {formLoading ? <><Loader size="sm" className="mr-2" />Saving...</> : editingStore ? "Save Changes" : "Add Store"}
             </Button>
           </DialogFooter>
         </DialogContent>

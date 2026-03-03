@@ -1,77 +1,136 @@
-
-
 import { apiFetch } from '@/lib/supabase'
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { useRouter, useParams } from "@/hooks/use-router"
-import { Link } from "wouter"
-import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { AdminDetailLayout } from "@/components/admin/admin-detail-layout"
+import { AdminStatusBadge } from "@/components/admin/admin-status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ExternalUser, Activity } from "@/types/admin/users"
+import { BlueSpinner } from "@/components/ui/blue-spinner"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { 
-  ArrowLeft, 
-  ChevronLeft, 
-  ChevronRight, 
-  Edit, 
-  Mail, 
-  MessageCircle, 
-  Coins, 
-  Calendar, 
-  CreditCard, 
-  User, 
-  Phone, 
-  Globe,
-  MoreVertical,
+  Edit,
+  Mail,
+  MessageCircle,
+  Coins,
+  Calendar,
+  CreditCard,
+  Phone,
   Lock,
   Check,
   Trash2,
   ArrowUp,
-  Map,
   BookOpen,
+  Map,
+  ShoppingBag,
+  Store,
+  GraduationCap,
+  ClipboardList,
   Key,
-  ClipboardList
+  Send,
+  Clock,
+  Shield,
+  StickyNote,
+  Activity as ActivityIcon,
+  Compass,
+  Settings,
+  Loader2,
 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ExternalUser } from "@/types/admin/users"
-import { BlueSpinner } from "@/components/ui/blue-spinner"
+
+interface JourneyData {
+  userId: string
+  onboarding: {
+    completed: boolean
+    completedAt: string | null
+    progress: number
+    steps: Array<{ id: string; videoId: string; moduleId: string; completed: boolean; completedAt: string | null; watchDuration: number }>
+    totalSteps: number
+    completedSteps: number
+  }
+  courses: {
+    enrollments: Array<{ id: string; courseId: string; courseTitle: string; enrolledAt: string; completedAt: string | null; progressPercentage: number }>
+    started: number
+    completed: number
+  }
+  productsSaved: number
+  roadmap: {
+    items: Array<{ id: string; taskId: string; status: string; createdAt: string; updatedAt: string }>
+    total: number
+    completed: number
+    progressPercent: number
+  }
+  shopifyStores: Array<{ id: string; storeName: string; storeUrl: string; status: string; createdAt: string }>
+  shopifyConnected: boolean
+  credentialsCount: number
+}
+
+interface SessionModule {
+  moduleId: string
+  moduleName: string
+  accessLevel: string | null
+  hasOverride: boolean
+  overriddenBy: string | null
+  overriddenAt: string | null
+}
+
+interface AdminNote {
+  id: string
+  userId: string
+  adminId: string
+  adminName: string
+  adminEmail: string | null
+  adminAvatarUrl: string | null
+  note: string
+  createdAt: string
+  updatedAt: string
+}
 
 export default function ExternalUserDetailPage() {
   const router = useRouter()
   const params = useParams()
   const userId = params?.id as string
+  const { showSuccess, showError } = useToast()
 
   const [user, setUser] = useState<ExternalUser | null>(null)
   const [allUsers, setAllUsers] = useState<ExternalUser[]>([])
   const [loading, setLoading] = useState(true)
+
+  const [journey, setJourney] = useState<JourneyData | null>(null)
+  const [journeyLoading, setJourneyLoading] = useState(true)
+
+  const [sessions, setSessions] = useState<SessionModule[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(true)
+  const [sessionsSaving, setSessionsSaving] = useState(false)
+  const [pendingOverrides, setPendingOverrides] = useState<Record<string, string | null>>({})
+
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
+
+  const [notes, setNotes] = useState<AdminNote[]>([])
+  const [notesLoading, setNotesLoading] = useState(true)
+  const [newNote, setNewNote] = useState("")
+  const [noteSaving, setNoteSaving] = useState(false)
+
   const [userProgress, setUserProgress] = useState<any>(null)
   const [progressLoading, setProgressLoading] = useState(true)
 
-  // Fetch current user from API
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId) return
-      
       try {
         setLoading(true)
         const response = await apiFetch(`/api/admin/external-users/${userId}`)
         if (!response.ok) {
-          if (response.status === 404) {
-            setUser(null)
-            return
-          }
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Failed to fetch user')
+          setUser(null)
+          return
         }
-        
         const userData = await response.json()
         setUser({
           ...userData,
@@ -88,31 +147,9 @@ export default function ExternalUserDetailPage() {
         setLoading(false)
       }
     }
-
     fetchUser()
   }, [userId])
 
-  useEffect(() => {
-    const fetchProgress = async () => {
-      if (!userId) return
-      try {
-        setProgressLoading(true)
-        const response = await apiFetch(`/api/admin/user-progress/${userId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setUserProgress(data)
-        }
-      } catch (err) {
-        console.error('Error fetching user progress:', err)
-      } finally {
-        setProgressLoading(false)
-      }
-    }
-
-    fetchProgress()
-  }, [userId])
-
-  // Fetch all users for navigation
   useEffect(() => {
     const fetchAllUsers = async () => {
       try {
@@ -133,20 +170,230 @@ export default function ExternalUserDetailPage() {
         console.error('Error fetching all users:', err)
       }
     }
-
     fetchAllUsers()
   }, [])
 
-  // Find previous and next users
+  useEffect(() => {
+    if (!userId) return
+    const fetchJourney = async () => {
+      try {
+        setJourneyLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/journey`)
+        if (response.ok) {
+          setJourney(await response.json())
+        }
+      } catch (err) {
+        console.error('Error fetching journey:', err)
+      } finally {
+        setJourneyLoading(false)
+      }
+    }
+    fetchJourney()
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const fetchSessions = async () => {
+      try {
+        setSessionsLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/sessions`)
+        if (response.ok) {
+          const data = await response.json()
+          setSessions(data.modules || [])
+          setPendingOverrides({})
+        }
+      } catch (err) {
+        console.error('Error fetching sessions:', err)
+      } finally {
+        setSessionsLoading(false)
+      }
+    }
+    fetchSessions()
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const fetchActivity = async () => {
+      try {
+        setActivitiesLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/activity`)
+        if (response.ok) {
+          const data = await response.json()
+          setActivities(data.activities || [])
+        }
+      } catch (err) {
+        console.error('Error fetching activity:', err)
+      } finally {
+        setActivitiesLoading(false)
+      }
+    }
+    fetchActivity()
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const fetchNotes = async () => {
+      try {
+        setNotesLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/notes`)
+        if (response.ok) {
+          const data = await response.json()
+          setNotes(data.notes || [])
+        }
+      } catch (err) {
+        console.error('Error fetching notes:', err)
+      } finally {
+        setNotesLoading(false)
+      }
+    }
+    fetchNotes()
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const fetchProgress = async () => {
+      try {
+        setProgressLoading(true)
+        const response = await apiFetch(`/api/admin/user-progress/${userId}`)
+        if (response.ok) {
+          setUserProgress(await response.json())
+        }
+      } catch (err) {
+        console.error('Error fetching user progress:', err)
+      } finally {
+        setProgressLoading(false)
+      }
+    }
+    fetchProgress()
+  }, [userId])
+
   const { prevUser, nextUser } = useMemo(() => {
     if (!user) return { prevUser: null, nextUser: null }
-    
     const currentIndex = allUsers.findIndex((u) => u.id === user.id)
     const prev = currentIndex > 0 ? allUsers[currentIndex - 1] : null
     const next = currentIndex < allUsers.length - 1 ? allUsers[currentIndex + 1] : null
-    
     return { prevUser: prev, nextUser: next }
   }, [user, allUsers])
+
+  const handleSuspend = useCallback(async () => {
+    if (!user) return
+    try {
+      const response = await apiFetch(`/api/admin/external-users/${user.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'suspended' }),
+      })
+      if (response.ok) {
+        setUser({ ...user, status: 'suspended' })
+        showSuccess('User suspended')
+      } else {
+        showError('Failed to suspend user')
+      }
+    } catch (err) {
+      showError('Failed to suspend user')
+    }
+  }, [user, showSuccess, showError])
+
+  const handleActivate = useCallback(async () => {
+    if (!user) return
+    try {
+      const response = await apiFetch(`/api/admin/external-users/${user.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'active' }),
+      })
+      if (response.ok) {
+        setUser({ ...user, status: 'active' })
+        showSuccess('User activated')
+      } else {
+        showError('Failed to activate user')
+      }
+    } catch (err) {
+      showError('Failed to activate user')
+    }
+  }, [user, showSuccess, showError])
+
+  const handleDelete = useCallback(async () => {
+    if (!user) return
+    if (!window.confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) return
+    try {
+      const response = await apiFetch(`/api/admin/external-users/${user.id}`, { method: 'DELETE' })
+      if (response.ok) {
+        showSuccess('User deleted')
+        router.push('/admin/external-users')
+      } else {
+        showError('Failed to delete user')
+      }
+    } catch (err) {
+      showError('Failed to delete user')
+    }
+  }, [user, showSuccess, showError, router])
+
+  const handleSaveModuleOverrides = useCallback(async () => {
+    if (!userId || Object.keys(pendingOverrides).length === 0) return
+    try {
+      setSessionsSaving(true)
+      const modules = Object.entries(pendingOverrides).map(([moduleId, accessLevel]) => ({
+        moduleId,
+        accessLevel,
+      }))
+      const response = await apiFetch(`/api/admin/external-users/${userId}/sessions`, {
+        method: 'PATCH',
+        body: JSON.stringify({ modules }),
+      })
+      if (response.ok) {
+        showSuccess('Module access updated')
+        const refreshed = await apiFetch(`/api/admin/external-users/${userId}/sessions`)
+        if (refreshed.ok) {
+          const data = await refreshed.json()
+          setSessions(data.modules || [])
+        }
+        setPendingOverrides({})
+      } else {
+        showError('Failed to update module access')
+      }
+    } catch (err) {
+      showError('Failed to update module access')
+    } finally {
+      setSessionsSaving(false)
+    }
+  }, [userId, pendingOverrides, showSuccess, showError])
+
+  const handleAddNote = useCallback(async () => {
+    if (!userId || !newNote.trim()) return
+    try {
+      setNoteSaving(true)
+      const response = await apiFetch(`/api/admin/external-users/${userId}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({ note: newNote.trim() }),
+      })
+      if (response.ok) {
+        showSuccess('Note added')
+        setNewNote("")
+        const refreshed = await apiFetch(`/api/admin/external-users/${userId}/notes`)
+        if (refreshed.ok) {
+          const data = await refreshed.json()
+          setNotes(data.notes || [])
+        }
+      } else {
+        showError('Failed to add note')
+      }
+    } catch (err) {
+      showError('Failed to add note')
+    } finally {
+      setNoteSaving(false)
+    }
+  }, [userId, newNote, showSuccess, showError])
+
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return "—"
+    const d = typeof date === 'string' ? new Date(date) : date
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
+  }
+
+  const formatDateTime = (date: Date | string | null | undefined) => {
+    if (!date) return "—"
+    const d = typeof date === 'string' ? new Date(date) : date
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+  }
 
   if (loading) {
     return (
@@ -168,488 +415,105 @@ export default function ExternalUserDetailPage() {
     )
   }
 
-  // Only Free and Pro plans
-  const getPlanBadgeVariant = (plan: string) => {
-    switch (plan) {
-      case "pro":
-        return "default" as const
-      case "free":
-        return "outline" as const
-      default:
-        return "outline" as const
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'login': return <Clock className="h-4 w-4" />
+      case 'subscription': return <CreditCard className="h-4 w-4" />
+      case 'plan_change': return <ArrowUp className="h-4 w-4" />
+      case 'feature_usage': return <Compass className="h-4 w-4" />
+      case 'visibility_change': return <Shield className="h-4 w-4" />
+      default: return <ActivityIcon className="h-4 w-4" />
     }
   }
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "active":
-        return "default" as const
-      case "suspended":
-        return "destructive" as const
-      case "inactive":
-        return "secondary" as const
-      default:
-        return "outline" as const
-    }
-  }
-
-  // Handler functions (placeholder - should be connected to actual handlers)
-  const handleEdit = () => {
-    // TODO: Implement edit functionality
-    console.log("Edit user:", user.id)
-  }
-
-  const handleSendEmail = () => {
-    // TODO: Implement send email
-    console.log("Send email to:", user.email)
-  }
-
-  const handleSendWhatsApp = () => {
-    // TODO: Implement send WhatsApp
-    console.log("Send WhatsApp to:", user.phoneNumber)
-  }
-
-  const handleManageCredits = () => {
-    // TODO: Implement manage credits
-    console.log("Manage credits for:", user.id)
-  }
-
-  const handleSuspend = () => {
-    // TODO: Implement suspend
-    console.log("Suspend user:", user.id)
-  }
-
-  const handleActivate = () => {
-    // TODO: Implement activate
-    console.log("Activate user:", user.id)
-  }
-
-  const handleDelete = () => {
-    // TODO: Implement delete
-    console.log("Delete user:", user.id)
-  }
-
-  const handleUpsell = () => {
-    // TODO: Implement upsell
-    console.log("Upsell user:", user.id)
-  }
-
-  return (
-    <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
-      {/* Topbar with Back Button, Breadcrumbs and Navigation */}
-      <div className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-        <div className="flex h-14 items-center gap-2 px-2">
-          {/* Back Button - Small Arrow */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/external-users")}
-            className="h-8 w-8 cursor-pointer"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-
-          {/* Breadcrumbs */}
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-1 min-w-0">
-            <Link href="/admin/external-users" className="hover:text-foreground transition-colors whitespace-nowrap cursor-pointer">
-              External Users
-            </Link>
-            <span>/</span>
-            <span className="line-clamp-1">{user.name}</span>
-          </nav>
-
-          {/* Prev/Next Navigation on Right */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {prevUser && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/admin/external-users/${prevUser.id}`)}
-                className="cursor-pointer h-7 px-2 text-xs"
-              >
-                <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                Prev
-              </Button>
-            )}
-            {nextUser && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(`/admin/external-users/${nextUser.id}`)}
-                className="cursor-pointer h-7 px-2 text-xs"
-              >
-                Next
-                <ChevronRight className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto px-2 pt-1">
-
-      {/* User Header */}
-      <Card className="mb-2">
-        <CardHeader className="pb-2 px-4 pt-2.5">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={getAvatarUrl(user.id, user.email)} alt={user.name} />
-                <AvatarFallback>{user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}</AvatarFallback>
-              </Avatar>
-              <div>
-                <CardTitle className="text-lg mb-0.5">{user.name}</CardTitle>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <Badge variant={getPlanBadgeVariant(user.plan)} className="text-xs">
-                    {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
-                  </Badge>
-                  <Badge variant={getStatusBadgeVariant(user.status)} className="text-xs">
-                    {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-            
-            {/* Button Group with Edit and More Actions */}
-            <div className="flex items-center gap-1.5">
-              <Button onClick={handleEdit} className="cursor-pointer" size="sm" variant="outline">
-                <Edit className="h-3.5 w-3.5 mr-1.5" />
-                Edit
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" className="cursor-pointer h-8 w-8">
-                    <MoreVertical className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleSendEmail} className="cursor-pointer">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Email
-                  </DropdownMenuItem>
-                  {user.phoneNumber && (
-                    <DropdownMenuItem onClick={handleSendWhatsApp} className="cursor-pointer">
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Send WhatsApp
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleManageCredits} className="cursor-pointer">
-                    <Coins className="h-4 w-4 mr-2" />
-                    Manage Credits
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleUpsell} className="cursor-pointer">
-                    <ArrowUp className="h-4 w-4 mr-2" />
-                    Upsell
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  {user.status === "active" ? (
-                    <DropdownMenuItem onClick={handleSuspend} className="cursor-pointer">
-                      <Lock className="h-4 w-4 mr-2" />
-                      Suspend
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem onClick={handleActivate} className="cursor-pointer">
-                      <Check className="h-4 w-4 mr-2" />
-                      Activate
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive cursor-pointer">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+  const overviewTab = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            Account Info
+          </CardTitle>
         </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Plan</p>
+              <AdminStatusBadge status={user.plan} size="sm" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Status</p>
+              <AdminStatusBadge status={user.status} dot size="sm" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Subscription Date</p>
+              <p className="text-sm font-medium" data-testid="text-subscription-date">{formatDate(user.subscriptionDate)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Expiry Date</p>
+              <p className="text-sm font-medium" data-testid="text-expiry-date">
+                {formatDate(user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Credits</p>
+              <p className="text-sm font-semibold" data-testid="text-credits">{(user.credits || 0).toLocaleString()}</p>
+            </div>
+            {user.isTrial && (
+              <div>
+                <p className="text-xs text-muted-foreground">Trial</p>
+                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Trial</Badge>
+              </div>
+            )}
+          </div>
+        </CardContent>
       </Card>
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-        <TabsList>
-          <TabsTrigger value="overview" className="cursor-pointer">Overview</TabsTrigger>
-          <TabsTrigger value="subscription" className="cursor-pointer">Subscription</TabsTrigger>
-          <TabsTrigger value="progress" className="cursor-pointer">Progress</TabsTrigger>
-          <TabsTrigger value="business" className="cursor-pointer">Business Details</TabsTrigger>
-        </TabsList>
-
-        <div className="flex-1 overflow-y-auto">
-          <TabsContent value="overview" className="space-y-2 mt-2">
-            <Card>
-              <CardHeader className="pb-2 px-4 pt-3">
-                <CardTitle className="text-sm font-semibold">Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0 px-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Email</p>
-                    <p className="text-sm font-medium">{user.email}</p>
-                  </div>
-                </div>
-                {user.phoneNumber && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="text-sm font-medium">{user.phoneNumber}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Member Since</p>
-                    <p className="text-sm font-medium">
-                      {new Date(user.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2 px-4 pt-3">
-                <CardTitle className="text-sm font-semibold">Credits</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 px-4 pb-3">
-                <div className="flex items-center gap-3">
-                  <Coins className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-2xl font-bold">{(user.credits || 0).toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">Available Credits</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="subscription" className="space-y-2 mt-2">
-            <Card>
-              <CardHeader className="pb-2 px-4 pt-3">
-                <CardTitle className="text-sm font-semibold">Subscription Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0 px-4 pb-3">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Plan</p>
-                    <Badge variant={getPlanBadgeVariant(user.plan)} className="text-xs">
-                      {user.plan.charAt(0).toUpperCase() + user.plan.slice(1)}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Subscription Date</p>
-                    <p className="text-sm font-medium">
-                      {new Date(user.subscriptionDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Expiry Date</p>
-                    <p className="text-sm font-medium">
-                      {(user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <Badge variant={getStatusBadgeVariant(user.status)} className="text-xs">
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="progress" className="space-y-2 mt-2">
-            {progressLoading ? (
-              <div className="space-y-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <Card key={i}>
-                    <CardHeader className="pb-2 px-4 pt-3">
-                      <Skeleton className="h-4 w-32" />
-                    </CardHeader>
-                    <CardContent className="pt-0 px-4 pb-3 space-y-2">
-                      <Skeleton className="h-3 w-48" />
-                      <Skeleton className="h-2 w-full rounded-full" />
-                    </CardContent>
-                  </Card>
-                ))}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Mail className="h-4 w-4 text-muted-foreground" />
+            User Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 gap-y-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="text-sm font-medium" data-testid="text-email">{user.email}</p>
+            </div>
+            {user.phoneNumber && (
+              <div>
+                <p className="text-xs text-muted-foreground">Phone</p>
+                <p className="text-sm font-medium" data-testid="text-phone">{user.phoneNumber}</p>
               </div>
-            ) : (
-              <>
-                <Card>
-                  <CardHeader className="pb-2 px-4 pt-3">
-                    <div className="flex items-center gap-2">
-                      <Map className="h-4 w-4 text-muted-foreground" />
-                      <CardTitle className="text-sm font-semibold">Roadmap Progress</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 px-4 pb-3">
-                    {(() => {
-                      const tasks = userProgress?.roadmapProgress ?? []
-                      const completed = tasks.filter((t: any) => t.status === 'completed').length
-                      const inProgress = tasks.filter((t: any) => t.status === 'in_progress').length
-                      const notStarted = tasks.filter((t: any) => t.status === 'not_started' || !t.status).length
-                      const total = tasks.length
-                      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-
-                      if (total === 0) {
-                        return <p className="text-sm text-muted-foreground">No roadmap tasks found</p>
-                      }
-
-                      return (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Overall completion</span>
-                            <span className="font-medium">{percentage}%</span>
-                          </div>
-                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-primary transition-all"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <div className="flex items-center gap-4 text-xs">
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-                              <span className="text-muted-foreground">Completed: <span className="font-medium text-foreground">{completed}</span></span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
-                              <span className="text-muted-foreground">In Progress: <span className="font-medium text-foreground">{inProgress}</span></span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
-                              <span className="text-muted-foreground">Not Started: <span className="font-medium text-foreground">{notStarted}</span></span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-2 px-4 pt-3">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-muted-foreground" />
-                      <CardTitle className="text-sm font-semibold">Onboarding Progress</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0 px-4 pb-3">
-                    {(() => {
-                      const videos = userProgress?.onboardingProgress ?? []
-                      const completed = videos.filter((v: any) => v.completed).length
-                      const total = videos.length
-                      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
-
-                      if (total === 0) {
-                        return <p className="text-sm text-muted-foreground">No onboarding videos found</p>
-                      }
-
-                      return (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Videos completed</span>
-                            <span className="font-medium">{completed} / {total}</span>
-                          </div>
-                          <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-green-500 transition-all"
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        </div>
-                      )
-                    })()}
-                  </CardContent>
-                </Card>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Card>
-                    <CardHeader className="pb-2 px-4 pt-3">
-                      <div className="flex items-center gap-2">
-                        <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                        <CardTitle className="text-sm font-semibold">Course Notes</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0 px-4 pb-3">
-                      <p className="text-2xl font-bold">{userProgress?.courseNotesCount ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Notes saved</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="pb-2 px-4 pt-3">
-                      <div className="flex items-center gap-2">
-                        <Key className="h-4 w-4 text-muted-foreground" />
-                        <CardTitle className="text-sm font-semibold">Credentials</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0 px-4 pb-3">
-                      <p className="text-2xl font-bold">{userProgress?.credentialsCount ?? 0}</p>
-                      <p className="text-xs text-muted-foreground">Credentials stored</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </>
             )}
-          </TabsContent>
+            {user.username && (
+              <div>
+                <p className="text-xs text-muted-foreground">Username</p>
+                <p className="text-sm font-medium" data-testid="text-username">{user.username}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-muted-foreground">Joined</p>
+              <p className="text-sm font-medium" data-testid="text-joined">{formatDate(user.createdAt)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          <TabsContent value="business" className="space-y-2 mt-2">
-            {progressLoading ? (
-              <Card>
-                <CardHeader className="pb-2 px-4 pt-3">
-                  <Skeleton className="h-4 w-40" />
-                </CardHeader>
-                <CardContent className="pt-0 px-4 pb-3 space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="grid grid-cols-2 gap-2">
-                      <Skeleton className="h-3 w-24" />
-                      <Skeleton className="h-3 w-36" />
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ) : (() => {
-              const details = Array.isArray(userProgress?.userDetails)
-                ? userProgress.userDetails[0] ?? null
-                : userProgress?.userDetails ?? null
-
-              if (!details) {
-                return (
-                  <Card>
-                    <CardContent className="py-8 text-center">
-                      <p className="text-sm text-muted-foreground">No business details on file</p>
-                    </CardContent>
-                  </Card>
-                )
-              }
-
+      {!progressLoading && userProgress?.userDetails && (
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              Business Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const details = Array.isArray(userProgress.userDetails) ? userProgress.userDetails[0] ?? null : userProgress.userDetails ?? null
+              if (!details) return <p className="text-sm text-muted-foreground">No business details on file</p>
               const fields = [
                 { label: "Full Name", value: details.full_name },
                 { label: "Batch ID", value: details.batch_id },
@@ -662,29 +526,458 @@ export default function ExternalUserDetailPage() {
                 { label: "LLC Name", value: details.llc_name },
                 { label: "EIN Name", value: details.ein_name },
               ]
-
               return (
-                <Card>
-                  <CardHeader className="pb-2 px-4 pt-3">
-                    <CardTitle className="text-sm font-semibold">Business Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0 px-4 pb-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                      {fields.map((field) => (
-                        <div key={field.label}>
-                          <p className="text-xs text-muted-foreground">{field.label}</p>
-                          <p className="text-sm font-medium">{field.value || "—"}</p>
-                        </div>
-                      ))}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-3">
+                  {fields.map((f) => (
+                    <div key={f.label}>
+                      <p className="text-xs text-muted-foreground">{f.label}</p>
+                      <p className="text-sm font-medium">{f.value || "—"}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                  ))}
+                </div>
               )
             })()}
-          </TabsContent>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+
+  const journeyTab = (
+    <div className="space-y-4">
+      {journeyLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2"><Skeleton className="h-4 w-40" /></CardHeader>
+              <CardContent className="space-y-2"><Skeleton className="h-3 w-48" /><Skeleton className="h-2 w-full rounded-full" /></CardContent>
+            </Card>
+          ))}
         </div>
-      </Tabs>
-      </div>
+      ) : journey ? (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold" data-testid="text-onboarding-progress">{journey.onboarding.completedSteps}/{journey.onboarding.totalSteps}</p>
+                    <p className="text-xs text-muted-foreground">Onboarding Steps</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold" data-testid="text-courses-progress">{journey.courses.completed}/{journey.courses.started}</p>
+                    <p className="text-xs text-muted-foreground">Courses Completed</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                    <ShoppingBag className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold" data-testid="text-products-saved">{journey.productsSaved}</p>
+                    <p className="text-xs text-muted-foreground">Products Saved</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                    <Key className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-semibold" data-testid="text-credentials-count">{journey.credentialsCount}</p>
+                    <p className="text-xs text-muted-foreground">Credentials Stored</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Map className="h-4 w-4 text-muted-foreground" />
+                Roadmap Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {journey.roadmap.total === 0 ? (
+                <p className="text-sm text-muted-foreground">No roadmap tasks found</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Overall completion</span>
+                    <span className="font-medium">{journey.roadmap.progressPercent}%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.roadmap.progressPercent}%` }} />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{journey.roadmap.completed} of {journey.roadmap.total} tasks completed</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {journey.courses.enrollments.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  Course Enrollments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {journey.courses.enrollments.map((enrollment) => (
+                    <div key={enrollment.id} className="flex items-center justify-between gap-4 py-2 border-b last:border-b-0" data-testid={`enrollment-${enrollment.id}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{enrollment.courseTitle}</p>
+                        <p className="text-xs text-muted-foreground">Enrolled: {formatDate(enrollment.enrolledAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-20">
+                          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${enrollment.progressPercentage}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 text-right">{Math.round(enrollment.progressPercentage)}%</p>
+                        </div>
+                        {enrollment.completedAt ? (
+                          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">Done</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">In Progress</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {journey.shopifyStores.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Store className="h-4 w-4 text-muted-foreground" />
+                  Shopify Stores
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {journey.shopifyStores.map((store) => (
+                    <div key={store.id} className="flex items-center justify-between py-2 border-b last:border-b-0" data-testid={`shopify-store-${store.id}`}>
+                      <div>
+                        <p className="text-sm font-medium">{store.storeName || store.storeUrl}</p>
+                        <p className="text-xs text-muted-foreground">{store.storeUrl}</p>
+                      </div>
+                      <AdminStatusBadge status={store.status || "connected"} size="sm" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      ) : (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-sm text-muted-foreground">Unable to load journey data</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+
+  const sessionsTab = (
+    <div className="space-y-4">
+      {sessionsLoading ? (
+        <Card>
+          <CardContent className="py-6 space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                  Module Access Controls
+                </CardTitle>
+                {Object.keys(pendingOverrides).length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={handleSaveModuleOverrides}
+                    disabled={sessionsSaving}
+                    data-testid="button-save-sessions"
+                  >
+                    {sessionsSaving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                    Save Changes ({Object.keys(pendingOverrides).length})
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Override module access for this specific user. Leave as "Plan Default" to use the access level from their subscription plan.</p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                {sessions.map((mod) => {
+                  const currentOverride = pendingOverrides[mod.moduleId] !== undefined
+                    ? pendingOverrides[mod.moduleId]
+                    : mod.accessLevel
+                  return (
+                    <div
+                      key={mod.moduleId}
+                      className="flex items-center justify-between gap-4 py-2.5 px-2 rounded-md border-b last:border-b-0"
+                      data-testid={`session-module-${mod.moduleId}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{mod.moduleName}</p>
+                        {mod.hasOverride && pendingOverrides[mod.moduleId] === undefined && (
+                          <p className="text-[10px] text-muted-foreground">Override active: {mod.accessLevel}</p>
+                        )}
+                      </div>
+                      <Select
+                        value={currentOverride || "plan_default"}
+                        onValueChange={(value) => {
+                          if (value === "plan_default") {
+                            setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: null }))
+                          } else {
+                            setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: value }))
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-40" data-testid={`select-module-${mod.moduleId}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="plan_default">Plan Default</SelectItem>
+                          <SelectItem value="full_access">Full Access</SelectItem>
+                          <SelectItem value="limited_access">Limited Access</SelectItem>
+                          <SelectItem value="locked">Locked</SelectItem>
+                          <SelectItem value="hidden">Hidden</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  )
+
+  const activityTab = (
+    <div className="space-y-4">
+      {activitiesLoading ? (
+        <Card>
+          <CardContent className="py-6 space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-start gap-3">
+                <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
+                <div className="space-y-1 flex-1">
+                  <Skeleton className="h-3.5 w-3/4" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : activities.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <ActivityIcon className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No activity recorded yet</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <ActivityIcon className="h-4 w-4 text-muted-foreground" />
+              Activity Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
+              <div className="space-y-0">
+                {activities.map((activity: any, index: number) => (
+                  <div key={activity.id || index} className="relative flex items-start gap-4 py-3" data-testid={`activity-item-${index}`}>
+                    <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-card flex-shrink-0">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <p className="text-sm">{activity.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{formatDateTime(activity.timestamp)}</p>
+                    </div>
+                    <AdminStatusBadge
+                      status={activity.type === 'login' ? 'active' : activity.type === 'visibility_change' ? 'pending' : 'published'}
+                      label={activity.type.replace(/_/g, ' ')}
+                      size="sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+
+  const notesTab = (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <StickyNote className="h-4 w-4 text-muted-foreground" />
+            Add Note
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Textarea
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Type a note about this user..."
+              className="resize-none text-sm"
+              rows={3}
+              data-testid="input-note"
+            />
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                onClick={handleAddNote}
+                disabled={!newNote.trim() || noteSaving}
+                data-testid="button-add-note"
+              >
+                {noteSaving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                Add Note
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {notesLoading ? (
+        <Card>
+          <CardContent className="py-6 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2 pb-3 border-b last:border-b-0">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-6 rounded-full" />
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : notes.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <StickyNote className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No notes yet. Add the first note above.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Notes ({notes.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {notes.map((note) => (
+                <div key={note.id} className="pb-3 border-b last:border-b-0" data-testid={`note-item-${note.id}`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Avatar className="h-5 w-5">
+                      <AvatarImage src={note.adminAvatarUrl || undefined} />
+                      <AvatarFallback className="text-[8px]">{note.adminName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs font-medium">{note.adminName}</span>
+                    <span className="text-[10px] text-muted-foreground">{formatDateTime(note.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-foreground/90 pl-7">{note.note}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+
+  const tabs = [
+    { value: "overview", label: "Overview", content: overviewTab },
+    { value: "journey", label: "Journey", content: journeyTab },
+    { value: "sessions", label: "Sessions", content: sessionsTab, count: sessions.filter(s => s.hasOverride).length || undefined },
+    { value: "activity", label: "Activity", content: activityTab, count: activities.length || undefined },
+    { value: "notes", label: "Notes", content: notesTab, count: notes.length || undefined },
+  ]
+
+  const headerActions = [
+    { label: "Send Email", icon: <Mail className="h-4 w-4" />, onClick: () => window.open(`mailto:${user.email}`) },
+    ...(user.phoneNumber ? [{ label: "Send WhatsApp", icon: <MessageCircle className="h-4 w-4" />, onClick: () => window.open(`https://wa.me/${user.phoneNumber?.replace(/\D/g, '')}`) }] : []),
+    { label: "Manage Credits", icon: <Coins className="h-4 w-4" />, onClick: () => {}, separator: true },
+    ...(user.status === "active"
+      ? [{ label: "Suspend", icon: <Lock className="h-4 w-4" />, onClick: handleSuspend, separator: true }]
+      : [{ label: "Activate", icon: <Check className="h-4 w-4" />, onClick: handleActivate, separator: true }]),
+    { label: "Delete", icon: <Trash2 className="h-4 w-4" />, onClick: handleDelete, variant: "destructive" as const, separator: true },
+  ]
+
+  return (
+    <div className="flex flex-1 flex-col min-w-0 h-full overflow-y-auto">
+      <AdminDetailLayout
+        backHref="/admin/external-users"
+        backLabel="Clients"
+        title={user.name}
+        subtitle={user.email}
+        avatarUrl={user.avatarUrl || getAvatarUrl(user.id, user.email)}
+        badges={[
+          <AdminStatusBadge key="plan" status={user.plan} />,
+          <AdminStatusBadge key="status" status={user.status} dot />,
+        ]}
+        primaryActions={
+          <Button variant="outline" size="sm" onClick={() => router.push(`/admin/external-users/${user.id}`)} data-testid="button-edit-user">
+            <Edit className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
+        }
+        actions={headerActions}
+        tabs={tabs}
+        defaultTab="overview"
+        onPrev={prevUser ? () => router.push(`/admin/external-users/${prevUser.id}`) : undefined}
+        onNext={nextUser ? () => router.push(`/admin/external-users/${nextUser.id}`) : undefined}
+        hasPrev={!!prevUser}
+        hasNext={!!nextUser}
+      />
     </div>
   )
 }

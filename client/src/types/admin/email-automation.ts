@@ -151,13 +151,9 @@ export interface EmailTouchpoint {
   trigger: AutomationTrigger
   category: EmailTemplateCategory
   recommendedTemplate?: string
- : 'high' | 'medium' | 'low'
+  priority: 'high' | 'medium' | 'low'
   userJourneyStage: 'awareness' | 'consideration' | 'purchase' | 'retention' | 'advocacy'
 }
-
-
-
-
 
 
 

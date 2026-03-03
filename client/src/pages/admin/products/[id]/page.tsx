@@ -1,26 +1,16 @@
-
-
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, Suspense } from "react"
 import { useRouter, useParams, useSearchParams } from "@/hooks/use-router"
-import { Link } from "wouter"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BlueSpinner } from "@/components/ui/blue-spinner"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { BlueSpinner, ButtonSpinner } from "@/components/ui/blue-spinner"
+import { AdminDetailLayout, AdminStatCards } from "@/components/admin"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  Edit, 
-  MoreVertical,
+  Edit,
   Lock,
   LockOpen,
   Trash2,
@@ -30,10 +20,16 @@ import {
   TrendingUp,
   DollarSign,
   Star,
+  Eye,
+  Bookmark,
+  BarChart3,
+  Calendar,
+  Save,
+  X,
+  ImageIcon,
 } from "lucide-react"
 import { HandPickedProduct, ProductPick } from "@/types/admin/products"
 import { Product, ProductMetadata } from "@/types/products"
-
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
@@ -43,7 +39,13 @@ import { ProductFormModal } from "../components/product-form-modal"
 type ProductType = "hand-picked" | "product-picks"
 type ProductUnion = HandPickedProduct | ProductPick
 
-// Transform API Product to HandPickedProduct
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 const transformToHandPicked = (product: Product): HandPickedProduct => {
   const metadata: Partial<ProductMetadata> = product.metadata || {}
   return {
@@ -69,7 +71,6 @@ const transformToHandPicked = (product: Product): HandPickedProduct => {
   }
 }
 
-// Transform API Product to ProductPick
 const transformToProductPick = (product: Product): ProductPick => {
   return {
     id: product.id,
@@ -97,6 +98,108 @@ const transformToProductPick = (product: Product): ProductPick => {
   }
 }
 
+interface InlineFieldProps {
+  label: string
+  value: string
+  onSave: (value: string) => Promise<void>
+  type?: "text" | "textarea" | "number"
+  disabled?: boolean
+  testId: string
+}
+
+function InlineEditField({ label, value, onSave, type = "text", disabled = false, testId }: InlineFieldProps) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setEditValue(value)
+  }, [value])
+
+  const handleSave = async () => {
+    if (editValue === value) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    try {
+      await onSave(editValue)
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    setEditValue(value)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="space-y-1.5">
+        <Label className="text-xs text-muted-foreground">{label}</Label>
+        <div className="flex items-start gap-2">
+          {type === "textarea" ? (
+            <Textarea
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="flex-1 text-sm"
+              rows={3}
+              data-testid={`${testId}-input`}
+            />
+          ) : (
+            <Input
+              type={type}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              className="flex-1 text-sm"
+              step={type === "number" ? "0.01" : undefined}
+              data-testid={`${testId}-input`}
+            />
+          )}
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSave}
+              disabled={saving}
+              data-testid={`${testId}-save`}
+            >
+              {saving ? <ButtonSpinner /> : <Save className="h-4 w-4 text-emerald-600" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              disabled={saving}
+              data-testid={`${testId}-cancel`}
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`space-y-1 group ${!disabled ? 'cursor-pointer' : ''}`}
+      onClick={() => !disabled && setEditing(true)}
+      data-testid={testId}
+    >
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-medium">{value || "—"}</p>
+        {!disabled && (
+          <Edit className="h-3.5 w-3.5 text-muted-foreground invisible group-hover:visible" />
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ProductDetailContent() {
   const router = useRouter()
   const params = useParams()
@@ -105,7 +208,6 @@ function ProductDetailContent() {
   const productType = (searchParams?.get("type") || "hand-picked") as ProductType
   const { showSuccess, showError } = useToast()
 
-  // Permission checks
   const { hasPermission: canEdit } = useHasPermission("products.edit")
   const { hasPermission: canDelete } = useHasPermission("products.delete")
   const { hasPermission: canLockUnlock } = useHasPermission("products.lock_unlock")
@@ -116,46 +218,36 @@ function ProductDetailContent() {
   const [loading, setLoading] = useState(true)
   const [productFormOpen, setProductFormOpen] = useState(false)
 
-  // Fetch product and all products for navigation
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
-        
-        // Validate productId before making request
         if (!productId || productId === 'undefined') {
           showError('Invalid product ID')
           setLoading(false)
           return
         }
-        
-        // Fetch the specific product
+
         const productResponse = await apiFetch(`/api/admin/products/${productId}`)
-        if (!productResponse.ok) {
-          throw new Error('Failed to fetch product')
-        }
+        if (!productResponse.ok) throw new Error('Failed to fetch product')
         const productData = await productResponse.json()
         const apiProduct: Product = productData.product
-        
-        // Determine product type from source
+
         const sourceType = apiProduct.source?.source_type || 'hand_picked'
         const isHandPicked = sourceType === 'hand_picked'
-        
-        // Transform to appropriate type
+
         if (isHandPicked) {
           setProduct(transformToHandPicked(apiProduct))
         } else {
           setProduct(transformToProductPick(apiProduct))
         }
-        
-        // Fetch all products for navigation
+
         const allProductsResponse = await fetch(
           `/api/admin/products?source_type=${isHandPicked ? 'hand_picked' : 'scraped'}&pageSize=1000`
         )
         if (allProductsResponse.ok) {
           const allProductsData = await allProductsResponse.json()
           const allProducts: Product[] = allProductsData.products || []
-          
           if (isHandPicked) {
             setAllHandPicked(allProducts.map(transformToHandPicked))
           } else {
@@ -169,46 +261,19 @@ function ProductDetailContent() {
         setLoading(false)
       }
     }
-    
-    if (productId) {
-      fetchProduct()
-    }
+
+    if (productId) fetchProduct()
   }, [productId, showError])
 
-  // Find previous and next products
   const { prevProduct, nextProduct } = useMemo(() => {
     if (!product) return { prevProduct: null, nextProduct: null }
-    
     const products = productType === "hand-picked" ? allHandPicked : allProductPicks
     const currentIndex = products.findIndex((p) => p.id === product.id)
-    const prev = currentIndex > 0 ? products[currentIndex - 1] : null
-    const next = currentIndex < products.length - 1 ? products[currentIndex + 1] : null
-    
-    return { prevProduct: prev, nextProduct: next }
+    return {
+      prevProduct: currentIndex > 0 ? products[currentIndex - 1] : null,
+      nextProduct: currentIndex < products.length - 1 ? products[currentIndex + 1] : null,
+    }
   }, [product, productType, allHandPicked, allProductPicks])
-
-  if (loading) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="flex items-center justify-center p-8">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <BlueSpinner size="md" />
-            <span>Loading product...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!product) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="flex items-center justify-center p-8">
-          <div className="text-muted-foreground">Product not found</div>
-        </div>
-      </div>
-    )
-  }
 
   const refetchProduct = async () => {
     try {
@@ -217,8 +282,7 @@ function ProductDetailContent() {
       const productData = await productResponse.json()
       const apiProduct: Product = productData.product
       const sourceType = apiProduct.source?.source_type || 'hand_picked'
-      const isHandPicked = sourceType === 'hand_picked'
-      if (isHandPicked) {
+      if (sourceType === 'hand_picked') {
         setProduct(transformToHandPicked(apiProduct))
       } else {
         setProduct(transformToProductPick(apiProduct))
@@ -228,12 +292,34 @@ function ProductDetailContent() {
     }
   }
 
-  const handleEdit = () => {
-    if (!canEdit) {
-      showError("You don't have permission to edit products")
-      return
+  const handleInlineSave = async (field: string, value: string) => {
+    try {
+      const body: Record<string, unknown> = {}
+      if (field === "title" || field === "description" || field === "image") {
+        body[field] = value
+      } else if (field === "buy_price" || field === "sell_price") {
+        body[field] = parseFloat(value) || 0
+      } else if (field === "rating") {
+        body[field] = parseFloat(value) || null
+      } else if (field === "reviews_count") {
+        body[field] = parseInt(value) || 0
+      } else if (field === "profit_margin" || field === "pot_revenue" || field === "unlock_price") {
+        body.metadata = { [field]: parseFloat(value) || 0 }
+      }
+
+      const response = await apiFetch(`/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) throw new Error('Failed to update')
+      showSuccess('Field updated successfully')
+      await refetchProduct()
+    } catch {
+      showError('Failed to update field')
+      throw new Error('Save failed')
     }
-    setProductFormOpen(true)
   }
 
   const handleDelete = async () => {
@@ -241,29 +327,21 @@ function ProductDetailContent() {
       showError("You don't have permission to delete products")
       return
     }
-    
-    if (!confirm(`Are you sure you want to delete "${product.title}"? This action cannot be undone.`)) {
-      return
-    }
-    
+    if (!product) return
+    if (!confirm(`Are you sure you want to delete "${product.title}"? This action cannot be undone.`)) return
+
     try {
-      const response = await apiFetch(`/api/admin/products/${product.id}`, {
-        method: 'DELETE',
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to delete product')
-      }
-      
+      const response = await apiFetch(`/api/admin/products/${product.id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Failed to delete product')
       showSuccess('Product deleted successfully')
       router.push('/admin/products')
-    } catch (err) {
+    } catch {
       showError("Failed to delete product")
     }
   }
 
   const handleToggleLock = async () => {
-    if (productType !== "hand-picked") return
+    if (productType !== "hand-picked" || !product) return
     if (!canLockUnlock) {
       showError("You don't have permission to lock/unlock products")
       return
@@ -273,575 +351,583 @@ function ProductDetailContent() {
       const response = await apiFetch(`/api/admin/products/${product.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          metadata: { is_locked: !hp.is_locked }
-        })
+        body: JSON.stringify({ metadata: { is_locked: !hp.is_locked } })
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to update product')
-      }
-      
+      if (!response.ok) throw new Error('Failed to update product')
       setProduct({ ...hp, is_locked: !hp.is_locked, updated_at: new Date().toISOString() } as ProductUnion)
       showSuccess(`Product ${!hp.is_locked ? "locked" : "unlocked"} successfully`)
-    } catch (err) {
+    } catch {
       showError("Failed to update product")
     }
   }
 
-  const handleDuplicate = () => {
-    if (!canEdit) {
-      showError("You don't have permission to create products")
-      return
-    }
-    // TODO: Implement duplicate
-    showError("Duplicate functionality will be implemented")
-  }
-
   const handleCopyProductId = async () => {
+    if (!product) return
     try {
       await navigator.clipboard.writeText(product.id)
       showSuccess("Product ID copied to clipboard")
-    } catch (err) {
+    } catch {
       showError("Failed to copy Product ID")
     }
   }
 
-  const handleCopyTitle = async () => {
-    try {
-      await navigator.clipboard.writeText(product.title)
-      showSuccess("Product title copied to clipboard")
-    } catch (err) {
-      showError("Failed to copy title")
-    }
-  }
-
-  const handleViewCategory = () => {
-    router.push(`/admin/categories?category=${product.category}`)
-  }
-
-  const handleViewSupplier = () => {
-    if (productType === "hand-picked") {
-      const hp = product as HandPickedProduct
-      if (hp.supplier_info) {
-        // TODO: Navigate to supplier page
-        showError(`Supplier navigation will be implemented. Supplier: ${hp.supplier_info.name}`)
-      }
-    } else {
-      const pp = product as ProductPick
-      if (pp.supplier_id) {
-        router.push(`/admin/suppliers/${pp.supplier_id}`)
-      }
-    }
-  }
-
-  return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* Topbar with Back Button, Breadcrumbs and Navigation */}
-      <div className="flex items-center justify-between p-3 border-b flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/products")}
-            className="h-8 w-8 cursor-pointer"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Link href="/admin/products" className="hover:text-foreground cursor-pointer">
-              Products
-            </Link>
-            <span>/</span>
-            <span className="text-foreground">{product.title}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {prevProduct && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(`/admin/products/${prevProduct.id}?type=${productType}`)}
-              className="h-8 w-8 cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          )}
-          {nextProduct && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.push(`/admin/products/${nextProduct.id}?type=${productType}`)}
-              className="h-8 w-8 cursor-pointer"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+  if (!product && !loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-muted-foreground" data-testid="text-product-not-found">Product not found</div>
       </div>
+    )
+  }
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {/* Product Header */}
-        <Card className="mb-2">
-          <CardHeader className="pb-2 px-4 pt-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
-                  {product.image ? (
-                    <img
-                      src={product.image}
-                      alt={product.title}
-                     
-                      className="object-cover"
-                     
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <Package className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <CardTitle className="text-lg mb-0.5">{product.title}</CardTitle>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <Badge variant="outline" className="text-xs">
-                      {product.category.replace(/-/g, " ")}
-                    </Badge>
-                    {productType === "hand-picked" && (
-                      <Badge variant={(product as HandPickedProduct).is_locked ? "destructive" : "default"} className="text-xs">
-                        {(product as HandPickedProduct).is_locked ? (
-                          <>
-                            <Lock className="h-3 w-3 mr-1" />
-                            Locked
-                          </>
-                        ) : (
-                          "Unlocked"
-                        )}
-                      </Badge>
-                    )}
-                    {productType === "product-picks" && (product as ProductPick).rating && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                        {(product as ProductPick).rating?.toFixed(1)}
-                      </Badge>
-                    )}
+  const isHandPicked = productType === "hand-picked"
+
+  const badges: React.ReactNode[] = []
+  if (product) {
+    badges.push(
+      <Badge key="category" variant="outline" data-testid="badge-category">
+        {product.category.replace(/-/g, " ")}
+      </Badge>
+    )
+    if (isHandPicked) {
+      const hp = product as HandPickedProduct
+      badges.push(
+        <Badge
+          key="lock"
+          variant={hp.is_locked ? "destructive" : "default"}
+          data-testid="badge-lock-status"
+        >
+          {hp.is_locked ? (
+            <><Lock className="h-3 w-3 mr-1" />Locked</>
+          ) : "Unlocked"}
+        </Badge>
+      )
+    }
+    if (!isHandPicked && (product as ProductPick).rating) {
+      badges.push(
+        <Badge key="rating" variant="secondary" data-testid="badge-rating">
+          <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+          {(product as ProductPick).rating?.toFixed(1)}
+        </Badge>
+      )
+    }
+  }
+
+  const actions = product ? [
+    ...(isHandPicked ? [{
+      label: (product as HandPickedProduct).is_locked ? "Unlock Product" : "Lock Product",
+      icon: (product as HandPickedProduct).is_locked ? <LockOpen className="h-4 w-4" /> : <Lock className="h-4 w-4" />,
+      onClick: handleToggleLock,
+      disabled: !canLockUnlock,
+    }] : []),
+    {
+      label: "View Category",
+      icon: <Package className="h-4 w-4" />,
+      onClick: () => router.push(`/admin/categories?category=${product.category}`),
+    },
+    ...((isHandPicked && (product as HandPickedProduct).supplier_info) ||
+      (!isHandPicked && (product as ProductPick).supplier) ? [{
+        label: "View Supplier",
+        icon: <Building className="h-4 w-4" />,
+        onClick: () => {
+          if (!isHandPicked) {
+            const pp = product as ProductPick
+            if (pp.supplier_id) router.push(`/admin/suppliers/${pp.supplier_id}`)
+          }
+        },
+      }] : []),
+    {
+      label: "Copy Product ID",
+      icon: <Copy className="h-4 w-4" />,
+      onClick: handleCopyProductId,
+      separator: true,
+    },
+    {
+      label: "Delete",
+      icon: <Trash2 className="h-4 w-4" />,
+      onClick: handleDelete,
+      variant: "destructive" as const,
+      disabled: !canDelete,
+      separator: true,
+    },
+  ] : []
+
+  const primaryActions = product ? (
+    <Button
+      onClick={() => setProductFormOpen(true)}
+      size="sm"
+      variant="outline"
+      disabled={!canEdit}
+      data-testid="button-edit-product"
+    >
+      <Edit className="h-3.5 w-3.5 mr-1.5" />
+      Edit
+    </Button>
+  ) : undefined
+
+  const overviewTab = product ? (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-4">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.title}
+                    className="w-full h-full object-cover"
+                    data-testid="img-product-main"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                    <Package className="h-16 w-16 text-muted-foreground" />
                   </div>
-                </div>
+                )}
               </div>
-              {/* Button Group with Edit and More Actions */}
-              <div className="flex items-center gap-1.5">
-                <Button onClick={handleEdit} className="cursor-pointer" size="sm" variant="outline" disabled={!canEdit}>
-                  <Edit className="h-3.5 w-3.5 mr-1.5" />
-                  Edit
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" className="cursor-pointer h-8 w-8">
-                      <MoreVertical className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {productType === "hand-picked" && (
-                      <DropdownMenuItem onClick={handleToggleLock} className="cursor-pointer" disabled={!canLockUnlock}>
-                        {(product as HandPickedProduct).is_locked ? (
-                          <>
-                            <LockOpen className="h-4 w-4 mr-2" />
-                            Unlock
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="h-4 w-4 mr-2" />
-                            Lock
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem onClick={handleViewCategory} className="cursor-pointer">
-                      <Package className="h-4 w-4 mr-2" />
-                      View Category
-                    </DropdownMenuItem>
-                    {(productType === "hand-picked" && (product as HandPickedProduct).supplier_info) ||
-                    (productType === "product-picks" && (product as ProductPick).supplier) ? (
-                      <DropdownMenuItem onClick={handleViewSupplier} className="cursor-pointer">
-                        <Building className="h-4 w-4 mr-2" />
-                        View Supplier
-                      </DropdownMenuItem>
-                    ) : null}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleCopyProductId} className="cursor-pointer">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Product ID
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleCopyTitle} className="cursor-pointer">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy Title
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDuplicate} className="cursor-pointer" disabled={!canEdit}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate Product
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDelete} className="text-destructive cursor-pointer" disabled={!canDelete}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Tabs */}
-        <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-          <TabsList>
-            <TabsTrigger value="overview" className="cursor-pointer">Overview</TabsTrigger>
-            <TabsTrigger value="pricing" className="cursor-pointer">Pricing & Profit</TabsTrigger>
-            <TabsTrigger value="supplier" className="cursor-pointer">Supplier Info</TabsTrigger>
-            {productType === "hand-picked" ? (
-              <TabsTrigger value="analysis" className="cursor-pointer">Analysis</TabsTrigger>
-            ) : (
-              <TabsTrigger value="trend" className="cursor-pointer">Trend Data</TabsTrigger>
-            )}
-            <TabsTrigger value="settings" className="cursor-pointer">Settings</TabsTrigger>
-          </TabsList>
-          <div className="flex-1 overflow-y-auto">
-            <TabsContent value="overview" className="space-y-2 mt-0">
-              <Card>
-                <CardHeader className="pb-2 px-4 pt-4">
-                  <CardTitle className="text-base">Product Information</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4 space-y-4">
-                  <div className="relative w-full h-64 rounded-lg overflow-hidden bg-muted">
-                    {product.image ? (
+              {!isHandPicked && (product as ProductPick).additional_images && (product as ProductPick).additional_images!.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {(product as ProductPick).additional_images!.slice(0, 4).map((img, i) => (
+                    <div key={i} className="relative aspect-square rounded-md overflow-hidden bg-muted">
                       <img
-                        src={product.image}
-                        alt={product.title}
-                       
-                        className="object-cover"
-                       
+                        src={img}
+                        alt={`${product.title} ${i + 1}`}
+                        className="w-full h-full object-cover"
+                        data-testid={`img-product-additional-${i}`}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-muted">
-                        <Package className="h-16 w-16 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Product ID</p>
-                      <p className="text-sm font-mono">{product.id}</p>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Category</p>
-                      <Badge variant="outline">{product.category.replace(/-/g, " ")}</Badge>
-                    </div>
-                    {productType === "hand-picked" && (
-                      <>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Status</p>
-                          <Badge variant={(product as HandPickedProduct).is_locked ? "destructive" : "default"}>
-                            {(product as HandPickedProduct).is_locked ? "Locked" : "Unlocked"}
-                          </Badge>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Found Date</p>
-                          <p className="text-sm">{format(new Date((product as HandPickedProduct).found_date), "MMM dd, yyyy")}</p>
-                        </div>
-                      </>
-                    )}
-                    {productType === "product-picks" && (
-                      <>
-                        {(product as ProductPick).rating && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Rating</p>
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="text-sm font-medium">
-                                {(product as ProductPick).rating?.toFixed(1)}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                ({(product as ProductPick).reviews_count} reviews)
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Created At</p>
-                          <p className="text-sm">{format(new Date(product.created_at), "MMM dd, yyyy HH:mm")}</p>
-                        </div>
-                      </>
-                    )}
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Updated At</p>
-                      <p className="text-sm">{format(new Date(product.updated_at), "MMM dd, yyyy HH:mm")}</p>
-                    </div>
-                  </div>
-                  {product.description && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">Description</p>
-                      <p className="text-sm">{product.description}</p>
-                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader className="pb-2 px-4 pt-4">
+              <CardTitle className="text-base">Pricing & Profit</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {isHandPicked ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <InlineEditField
+                    label="Profit Margin (%)"
+                    value={String((product as HandPickedProduct).profit_margin)}
+                    onSave={(v) => handleInlineSave("profit_margin", v)}
+                    type="number"
+                    disabled={!canEdit}
+                    testId="field-profit-margin"
+                  />
+                  <InlineEditField
+                    label="Potential Revenue"
+                    value={String((product as HandPickedProduct).pot_revenue)}
+                    onSave={(v) => handleInlineSave("pot_revenue", v)}
+                    type="number"
+                    disabled={!canEdit}
+                    testId="field-pot-revenue"
+                  />
+                  {(product as HandPickedProduct).unlock_price !== null && (
+                    <InlineEditField
+                      label="Unlock Price"
+                      value={String((product as HandPickedProduct).unlock_price ?? "")}
+                      onSave={(v) => handleInlineSave("unlock_price", v)}
+                      type="number"
+                      disabled={!canEdit}
+                      testId="field-unlock-price"
+                    />
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="pricing" className="space-y-2 mt-0">
-              <Card>
-                <CardHeader className="pb-2 px-4 pt-4">
-                  <CardTitle className="text-base">Pricing & Profit Information</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  {productType === "hand-picked" ? (
+                </div>
+              ) : (() => {
+                const pp = product as ProductPick
+                const profit = pp.profit_per_order
+                const margin = pp.sell_price > 0 ? ((profit / pp.sell_price) * 100).toFixed(1) : "0.0"
+                return (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <InlineEditField
+                        label="Buy Price ($)"
+                        value={String(pp.buy_price)}
+                        onSave={(v) => handleInlineSave("buy_price", v)}
+                        type="number"
+                        disabled={!canEdit}
+                        testId="field-buy-price"
+                      />
+                      <InlineEditField
+                        label="Sell Price ($)"
+                        value={String(pp.sell_price)}
+                        onSave={(v) => handleInlineSave("sell_price", v)}
+                        type="number"
+                        disabled={!canEdit}
+                        testId="field-sell-price"
+                      />
+                      <div className="space-y-1" data-testid="field-profit">
+                        <p className="text-xs text-muted-foreground">Profit / Order</p>
+                        <p className={`text-sm font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {currencyFormatter.format(profit)}
+                        </p>
+                      </div>
+                      <div className="space-y-1" data-testid="field-margin">
+                        <p className="text-xs text-muted-foreground">Margin</p>
+                        <p className={`text-sm font-semibold ${profit >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                          {margin}%
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">Profit Breakdown</p>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart
+                          data={[
+                            { name: 'Buy Price', value: pp.buy_price, fill: '#3b82f6' },
+                            { name: 'Profit', value: profit, fill: '#10b981' },
+                            { name: 'Sell Price', value: pp.sell_price, fill: '#6366f1' },
+                          ]}
+                          barSize={50}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                          <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
+                          <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, '']} />
+                          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                            {[0, 1, 2].map((i) => (
+                              <Cell key={i} fill={['#3b82f6', '#10b981', '#6366f1'][i]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )
+              })()}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2 px-4 pt-4">
+              <CardTitle className="text-base">Product Details</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-4">
+              <InlineEditField
+                label="Title"
+                value={product.title}
+                onSave={(v) => handleInlineSave("title", v)}
+                disabled={!canEdit}
+                testId="field-title"
+              />
+              <InlineEditField
+                label="Description"
+                value={product.description || ""}
+                onSave={(v) => handleInlineSave("description", v)}
+                type="textarea"
+                disabled={!canEdit}
+                testId="field-description"
+              />
+              <InlineEditField
+                label="Image URL"
+                value={product.image || ""}
+                onSave={(v) => handleInlineSave("image", v)}
+                disabled={!canEdit}
+                testId="field-image"
+              />
+
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                <div data-testid="field-product-id">
+                  <p className="text-xs text-muted-foreground">Product ID</p>
+                  <p className="text-sm font-mono truncate">{product.id}</p>
+                </div>
+                <div data-testid="field-category">
+                  <p className="text-xs text-muted-foreground">Category</p>
+                  <Badge variant="outline">{product.category.replace(/-/g, " ")}</Badge>
+                </div>
+                {isHandPicked && (
+                  <div data-testid="field-found-date">
+                    <p className="text-xs text-muted-foreground">Found Date</p>
+                    <p className="text-sm">{format(new Date((product as HandPickedProduct).found_date), "MMM dd, yyyy")}</p>
+                  </div>
+                )}
+                {!isHandPicked && (product as ProductPick).rating && (
+                  <div data-testid="field-rating-display">
+                    <p className="text-xs text-muted-foreground">Rating</p>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium">{(product as ProductPick).rating?.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({(product as ProductPick).reviews_count} reviews)</span>
+                    </div>
+                  </div>
+                )}
+                <div data-testid="field-created-at">
+                  <p className="text-xs text-muted-foreground">Created</p>
+                  <p className="text-sm">{format(new Date(product.created_at), "MMM dd, yyyy")}</p>
+                </div>
+                <div data-testid="field-updated-at">
+                  <p className="text-xs text-muted-foreground">Updated</p>
+                  <p className="text-sm">{format(new Date(product.updated_at), "MMM dd, yyyy HH:mm")}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {((isHandPicked && (product as HandPickedProduct).supplier_info) ||
+            (!isHandPicked && (product as ProductPick).supplier)) && (
+            <Card>
+              <CardHeader className="pb-2 px-4 pt-4">
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-base">Supplier Information</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                {isHandPicked && (product as HandPickedProduct).supplier_info ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div data-testid="field-supplier-name">
+                      <p className="text-xs text-muted-foreground">Supplier Name</p>
+                      <p className="text-sm font-medium">{(product as HandPickedProduct).supplier_info?.name || "N/A"}</p>
+                    </div>
+                    {(product as HandPickedProduct).supplier_info?.company_name && (
+                      <div data-testid="field-supplier-company">
+                        <p className="text-xs text-muted-foreground">Company</p>
+                        <p className="text-sm">{(product as HandPickedProduct).supplier_info?.company_name}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (product as ProductPick).supplier ? (
+                  <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Profit Margin</p>
-                        <p className="text-2xl font-bold text-emerald-600">
-                          {(product as HandPickedProduct).profit_margin}%
-                        </p>
+                      <div data-testid="field-supplier-name">
+                        <p className="text-xs text-muted-foreground">Supplier Name</p>
+                        <p className="text-sm font-medium">{(product as ProductPick).supplier?.name}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Pot Revenue</p>
-                        <p className="text-2xl font-bold">
-                          ${(product as HandPickedProduct).pot_revenue.toFixed(2)}
-                        </p>
-                      </div>
-                      {(product as HandPickedProduct).unlock_price && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Unlock Price</p>
-                          <p className="text-lg font-semibold"> 
-                            ${(product as HandPickedProduct).unlock_price?.toFixed(2) ?? '0.00'}
-                          </p>
+                      {(product as ProductPick).supplier?.company_name && (
+                        <div data-testid="field-supplier-company">
+                          <p className="text-xs text-muted-foreground">Company</p>
+                          <p className="text-sm">{(product as ProductPick).supplier?.company_name}</p>
                         </div>
                       )}
                     </div>
-                  ) : (() => {
-                    const pp = product as ProductPick
-                    const buyPrice = pp.buy_price
-                    const sellPrice = pp.sell_price
-                    const profit = pp.profit_per_order
-                    const margin = buyPrice > 0 ? ((profit / sellPrice) * 100).toFixed(1) : "0.0"
-                    const chartData = [
-                      { name: 'Buy Price', value: buyPrice, fill: '#3b82f6' },
-                      { name: 'Profit', value: profit, fill: '#10b981' },
-                      { name: 'Sell Price', value: sellPrice, fill: '#6366f1' },
-                    ]
-                    return (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div className="rounded-lg border p-3">
-                            <p className="text-xs text-muted-foreground mb-1">Buy Price</p>
-                            <p className="text-2xl font-bold text-blue-500">${buyPrice.toFixed(2)}</p>
-                          </div>
-                          <div className="rounded-lg border p-3">
-                            <p className="text-xs text-muted-foreground mb-1">Sell Price</p>
-                            <p className="text-2xl font-bold text-indigo-500">${sellPrice.toFixed(2)}</p>
-                          </div>
-                          <div className="rounded-lg border p-3">
-                            <p className="text-xs text-muted-foreground mb-1">Profit per Order</p>
-                            <p className="text-2xl font-bold text-emerald-600">${profit.toFixed(2)}</p>
-                          </div>
-                          <div className="rounded-lg border p-3">
-                            <p className="text-xs text-muted-foreground mb-1">Profit Margin</p>
-                            <p className="text-2xl font-bold text-emerald-600">{margin}%</p>
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium mb-3">Profit Breakdown</p>
-                          <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={chartData} barSize={60}>
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
-                              <Tooltip formatter={(value: number) => [`$${value.toFixed(2)}`, '']} />
-                              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                                {chartData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                                ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                    )
-                  })()}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="supplier" className="space-y-2 mt-0">
-              <Card>
-                <CardHeader className="pb-2 px-4 pt-4">
-                  <CardTitle className="text-base">Supplier Information</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4">
-                  {productType === "hand-picked" ? (
-                    (product as HandPickedProduct).supplier_info ? (
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Supplier Name</p>
-                          <p className="text-sm font-medium">
-                            {(product as HandPickedProduct).supplier_info?.name || "N/A"}
-                          </p>
-                        </div>
-                        {(product as HandPickedProduct).supplier_info?.min_order && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Minimum Order</p>
-                            <p className="text-sm">
-                              {(product as HandPickedProduct).supplier_info?.min_order} units
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No supplier information available</p>
-                    )
-                  ) : (
-                    (product as ProductPick).supplier ? (
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">Supplier Name</p>
-                          <p className="text-sm font-medium">
-                            {(product as ProductPick).supplier?.name}
-                          </p>
-                        </div>
-                        {(product as ProductPick).supplier?.company_name && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Company Name</p>
-                            <p className="text-sm">
-                              {(product as ProductPick).supplier?.company_name}
-                            </p>
-                          </div>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleViewSupplier}
-                          className="cursor-pointer"
-                        >
-                          <Building className="h-4 w-4 mr-2" />
-                          View Supplier Details
-                        </Button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No supplier information available</p>
-                    )
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            {productType === "hand-picked" ? (
-              <TabsContent value="analysis" className="space-y-2 mt-0">
-                <Card>
-                  <CardHeader className="pb-2 px-4 pt-4">
-                    <CardTitle className="text-base">Product Analysis</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4 space-y-4">
-                    {(product as HandPickedProduct).detailed_analysis && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-2">Detailed Analysis</p>
-                        <p className="text-sm whitespace-pre-wrap">
-                          {(product as HandPickedProduct).detailed_analysis}
-                        </p>
-                      </div>
-                    )}
-                    {(product as HandPickedProduct).filters && (product as HandPickedProduct).filters!.length > 0 && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-2">Filters</p>
-                        <div className="flex flex-wrap gap-1">
-                          {(product as HandPickedProduct).filters!.map((filter, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {filter}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            ) : (
-              <TabsContent value="trend" className="space-y-2 mt-0">
-                <Card>
-                  <CardHeader className="pb-2 px-4 pt-4">
-                    <CardTitle className="text-base">Trend Data</CardTitle>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    {(product as ProductPick).trend_data && (product as ProductPick).trend_data!.length > 0 ? (() => {
-                      const trendData = (product as ProductPick).trend_data!
-                      const chartData = trendData.map((val, i) => ({ period: `Week ${i + 1}`, value: val }))
-                      const minVal = Math.min(...trendData)
-                      const maxVal = Math.max(...trendData)
-                      const avgVal = trendData.reduce((a, b) => a + b, 0) / trendData.length
-                      const firstVal = trendData[0]
-                      const lastVal = trendData[trendData.length - 1]
-                      const pctChange = firstVal > 0 ? (((lastVal - firstVal) / firstVal) * 100).toFixed(1) : "0.0"
-                      const isTrendingUp = lastVal > firstVal
-                      return (
-                        <div className="space-y-6">
-                          <ResponsiveContainer width="100%" height={250}>
-                            <AreaChart data={chartData}>
-                              <defs>
-                                <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                </linearGradient>
-                              </defs>
-                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                              <XAxis dataKey="period" tick={{ fontSize: 11 }} />
-                              <YAxis tick={{ fontSize: 11 }} />
-                              <Tooltip />
-                              <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#trendGradient)" />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                          <div className="grid grid-cols-3 gap-4">
-                            <div className="rounded-lg border p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Min</p>
-                              <p className="text-lg font-bold">{minVal}</p>
-                            </div>
-                            <div className="rounded-lg border p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Max</p>
-                              <p className="text-lg font-bold">{maxVal}</p>
-                            </div>
-                            <div className="rounded-lg border p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Average</p>
-                              <p className="text-lg font-bold">{avgVal.toFixed(1)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className={`h-4 w-4 ${isTrendingUp ? 'text-emerald-600' : 'text-red-500'}`} />
-                            <span className="text-sm font-medium">
-                              {isTrendingUp ? "Trending Up" : "Trending Down"} {pctChange}%
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })() : (
-                      <p className="text-sm text-muted-foreground">No trend data available</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            )}
-            <TabsContent value="settings" className="space-y-2 mt-0">
-              <Card>
-                <CardHeader className="pb-2 px-4 pt-4">
-                  <CardTitle className="text-base">Product Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 pb-4 space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Product settings and management options will be available here.
-                  </p>
-                  {/* TODO: Add product settings form */}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const pp = product as ProductPick
+                        if (pp.supplier_id) router.push(`/admin/suppliers/${pp.supplier_id}`)
+                      }}
+                      data-testid="button-view-supplier"
+                    >
+                      <Building className="h-3.5 w-3.5 mr-1.5" />
+                      View Supplier Details
+                    </Button>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          )}
 
-      {productType === "product-picks" && (
+          {isHandPicked && (product as HandPickedProduct).filters && (product as HandPickedProduct).filters!.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-base">Filters / Tags</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <div className="flex flex-wrap gap-2">
+                  {(product as HandPickedProduct).filters!.map((filter, idx) => (
+                    <Badge key={idx} variant="secondary" data-testid={`badge-filter-${idx}`}>
+                      {filter}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {isHandPicked && (product as HandPickedProduct).detailed_analysis && (
+            <Card>
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-base">Detailed Analysis</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <p className="text-sm whitespace-pre-wrap" data-testid="text-analysis">
+                  {(product as HandPickedProduct).detailed_analysis}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {!isHandPicked && (product as ProductPick).specifications && Object.keys((product as ProductPick).specifications!).length > 0 && (
+            <Card>
+              <CardHeader className="pb-2 px-4 pt-4">
+                <CardTitle className="text-base">Specifications</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <div className="space-y-2">
+                  {Object.entries((product as ProductPick).specifications!).map(([key, value]) => (
+                    <div key={key} className="flex justify-between items-start py-2 border-b last:border-0" data-testid={`spec-${key}`}>
+                      <span className="text-sm text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      <span className="text-sm font-medium text-right ml-4">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null
+
+  const analyticsTab = product ? (
+    <div className="space-y-6">
+      <AdminStatCards
+        stats={[
+          {
+            label: "Views",
+            value: "—",
+            icon: Eye,
+            description: "No tracking data yet",
+          },
+          {
+            label: "Picks / Saves",
+            value: "—",
+            icon: Bookmark,
+            description: "No tracking data yet",
+          },
+          {
+            label: "Added",
+            value: format(new Date(product.created_at), "MMM dd, yyyy"),
+            icon: Calendar,
+          },
+          ...(isHandPicked ? [{
+            label: "Profit Margin",
+            value: `${(product as HandPickedProduct).profit_margin}%`,
+            icon: TrendingUp,
+            badgeVariant: "success" as const,
+          }] : [{
+            label: "Profit / Order",
+            value: currencyFormatter.format((product as ProductPick).profit_per_order),
+            icon: DollarSign,
+            badgeVariant: "success" as const,
+          }]),
+        ]}
+        columns={4}
+      />
+
+      {!isHandPicked && (product as ProductPick).trend_data && (product as ProductPick).trend_data!.length > 0 && (() => {
+        const trendData = (product as ProductPick).trend_data!
+        const chartData = trendData.map((val, i) => ({ period: `Week ${i + 1}`, value: val }))
+        const minVal = Math.min(...trendData)
+        const maxVal = Math.max(...trendData)
+        const avgVal = trendData.reduce((a, b) => a + b, 0) / trendData.length
+        const firstVal = trendData[0]
+        const lastVal = trendData[trendData.length - 1]
+        const pctChange = firstVal > 0 ? (((lastVal - firstVal) / firstVal) * 100).toFixed(1) : "0.0"
+        const isTrendingUp = lastVal > firstVal
+
+        return (
+          <Card>
+            <CardHeader className="pb-2 px-4 pt-4">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <CardTitle className="text-base">Trend Data</CardTitle>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className={`h-4 w-4 ${isTrendingUp ? 'text-emerald-600' : 'text-red-500'}`} />
+                  <span className="text-sm font-medium" data-testid="text-trend-change">
+                    {isTrendingUp ? "Up" : "Down"} {pctChange}%
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-4">
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="period" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#trendGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="rounded-lg border p-3" data-testid="stat-trend-min">
+                  <p className="text-xs text-muted-foreground mb-1">Min</p>
+                  <p className="text-lg font-bold">{minVal}</p>
+                </div>
+                <div className="rounded-lg border p-3" data-testid="stat-trend-max">
+                  <p className="text-xs text-muted-foreground mb-1">Max</p>
+                  <p className="text-lg font-bold">{maxVal}</p>
+                </div>
+                <div className="rounded-lg border p-3" data-testid="stat-trend-avg">
+                  <p className="text-xs text-muted-foreground mb-1">Average</p>
+                  <p className="text-lg font-bold">{avgVal.toFixed(1)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })()}
+
+      {!isHandPicked && (!(product as ProductPick).trend_data || (product as ProductPick).trend_data!.length === 0) && (
+        <Card>
+          <CardContent className="p-8 flex flex-col items-center justify-center text-center">
+            <BarChart3 className="h-12 w-12 text-muted-foreground mb-3" />
+            <p className="text-sm font-medium mb-1">No trend data available</p>
+            <p className="text-xs text-muted-foreground">Trend analytics will appear here when data is available.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {isHandPicked && (
+        <Card>
+          <CardContent className="p-8 flex flex-col items-center justify-center text-center">
+            <BarChart3 className="h-12 w-12 text-muted-foreground mb-3" />
+            <p className="text-sm font-medium mb-1">Analytics Coming Soon</p>
+            <p className="text-xs text-muted-foreground">View counts, pick counts, and user saves tracking will be available here.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  ) : null
+
+  const tabs = [
+    {
+      value: "overview",
+      label: "Overview",
+      icon: <Package className="h-4 w-4" />,
+      content: overviewTab,
+    },
+    {
+      value: "analytics",
+      label: "Analytics",
+      icon: <BarChart3 className="h-4 w-4" />,
+      content: analyticsTab,
+    },
+  ]
+
+  return (
+    <div className="flex flex-col h-full overflow-y-auto">
+      <AdminDetailLayout
+        backHref="/admin/products"
+        backLabel="Products"
+        title={product?.title || "Loading..."}
+        subtitle={product ? `${isHandPicked ? "Hand-Picked" : "Product Pick"} — ${product.category.replace(/-/g, " ")}` : ""}
+        avatarUrl={product?.image || undefined}
+        avatarFallback={product ? product.title.slice(0, 2).toUpperCase() : "PR"}
+        badges={badges}
+        actions={actions}
+        primaryActions={primaryActions}
+        tabs={tabs}
+        defaultTab="overview"
+        loading={loading}
+        onPrev={prevProduct ? () => router.push(`/admin/products/${prevProduct.id}?type=${productType}`) : undefined}
+        onNext={nextProduct ? () => router.push(`/admin/products/${nextProduct.id}?type=${productType}`) : undefined}
+        hasPrev={!!prevProduct}
+        hasNext={!!nextProduct}
+      />
+
+      {!isHandPicked && product && (
         <ProductFormModal
           open={productFormOpen}
           onOpenChange={setProductFormOpen}
@@ -856,12 +942,10 @@ function ProductDetailContent() {
 export default function ProductDetailPage() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="flex items-center justify-center p-8">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <BlueSpinner size="md" />
-            <span>Loading product...</span>
-          </div>
+      <div className="flex items-center justify-center p-8">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <BlueSpinner size="md" />
+          <span>Loading product...</span>
         </div>
       </div>
     }>

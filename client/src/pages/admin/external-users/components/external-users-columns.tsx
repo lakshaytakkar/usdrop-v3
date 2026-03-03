@@ -1,5 +1,3 @@
-"use client"
-
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header"
-import { MoreVertical, Eye, Edit, Trash2, Lock, Check, ArrowUp, Clock, AlertCircle, Mail, MessageCircle, Coins } from "lucide-react"
+import { MoreVertical, Eye, Edit, Trash2, Lock, Check, Clock, AlertCircle, Mail, MessageCircle, Coins, ArrowUpDown } from "lucide-react"
 import { ExternalUser } from "@/types/admin/users"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getAvatarUrl } from "@/lib/utils/avatar"
@@ -24,7 +22,7 @@ interface CreateExternalUsersColumnsProps {
   onDelete: (user: ExternalUser) => void
   onSuspend?: (user: ExternalUser) => void
   onActivate?: (user: ExternalUser) => void
-  onUpsell?: (user: ExternalUser) => void
+  onChangePlan?: (user: ExternalUser) => void
   onSendEmail?: (user: ExternalUser) => void
   onSendWhatsApp?: (user: ExternalUser) => void
   onManageCredits?: (user: ExternalUser) => void
@@ -42,7 +40,7 @@ export function createExternalUsersColumns({
   onDelete,
   onSuspend,
   onActivate,
-  onUpsell,
+  onChangePlan,
   onSendEmail,
   onSendWhatsApp,
   onManageCredits,
@@ -53,7 +51,6 @@ export function createExternalUsersColumns({
   canActivate = true,
   canUpsell = true,
 }: CreateExternalUsersColumnsProps): ColumnDef<ExternalUser>[] {
-  // Only Free and Pro plans
   const getPlanBadgeClassName = (plan: string) => {
     switch (plan) {
       case "pro":
@@ -80,11 +77,9 @@ export function createExternalUsersColumns({
 
   const getTrialStatus = (user: ExternalUser) => {
     if (!user.isTrial || !user.trialEndsAt) return null
-
     const now = new Date()
     const daysRemaining = Math.ceil((user.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     const isExpired = now > user.trialEndsAt
-
     return {
       daysRemaining: isExpired ? 0 : daysRemaining,
       isExpired,
@@ -93,12 +88,7 @@ export function createExternalUsersColumns({
   }
 
   const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
   }
 
   return [
@@ -117,6 +107,7 @@ export function createExternalUsersColumns({
           <div
             className="flex items-center gap-2 min-w-0 cursor-pointer hover:[&>span]:text-primary [&>div]:hover:opacity-80 transition-all"
             onClick={handleClick}
+            data-testid={`link-user-${user.id}`}
           >
             <div className="shrink-0 pointer-events-none">
               <Avatar className="h-8 w-8">
@@ -137,7 +128,7 @@ export function createExternalUsersColumns({
       enableSorting: true,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
       cell: ({ row }) => (
-        <span className="text-sm truncate block max-w-[200px]" onClick={(e) => e.stopPropagation()} title={row.original.email}>
+        <span className="text-sm truncate block max-w-[200px]" onClick={(e) => e.stopPropagation()} title={row.original.email} data-testid={`text-email-${row.original.id}`}>
           {row.original.email}
         </span>
       ),
@@ -153,55 +144,15 @@ export function createExternalUsersColumns({
         const planLabel = user.plan.charAt(0).toUpperCase() + user.plan.slice(1)
         return (
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Badge variant="outline" className={cn("whitespace-nowrap border cursor-pointer", getPlanBadgeClassName(user.plan))} title={planLabel}>
+            <Badge variant="outline" className={cn("whitespace-nowrap border cursor-pointer", getPlanBadgeClassName(user.plan))} title={planLabel} data-testid={`badge-plan-${user.id}`}>
               {planLabel}
             </Badge>
             {user.isTrial && user.trialEndsAt && <Clock className="h-4 w-4 text-amber-600" />}
           </div>
         )
       },
-      filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
-      },
+      filterFn: (row, id, value) => value.includes(row.getValue(id)),
       size: 120,
-    },
-    {
-      accessorKey: "trialStatus",
-      id: "trialStatus",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Trial" />,
-      cell: ({ row }) => {
-        const user = row.original
-        const trialStatus = getTrialStatus(user)
-
-        if (!trialStatus) {
-          return <span className="text-sm text-muted-foreground" onClick={(e) => e.stopPropagation()}>—</span>
-        }
-
-        return (
-          <div 
-            className="flex items-center gap-2" 
-            onClick={(e) => e.stopPropagation()}
-            title={user.trialEndsAt ? `Trial ends: ${user.trialEndsAt.toLocaleDateString()}` : undefined}
-          >
-            {trialStatus.isExpired ? (
-              <Badge variant="destructive" className="gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Expired
-              </Badge>
-            ) : trialStatus.isEndingSoon ? (
-              <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700">
-                <Clock className="h-3 w-3" />
-                {trialStatus.daysRemaining} day{trialStatus.daysRemaining !== 1 ? "s" : ""}
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1">
-                <Clock className="h-3 w-3" />
-                {trialStatus.daysRemaining} day{trialStatus.daysRemaining !== 1 ? "s" : ""}
-              </Badge>
-            )}
-          </div>
-        )
-      },
     },
     {
       accessorKey: "status",
@@ -212,14 +163,12 @@ export function createExternalUsersColumns({
         const status = row.original.status
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1)
         return (
-          <Badge variant="outline" onClick={(e) => e.stopPropagation()} className={cn("whitespace-nowrap cursor-pointer border", getStatusBadgeClassName(status))} title={statusLabel}>
+          <Badge variant="outline" onClick={(e) => e.stopPropagation()} className={cn("whitespace-nowrap cursor-pointer border", getStatusBadgeClassName(status))} title={statusLabel} data-testid={`badge-status-${row.original.id}`}>
             {statusLabel}
           </Badge>
         )
       },
-      filterFn: (row, id, value) => {
-        return value.includes(row.getValue(id))
-      },
+      filterFn: (row, id, value) => value.includes(row.getValue(id)),
       size: 110,
     },
     {
@@ -230,12 +179,8 @@ export function createExternalUsersColumns({
       cell: ({ row }) => {
         const date = row.original.subscriptionDate
         return (
-          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-            {date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
+          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()} data-testid={`text-sub-date-${row.original.id}`}>
+            {date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
           </span>
         )
       },
@@ -244,18 +189,28 @@ export function createExternalUsersColumns({
       accessorKey: "expiryDate",
       id: "expiryDate",
       enableSorting: true,
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Expiry Date" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Expiry" />,
       cell: ({ row }) => {
         const user = row.original
         const date = user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate
+        const trialStatus = getTrialStatus(user)
         return (
-          <span className="text-sm text-muted-foreground whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-            {date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <span className="text-sm text-muted-foreground whitespace-nowrap" data-testid={`text-expiry-${user.id}`}>
+              {date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </span>
+            {trialStatus && (
+              trialStatus.isExpired ? (
+                <Badge variant="destructive" className="gap-1 text-[10px] px-1.5 py-0">
+                  <AlertCircle className="h-3 w-3" />Expired
+                </Badge>
+              ) : trialStatus.isEndingSoon ? (
+                <Badge variant="outline" className="gap-1 border-amber-500 text-amber-700 text-[10px] px-1.5 py-0">
+                  <Clock className="h-3 w-3" />{trialStatus.daysRemaining}d
+                </Badge>
+              ) : null
+            )}
+          </div>
         )
       },
     },
@@ -269,7 +224,7 @@ export function createExternalUsersColumns({
         return (
           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
             <Coins className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">{credits.toLocaleString()}</span>
+            <span className="text-sm font-medium" data-testid={`text-credits-${row.original.id}`}>{credits.toLocaleString()}</span>
           </div>
         )
       },
@@ -278,86 +233,73 @@ export function createExternalUsersColumns({
       id: "actions",
       cell: ({ row }) => {
         const user = row.original
-
         return (
           <div className="flex justify-end pr-2" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Actions</p>
-              </TooltipContent>
-            </Tooltip>
-            <DropdownMenuContent align="end" side="left" className="w-48">
-              <DropdownMenuItem onClick={() => onViewDetails(user)} className="cursor-pointer">
-                <Eye className="h-4 w-4 mr-2" />
-                View Details
-              </DropdownMenuItem>
-              {canEdit && (
-                <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" data-testid={`button-actions-${user.id}`}>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent><p>Actions</p></TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" side="left" className="w-48">
+                <DropdownMenuItem onClick={() => onViewDetails(user)} className="cursor-pointer" data-testid={`action-view-${user.id}`}>
+                  <Eye className="h-4 w-4 mr-2" />View Details
                 </DropdownMenuItem>
-              )}
-              {(canEdit || onSendEmail || (onSendWhatsApp && user.phoneNumber)) && <DropdownMenuSeparator />}
-              {onSendEmail && (
-                <DropdownMenuItem onClick={() => onSendEmail(user)} className="cursor-pointer">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Send Email
-                </DropdownMenuItem>
-              )}
-              {onSendWhatsApp && user.phoneNumber && (
-                <DropdownMenuItem onClick={() => onSendWhatsApp(user)} className="cursor-pointer">
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Send WhatsApp
-                </DropdownMenuItem>
-              )}
-              {(onSendEmail || (onSendWhatsApp && user.phoneNumber) || onManageCredits || onUpsell) && <DropdownMenuSeparator />}
-              {onManageCredits && (
-                <DropdownMenuItem onClick={() => onManageCredits(user)} className="cursor-pointer">
-                  <Coins className="h-4 w-4 mr-2" />
-                  Manage Credits
-                </DropdownMenuItem>
-              )}
-              {canUpsell && onUpsell && (
-                <DropdownMenuItem onClick={() => onUpsell(user)} className="cursor-pointer">
-                  <ArrowUp className="h-4 w-4 mr-2" />
-                  Upsell
-                </DropdownMenuItem>
-              )}
-              {(onManageCredits || (canUpsell && onUpsell) || canSuspend || canActivate) && <DropdownMenuSeparator />}
-              {user.status === "active" && canSuspend && onSuspend ? (
-                <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer">
-                  <Lock className="h-4 w-4 mr-2" />
-                  Suspend
-                </DropdownMenuItem>
-              ) : (
-                canActivate && onActivate && (
-                  <DropdownMenuItem onClick={() => onActivate(user)} className="cursor-pointer">
-                    <Check className="h-4 w-4 mr-2" />
-                    Activate
+                {canEdit && (
+                  <DropdownMenuItem onClick={() => onEdit(user)} className="cursor-pointer" data-testid={`action-edit-${user.id}`}>
+                    <Edit className="h-4 w-4 mr-2" />Edit
                   </DropdownMenuItem>
-                )
-              )}
-              {canDelete && <DropdownMenuSeparator />}
-              {canDelete && (
-                <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive cursor-pointer">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                )}
+                <DropdownMenuSeparator />
+                {onSendEmail && (
+                  <DropdownMenuItem onClick={() => onSendEmail(user)} className="cursor-pointer" data-testid={`action-email-${user.id}`}>
+                    <Mail className="h-4 w-4 mr-2" />Send Email
+                  </DropdownMenuItem>
+                )}
+                {onSendWhatsApp && user.phoneNumber && (
+                  <DropdownMenuItem onClick={() => onSendWhatsApp(user)} className="cursor-pointer">
+                    <MessageCircle className="h-4 w-4 mr-2" />Send WhatsApp
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {canUpsell && onChangePlan && (
+                  <DropdownMenuItem onClick={() => onChangePlan(user)} className="cursor-pointer" data-testid={`action-change-plan-${user.id}`}>
+                    <ArrowUpDown className="h-4 w-4 mr-2" />Change Plan
+                  </DropdownMenuItem>
+                )}
+                {onManageCredits && (
+                  <DropdownMenuItem onClick={() => onManageCredits(user)} className="cursor-pointer" data-testid={`action-credits-${user.id}`}>
+                    <Coins className="h-4 w-4 mr-2" />Manage Credits
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                {user.status === "active" && canSuspend && onSuspend ? (
+                  <DropdownMenuItem onClick={() => onSuspend(user)} className="cursor-pointer" data-testid={`action-suspend-${user.id}`}>
+                    <Lock className="h-4 w-4 mr-2" />Suspend
+                  </DropdownMenuItem>
+                ) : (
+                  canActivate && onActivate && (
+                    <DropdownMenuItem onClick={() => onActivate(user)} className="cursor-pointer" data-testid={`action-activate-${user.id}`}>
+                      <Check className="h-4 w-4 mr-2" />Activate
+                    </DropdownMenuItem>
+                  )
+                )}
+                {canDelete && <DropdownMenuSeparator />}
+                {canDelete && (
+                  <DropdownMenuItem onClick={() => onDelete(user)} className="text-destructive cursor-pointer" data-testid={`action-delete-${user.id}`}>
+                    <Trash2 className="h-4 w-4 mr-2" />Delete
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )
       },
     },
   ]
 }
-
