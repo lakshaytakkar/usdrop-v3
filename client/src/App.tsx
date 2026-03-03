@@ -121,6 +121,28 @@ const queryClient = new QueryClient({
   },
 });
 
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth()
+  const { isInternal, loading: metaLoading } = useUserMetadata()
+
+  if (authLoading || metaLoading) return null
+  if (!user) return <Redirect to="/login" />
+  if (!isInternal) return <Redirect to="/framework" />
+
+  return <>{children}</>
+}
+
+function UserGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading: authLoading } = useAuth()
+  const { isInternal, loading: metaLoading } = useUserMetadata()
+
+  if (authLoading || metaLoading) return null
+  if (!user) return <Redirect to="/login" />
+  if (isInternal) return <Redirect to="/admin" />
+
+  return <>{children}</>
+}
+
 function NotFound() {
   const { user, loading: authLoading } = useAuth()
   const { isInternal, loading: metaLoading } = useUserMetadata()
@@ -197,26 +219,26 @@ function Router() {
       <Route path="/auth/auth-code-error" component={AuthCodeError} />
       <Route path="/auth/callback" component={AuthCallback} />
 
-      {/* Admin */}
-      <Route path="/admin" component={() => <AdminLayout><AdminDashboard /></AdminLayout>} />
-      <Route path="/admin/products" component={() => <AdminLayout><AdminProducts /></AdminLayout>} />
-      <Route path="/admin/products/:id" component={() => <AdminLayout><AdminProductDetail /></AdminLayout>} />
-      <Route path="/admin/categories" component={() => <AdminLayout><AdminCategories /></AdminLayout>} />
-      <Route path="/admin/categories/:id" component={() => <AdminLayout><AdminCategoryDetail /></AdminLayout>} />
-      <Route path="/admin/courses" component={() => <AdminLayout><AdminCourses /></AdminLayout>} />
-      <Route path="/admin/courses/:courseId/builder" component={() => <AdminLayout><AdminCourseBuilder /></AdminLayout>} />
-      <Route path="/admin/competitor-stores" component={() => <AdminLayout><AdminCompetitorStores /></AdminLayout>} />
-      <Route path="/admin/competitor-stores/:id" component={() => <AdminLayout><AdminCompetitorStoreDetail /></AdminLayout>} />
-      <Route path="/admin/suppliers" component={() => <AdminLayout><AdminSuppliers /></AdminLayout>} />
-      <Route path="/admin/external-users" component={() => <AdminLayout><AdminExternalUsers /></AdminLayout>} />
-      <Route path="/admin/external-users/:id" component={() => <AdminLayout><AdminExternalUserDetail /></AdminLayout>} />
-      <Route path="/admin/internal-users" component={() => <AdminLayout><AdminInternalUsers /></AdminLayout>} />
-      <Route path="/admin/internal-users/:id" component={() => <AdminLayout><AdminInternalUserDetail /></AdminLayout>} />
-      <Route path="/admin/plans" component={() => <AdminLayout><AdminPlans /></AdminLayout>} />
-      <Route path="/admin/plans/:id" component={() => <AdminLayout><AdminPlanDetail /></AdminLayout>} />
-      <Route path="/admin/shopify-stores" component={() => <AdminLayout><AdminShopifyStores /></AdminLayout>} />
-      <Route path="/admin/leads" component={() => <AdminLayout><AdminLeads /></AdminLayout>} />
-      <Route path="/admin/leads/:id" component={() => <AdminLayout><AdminLeadDetail /></AdminLayout>} />
+      {/* Admin (internal users only) */}
+      <Route path="/admin" component={() => <AdminGuard><AdminLayout><AdminDashboard /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/products" component={() => <AdminGuard><AdminLayout><AdminProducts /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/products/:id" component={() => <AdminGuard><AdminLayout><AdminProductDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/categories" component={() => <AdminGuard><AdminLayout><AdminCategories /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/categories/:id" component={() => <AdminGuard><AdminLayout><AdminCategoryDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/courses" component={() => <AdminGuard><AdminLayout><AdminCourses /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/courses/:courseId/builder" component={() => <AdminGuard><AdminLayout><AdminCourseBuilder /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/competitor-stores" component={() => <AdminGuard><AdminLayout><AdminCompetitorStores /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/competitor-stores/:id" component={() => <AdminGuard><AdminLayout><AdminCompetitorStoreDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/suppliers" component={() => <AdminGuard><AdminLayout><AdminSuppliers /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/external-users" component={() => <AdminGuard><AdminLayout><AdminExternalUsers /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/external-users/:id" component={() => <AdminGuard><AdminLayout><AdminExternalUserDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/internal-users" component={() => <AdminGuard><AdminLayout><AdminInternalUsers /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/internal-users/:id" component={() => <AdminGuard><AdminLayout><AdminInternalUserDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/plans/:id" component={() => <AdminGuard><AdminLayout><AdminPlanDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/shopify-stores" component={() => <AdminGuard><AdminLayout><AdminShopifyStores /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/leads" component={() => <AdminGuard><AdminLayout><AdminLeads /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/leads/:id" component={() => <AdminGuard><AdminLayout><AdminLeadDetail /></AdminLayout></AdminGuard>} />
 
       {/* Dev */}
       <Route path="/dev" component={() => <DevLayout><DevDashboard /></DevLayout>} />
@@ -225,71 +247,71 @@ function Router() {
       <Route path="/dev/tasks/:id/edit" component={() => <DevLayout><DevTaskEdit /></DevLayout>} />
       <Route path="/dev/tasks/:id" component={() => <DevLayout><DevTaskDetail /></DevLayout>} />
 
-      {/* App pages (authenticated user pages with top nav) */}
+      {/* App pages (external users only — admin users redirected to /admin) */}
       {/* Framework (personal hub) — /framework/* */}
-      <Route path="/framework" component={() => <AppLayout><HomePage /></AppLayout>} />
-      <Route path="/framework/my-products" component={() => <AppLayout><MyProducts /></AppLayout>} />
-      <Route path="/framework/my-store" component={() => <AppLayout><MyStore /></AppLayout>} />
-      <Route path="/framework/my-roadmap" component={() => <AppLayout><MyRoadmap /></AppLayout>} />
-      <Route path="/framework/my-learning" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
-      <Route path="/framework/my-learning/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
-      <Route path="/framework/my-sessions" component={() => <AppLayout><MySessionsPage /></AppLayout>} />
-      <Route path="/framework/my-rnd" component={() => <AppLayout><MyRnD /></AppLayout>} />
-      <Route path="/framework/my-profile" component={() => <AppLayout><MyProfile /></AppLayout>} />
-      <Route path="/framework/my-credentials" component={() => <AppLayout><MyCredentials /></AppLayout>} />
-      <Route path="/framework/my-plan" component={() => <AppLayout><MyPlan /></AppLayout>} />
+      <Route path="/framework" component={() => <UserGuard><AppLayout><HomePage /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-products" component={() => <UserGuard><AppLayout><MyProducts /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-store" component={() => <UserGuard><AppLayout><MyStore /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-roadmap" component={() => <UserGuard><AppLayout><MyRoadmap /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-learning" component={() => <UserGuard><AppLayout><MentorshipPage /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-learning/:id" component={() => <UserGuard><AppLayout><MentorshipDetail /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-sessions" component={() => <UserGuard><AppLayout><MySessionsPage /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-rnd" component={() => <UserGuard><AppLayout><MyRnD /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-profile" component={() => <UserGuard><AppLayout><MyProfile /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-credentials" component={() => <UserGuard><AppLayout><MyCredentials /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-plan" component={() => <UserGuard><AppLayout><MyPlan /></AppLayout></UserGuard>} />
 
       {/* Products — /products/* */}
-      <Route path="/products/product-hunt" component={() => <AppLayout><ProductHunt /></AppLayout>} />
-      <Route path="/products/product-hunt/:id" component={() => <AppLayout><ProductHuntDetail /></AppLayout>} />
-      <Route path="/products/winning-products" component={() => <AppLayout><WinningProducts /></AppLayout>} />
-      <Route path="/products/categories" component={() => <AppLayout><CategoriesPage /></AppLayout>} />
-      <Route path="/products/seasonal-collections" component={() => <AppLayout><SeasonalCollections /></AppLayout>} />
-      <Route path="/products/trending" component={() => <AppLayout><TrendingProducts /></AppLayout>} />
-      <Route path="/products/competitor-stores" component={() => <AppLayout><CompetitorStoresPage /></AppLayout>} />
+      <Route path="/products/product-hunt" component={() => <UserGuard><AppLayout><ProductHunt /></AppLayout></UserGuard>} />
+      <Route path="/products/product-hunt/:id" component={() => <UserGuard><AppLayout><ProductHuntDetail /></AppLayout></UserGuard>} />
+      <Route path="/products/winning-products" component={() => <UserGuard><AppLayout><WinningProducts /></AppLayout></UserGuard>} />
+      <Route path="/products/categories" component={() => <UserGuard><AppLayout><CategoriesPage /></AppLayout></UserGuard>} />
+      <Route path="/products/seasonal-collections" component={() => <UserGuard><AppLayout><SeasonalCollections /></AppLayout></UserGuard>} />
+      <Route path="/products/trending" component={() => <UserGuard><AppLayout><TrendingProducts /></AppLayout></UserGuard>} />
+      <Route path="/products/competitor-stores" component={() => <UserGuard><AppLayout><CompetitorStoresPage /></AppLayout></UserGuard>} />
 
       {/* Ads — /ads/* */}
-      <Route path="/ads/meta-ads" component={() => <AppLayout><MetaAds /></AppLayout>} />
-      <Route path="/ads/videos" component={() => <AppLayout><VideosPage /></AppLayout>} />
+      <Route path="/ads/meta-ads" component={() => <UserGuard><AppLayout><MetaAds /></AppLayout></UserGuard>} />
+      <Route path="/ads/videos" component={() => <UserGuard><AppLayout><VideosPage /></AppLayout></UserGuard>} />
 
       {/* Private Supplier */}
-      <Route path="/private-supplier" component={() => <AppLayout><SuppliersPage /></AppLayout>} />
+      <Route path="/private-supplier" component={() => <UserGuard><AppLayout><SuppliersPage /></AppLayout></UserGuard>} />
 
       {/* LLC */}
-      <Route path="/llc" component={() => <AppLayout><MyLLC /></AppLayout>} />
+      <Route path="/llc" component={() => <UserGuard><AppLayout><MyLLC /></AppLayout></UserGuard>} />
 
       {/* AI Studio — /ai-studio/* */}
-      <Route path="/ai-studio/model-studio" component={() => <AppLayout><ModelStudio /></AppLayout>} />
-      <Route path="/ai-studio/whitelabelling" component={() => <AppLayout><Whitelabelling /></AppLayout>} />
+      <Route path="/ai-studio/model-studio" component={() => <UserGuard><AppLayout><ModelStudio /></AppLayout></UserGuard>} />
+      <Route path="/ai-studio/whitelabelling" component={() => <UserGuard><AppLayout><Whitelabelling /></AppLayout></UserGuard>} />
 
       {/* Tools — /tools/* */}
-      <Route path="/tools/description-generator" component={() => <AppLayout><DescriptionGenerator /></AppLayout>} />
-      <Route path="/tools/email-templates" component={() => <AppLayout><EmailTemplates /></AppLayout>} />
-      <Route path="/tools/policy-generator" component={() => <AppLayout><PolicyGenerator /></AppLayout>} />
-      <Route path="/tools/invoice-generator" component={() => <AppLayout><InvoiceGenerator /></AppLayout>} />
-      <Route path="/tools/profit-calculator" component={() => <AppLayout><ProfitCalculator /></AppLayout>} />
-      <Route path="/tools/shipping-calculator" component={() => <AppLayout><ShippingCalculator /></AppLayout>} />
-      <Route path="/tools/cro-checklist" component={() => <AppLayout><CROChecklist /></AppLayout>} />
+      <Route path="/tools/description-generator" component={() => <UserGuard><AppLayout><DescriptionGenerator /></AppLayout></UserGuard>} />
+      <Route path="/tools/email-templates" component={() => <UserGuard><AppLayout><EmailTemplates /></AppLayout></UserGuard>} />
+      <Route path="/tools/policy-generator" component={() => <UserGuard><AppLayout><PolicyGenerator /></AppLayout></UserGuard>} />
+      <Route path="/tools/invoice-generator" component={() => <UserGuard><AppLayout><InvoiceGenerator /></AppLayout></UserGuard>} />
+      <Route path="/tools/profit-calculator" component={() => <UserGuard><AppLayout><ProfitCalculator /></AppLayout></UserGuard>} />
+      <Route path="/tools/shipping-calculator" component={() => <UserGuard><AppLayout><ShippingCalculator /></AppLayout></UserGuard>} />
+      <Route path="/tools/cro-checklist" component={() => <UserGuard><AppLayout><CROChecklist /></AppLayout></UserGuard>} />
 
       {/* Resources */}
-      <Route path="/resources" component={() => <AppLayout><ResourcesPage /></AppLayout>} />
+      <Route path="/resources" component={() => <UserGuard><AppLayout><ResourcesPage /></AppLayout></UserGuard>} />
 
       {/* Other app pages */}
-      <Route path="/mentorship" component={() => <AppLayout><MentorshipPage /></AppLayout>} />
-      <Route path="/mentorship/:id" component={() => <AppLayout><MentorshipDetail /></AppLayout>} />
-      <Route path="/blogs" component={() => <AppLayout><BlogsPage /></AppLayout>} />
-      <Route path="/blogs/:slug" component={() => <AppLayout><BlogDetail /></AppLayout>} />
-      <Route path="/prompt-analyzer" component={() => <AppLayout><PromptAnalyzer /></AppLayout>} />
-      <Route path="/store-research" component={() => <AppLayout><StoreResearch /></AppLayout>} />
-      <Route path="/research-tools" component={() => <AppLayout><ResearchTools /></AppLayout>} />
-      <Route path="/intelligence-hub" component={() => <AppLayout><IntelligenceHub /></AppLayout>} />
-      <Route path="/selling-channels" component={() => <AppLayout><SellingChannels /></AppLayout>} />
-      <Route path="/fulfillment" component={() => <AppLayout><Fulfillment /></AppLayout>} />
-      <Route path="/shopify-stores" component={() => <AppLayout><ShopifyStores /></AppLayout>} />
+      <Route path="/mentorship" component={() => <UserGuard><AppLayout><MentorshipPage /></AppLayout></UserGuard>} />
+      <Route path="/mentorship/:id" component={() => <UserGuard><AppLayout><MentorshipDetail /></AppLayout></UserGuard>} />
+      <Route path="/blogs" component={() => <UserGuard><AppLayout><BlogsPage /></AppLayout></UserGuard>} />
+      <Route path="/blogs/:slug" component={() => <UserGuard><AppLayout><BlogDetail /></AppLayout></UserGuard>} />
+      <Route path="/prompt-analyzer" component={() => <UserGuard><AppLayout><PromptAnalyzer /></AppLayout></UserGuard>} />
+      <Route path="/store-research" component={() => <UserGuard><AppLayout><StoreResearch /></AppLayout></UserGuard>} />
+      <Route path="/research-tools" component={() => <UserGuard><AppLayout><ResearchTools /></AppLayout></UserGuard>} />
+      <Route path="/intelligence-hub" component={() => <UserGuard><AppLayout><IntelligenceHub /></AppLayout></UserGuard>} />
+      <Route path="/selling-channels" component={() => <UserGuard><AppLayout><SellingChannels /></AppLayout></UserGuard>} />
+      <Route path="/fulfillment" component={() => <UserGuard><AppLayout><Fulfillment /></AppLayout></UserGuard>} />
+      <Route path="/shopify-stores" component={() => <UserGuard><AppLayout><ShopifyStores /></AppLayout></UserGuard>} />
       <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
-      <Route path="/who-is-this-for" component={() => <AppLayout><WhoIsThisFor /></AppLayout>} />
-      <Route path="/help-center" component={() => <AppLayout><HelpCenter /></AppLayout>} />
-      <Route path="/help" component={() => <AppLayout><HelpPage /></AppLayout>} />
+      <Route path="/who-is-this-for" component={() => <UserGuard><AppLayout><WhoIsThisFor /></AppLayout></UserGuard>} />
+      <Route path="/help-center" component={() => <UserGuard><AppLayout><HelpCenter /></AppLayout></UserGuard>} />
+      <Route path="/help" component={() => <UserGuard><AppLayout><HelpPage /></AppLayout></UserGuard>} />
 
       {/* Legacy redirects → new /menu/submenu routes */}
       <Route path="/home"><Redirect to="/framework" /></Route>
@@ -312,7 +334,7 @@ function Router() {
       <Route path="/competitor-stores"><Redirect to="/products/competitor-stores" /></Route>
       <Route path="/meta-ads"><Redirect to="/ads/meta-ads" /></Route>
       <Route path="/suppliers"><Redirect to="/private-supplier" /></Route>
-      <Route path="/tools" component={() => <AppLayout><ToolsPage /></AppLayout>} />
+      <Route path="/tools" component={() => <UserGuard><AppLayout><ToolsPage /></AppLayout></UserGuard>} />
       <Route path="/shipping-calculator"><Redirect to="/tools/shipping-calculator" /></Route>
       <Route path="/studio/model-studio"><Redirect to="/ai-studio/model-studio" /></Route>
       <Route path="/studio/whitelabelling"><Redirect to="/ai-studio/whitelabelling" /></Route>
