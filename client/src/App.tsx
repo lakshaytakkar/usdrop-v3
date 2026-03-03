@@ -22,6 +22,8 @@ import SignupPage from "@/pages/signup/page";
 import AdminDashboard from "@/pages/admin/page";
 import AdminCourses from "@/pages/admin/courses/page";
 import AdminCourseBuilder from "@/pages/admin/courses/[courseId]/builder/page";
+import AdminProducts from "@/pages/admin/products/page";
+import AdminProductDetail from "@/pages/admin/products/[id]/page";
 import AdminExternalUsers from "@/pages/admin/external-users/page";
 import AdminExternalUserDetail from "@/pages/admin/external-users/[id]/page";
 import AdminInternalUsers from "@/pages/admin/internal-users/page";
@@ -211,6 +213,8 @@ function Router() {
       <Route path="/admin" component={() => <AdminGuard><AdminLayout><AdminDashboard /></AdminLayout></AdminGuard>} />
       <Route path="/admin/courses" component={() => <AdminGuard><AdminLayout><AdminCourses /></AdminLayout></AdminGuard>} />
       <Route path="/admin/courses/:courseId/builder" component={() => <AdminGuard><AdminLayout><AdminCourseBuilder /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/products" component={() => <AdminGuard><AdminLayout><AdminProducts /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/products/:id" component={() => <AdminGuard><AdminLayout><AdminProductDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/external-users" component={() => <AdminGuard><AdminLayout><AdminExternalUsers /></AdminLayout></AdminGuard>} />
       <Route path="/admin/external-users/:id" component={() => <AdminGuard><AdminLayout><AdminExternalUserDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/internal-users" component={() => <AdminGuard><AdminLayout><AdminInternalUsers /></AdminLayout></AdminGuard>} />

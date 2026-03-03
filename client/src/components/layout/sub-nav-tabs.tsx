@@ -1,12 +1,13 @@
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { usePathname } from "@/hooks/use-router"
 import { Link } from "wouter"
 import { cn } from "@/lib/utils"
 import { findActiveGroup, NavItem } from "@/data/navigation"
 import { UnlockBadge } from "@/components/ui/unlock-badge"
 import { useUserPlan } from "@/hooks/use-user-plan"
-import { Search, PlayCircle, Download, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react"
+import { useModuleAccess } from "@/hooks/use-module-access"
+import { Search, PlayCircle, Download, SlidersHorizontal, ChevronLeft, ChevronRight, Lock } from "lucide-react"
 import { VideoTutorialModal } from "@/components/ui/video-tutorial-modal"
 
 interface ToolbarAction {
@@ -132,6 +133,7 @@ export function SubNavTabs() {
   const pathname = usePathname()
   const activeGroup = findActiveGroup(pathname || "")
   const { isFree, isLoading } = useUserPlan()
+  const { getModuleAccess } = useModuleAccess()
   const [searchValue, setSearchValue] = useState("")
   const [videoModalOpen, setVideoModalOpen] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -158,9 +160,18 @@ export function SubNavTabs() {
     }
   }, [checkScroll, activeGroup?.label])
 
+  const filteredItems = useMemo(() => {
+    if (!activeGroup) return []
+    return activeGroup.items.filter((item) => {
+      const access = getModuleAccess(item.moduleId)
+      if (access === "hidden") return false
+      return true
+    })
+  }, [activeGroup, getModuleAccess])
+
   if (!activeGroup) return null
 
-  const hasTabs = activeGroup.items.length > 1
+  const hasTabs = filteredItems.length > 1
   const isDetailPage = /\/products\/product-hunt\/[^/]+$/.test(pathname || "")
   if (isDetailPage) return null
   const isMetaAdsPage = pathname === "/ads/meta-ads"
@@ -217,9 +228,12 @@ export function SubNavTabs() {
             ref={scrollRef}
             className="flex items-center gap-1.5 min-w-0 flex-1 overflow-x-hidden"
           >
-            {activeGroup.items.map((item, index) => {
+            {filteredItems.map((item, index) => {
               const isActive = pathname === item.url || (item.url !== "/framework" && pathname?.startsWith(item.url + "/"))
-              const isLocked = !isLoading && isFree && item.isPro
+              const moduleAccess = getModuleAccess(item.moduleId)
+              const isOverrideLocked = moduleAccess === "locked"
+              const isOverrideGranted = moduleAccess === "full_access"
+              const isLocked = isOverrideLocked || (!isOverrideGranted && !isLoading && isFree && !!item.isPro)
 
               return (
                 <SubNavTabItem

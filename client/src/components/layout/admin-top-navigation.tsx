@@ -20,6 +20,7 @@ import {
   X,
   LayoutDashboard,
   UserCog,
+  Package,
   Book,
   Users,
 } from "lucide-react"
@@ -48,6 +49,12 @@ const adminNavGroups: AdminNavGroup[] = [
     label: "Users",
     items: [
       { title: "Clients", icon: UserCog, url: "/admin/external-users" },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { title: "Products", icon: Package, url: "/admin/products" },
     ],
   },
   {

@@ -730,4 +730,37 @@ export function registerAuthRoutes(app: Express) {
   });
 
   app.use('/api/auth', router);
+
+  const userRouter = Router();
+
+  userRouter.get('/module-overrides', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+
+      const { data: overrides, error } = await supabaseRemote
+        .from('user_module_overrides')
+        .select('module_id, access_level')
+        .eq('user_id', user.id);
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') {
+          return res.json({ overrides: [] });
+        }
+        console.error('Error fetching module overrides:', error);
+        return res.json({ overrides: [] });
+      }
+
+      return res.json({
+        overrides: (overrides || []).map((o: any) => ({
+          moduleId: o.module_id,
+          accessLevel: o.access_level,
+        })),
+      });
+    } catch (error) {
+      console.error('Error in GET /api/user/module-overrides:', error);
+      return res.json({ overrides: [] });
+    }
+  });
+
+  app.use('/api/user', userRouter);
 }

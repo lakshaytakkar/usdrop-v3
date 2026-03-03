@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
@@ -34,6 +33,7 @@ import {
 } from "@/lib/utils/password"
 import { cn } from "@/lib/utils"
 import { Loader } from "@/components/ui/loader"
+import { freeLearningModules, findLesson } from "@/pages/free-learning/data"
 import {
   Edit,
   Mail,
@@ -66,7 +66,17 @@ import {
   Copy,
   RefreshCw,
   KeyRound,
+  CheckCircle2,
+  Circle,
+  Users,
+  BarChart3,
 } from "lucide-react"
+
+const TOTAL_FREE_LESSONS = freeLearningModules.reduce((acc, m) => acc + m.lessons.length, 0)
+
+const allFreeLessons = freeLearningModules.flatMap(m =>
+  m.lessons.map(l => ({ ...l, moduleName: m.title }))
+)
 
 interface JourneyData {
   userId: string
@@ -116,6 +126,12 @@ interface AdminNote {
   updatedAt: string
 }
 
+interface LessonProgress {
+  lesson_id: string
+  completed_at: string
+  source: string
+}
+
 export default function ExternalUserDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -144,6 +160,9 @@ export default function ExternalUserDetailPage() {
 
   const [userProgress, setUserProgress] = useState<any>(null)
   const [progressLoading, setProgressLoading] = useState(true)
+
+  const [learningProgress, setLearningProgress] = useState<LessonProgress[]>([])
+  const [learningProgressLoading, setLearningProgressLoading] = useState(true)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
@@ -306,6 +325,25 @@ export default function ExternalUserDetailPage() {
     fetchProgress()
   }, [userId])
 
+  useEffect(() => {
+    if (!userId) return
+    const fetchLearningProgress = async () => {
+      try {
+        setLearningProgressLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/learning-progress`)
+        if (response.ok) {
+          const data = await response.json()
+          setLearningProgress(data.lessons || [])
+        }
+      } catch (err) {
+        console.error('Error fetching learning progress:', err)
+      } finally {
+        setLearningProgressLoading(false)
+      }
+    }
+    fetchLearningProgress()
+  }, [userId])
+
   const { prevUser, nextUser } = useMemo(() => {
     if (!user) return { prevUser: null, nextUser: null }
     const currentIndex = allUsers.findIndex((u) => u.id === user.id)
@@ -313,6 +351,10 @@ export default function ExternalUserDetailPage() {
     const next = currentIndex < allUsers.length - 1 ? allUsers[currentIndex + 1] : null
     return { prevUser: prev, nextUser: next }
   }, [user, allUsers])
+
+  const completedLessonIds = useMemo(() => {
+    return new Set(learningProgress.map(lp => lp.lesson_id))
+  }, [learningProgress])
 
   const handleSuspend = useCallback(async () => {
     if (!user) return
@@ -529,6 +571,14 @@ export default function ExternalUserDetailPage() {
     return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
   }
 
+  const getDaysActive = useCallback(() => {
+    if (!user) return 0
+    const now = new Date()
+    const created = new Date(user.createdAt)
+    const diff = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+    return Math.max(diff, 1)
+  }, [user])
+
   if (loading) {
     return (
       <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
@@ -560,84 +610,156 @@ export default function ExternalUserDetailPage() {
     }
   }
 
-  const overviewTab = (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-            Account Info
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Plan</p>
-              <AdminStatusBadge status={user.plan} size="sm" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Status</p>
-              <AdminStatusBadge status={user.status} dot size="sm" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Subscription Date</p>
-              <p className="text-sm font-medium" data-testid="text-subscription-date">{formatDate(user.subscriptionDate)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Expiry Date</p>
-              <p className="text-sm font-medium" data-testid="text-expiry-date">
-                {formatDate(user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Credits</p>
-              <p className="text-sm font-semibold" data-testid="text-credits">{(user.credits || 0).toLocaleString()}</p>
-            </div>
-            {user.isTrial && (
-              <div>
-                <p className="text-xs text-muted-foreground">Trial</p>
-                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Trial</Badge>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+  const getAccessLevelBadge = (level: string | null) => {
+    switch (level) {
+      case 'full_access':
+        return <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">Full Access</Badge>
+      case 'limited_access':
+        return <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Limited</Badge>
+      case 'locked':
+        return <Badge variant="outline" className="text-[10px] bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">Locked</Badge>
+      case 'hidden':
+        return <Badge variant="outline" className="text-[10px] bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20">Hidden</Badge>
+      default:
+        return <Badge variant="outline" className="text-[10px]">Plan Default</Badge>
+    }
+  }
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Mail className="h-4 w-4 text-muted-foreground" />
-            User Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 gap-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Email</p>
-              <p className="text-sm font-medium" data-testid="text-email">{user.email}</p>
-            </div>
-            {user.phoneNumber && (
-              <div>
-                <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="text-sm font-medium" data-testid="text-phone">{user.phoneNumber}</p>
+  const overviewTab = (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                <GraduationCap className="h-4 w-4 text-primary" />
               </div>
-            )}
-            {user.username && (
               <div>
-                <p className="text-xs text-muted-foreground">Username</p>
-                <p className="text-sm font-medium" data-testid="text-username">{user.username}</p>
+                <p className="text-2xl font-semibold" data-testid="stat-courses-enrolled">{journey?.courses.started || 0}</p>
+                <p className="text-xs text-muted-foreground">Courses Enrolled</p>
               </div>
-            )}
-            <div>
-              <p className="text-xs text-muted-foreground">Joined</p>
-              <p className="text-sm font-medium" data-testid="text-joined">{formatDate(user.createdAt)}</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                <ShoppingBag className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold" data-testid="stat-products-saved">{journey?.productsSaved || 0}</p>
+                <p className="text-xs text-muted-foreground">Products Saved</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                <BookOpen className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold" data-testid="stat-lessons-completed">{completedLessonIds.size}</p>
+                <p className="text-xs text-muted-foreground">Lessons Completed</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-semibold" data-testid="stat-days-active">{getDaysActive()}</p>
+                <p className="text-xs text-muted-foreground">Days Active</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              Account Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Plan</p>
+                <AdminStatusBadge status={user.plan} size="sm" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Status</p>
+                <AdminStatusBadge status={user.status} dot size="sm" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Subscription Date</p>
+                <p className="text-sm font-medium" data-testid="text-subscription-date">{formatDate(user.subscriptionDate)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Expiry Date</p>
+                <p className="text-sm font-medium" data-testid="text-expiry-date">
+                  {formatDate(user.isTrial && user.trialEndsAt ? user.trialEndsAt : user.expiryDate)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Credits</p>
+                <p className="text-sm font-semibold" data-testid="text-credits">{(user.credits || 0).toLocaleString()}</p>
+              </div>
+              {user.isTrial && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Trial</p>
+                  <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">Trial</Badge>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              Contact Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 gap-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm font-medium" data-testid="text-email">{user.email}</p>
+              </div>
+              {user.phoneNumber && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium" data-testid="text-phone">{user.phoneNumber}</p>
+                </div>
+              )}
+              {user.username && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Username</p>
+                  <p className="text-sm font-medium" data-testid="text-username">{user.username}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-muted-foreground">Joined</p>
+                <p className="text-sm font-medium" data-testid="text-joined">{formatDate(user.createdAt)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {!progressLoading && userProgress?.userDetails && (
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-muted-foreground" />
@@ -677,170 +799,159 @@ export default function ExternalUserDetailPage() {
     </div>
   )
 
-  const journeyTab = (
+  const learningTab = (
     <div className="space-y-4">
-      {journeyLoading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2"><Skeleton className="h-4 w-40" /></CardHeader>
-              <CardContent className="space-y-2"><Skeleton className="h-3 w-48" /><Skeleton className="h-2 w-full rounded-full" /></CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : journey ? (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold" data-testid="text-onboarding-progress">{journey.onboarding.completedSteps}/{journey.onboarding.totalSteps}</p>
-                    <p className="text-xs text-muted-foreground">Onboarding Steps</p>
-                  </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            Free Learning Progress
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {learningProgressLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <div className="space-y-2 mt-4">
+                {[1, 2, 3].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mb-4">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Overall completion</span>
+                  <span className="font-semibold" data-testid="text-free-learning-progress">{completedLessonIds.size}/{TOTAL_FREE_LESSONS} lessons</span>
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
-                    <GraduationCap className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold" data-testid="text-courses-progress">{journey.courses.completed}/{journey.courses.started}</p>
-                    <p className="text-xs text-muted-foreground">Courses Completed</p>
-                  </div>
+                <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${TOTAL_FREE_LESSONS > 0 ? (completedLessonIds.size / TOTAL_FREE_LESSONS) * 100 : 0}%` }}
+                  />
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
-                    <ShoppingBag className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold" data-testid="text-products-saved">{journey.productsSaved}</p>
-                    <p className="text-xs text-muted-foreground">Products Saved</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-lg bg-primary/5 border flex items-center justify-center">
-                    <Key className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-semibold" data-testid="text-credentials-count">{journey.credentialsCount}</p>
-                    <p className="text-xs text-muted-foreground">Credentials Stored</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {TOTAL_FREE_LESSONS > 0 ? Math.round((completedLessonIds.size / TOTAL_FREE_LESSONS) * 100) : 0}% complete
+                </p>
+              </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Map className="h-4 w-4 text-muted-foreground" />
-                Roadmap Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {journey.roadmap.total === 0 ? (
-                <p className="text-sm text-muted-foreground">No roadmap tasks found</p>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Overall completion</span>
-                    <span className="font-medium">{journey.roadmap.progressPercent}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.roadmap.progressPercent}%` }} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{journey.roadmap.completed} of {journey.roadmap.total} tasks completed</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {journey.courses.enrollments.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  Course Enrollments
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {journey.courses.enrollments.map((enrollment) => (
-                    <div key={enrollment.id} className="flex items-center justify-between gap-4 py-2 border-b last:border-b-0" data-testid={`enrollment-${enrollment.id}`}>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{enrollment.courseTitle}</p>
-                        <p className="text-xs text-muted-foreground">Enrolled: {formatDate(enrollment.enrolledAt)}</p>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-20">
-                          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${enrollment.progressPercentage}%` }} />
-                          </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 text-right">{Math.round(enrollment.progressPercentage)}%</p>
+              <div className="space-y-1">
+                {freeLearningModules.map((mod) => {
+                  const completedInModule = mod.lessons.filter(l => completedLessonIds.has(l.id)).length
+                  const isModuleComplete = completedInModule === mod.lessons.length
+                  return (
+                    <div key={mod.id} className="border-b last:border-b-0">
+                      <div className="flex items-center justify-between py-2.5 px-1" data-testid={`free-module-${mod.id}`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isModuleComplete ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <span className="text-sm font-medium truncate">{mod.title}</span>
                         </div>
-                        {enrollment.completedAt ? (
-                          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">Done</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px]">In Progress</Badge>
-                        )}
+                        <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{completedInModule}/{mod.lessons.length}</span>
                       </div>
+                      {completedInModule > 0 && completedInModule < mod.lessons.length && (
+                        <div className="pl-7 pb-2 space-y-1">
+                          {mod.lessons.map(lesson => {
+                            const isComplete = completedLessonIds.has(lesson.id)
+                            const progressEntry = learningProgress.find(lp => lp.lesson_id === lesson.id)
+                            return (
+                              <div key={lesson.id} className="flex items-center justify-between text-xs py-0.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {isComplete ? (
+                                    <Check className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                                  ) : (
+                                    <Circle className="h-3 w-3 text-muted-foreground/50 flex-shrink-0" />
+                                  )}
+                                  <span className={cn("truncate", !isComplete && "text-muted-foreground")}>{lesson.title}</span>
+                                </div>
+                                {isComplete && progressEntry && (
+                                  <span className="text-muted-foreground flex-shrink-0 ml-2">{formatDate(progressEntry.completed_at)}</span>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  )
+                })}
+              </div>
+            </>
           )}
+        </CardContent>
+      </Card>
 
-          {journey.shopifyStores.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Store className="h-4 w-4 text-muted-foreground" />
-                  Shopify Stores
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {journey.shopifyStores.map((store) => (
-                    <div key={store.id} className="flex items-center justify-between py-2 border-b last:border-b-0" data-testid={`shopify-store-${store.id}`}>
-                      <div>
-                        <p className="text-sm font-medium">{store.storeName || store.storeUrl}</p>
-                        <p className="text-xs text-muted-foreground">{store.storeUrl}</p>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            Paid Course Enrollments
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {journeyLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : journey && journey.courses.enrollments.length > 0 ? (
+            <div className="space-y-3">
+              {journey.courses.enrollments.map((enrollment) => (
+                <div key={enrollment.id} className="flex items-center justify-between gap-4 py-2 border-b last:border-b-0" data-testid={`enrollment-${enrollment.id}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{enrollment.courseTitle}</p>
+                    <p className="text-xs text-muted-foreground">Enrolled: {formatDate(enrollment.enrolledAt)}</p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="w-20">
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${enrollment.progressPercentage}%` }} />
                       </div>
-                      <AdminStatusBadge status={store.status || "connected"} size="sm" />
+                      <p className="text-[10px] text-muted-foreground mt-0.5 text-right">{Math.round(enrollment.progressPercentage)}%</p>
                     </div>
-                  ))}
+                    {enrollment.completedAt ? (
+                      <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">Done</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px]">In Progress</Badge>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground py-2">No paid course enrollments</p>
           )}
-        </>
-      ) : (
+        </CardContent>
+      </Card>
+
+      {journey && journey.roadmap.total > 0 && (
         <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">Unable to load journey data</p>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Map className="h-4 w-4 text-muted-foreground" />
+              Roadmap Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Overall completion</span>
+                <span className="font-medium">{journey.roadmap.progressPercent}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.roadmap.progressPercent}%` }} />
+              </div>
+              <p className="text-xs text-muted-foreground">{journey.roadmap.completed} of {journey.roadmap.total} tasks completed</p>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
   )
 
-  const sessionsTab = (
+  const accessControlTab = (
     <div className="space-y-4">
       {sessionsLoading ? (
         <Card>
@@ -854,74 +965,84 @@ export default function ExternalUserDetailPage() {
           </CardContent>
         </Card>
       ) : (
-        <>
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Settings className="h-4 w-4 text-muted-foreground" />
-                  Module Access Controls
-                </CardTitle>
-                {Object.keys(pendingOverrides).length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={handleSaveModuleOverrides}
-                    disabled={sessionsSaving}
-                    data-testid="button-save-sessions"
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Settings className="h-4 w-4 text-muted-foreground" />
+                Module Access Controls
+              </CardTitle>
+              {Object.keys(pendingOverrides).length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={handleSaveModuleOverrides}
+                  disabled={sessionsSaving}
+                  data-testid="button-save-overrides"
+                >
+                  {sessionsSaving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                  Save Changes ({Object.keys(pendingOverrides).length})
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Override module access for this specific user. Leave as "Plan Default" to use the access level from their subscription plan.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-0">
+              <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-2 px-2 text-xs font-medium text-muted-foreground border-b">
+                <span>Module</span>
+                <span className="w-24 text-center">Current</span>
+                <span className="w-40 text-center">Override</span>
+              </div>
+              {sessions.map((mod) => {
+                const currentOverride = pendingOverrides[mod.moduleId] !== undefined
+                  ? pendingOverrides[mod.moduleId]
+                  : mod.accessLevel
+                const hasPendingChange = pendingOverrides[mod.moduleId] !== undefined
+                return (
+                  <div
+                    key={mod.moduleId}
+                    className={cn(
+                      "grid grid-cols-[1fr_auto_auto] gap-4 items-center py-2.5 px-2 border-b last:border-b-0",
+                      hasPendingChange && "bg-primary/5"
+                    )}
+                    data-testid={`session-module-${mod.moduleId}`}
                   >
-                    {sessionsSaving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                    Save Changes ({Object.keys(pendingOverrides).length})
-                  </Button>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Override module access for this specific user. Leave as "Plan Default" to use the access level from their subscription plan.</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1">
-                {sessions.map((mod) => {
-                  const currentOverride = pendingOverrides[mod.moduleId] !== undefined
-                    ? pendingOverrides[mod.moduleId]
-                    : mod.accessLevel
-                  return (
-                    <div
-                      key={mod.moduleId}
-                      className="flex items-center justify-between gap-4 py-2.5 px-2 rounded-md border-b last:border-b-0"
-                      data-testid={`session-module-${mod.moduleId}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{mod.moduleName}</p>
-                        {mod.hasOverride && pendingOverrides[mod.moduleId] === undefined && (
-                          <p className="text-[10px] text-muted-foreground">Override active: {mod.accessLevel}</p>
-                        )}
-                      </div>
-                      <Select
-                        value={currentOverride || "plan_default"}
-                        onValueChange={(value) => {
-                          if (value === "plan_default") {
-                            setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: null }))
-                          } else {
-                            setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: value }))
-                          }
-                        }}
-                      >
-                        <SelectTrigger className="w-40" data-testid={`select-module-${mod.moduleId}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="plan_default">Plan Default</SelectItem>
-                          <SelectItem value="full_access">Full Access</SelectItem>
-                          <SelectItem value="limited_access">Limited Access</SelectItem>
-                          <SelectItem value="locked">Locked</SelectItem>
-                          <SelectItem value="hidden">Hidden</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{mod.moduleName}</p>
+                      {mod.hasOverride && pendingOverrides[mod.moduleId] === undefined && (
+                        <p className="text-[10px] text-muted-foreground">Override set {mod.overriddenAt ? formatDate(mod.overriddenAt) : ''}</p>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </>
+                    <div className="w-24 flex justify-center">
+                      {getAccessLevelBadge(mod.hasOverride ? mod.accessLevel : null)}
+                    </div>
+                    <Select
+                      value={currentOverride || "plan_default"}
+                      onValueChange={(value) => {
+                        if (value === "plan_default") {
+                          setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: null }))
+                        } else {
+                          setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: value }))
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-40" data-testid={`select-module-${mod.moduleId}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="plan_default">Plan Default</SelectItem>
+                        <SelectItem value="full_access">Full Access</SelectItem>
+                        <SelectItem value="limited_access">Limited Access</SelectItem>
+                        <SelectItem value="locked">Locked</SelectItem>
+                        <SelectItem value="hidden">Hidden</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
@@ -1069,11 +1190,11 @@ export default function ExternalUserDetailPage() {
   )
 
   const tabs = [
-    { value: "overview", label: "Overview", content: overviewTab },
-    { value: "journey", label: "Journey", content: journeyTab },
-    { value: "sessions", label: "Sessions", content: sessionsTab, count: sessions.filter(s => s.hasOverride).length || undefined },
-    { value: "activity", label: "Activity", content: activityTab, count: activities.length || undefined },
-    { value: "notes", label: "Notes", content: notesTab, count: notes.length || undefined },
+    { value: "overview", label: "Overview", icon: <BarChart3 className="h-3.5 w-3.5" />, content: overviewTab },
+    { value: "learning", label: "Learning", icon: <GraduationCap className="h-3.5 w-3.5" />, content: learningTab },
+    { value: "access", label: "Access Control", icon: <Shield className="h-3.5 w-3.5" />, content: accessControlTab, count: sessions.filter(s => s.hasOverride).length || undefined },
+    { value: "activity", label: "Activity", icon: <ActivityIcon className="h-3.5 w-3.5" />, content: activityTab, count: activities.length || undefined },
+    { value: "notes", label: "Notes", icon: <StickyNote className="h-3.5 w-3.5" />, content: notesTab, count: notes.length || undefined },
   ]
 
   const headerActions = [
@@ -1092,7 +1213,7 @@ export default function ExternalUserDetailPage() {
         backHref="/admin/external-users"
         backLabel="Clients"
         title={user.name}
-        subtitle={user.email}
+        subtitle={`${user.email} · Joined ${formatDate(user.createdAt)}`}
         avatarUrl={user.avatarUrl || getAvatarUrl(user.id, user.email)}
         badges={[
           <AdminStatusBadge key="plan" status={user.plan} />,

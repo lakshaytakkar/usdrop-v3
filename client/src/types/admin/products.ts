@@ -32,6 +32,8 @@ export interface ProductPick {
   additional_images: string[] | null
   specifications: Record<string, any> | null
   is_trending?: boolean
+  is_winning?: boolean
+  is_locked?: boolean
   created_at: string
   updated_at: string
   // Joined data

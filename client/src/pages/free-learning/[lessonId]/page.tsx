@@ -3,7 +3,7 @@ import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
 import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, LockOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
+import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, markLessonCompletedOnServer, syncCompletedLessonsFromServer, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
 import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
 
 function Sidebar({
@@ -132,9 +132,16 @@ export default function FreeLearningLessonPage() {
   useEffect(() => {
     if (lessonId) {
       markLessonCompleted(lessonId)
+      markLessonCompletedOnServer(lessonId)
       setCompletionVersion(v => v + 1)
     }
   }, [lessonId])
+
+  useEffect(() => {
+    syncCompletedLessonsFromServer().then(() => {
+      setCompletionVersion(v => v + 1)
+    })
+  }, [])
 
   const allCompleted = useMemo(() => isAllCompleted(), [completionVersion])
 

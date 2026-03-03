@@ -38,17 +38,14 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Folder,
   Star,
   TrendingUp,
-  Flame,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react"
 import { ProductFormModal } from "./components/product-form-modal"
-import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { useHasPermission } from "@/hooks/use-has-permission"
@@ -64,7 +61,7 @@ import {
 
 type SortField = "title" | "created_at" | "sell_price" | "profit_per_order" | "rating"
 type SortOrder = "asc" | "desc"
-type ProductTab = "all" | "hand-picked" | "trending"
+type ProductTab = "all" | "winning" | "locked"
 
 export default function AdminProductsPage() {
   const router = useRouter()
@@ -111,10 +108,10 @@ export default function AdminProductsPage() {
         params.set("category_id", categoryFilter)
       }
 
-      if (activeTab === "hand-picked") {
-        params.set("source_type", "hand_picked")
-      } else if (activeTab === "trending") {
-        params.set("is_trending", "true")
+      if (activeTab === "winning") {
+        params.set("is_winning", "true")
+      } else if (activeTab === "locked") {
+        params.set("is_locked", "true")
       }
 
       const response = await apiFetch(`/api/admin/products?${params.toString()}`)
@@ -269,68 +266,6 @@ export default function AdminProductsPage() {
     setProductFormOpen(true)
   }
 
-  const handleToggleTrending = async (product: Product) => {
-    if (!canEdit) {
-      showError("You don't have permission to edit products")
-      return
-    }
-    try {
-      const isTrending = product.metadata?.is_trending ?? false
-      const response = await apiFetch(`/api/admin/products/${product.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ metadata: { is_trending: !isTrending } }),
-      })
-      if (!response.ok) throw new Error("Failed to update product")
-      showSuccess(isTrending ? "Removed from trending" : "Marked as trending")
-      fetchProducts()
-    } catch {
-      showError("Failed to update product")
-    }
-  }
-
-  const handleTogglePick = async (product: Product) => {
-    if (!canEdit) {
-      showError("You don't have permission to edit products")
-      return
-    }
-    try {
-      const isWinning = product.metadata?.is_winning ?? false
-      const response = await apiFetch(`/api/admin/products/${product.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ metadata: { is_winning: !isWinning } }),
-      })
-      if (!response.ok) throw new Error("Failed to update product")
-      showSuccess(isWinning ? "Removed from picks" : "Marked as picked")
-      fetchProducts()
-    } catch {
-      showError("Failed to update product")
-    }
-  }
-
-  const handleBulkMarkPicked = async () => {
-    if (!canEdit) {
-      showError("You don't have permission to edit products")
-      return
-    }
-    try {
-      const promises = Array.from(selectedIds).map((id) =>
-        apiFetch(`/api/admin/products/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ metadata: { is_winning: true } }),
-        })
-      )
-      const results = await Promise.allSettled(promises)
-      const failed = results.filter((r) => r.status === "rejected").length
-      const succeeded = selectedIds.size - failed
-      if (succeeded > 0) showSuccess(`${succeeded} product(s) marked as picked`)
-      if (failed > 0) showError(`Failed to update ${failed} product(s)`)
-      setSelectedIds(new Set())
-      fetchProducts()
-    } catch {
-      showError("Failed to update products")
-    }
-  }
-
   const handleExport = () => {
     const exportProducts = selectedIds.size > 0
       ? products.filter((p) => selectedIds.has(p.id))
@@ -371,9 +306,12 @@ export default function AdminProductsPage() {
     return `$${Number(price).toFixed(2)}`
   }
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-  }
+  const winningCount = useMemo(() => products.filter(p => p.metadata?.is_winning).length, [products])
+  const avgProfit = useMemo(() => {
+    if (products.length === 0) return 0
+    const totalProfit = products.reduce((sum, p) => sum + (p.profit_per_order || 0), 0)
+    return totalProfit / products.length
+  }, [products])
 
   const statCards = useMemo(() => [
     {
@@ -383,23 +321,23 @@ export default function AdminProductsPage() {
       description: "All products in catalog",
     },
     {
-      label: "Categories",
-      value: categories.length,
-      icon: Folder,
-      description: "Product categories",
+      label: "Winning Products",
+      value: winningCount,
+      icon: Star,
+      description: "Marked as winning",
     },
     {
-      label: "On This Page",
-      value: products.length,
-      icon: Eye,
-      description: "Products on current page",
+      label: "Avg Profit",
+      value: `$${avgProfit.toFixed(2)}`,
+      icon: TrendingUp,
+      description: "Average profit per order",
     },
-  ], [total, categories.length, products.length])
+  ], [total, winningCount, avgProfit])
 
   const tabs = [
-    { value: "all", label: "All Products" },
-    { value: "hand-picked", label: "Hand-Picked Winners" },
-    { value: "trending", label: "Trending" },
+    { value: "all", label: "All" },
+    { value: "winning", label: "Winning" },
+    { value: "locked", label: "Locked" },
   ]
 
   return (
@@ -484,13 +422,6 @@ export default function AdminProductsPage() {
                 variant: "outline",
               },
               {
-                label: "Mark as Picked",
-                icon: <Star className="h-4 w-4" />,
-                onClick: handleBulkMarkPicked,
-                variant: "outline",
-                disabled: !canEdit,
-              },
-              {
                 label: "Delete",
                 icon: <Trash2 className="h-4 w-4" />,
                 onClick: () => setBulkDeleteConfirmOpen(true),
@@ -521,19 +452,19 @@ export default function AdminProductsPage() {
                     onClick={() => handleSort("title")}
                     data-testid="sort-title"
                   >
-                    Product
+                    Title
                     <SortIcon field="title" />
                   </button>
                 </th>
-                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Status</th>
                 <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Category</th>
+                <th className="px-3 py-2.5 text-right font-medium text-muted-foreground">Buy Price</th>
                 <th className="px-3 py-2.5 text-right">
                   <button
                     className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
                     onClick={() => handleSort("sell_price")}
                     data-testid="sort-price"
                   >
-                    Price
+                    Sell Price
                     <SortIcon field="sell_price" />
                   </button>
                 </th>
@@ -547,35 +478,14 @@ export default function AdminProductsPage() {
                     <SortIcon field="profit_per_order" />
                   </button>
                 </th>
-                <th className="px-3 py-2.5 text-center font-medium text-muted-foreground">Margin%</th>
-                <th className="px-3 py-2.5 text-right">
-                  <button
-                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => handleSort("rating")}
-                    data-testid="sort-rating"
-                  >
-                    Rating
-                    <SortIcon field="rating" />
-                  </button>
-                </th>
-                <th className="px-3 py-2.5 text-center font-medium text-muted-foreground">Picked</th>
-                <th className="px-3 py-2.5 text-right">
-                  <button
-                    className="flex items-center ml-auto font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => handleSort("created_at")}
-                    data-testid="sort-date"
-                  >
-                    Date
-                    <SortIcon field="created_at" />
-                  </button>
-                </th>
+                <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">Status</th>
                 <th className="w-12 px-3 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={12} className="py-16 text-center">
+                  <td colSpan={9} className="py-16 text-center">
                     <div className="flex flex-col items-center gap-2 text-muted-foreground">
                       <RefreshCw className="h-5 w-5 animate-spin" />
                       <span className="text-sm">Loading products...</span>
@@ -584,7 +494,7 @@ export default function AdminProductsPage() {
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={12}>
+                  <td colSpan={9}>
                     <AdminEmptyState
                       icon={Package}
                       title="No products found"
@@ -599,11 +509,8 @@ export default function AdminProductsPage() {
                 </tr>
               ) : (
                 products.map((product) => {
-                  const margin = product.sell_price > 0
-                    ? ((product.profit_per_order / product.sell_price) * 100).toFixed(1)
-                    : "0.0"
-                  const isPicked = product.metadata?.is_winning ?? false
-                  const isTrending = product.metadata?.is_trending ?? false
+                  const isWinning = product.metadata?.is_winning ?? false
+                  const isLocked = product.metadata?.is_locked ?? false
 
                   return (
                     <tr
@@ -643,30 +550,15 @@ export default function AdminProductsPage() {
                           >
                             {product.title}
                           </button>
-                          {product.description && (
-                            <p className="text-xs text-muted-foreground truncate max-w-[280px] mt-0.5">
-                              {product.description}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
-                            Active
-                          </Badge>
-                          {isTrending && (
-                            <Badge variant="outline" className="text-xs font-normal bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20">
-                              <Flame className="h-3 w-3 mr-0.5" />
-                              Trending
-                            </Badge>
-                          )}
                         </div>
                       </td>
                       <td className="px-3 py-2.5">
                         <span className="text-sm text-muted-foreground">
                           {product.category?.name || "\u2014"}
                         </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        {formatPrice(product.buy_price)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular-nums">
                         {formatPrice(product.sell_price)}
@@ -676,31 +568,24 @@ export default function AdminProductsPage() {
                           {formatPrice(product.profit_per_order)}
                         </span>
                       </td>
-                      <td className="px-3 py-2.5 text-center tabular-nums">
-                        <span className="text-sm text-muted-foreground">{margin}%</span>
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular-nums">
-                        {product.rating ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm">{Number(product.rating).toFixed(1)}</span>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">{"\u2014"}</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-center">
-                        <button
-                          onClick={() => handleTogglePick(product)}
-                          className="inline-flex items-center justify-center cursor-pointer"
-                          data-testid={`button-toggle-pick-${product.id}`}
-                          disabled={!canEdit}
-                        >
-                          <Star className={`h-4 w-4 transition-colors ${isPicked ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/40 hover:text-yellow-400"}`} />
-                        </button>
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-muted-foreground text-xs whitespace-nowrap">
-                        {formatDate(product.created_at)}
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {isWinning ? (
+                            <Badge variant="default" className="text-xs" data-testid={`badge-winning-${product.id}`}>
+                              <Star className="h-3 w-3 mr-0.5" />
+                              Winning
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-xs" data-testid={`badge-regular-${product.id}`}>
+                              Regular
+                            </Badge>
+                          )}
+                          {isLocked && (
+                            <Badge variant="outline" className="text-xs" data-testid={`badge-locked-${product.id}`}>
+                              Locked
+                            </Badge>
+                          )}
+                        </div>
                       </td>
                       <td className="px-3 py-2.5">
                         <DropdownMenu>
@@ -708,7 +593,7 @@ export default function AdminProductsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
                               data-testid={`button-actions-${product.id}`}
                             >
                               <MoreHorizontal className="h-4 w-4" />
@@ -731,25 +616,6 @@ export default function AdminProductsPage() {
                             >
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => handleTogglePick(product)}
-                              className="cursor-pointer"
-                              disabled={!canEdit}
-                              data-testid={`action-toggle-pick-${product.id}`}
-                            >
-                              <Star className="h-4 w-4 mr-2" />
-                              {isPicked ? "Remove Pick" : "Mark as Picked"}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleToggleTrending(product)}
-                              className="cursor-pointer"
-                              disabled={!canEdit}
-                              data-testid={`action-toggle-trending-${product.id}`}
-                            >
-                              <TrendingUp className="h-4 w-4 mr-2" />
-                              {isTrending ? "Remove Trending" : "Mark as Trending"}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

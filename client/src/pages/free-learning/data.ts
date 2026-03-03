@@ -265,6 +265,42 @@ export function markLessonCompleted(lessonId: string): void {
   }
 }
 
+export async function markLessonCompletedOnServer(lessonId: string): Promise<void> {
+  try {
+    const token = localStorage.getItem('usdrop_auth_token')
+    if (!token) return
+    await fetch('/api/learning/progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ lesson_id: lessonId }),
+    })
+  } catch {}
+}
+
+export async function syncCompletedLessonsFromServer(): Promise<string[]> {
+  try {
+    const token = localStorage.getItem('usdrop_auth_token')
+    if (!token) return []
+    const res = await fetch('/api/learning/progress', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const serverLessons: string[] = (data.lessons || []).map((l: any) => l.lesson_id)
+      const localLessons = getCompletedLessons()
+      const merged = Array.from(new Set([...localLessons, ...serverLessons]))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+      return merged
+    }
+  } catch {}
+  return getCompletedLessons()
+}
+
 export function getCompletedLessons(): string[] {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)

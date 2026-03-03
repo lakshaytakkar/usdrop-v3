@@ -57,6 +57,8 @@ interface FormData {
   trend_data: string
   specifications: { key: string; value: string }[]
   is_trending: boolean
+  is_winning: boolean
+  is_locked: boolean
 }
 
 const STEPS = [
@@ -79,6 +81,8 @@ const initialFormData: FormData = {
   trend_data: "",
   specifications: [],
   is_trending: false,
+  is_winning: false,
+  is_locked: false,
 }
 
 export function ProductFormModal({ open, onOpenChange, product, onSuccess }: ProductFormModalProps) {
@@ -139,6 +143,8 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
           trend_data: product.trend_data?.join(", ") || "",
           specifications: specs,
           is_trending: product.is_trending || false,
+          is_winning: product.is_winning || false,
+          is_locked: product.is_locked || false,
         })
       }
     })
@@ -220,6 +226,8 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
 
       body.metadata = {
         is_trending: formData.is_trending,
+        is_winning: formData.is_winning,
+        is_locked: formData.is_locked,
       }
 
       if (!isEditMode) {
@@ -521,19 +529,49 @@ export function ProductFormModal({ open, onOpenChange, product, onSuccess }: Pro
           )}
         </div>
 
-        <div className="flex items-center gap-3 py-2">
-          <input
-            type="checkbox"
-            id="is_trending"
-            data-testid="checkbox-is-trending"
-            checked={formData.is_trending}
-            onChange={(e) => updateField("is_trending", e.target.checked)}
-            className="h-4 w-4 rounded border-border accent-blue-500"
-          />
-          <Label htmlFor="is_trending" className="cursor-pointer flex items-center gap-2 mb-0">
-            <Flame className="h-4 w-4 text-orange-500" />
-            Mark as Trending
-          </Label>
+        <div className="space-y-2 py-2">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="is_trending"
+              data-testid="checkbox-is-trending"
+              checked={formData.is_trending}
+              onChange={(e) => updateField("is_trending", e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-blue-500"
+            />
+            <Label htmlFor="is_trending" className="cursor-pointer flex items-center gap-2 mb-0">
+              <Flame className="h-4 w-4 text-orange-500" />
+              Mark as Trending
+            </Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="is_winning"
+              data-testid="checkbox-is-winning"
+              checked={formData.is_winning}
+              onChange={(e) => updateField("is_winning", e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-blue-500"
+            />
+            <Label htmlFor="is_winning" className="cursor-pointer flex items-center gap-2 mb-0">
+              <Star className="h-4 w-4 text-yellow-500" />
+              Winning Product
+            </Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="is_locked"
+              data-testid="checkbox-is-locked"
+              checked={formData.is_locked}
+              onChange={(e) => updateField("is_locked", e.target.checked)}
+              className="h-4 w-4 rounded border-border accent-blue-500"
+            />
+            <Label htmlFor="is_locked" className="cursor-pointer flex items-center gap-2 mb-0">
+              <Eye className="h-4 w-4 text-gray-500" />
+              Locked (Pro Only)
+            </Label>
+          </div>
         </div>
 
         <div className="space-y-2">
