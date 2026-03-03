@@ -1584,6 +1584,73 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  router.post('/courses/:id/upload-video', upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const courseId = req.params.id;
+
+      const { data: courseResult, error: courseError } = await supabaseRemote
+        .from('courses')
+        .select('id')
+        .eq('id', courseId)
+        .single();
+
+      if (courseError || !courseResult) {
+        return res.status(404).json({ error: 'Course not found' });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ error: 'No file provided' });
+      }
+
+      const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ error: 'Invalid file type. Only MP4, WebM, OGG, and QuickTime videos are allowed.' });
+      }
+
+      const maxSize = 500 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return res.status(400).json({ error: 'File size exceeds maximum allowed size of 500MB' });
+      }
+
+      const ext = file.originalname.split('.').pop() || 'mp4';
+      const storagePath = `courses/${courseId}/uploads/${Date.now()}_${file.originalname}`;
+
+      const { data: uploadData, error: uploadError } = await supabaseRemote.storage
+        .from('course-videos')
+        .upload(storagePath, file.buffer, {
+          contentType: file.mimetype,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Supabase storage upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload video to storage' });
+      }
+
+      const { data: urlData } = supabaseRemote.storage
+        .from('course-videos')
+        .getPublicUrl(storagePath);
+
+      const { data: signedUrlData } = await supabaseRemote.storage
+        .from('course-videos')
+        .createSignedUrl(storagePath, 3600);
+
+      return res.json({
+        success: true,
+        video: {
+          url: urlData?.publicUrl || signedUrlData?.signedUrl || '',
+          signedUrl: signedUrlData?.signedUrl || urlData?.publicUrl || '',
+          path: storagePath,
+          size: file.size,
+        },
+      });
+    } catch (error) {
+      console.error('Error uploading course video:', error);
+      return res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to upload video' });
+    }
+  });
+
   // =============================================
   // EXTERNAL USERS
   // =============================================
@@ -2075,6 +2142,9 @@ export function registerAdminRoutes(app: Express) {
         .eq('user_id', id);
 
       if (error) {
+        if (error.code === 'PGRST205') {
+          return res.json({ modules: [] });
+        }
         console.error('Error fetching module overrides:', error);
         return res.status(500).json({ error: 'Failed to fetch session data' });
       }
@@ -2184,6 +2254,9 @@ export function registerAdminRoutes(app: Express) {
           .single();
 
         if (error) {
+          if (error.code === 'PGRST205') {
+            return res.status(503).json({ error: 'Module overrides feature is not yet configured. Please create the user_module_overrides table in Supabase.' });
+          }
           console.error(`Error upserting module override for ${mod.moduleId}:`, error);
           return res.status(500).json({ error: `Failed to update module ${mod.moduleId}` });
         }
@@ -2356,6 +2429,9 @@ export function registerAdminRoutes(app: Express) {
         .single();
 
       if (error || !data) {
+        if (error?.code === 'PGRST205' || error?.code === '42P01') {
+          return res.status(503).json({ error: 'Notes feature is not yet configured. Please create the user_admin_notes table in Supabase.' });
+        }
         console.error('Error creating admin note:', error);
         return res.status(500).json({ error: 'Failed to create note' });
       }
@@ -2390,6 +2466,9 @@ export function registerAdminRoutes(app: Express) {
         .order('created_at', { ascending: false });
 
       if (error) {
+        if (error.code === 'PGRST205') {
+          return res.json({ notes: [] });
+        }
         console.error('Error fetching admin notes:', error);
         return res.status(500).json({ error: 'Failed to fetch notes' });
       }

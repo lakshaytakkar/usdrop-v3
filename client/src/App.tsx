@@ -20,24 +20,12 @@ import LoginPage from "@/pages/login/page";
 import SignupPage from "@/pages/signup/page";
 
 import AdminDashboard from "@/pages/admin/page";
-import AdminProducts from "@/pages/admin/products/page";
-import AdminProductDetail from "@/pages/admin/products/[id]/page";
-import AdminCategories from "@/pages/admin/categories/page";
-import AdminCategoryDetail from "@/pages/admin/categories/[id]/page";
 import AdminCourses from "@/pages/admin/courses/page";
 import AdminCourseBuilder from "@/pages/admin/courses/[courseId]/builder/page";
-import AdminCompetitorStores from "@/pages/admin/competitor-stores/page";
-import AdminCompetitorStoreDetail from "@/pages/admin/competitor-stores/[id]/page";
-import AdminSuppliers from "@/pages/admin/suppliers/page";
 import AdminExternalUsers from "@/pages/admin/external-users/page";
 import AdminExternalUserDetail from "@/pages/admin/external-users/[id]/page";
 import AdminInternalUsers from "@/pages/admin/internal-users/page";
 import AdminInternalUserDetail from "@/pages/admin/internal-users/[id]/page";
-import AdminPlans from "@/pages/admin/plans/page";
-import AdminPlanDetail from "@/pages/admin/plans/[id]/page";
-import AdminShopifyStores from "@/pages/admin/shopify-stores/page";
-import AdminLeads from "@/pages/admin/leads/page";
-import AdminLeadDetail from "@/pages/admin/leads/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
 import DevTasks from "@/pages/dev/tasks/page";
@@ -221,24 +209,12 @@ function Router() {
 
       {/* Admin (internal users only) */}
       <Route path="/admin" component={() => <AdminGuard><AdminLayout><AdminDashboard /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/products" component={() => <AdminGuard><AdminLayout><AdminProducts /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/products/:id" component={() => <AdminGuard><AdminLayout><AdminProductDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/categories" component={() => <AdminGuard><AdminLayout><AdminCategories /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/categories/:id" component={() => <AdminGuard><AdminLayout><AdminCategoryDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/courses" component={() => <AdminGuard><AdminLayout><AdminCourses /></AdminLayout></AdminGuard>} />
       <Route path="/admin/courses/:courseId/builder" component={() => <AdminGuard><AdminLayout><AdminCourseBuilder /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/competitor-stores" component={() => <AdminGuard><AdminLayout><AdminCompetitorStores /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/competitor-stores/:id" component={() => <AdminGuard><AdminLayout><AdminCompetitorStoreDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/suppliers" component={() => <AdminGuard><AdminLayout><AdminSuppliers /></AdminLayout></AdminGuard>} />
       <Route path="/admin/external-users" component={() => <AdminGuard><AdminLayout><AdminExternalUsers /></AdminLayout></AdminGuard>} />
       <Route path="/admin/external-users/:id" component={() => <AdminGuard><AdminLayout><AdminExternalUserDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/internal-users" component={() => <AdminGuard><AdminLayout><AdminInternalUsers /></AdminLayout></AdminGuard>} />
       <Route path="/admin/internal-users/:id" component={() => <AdminGuard><AdminLayout><AdminInternalUserDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/plans/:id" component={() => <AdminGuard><AdminLayout><AdminPlanDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/shopify-stores" component={() => <AdminGuard><AdminLayout><AdminShopifyStores /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/leads" component={() => <AdminGuard><AdminLayout><AdminLeads /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/leads/:id" component={() => <AdminGuard><AdminLayout><AdminLeadDetail /></AdminLayout></AdminGuard>} />
 
       {/* Dev */}
       <Route path="/dev" component={() => <DevLayout><DevDashboard /></DevLayout>} />

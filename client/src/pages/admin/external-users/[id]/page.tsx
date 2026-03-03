@@ -7,14 +7,33 @@ import { AdminStatusBadge } from "@/components/admin/admin-status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
-import { ExternalUser, Activity } from "@/types/admin/users"
+import { ExternalUser, ExternalUserPlan, UserStatus, Activity } from "@/types/admin/users"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
+import {
+  generateSecurePassword,
+  getPasswordStrengthLabel,
+  getPasswordStrengthColor,
+  getPasswordStrengthBarColor,
+  getPasswordStrengthProgress,
+} from "@/lib/utils/password"
+import { cn } from "@/lib/utils"
+import { Loader } from "@/components/ui/loader"
 import {
   Edit,
   Mail,
@@ -42,6 +61,11 @@ import {
   Compass,
   Settings,
   Loader2,
+  Eye,
+  EyeOff,
+  Copy,
+  RefreshCw,
+  KeyRound,
 } from "lucide-react"
 
 interface JourneyData {
@@ -120,6 +144,21 @@ export default function ExternalUserDetailPage() {
 
   const [userProgress, setUserProgress] = useState<any>(null)
   const [progressLoading, setProgressLoading] = useState(true)
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    status: "active" as UserStatus,
+    plan: "free" as ExternalUserPlan,
+  })
+
+  const [resetPwOpen, setResetPwOpen] = useState(false)
+  const [resetPwLoading, setResetPwLoading] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [showNewPassword, setShowNewPassword] = useState(false)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -382,6 +421,101 @@ export default function ExternalUserDetailPage() {
       setNoteSaving(false)
     }
   }, [userId, newNote, showSuccess, showError])
+
+  const openEditDialog = useCallback(() => {
+    if (!user) return
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber || "",
+      status: (user.status || "active") as UserStatus,
+      plan: (user.plan || "free") as ExternalUserPlan,
+    })
+    setEditOpen(true)
+  }, [user])
+
+  const handleEditSubmit = useCallback(async () => {
+    if (!user) return
+    setEditLoading(true)
+    try {
+      const response = await apiFetch(`/api/admin/external-users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name,
+          email: editForm.email,
+          phoneNumber: editForm.phoneNumber || undefined,
+          status: editForm.status,
+          plan: editForm.plan,
+        }),
+      })
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || 'Failed to update user')
+      }
+      const updated = await response.json()
+      setUser({
+        ...updated,
+        subscriptionDate: new Date(updated.subscriptionDate),
+        expiryDate: new Date(updated.expiryDate),
+        createdAt: new Date(updated.createdAt),
+        updatedAt: new Date(updated.updatedAt),
+        trialEndsAt: updated.trialEndsAt ? new Date(updated.trialEndsAt) : null,
+      })
+      setEditOpen(false)
+      showSuccess('User updated')
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Failed to update user')
+    } finally {
+      setEditLoading(false)
+    }
+  }, [user, editForm, showSuccess, showError])
+
+  const openResetPassword = useCallback(() => {
+    setNewPassword("")
+    setShowNewPassword(false)
+    setResetPwOpen(true)
+  }, [])
+
+  const handleResetPassword = useCallback(async () => {
+    if (!user || !newPassword) return
+    if (newPassword.length < 8) {
+      showError("Password must be at least 8 characters")
+      return
+    }
+    setResetPwLoading(true)
+    try {
+      const response = await apiFetch(`/api/admin/external-users/${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: newPassword }),
+      })
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || 'Failed to reset password')
+      }
+      setResetPwOpen(false)
+      setNewPassword("")
+      showSuccess('Password reset successfully')
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Failed to reset password')
+    } finally {
+      setResetPwLoading(false)
+    }
+  }, [user, newPassword, showSuccess, showError])
+
+  const handleGeneratePassword = useCallback(() => {
+    const pw = generateSecurePassword(16)
+    setNewPassword(pw)
+    setShowNewPassword(true)
+  }, [])
+
+  const handleCopyPassword = useCallback(async () => {
+    if (newPassword) {
+      await navigator.clipboard.writeText(newPassword)
+      showSuccess("Password copied to clipboard")
+    }
+  }, [newPassword, showSuccess])
 
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return "—"
@@ -945,7 +1079,7 @@ export default function ExternalUserDetailPage() {
   const headerActions = [
     { label: "Send Email", icon: <Mail className="h-4 w-4" />, onClick: () => window.open(`mailto:${user.email}`) },
     ...(user.phoneNumber ? [{ label: "Send WhatsApp", icon: <MessageCircle className="h-4 w-4" />, onClick: () => window.open(`https://wa.me/${user.phoneNumber?.replace(/\D/g, '')}`) }] : []),
-    { label: "Manage Credits", icon: <Coins className="h-4 w-4" />, onClick: () => {}, separator: true },
+    { label: "Reset Password", icon: <KeyRound className="h-4 w-4" />, onClick: openResetPassword, separator: true },
     ...(user.status === "active"
       ? [{ label: "Suspend", icon: <Lock className="h-4 w-4" />, onClick: handleSuspend, separator: true }]
       : [{ label: "Activate", icon: <Check className="h-4 w-4" />, onClick: handleActivate, separator: true }]),
@@ -965,7 +1099,7 @@ export default function ExternalUserDetailPage() {
           <AdminStatusBadge key="status" status={user.status} dot />,
         ]}
         primaryActions={
-          <Button variant="outline" size="sm" onClick={() => router.push(`/admin/external-users/${user.id}`)} data-testid="button-edit-user">
+          <Button variant="outline" size="sm" onClick={openEditDialog} className="cursor-pointer" data-testid="button-edit-user">
             <Edit className="h-3.5 w-3.5 mr-1.5" />
             Edit
           </Button>
@@ -978,6 +1112,140 @@ export default function ExternalUserDetailPage() {
         hasPrev={!!prevUser}
         hasNext={!!nextUser}
       />
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information and account settings.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="Enter full name"
+                data-testid="input-edit-name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="Enter email"
+                data-testid="input-edit-email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editForm.phoneNumber}
+                onChange={(e) => setEditForm({ ...editForm, phoneNumber: e.target.value })}
+                placeholder="+1234567890"
+                data-testid="input-edit-phone"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Plan</Label>
+                <Select value={editForm.plan} onValueChange={(v) => setEditForm({ ...editForm, plan: v as ExternalUserPlan })}>
+                  <SelectTrigger data-testid="select-edit-plan"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="pro">Pro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v as UserStatus })}>
+                  <SelectTrigger data-testid="select-edit-status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)} disabled={editLoading} className="cursor-pointer" data-testid="button-cancel-edit">
+              Cancel
+            </Button>
+            <Button onClick={handleEditSubmit} disabled={editLoading || !editForm.name.trim() || !editForm.email.trim()} className="bg-blue-500 hover:bg-blue-600 cursor-pointer" data-testid="button-save-edit">
+              {editLoading ? <><Loader size="sm" className="mr-2" />Saving...</> : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetPwOpen} onOpenChange={setResetPwOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>Set a new password for {user.name}. They will need to use this password on their next login.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="pr-20"
+                    data-testid="input-new-password"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 cursor-pointer" onClick={() => setShowNewPassword(!showNewPassword)} data-testid="button-toggle-pw-visibility">
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    {newPassword && (
+                      <Button type="button" variant="ghost" size="icon" className="h-7 w-7 cursor-pointer" onClick={handleCopyPassword} data-testid="button-copy-pw">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <Button type="button" variant="outline" onClick={handleGeneratePassword} className="flex-shrink-0 cursor-pointer" data-testid="button-generate-pw">
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Generate
+                </Button>
+              </div>
+            </div>
+            {newPassword && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Strength:</span>
+                  <span className={cn("font-medium", getPasswordStrengthColor(newPassword))}>{getPasswordStrengthLabel(newPassword)}</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={cn("h-full transition-all", getPasswordStrengthBarColor(newPassword))} style={{ width: `${getPasswordStrengthProgress(newPassword)}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetPwOpen(false)} disabled={resetPwLoading} className="cursor-pointer" data-testid="button-cancel-reset-pw">
+              Cancel
+            </Button>
+            <Button onClick={handleResetPassword} disabled={resetPwLoading || !newPassword || newPassword.length < 8} className="bg-blue-500 hover:bg-blue-600 cursor-pointer" data-testid="button-confirm-reset-pw">
+              {resetPwLoading ? <><Loader size="sm" className="mr-2" />Resetting...</> : "Reset Password"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

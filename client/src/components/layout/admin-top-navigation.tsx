@@ -19,15 +19,8 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  Receipt,
   UserCog,
-  CreditCard,
-  Luggage,
-  Folder,
   Book,
-  Store,
-  Building,
-  ShoppingBag,
   Users,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
@@ -52,22 +45,15 @@ const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
-    label: "Sales & Clients",
+    label: "Users",
     items: [
-      { title: "Leads", icon: Receipt, url: "/admin/leads" },
       { title: "Clients", icon: UserCog, url: "/admin/external-users" },
-      { title: "Plans", icon: CreditCard, url: "/admin/plans" },
     ],
   },
   {
-    label: "Content Library",
+    label: "Content",
     items: [
-      { title: "Products", icon: Luggage, url: "/admin/products" },
-      { title: "Categories", icon: Folder, url: "/admin/categories" },
       { title: "Courses", icon: Book, url: "/admin/courses" },
-      { title: "Competitors", icon: Store, url: "/admin/competitor-stores" },
-      { title: "Suppliers", icon: Building, url: "/admin/suppliers" },
-      { title: "Shopify Stores", icon: ShoppingBag, url: "/admin/shopify-stores" },
     ],
   },
   {
