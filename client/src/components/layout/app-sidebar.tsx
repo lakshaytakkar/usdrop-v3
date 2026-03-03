@@ -35,12 +35,7 @@ import {
   Newspaper,
   Shield,
   Users,
-  UserCog,
-  CreditCard,
   ShoppingCart,
-  Luggage,
-  Folder,
-  Building,
   Book,
   Image,
   Badge,
@@ -229,74 +224,6 @@ const aiWorkspaceItems: SidebarItem[] = [
     icon: ShoppingBag,
     url: "/framework/my-store",
     isPro: true,
-  },
-]
-
-// Admin items
-const adminOverviewItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    url: "/admin",
-  },
-]
-
-const adminSalesItems = [
-  {
-    title: "Leads",
-    icon: Receipt,
-    url: "/admin/leads",
-  },
-  {
-    title: "Clients",
-    icon: UserCog,
-    url: "/admin/external-users",
-  },
-  {
-    title: "Plans",
-    icon: CreditCard,
-    url: "/admin/plans",
-  },
-]
-
-const adminContentItems = [
-  {
-    title: "Products",
-    icon: Luggage,
-    url: "/admin/products",
-  },
-  {
-    title: "Categories",
-    icon: Folder,
-    url: "/admin/categories",
-  },
-  {
-    title: "Courses",
-    icon: Book,
-    url: "/admin/courses",
-  },
-  {
-    title: "Competitors",
-    icon: Store,
-    url: "/admin/competitor-stores",
-  },
-  {
-    title: "Suppliers",
-    icon: Building,
-    url: "/admin/suppliers",
-  },
-  {
-    title: "Shopify Stores",
-    icon: ShoppingBag,
-    url: "/admin/shopify-stores",
-  },
-]
-
-const adminTeamItems = [
-  {
-    title: "Team",
-    icon: Users,
-    url: "/admin/internal-users",
   },
 ]
 
@@ -606,115 +533,6 @@ export function AppSidebar() {
             </SidebarGroup>
 
             {/* Platform Admin Sections – mirror admin nav for dev context */}
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em]">SALES & CLIENTS</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminSalesItems.map((item) => {
-                    const active = isActive(item.url)
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          tooltip={item.title}
-                          isActive={active}
-                          className={active ? "bg-primary text-white data-[active=true]:bg-primary data-[active=true]:text-white" : "hover-elevate"}
-                        >
-                          <Link href={item.url}>
-                            <item.icon className="h-[18px] w-[18px]" />
-                            <span className="text-[14px] font-medium">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em]">CONTENT LIBRARY</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminContentItems.map((item) => {
-                    const active = isActive(item.url)
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          tooltip={item.title}
-                          isActive={active}
-                          className={active ? "bg-primary text-white data-[active=true]:bg-primary data-[active=true]:text-white" : "hover-elevate"}
-                        >
-                          <Link href={item.url}>
-                            <item.icon className="h-[18px] w-[18px]" />
-                            <span className="text-[14px] font-medium">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em]">TEAM</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminTeamItems.map((item) => {
-                    const active = isActive(item.url)
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          tooltip={item.title}
-                          isActive={active}
-                          className={active ? "bg-primary text-white data-[active=true]:bg-primary data-[active=true]:text-white" : "hover-elevate"}
-                        >
-                          <Link href={item.url}>
-                            <item.icon className="h-[18px] w-[18px]" />
-                            <span className="text-[14px] font-medium">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </>
-        )}
-
-        {/* Admin Sections - Only show when on admin routes */}
-        {isAdminRoute && (
-          <>
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em]">OVERVIEW</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {adminOverviewItems.map((item) => {
-                    const active = pathname === item.url
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          tooltip={item.title}
-                          isActive={active}
-                          className={active ? "bg-primary text-white data-[active=true]:bg-primary data-[active=true]:text-white" : "hover-elevate"}
-                        >
-                          <Link href={item.url}>
-                            <item.icon className="h-[18px] w-[18px]" />
-                            <span className="text-[14px] font-medium">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
             <SidebarGroup>
               <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-[0.08em]">SALES & CLIENTS</SidebarGroupLabel>
               <SidebarGroupContent>

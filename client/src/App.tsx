@@ -1,12 +1,14 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@/contexts/auth-context";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { UnifiedUserProvider } from "@/contexts/unified-user-context";
 import { UserPlanProvider } from "@/contexts/user-plan-context";
 import { OnboardingProvider } from "@/contexts/onboarding-context";
 import { Toaster } from "@/components/ui/toast";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AuthLoadingGate } from "@/components/auth/auth-loading-gate";
+import { useUserMetadata } from "@/hooks/use-user-metadata";
 
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { DevLayout } from "@/layouts/DevLayout";
@@ -120,14 +122,49 @@ const queryClient = new QueryClient({
 });
 
 function NotFound() {
+  const { user, loading: authLoading } = useAuth()
+  const { isInternal, loading: metaLoading } = useUserMetadata()
+  const [, navigate] = useLocation()
+  const [countdown, setCountdown] = useState(5)
+
+  const isLoading = authLoading || metaLoading
+
+  const redirectPath = !user ? "/login" : isInternal ? "/admin" : "/framework"
+  const redirectLabel = redirectPath === "/login" ? "Login" : redirectPath === "/admin" ? "Dashboard" : "Home"
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [isLoading])
+
+  useEffect(() => {
+    if (countdown <= 0 && !isLoading) {
+      navigate(redirectPath)
+    }
+  }, [countdown, isLoading, redirectPath])
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-muted-foreground">Page not found</p>
+    <div className="flex items-center justify-center min-h-screen" style={{ background: '#F5F5F7' }}>
+      <div className="text-center space-y-4">
+        <h1 className="text-6xl font-bold text-gray-300" data-testid="text-404">404</h1>
+        <p className="text-lg text-muted-foreground" data-testid="text-not-found">This page doesn't exist</p>
+        <p className="text-sm text-muted-foreground" data-testid="text-redirect-countdown">
+          {isLoading ? "Loading..." : `Redirecting to ${redirectLabel} in ${countdown}s...`}
+        </p>
+        <button
+          onClick={() => navigate(redirectPath)}
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors cursor-pointer"
+          data-testid="button-go-back"
+        >
+          Go to {redirectLabel}
+        </button>
       </div>
     </div>
-  );
+  )
 }
 
 function Router() {
