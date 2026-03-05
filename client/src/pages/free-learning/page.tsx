@@ -1,19 +1,116 @@
 import { useState } from "react"
 import { Link } from "wouter"
-import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck } from "lucide-react"
+import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck, Clock, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount } from "./data"
-import type { FreeLearningModule } from "./data"
+import { freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount, getYouTubeThumbnail, getCompletedLessons } from "./data"
+import type { FreeLearningModule, FreeLearningLesson } from "./data"
 import { MentorshipActivationModal } from "./components/mentorship-activation-modal"
 
-function ModuleAccordion({ module, defaultOpen }: { module: FreeLearningModule; defaultOpen?: boolean }) {
+function LessonCard({ lesson, index, moduleIndex, completedIds }: { lesson: FreeLearningLesson; index: number; moduleIndex: number; completedIds: string[] }) {
+  const thumbnail = lesson.thumbnail || getYouTubeThumbnail(lesson.videoUrl)
+  const [imgError, setImgError] = useState(false)
+  const isCompleted = completedIds.includes(lesson.id)
+  const lessonNumber = index + 1
+  const isExternal = !lesson.videoUrl && lesson.externalUrl
+
+  const content = (
+    <div
+      data-testid={`card-lesson-${lesson.id}`}
+      className="flex bg-white border border-black/[0.06] rounded-xl overflow-hidden hover:shadow-sm transition-shadow group"
+    >
+      <div className="w-[200px] min-w-[200px] h-[120px] relative bg-gray-100 overflow-hidden shrink-0">
+        {thumbnail && !imgError ? (
+          <img
+            src={thumbnail}
+            alt={lesson.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={() => setImgError(true)}
+            data-testid={`img-lesson-${lesson.id}`}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+            {isExternal ? (
+              <ExternalLink className="h-8 w-8 text-white/40" />
+            ) : (
+              <Play className="h-8 w-8 text-white/40" />
+            )}
+          </div>
+        )}
+        {isCompleted && (
+          <div className="absolute top-2 left-2 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+            <Check className="h-3 w-3 text-white" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-between">
+        <div>
+          <h4 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1" data-testid={`text-lesson-title-${lesson.id}`}>
+            {lessonNumber}. {lesson.title}
+          </h4>
+          {lesson.description && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{lesson.description}</p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center gap-3">
+            <span
+              data-testid={`button-watch-${lesson.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-500 text-white text-xs font-semibold hover:bg-blue-600 transition-colors"
+            >
+              <Play className="h-3 w-3" />
+              {isExternal ? "Open Resource" : "Watch Lesson"}
+            </span>
+            {lesson.duration && (
+              <span className="flex items-center gap-1 text-xs text-gray-400">
+                <Clock className="h-3 w-3" />
+                Duration: {lesson.duration}
+              </span>
+            )}
+          </div>
+
+          {lesson.tags && lesson.tags.length > 0 && (
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              {lesson.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded border border-green-200 bg-green-50 text-green-700 text-[10px] font-medium"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  if (isExternal) {
+    return (
+      <a href={lesson.externalUrl!} target="_blank" rel="noopener noreferrer" data-testid={`link-lesson-${lesson.id}`}>
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={`/free-learning/${lesson.id}`} data-testid={`link-lesson-${lesson.id}`}>
+      {content}
+    </Link>
+  )
+}
+
+function ModuleAccordion({ module, moduleIndex, defaultOpen, completedIds }: { module: FreeLearningModule; moduleIndex: number; defaultOpen?: boolean; completedIds: string[] }) {
   const [isOpen, setIsOpen] = useState(defaultOpen ?? false)
 
   return (
-    <div className="border border-black/[0.06] rounded-xl overflow-hidden bg-white" data-testid={`module-${module.id}`}>
+    <div className="rounded-xl overflow-hidden" data-testid={`module-${module.id}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-white border border-black/[0.06] rounded-xl hover:bg-gray-50/50 transition-colors cursor-pointer"
         data-testid={`button-toggle-module-${module.id}`}
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -37,29 +134,9 @@ function ModuleAccordion({ module, defaultOpen }: { module: FreeLearningModule; 
       </button>
 
       {isOpen && (
-        <div className="border-t border-black/[0.04]">
-          {module.lessons.map((lesson) => (
-            <Link
-              key={lesson.id}
-              href={`/free-learning/${lesson.id}`}
-              data-testid={`link-lesson-${lesson.id}`}
-              className="flex items-center gap-3 px-5 py-3 hover:bg-blue-50/50 transition-colors group border-b border-black/[0.03] last:border-b-0"
-            >
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-50 text-blue-500 shrink-0 group-hover:bg-blue-100 transition-colors">
-                <Play className="h-3 w-3 ml-0.5" />
-              </div>
-              <span className="text-sm text-gray-700 group-hover:text-blue-600 transition-colors flex-1 min-w-0 truncate">
-                {lesson.title}
-              </span>
-              <div className="flex items-center gap-2 shrink-0">
-                {lesson.duration && (
-                  <span className="text-xs text-gray-400">{lesson.duration}</span>
-                )}
-                <span className="text-xs text-blue-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Watch
-                </span>
-              </div>
-            </Link>
+        <div className="space-y-3 pt-3 pl-4">
+          {module.lessons.map((lesson, idx) => (
+            <LessonCard key={lesson.id} lesson={lesson} index={idx} moduleIndex={moduleIndex} completedIds={completedIds} />
           ))}
         </div>
       )}
@@ -86,6 +163,7 @@ export default function FreeLearningPage() {
   const firstLessonId = freeLearningModules[0]?.lessons[0]?.id
   const allCompleted = isAllCompleted()
   const completedCount = getCompletionCount()
+  const completedIds = getCompletedLessons()
   const [showActivation, setShowActivation] = useState(false)
 
   return (
@@ -218,9 +296,9 @@ export default function FreeLearningPage() {
         </span>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         {freeLearningModules.map((module, idx) => (
-          <ModuleAccordion key={module.id} module={module} defaultOpen={idx === 0} />
+          <ModuleAccordion key={module.id} module={module} moduleIndex={idx} defaultOpen={idx === 0} completedIds={completedIds} />
         ))}
       </div>
 
