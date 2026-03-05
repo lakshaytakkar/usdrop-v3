@@ -1,6 +1,8 @@
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Plus, CreditCard, CheckCircle2, Eye, AlertCircle } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -11,6 +13,7 @@ import {
   DataTable,
   StatusBadge,
   EmptyState,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
@@ -31,6 +34,12 @@ export default function AdminPlansPage() {
   const { showSuccess, showError } = useToast()
   const [plans, setPlans] = useState<PlanRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newDescription, setNewDescription] = useState("")
+  const [newPrice, setNewPrice] = useState("")
+  const [newFeatures, setNewFeatures] = useState("")
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -57,6 +66,34 @@ export default function AdminPlansPage() {
   }, [showError])
 
   useEffect(() => { fetchPlans() }, [fetchPlans])
+
+  const handleCreatePlan = useCallback(async () => {
+    try {
+      setIsSubmitting(true)
+      const response = await apiFetch("/api/admin/plans", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName,
+          description: newDescription,
+          price: Number(newPrice),
+          features: newFeatures.split(',').map(f => f.trim()).filter(Boolean),
+        }),
+      })
+      if (!response.ok) throw new Error("Failed to create plan")
+      showSuccess("Plan created successfully")
+      setShowAddDialog(false)
+      setNewName("")
+      setNewDescription("")
+      setNewPrice("")
+      setNewFeatures("")
+      fetchPlans()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create plan")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [newName, newDescription, newPrice, newFeatures, fetchPlans, showSuccess, showError])
 
   const handleToggleActive = useCallback(async (plan: PlanRow) => {
     try {
@@ -122,7 +159,7 @@ export default function AdminPlansPage() {
         title="Plans"
         subtitle="Manage subscription plans, pricing, and features"
         actions={
-          <Button size="sm" data-testid="button-create-plan">
+          <Button size="sm" data-testid="button-create-plan" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
             Create Plan
           </Button>
@@ -141,7 +178,7 @@ export default function AdminPlansPage() {
           title="No plans yet"
           description="Create your first subscription plan to get started."
           actionLabel="Create Plan"
-          onAction={() => {}}
+          onAction={() => setShowAddDialog(true)}
         />
       ) : (
         <DataTable
@@ -154,6 +191,57 @@ export default function AdminPlansPage() {
           emptyDescription="Try adjusting your search."
         />
       )}
+
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        title="Create Plan"
+        onSubmit={handleCreatePlan}
+        submitLabel="Create"
+        isSubmitting={isSubmitting}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="plan-name">Name</Label>
+          <Input
+            id="plan-name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="e.g. Pro Plan"
+            data-testid="input-plan-name"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="plan-description">Description</Label>
+          <Input
+            id="plan-description"
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Plan description"
+            data-testid="input-plan-description"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="plan-price">Price</Label>
+          <Input
+            id="plan-price"
+            type="number"
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+            placeholder="0"
+            data-testid="input-plan-price"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="plan-features">Features (comma-separated)</Label>
+          <Input
+            id="plan-features"
+            value={newFeatures}
+            onChange={(e) => setNewFeatures(e.target.value)}
+            placeholder="Feature 1, Feature 2, Feature 3"
+            data-testid="input-plan-features"
+          />
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }

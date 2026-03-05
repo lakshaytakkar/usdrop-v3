@@ -2,6 +2,8 @@ import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "@/hooks/use-router"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Plus, Folder, TrendingUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Category } from "@/types/categories"
@@ -13,6 +15,7 @@ import {
   DataTable,
   StatusBadge,
   EmptyState,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
@@ -32,6 +35,10 @@ export default function AdminCategoriesPage() {
   const { showSuccess, showError } = useToast()
   const [categories, setCategories] = useState<CategoryRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [newName, setNewName] = useState("")
+  const [newDescription, setNewDescription] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -57,6 +64,38 @@ export default function AdminCategoriesPage() {
   }, [showError])
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
+
+  const generateSlug = (name: string) =>
+    name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+
+  const handleAddCategory = useCallback(async () => {
+    const slug = generateSlug(newName)
+    if (!newName.trim()) {
+      showError("Name is required")
+      return
+    }
+    try {
+      setIsSubmitting(true)
+      const response = await apiFetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim(), slug, description: newDescription.trim() }),
+      })
+      if (!response.ok) {
+        const d = await response.json()
+        throw new Error(d.error || "Failed to create category")
+      }
+      showSuccess(`Category "${newName.trim()}" created`)
+      setShowAddDialog(false)
+      setNewName("")
+      setNewDescription("")
+      fetchCategories()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create category")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [newName, newDescription, fetchCategories, showSuccess, showError])
 
   const handleDelete = useCallback(async (cat: CategoryRow) => {
     try {
@@ -121,7 +160,7 @@ export default function AdminCategoriesPage() {
         title="Categories"
         subtitle="Manage product categories"
         actions={
-          <Button size="sm" data-testid="button-add-category">
+          <Button size="sm" data-testid="button-add-category" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
             Add Category
           </Button>
@@ -139,7 +178,7 @@ export default function AdminCategoriesPage() {
           title="No categories found"
           description="Create your first product category to get started."
           actionLabel="Add Category"
-          onAction={() => {}}
+          onAction={() => setShowAddDialog(true)}
         />
       ) : (
         <DataTable
@@ -153,6 +192,49 @@ export default function AdminCategoriesPage() {
           emptyDescription="Try adjusting your search."
         />
       )}
+
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={(open) => {
+          setShowAddDialog(open)
+          if (!open) { setNewName(""); setNewDescription("") }
+        }}
+        title="Add Category"
+        onSubmit={handleAddCategory}
+        submitLabel="Create Category"
+        isSubmitting={isSubmitting}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="category-name">Name</Label>
+          <Input
+            id="category-name"
+            data-testid="input-category-name"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="e.g. Electronics"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="category-slug">Slug</Label>
+          <Input
+            id="category-slug"
+            data-testid="input-category-slug"
+            value={generateSlug(newName)}
+            readOnly
+            className="text-muted-foreground"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="category-description">Description</Label>
+          <Input
+            id="category-description"
+            data-testid="input-category-description"
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Brief description of this category"
+          />
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }

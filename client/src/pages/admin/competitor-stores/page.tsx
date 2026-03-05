@@ -13,9 +13,12 @@ import {
   DataTable,
   StatusBadge,
   EmptyState,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface StoreRow {
   id: string
@@ -39,6 +42,9 @@ export default function AdminCompetitorStoresPage() {
   const { showSuccess, showError } = useToast()
   const [stores, setStores] = useState<StoreRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [newStore, setNewStore] = useState({ name: "", url: "", category: "", description: "" })
 
   const fetchStores = useCallback(async () => {
     try {
@@ -77,6 +83,27 @@ export default function AdminCompetitorStoresPage() {
       fetchStores()
     } catch { showError("Failed to delete store") }
   }, [fetchStores, showSuccess, showError])
+
+  const handleCreateStore = useCallback(async () => {
+    try {
+      setIsSubmitting(true)
+      const response = await apiFetch("/api/admin/competitor-stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(newStore),
+      })
+      if (!response.ok) throw new Error("Failed to create store")
+      showSuccess("Store created successfully")
+      setShowAddDialog(false)
+      setNewStore({ name: "", url: "", category: "", description: "" })
+      fetchStores()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create store")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [newStore, fetchStores, showSuccess, showError])
 
   const verifiedCount = stores.filter(s => s.verified).length
   const avgTraffic = stores.length > 0 ? stores.reduce((sum, s) => sum + s.monthly_traffic, 0) / stores.length : 0
@@ -130,7 +157,7 @@ export default function AdminCompetitorStoresPage() {
         title="Competitor Stores"
         subtitle="Monitor and manage competitor stores"
         actions={
-          <Button size="sm" data-testid="button-add-store">
+          <Button size="sm" data-testid="button-add-store" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
             Add Store
           </Button>
@@ -149,7 +176,7 @@ export default function AdminCompetitorStoresPage() {
           title="No stores found"
           description="Add your first competitor store to start tracking."
           actionLabel="Add Store"
-          onAction={() => {}}
+          onAction={() => setShowAddDialog(true)}
         />
       ) : (
         <DataTable
@@ -163,6 +190,55 @@ export default function AdminCompetitorStoresPage() {
           emptyDescription="Try adjusting your search."
         />
       )}
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        title="Add Competitor Store"
+        onSubmit={handleCreateStore}
+        submitLabel="Add Store"
+        isSubmitting={isSubmitting}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="store-name">Name</Label>
+          <Input
+            id="store-name"
+            data-testid="input-store-name"
+            placeholder="Store name"
+            value={newStore.name}
+            onChange={(e) => setNewStore(prev => ({ ...prev, name: e.target.value }))}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="store-url">URL</Label>
+          <Input
+            id="store-url"
+            data-testid="input-store-url"
+            placeholder="https://example.com"
+            value={newStore.url}
+            onChange={(e) => setNewStore(prev => ({ ...prev, url: e.target.value }))}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="store-category">Category</Label>
+          <Input
+            id="store-category"
+            data-testid="input-store-category"
+            placeholder="e.g. Fashion, Electronics"
+            value={newStore.category}
+            onChange={(e) => setNewStore(prev => ({ ...prev, category: e.target.value }))}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="store-description">Description</Label>
+          <Input
+            id="store-description"
+            data-testid="input-store-description"
+            placeholder="Brief description"
+            value={newStore.description}
+            onChange={(e) => setNewStore(prev => ({ ...prev, description: e.target.value }))}
+          />
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }

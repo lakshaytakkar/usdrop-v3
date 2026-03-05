@@ -2,16 +2,26 @@ import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "@/hooks/use-router"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getAvatarUrl } from "@/lib/utils/avatar"
-import { Plus, UserPlus } from "lucide-react"
+import { UserPlus } from "lucide-react"
 import { ExternalUser } from "@/types/admin/users"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   PageShell,
   PageHeader,
   DataTable,
   StatusBadge,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
@@ -22,6 +32,9 @@ export default function ExternalUsersPage() {
 
   const [users, setUsers] = useState<ExternalUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [addForm, setAddForm] = useState({ name: "", email: "", password: "", plan: "free" })
+  const [addLoading, setAddLoading] = useState(false)
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -50,6 +63,38 @@ export default function ExternalUsersPage() {
   }, [showError])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
+
+  const handleAddUser = useCallback(async () => {
+    if (!addForm.name || !addForm.email || !addForm.password) {
+      showError("Please fill in all required fields")
+      return
+    }
+    setAddLoading(true)
+    try {
+      const response = await apiFetch("/api/admin/external-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: addForm.name,
+          email: addForm.email,
+          password: addForm.password,
+          plan: addForm.plan,
+        }),
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create user")
+      }
+      showSuccess(`User "${addForm.name}" has been created`)
+      setShowAddDialog(false)
+      setAddForm({ name: "", email: "", password: "", plan: "free" })
+      await fetchUsers()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create user.")
+    } finally {
+      setAddLoading(false)
+    }
+  }, [addForm, fetchUsers, showSuccess, showError])
 
   const handleSuspend = useCallback(async (user: ExternalUser) => {
     try {
@@ -157,10 +202,6 @@ export default function ExternalUsersPage() {
       onClick: (user) => router.push(`/admin/external-users/${user.id}`),
     },
     {
-      label: "Edit",
-      onClick: (user) => router.push(`/admin/external-users/${user.id}`),
-    },
-    {
       label: "Suspend",
       onClick: (user) => handleSuspend(user),
       separator: true,
@@ -183,7 +224,7 @@ export default function ExternalUsersPage() {
         title="Clients"
         subtitle="Manage external users and their subscriptions"
         actions={
-          <Button data-testid="button-add-user" onClick={() => {}}>
+          <Button data-testid="button-add-user" onClick={() => setShowAddDialog(true)}>
             <UserPlus className="size-4 mr-1.5" />
             Add User
           </Button>
@@ -206,6 +247,60 @@ export default function ExternalUsersPage() {
         emptyDescription="There are no external users to display."
         isLoading={loading}
       />
+
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        title="Add New User"
+        onSubmit={handleAddUser}
+        submitLabel="Create User"
+        isSubmitting={addLoading}
+      >
+        <div className="space-y-1.5">
+          <Label htmlFor="add-name">Full Name</Label>
+          <Input
+            id="add-name"
+            placeholder="John Doe"
+            value={addForm.name}
+            onChange={(e) => setAddForm(f => ({ ...f, name: e.target.value }))}
+            data-testid="input-add-name"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="add-email">Email</Label>
+          <Input
+            id="add-email"
+            type="email"
+            placeholder="john@example.com"
+            value={addForm.email}
+            onChange={(e) => setAddForm(f => ({ ...f, email: e.target.value }))}
+            data-testid="input-add-email"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="add-password">Password</Label>
+          <Input
+            id="add-password"
+            type="password"
+            placeholder="Enter password"
+            value={addForm.password}
+            onChange={(e) => setAddForm(f => ({ ...f, password: e.target.value }))}
+            data-testid="input-add-password"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Plan</Label>
+          <Select value={addForm.plan} onValueChange={(val) => setAddForm(f => ({ ...f, plan: val }))}>
+            <SelectTrigger data-testid="select-add-plan">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="free">Free</SelectItem>
+              <SelectItem value="pro">Pro</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }

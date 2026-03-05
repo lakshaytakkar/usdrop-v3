@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: 'General Sans', 'DM Sans', ui-sans-serif, sans-serif, system-ui;
+  --font-sans: 'Plus Jakarta Sans', 'General Sans', 'DM Sans', ui-sans-serif, sans-serif, system-ui;
   --font-heading: 'Plus Jakarta Sans', 'General Sans', ui-sans-serif, sans-serif;
   --font-mono: Geist Mono, monospace;
   --font-cooper: CooperLtBt, Georgia, serif;
@@ -127,7 +127,7 @@
   --sidebar-accent-foreground: oklch(0.2007 0.0199 284.4646);
   --sidebar-border: oklch(0.9209 0.0094 286.2133);
   --sidebar-ring: oklch(0.4099 0.2135 264.0522);
-  --font-sans: 'General Sans', 'DM Sans', ui-sans-serif, sans-serif, system-ui;
+  --font-sans: 'Plus Jakarta Sans', 'General Sans', 'DM Sans', ui-sans-serif, sans-serif, system-ui;
   --font-serif: "Georgia", serif;
   --font-mono: "Geist Mono", "Fira Code", monospace;
   --radius: 0.75rem;

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <PageTransition className={cn("px-6 py-6 lg:px-10 space-y-6", className)}>
+    <PageTransition className={cn("px-16 py-6 lg:px-24 space-y-6", className)}>
       {children}
     </PageTransition>
   );
@@ -100,14 +100,14 @@ interface StatCardProps {
 export function StatCard({ label, value, trend, icon: Icon, iconBg, iconColor }: StatCardProps) {
   return (
     <div
-      className="group rounded-lg border bg-background p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      className="rounded-xl border bg-card p-5"
       data-testid={`card-stat-${label.toLowerCase().replace(/\s+/g, "-")}`}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-muted-foreground">{label}</span>
-          <span className="text-2xl font-semibold font-heading tracking-tight">{value}</span>
-          {trend && <span className="text-xs font-medium text-muted-foreground">{trend}</span>}
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-2 text-2xl font-bold font-heading">{value}</p>
+          {trend && <p className="mt-1 text-xs text-muted-foreground">{trend}</p>}
         </div>
         <div
           className="flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors duration-200"
@@ -140,7 +140,7 @@ export function SectionCard({
   actions?: ReactNode;
 }) {
   return (
-    <div className="rounded-lg border bg-background" data-testid={`section-${title.toLowerCase().replace(/\s+/g, "-")}`}>
+    <div className="rounded-xl border bg-card" data-testid={`section-${title.toLowerCase().replace(/\s+/g, "-")}`}>
       <div className="flex items-center justify-between border-b px-5 py-3.5">
         <h3 className="text-sm font-semibold font-heading">{title}</h3>
         {actions}

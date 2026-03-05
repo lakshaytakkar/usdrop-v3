@@ -149,7 +149,7 @@ export function DataTable<T extends { id: string }>({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border bg-background">
+      <div className="rounded-xl border bg-card overflow-hidden">
         <div className="p-4 space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-12 bg-muted/50 rounded animate-pulse" />
@@ -160,7 +160,7 @@ export function DataTable<T extends { id: string }>({
   }
 
   return (
-    <div className="rounded-lg border bg-background" data-testid="data-table">
+    <div className="rounded-xl border bg-card overflow-hidden" data-testid="data-table">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -206,8 +206,8 @@ export function DataTable<T extends { id: string }>({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-muted/30">
-              <th className="w-10 px-3 py-2.5">
+            <tr className="border-b">
+              <th className="w-10 px-4 py-3">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
@@ -218,7 +218,7 @@ export function DataTable<T extends { id: string }>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider",
+                    "px-4 py-3 text-left text-xs font-medium text-muted-foreground tracking-wide",
                     col.sortable && "cursor-pointer select-none hover:text-foreground"
                   )}
                   style={col.width ? { width: col.width } : undefined}
@@ -231,7 +231,7 @@ export function DataTable<T extends { id: string }>({
                 </th>
               ))}
               {rowActions && rowActions.length > 0 && (
-                <th className="w-10 px-3 py-2.5" />
+                <th className="w-10 px-4 py-3" />
               )}
             </tr>
           </thead>
@@ -254,7 +254,7 @@ export function DataTable<T extends { id: string }>({
                   onClick={() => onRowClick?.(item)}
                   data-testid={`row-${item.id}`}
                 >
-                  <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.has(item.id)}
                       onCheckedChange={() => toggleOne(item.id)}
@@ -262,14 +262,14 @@ export function DataTable<T extends { id: string }>({
                     />
                   </td>
                   {columns.map((col) => (
-                    <td key={col.key} className="px-3 py-2.5">
+                    <td key={col.key} className="px-4 py-3.5">
                       {col.render
                         ? col.render(item)
                         : String((item as Record<string, unknown>)[col.key] ?? "")}
                     </td>
                   ))}
                   {rowActions && rowActions.length > 0 && (
-                    <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="icon" variant="ghost" className="size-7" data-testid={`button-actions-${item.id}`}>

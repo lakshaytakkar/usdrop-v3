@@ -11,9 +11,20 @@ import {
   StatGrid,
   DataTable,
   StatusBadge,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Product } from "@/types/products"
 import { Category } from "@/types/categories"
 
@@ -25,6 +36,16 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "",
+    buy_price: "",
+    sell_price: "",
+    description: "",
+    status: "active",
+  })
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -70,6 +91,37 @@ export default function AdminProductsPage() {
       fetchProducts()
     } catch {
       showError("Failed to delete product")
+    }
+  }
+
+  const handleAddProduct = async () => {
+    if (!formData.title.trim()) {
+      showError("Title is required")
+      return
+    }
+    try {
+      setIsSubmitting(true)
+      const response = await apiFetch("/api/admin/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: formData.title,
+          category: formData.category,
+          buy_price: formData.buy_price ? Number(formData.buy_price) : 0,
+          sell_price: formData.sell_price ? Number(formData.sell_price) : 0,
+          description: formData.description,
+          status: formData.status,
+        }),
+      })
+      if (!response.ok) throw new Error("Failed to create product")
+      showSuccess("Product created successfully")
+      setShowAddDialog(false)
+      setFormData({ title: "", category: "", buy_price: "", sell_price: "", description: "", status: "active" })
+      fetchProducts()
+    } catch {
+      showError("Failed to create product")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -193,7 +245,7 @@ export default function AdminProductsPage() {
         title="Products"
         subtitle="Manage your product catalog"
         actions={
-          <Button onClick={() => router.push("/admin/products/new")} data-testid="button-add-product">
+          <Button onClick={() => setShowAddDialog(true)} data-testid="button-add-product">
             <Plus className="h-4 w-4 mr-1.5" />
             Add Product
           </Button>
@@ -240,12 +292,96 @@ export default function AdminProductsPage() {
         isLoading={loading}
         pageSize={10}
         headerActions={
-          <Button onClick={() => router.push("/admin/products/new")} data-testid="button-add-product-table">
+          <Button onClick={() => setShowAddDialog(true)} data-testid="button-add-product-table">
             <Plus className="h-4 w-4 mr-1.5" />
             Add Product
           </Button>
         }
       />
+
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={(open) => {
+          setShowAddDialog(open)
+          if (!open) {
+            setFormData({ title: "", category: "", buy_price: "", sell_price: "", description: "", status: "active" })
+          }
+        }}
+        title="Add Product"
+        onSubmit={handleAddProduct}
+        submitLabel="Create Product"
+        isSubmitting={isSubmitting}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="product-title">Title</Label>
+          <Input
+            id="product-title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            placeholder="Product title"
+            data-testid="input-product-title"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="product-category">Category</Label>
+          <Input
+            id="product-category"
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            placeholder="Category name"
+            data-testid="input-product-category"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="product-buy-price">Buy Price</Label>
+            <Input
+              id="product-buy-price"
+              type="number"
+              value={formData.buy_price}
+              onChange={(e) => setFormData({ ...formData, buy_price: e.target.value })}
+              placeholder="0.00"
+              data-testid="input-product-buy-price"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="product-sell-price">Sell Price</Label>
+            <Input
+              id="product-sell-price"
+              type="number"
+              value={formData.sell_price}
+              onChange={(e) => setFormData({ ...formData, sell_price: e.target.value })}
+              placeholder="0.00"
+              data-testid="input-product-sell-price"
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="product-description">Description</Label>
+          <Textarea
+            id="product-description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Product description"
+            data-testid="input-product-description"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="product-status">Status</Label>
+          <Select
+            value={formData.status}
+            onValueChange={(value) => setFormData({ ...formData, status: value })}
+          >
+            <SelectTrigger data-testid="select-product-status">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }

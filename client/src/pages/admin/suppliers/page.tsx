@@ -12,9 +12,12 @@ import {
   DataTable,
   StatusBadge,
   EmptyState,
+  FormDialog,
   type Column,
   type RowAction,
 } from "@/components/admin-shared"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface SupplierRow {
   id: string
@@ -38,6 +41,9 @@ export default function AdminSuppliersPage() {
   const { showSuccess, showError } = useToast()
   const [suppliers, setSuppliers] = useState<SupplierRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddDialog, setShowAddDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({ name: "", country: "", website: "", description: "" })
 
   const fetchSuppliers = useCallback(async () => {
     try {
@@ -65,6 +71,26 @@ export default function AdminSuppliersPage() {
       showError("Failed to delete supplier")
     }
   }, [fetchSuppliers, showSuccess, showError])
+
+  const handleCreateSupplier = useCallback(async () => {
+    try {
+      setIsSubmitting(true)
+      const res = await apiFetch("/api/admin/suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      if (!res.ok) throw new Error("Failed to create supplier")
+      showSuccess("Supplier created successfully")
+      setShowAddDialog(false)
+      setFormData({ name: "", country: "", website: "", description: "" })
+      fetchSuppliers()
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create supplier")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [formData, fetchSuppliers, showSuccess, showError])
 
   const verifiedCount = suppliers.filter(s => s.verified).length
   const avgRating = suppliers.length > 0
@@ -121,7 +147,7 @@ export default function AdminSuppliersPage() {
         title="Suppliers"
         subtitle="Manage product suppliers and verification status"
         actions={
-          <Button size="sm" data-testid="button-add-supplier">
+          <Button size="sm" data-testid="button-add-supplier" onClick={() => setShowAddDialog(true)}>
             <Plus className="h-4 w-4 mr-1.5" />
             Add Supplier
           </Button>
@@ -139,7 +165,7 @@ export default function AdminSuppliersPage() {
           title="No suppliers found"
           description="Add your first supplier to get started."
           actionLabel="Add Supplier"
-          onAction={() => {}}
+          onAction={() => setShowAddDialog(true)}
         />
       ) : (
         <DataTable
@@ -153,6 +179,56 @@ export default function AdminSuppliersPage() {
           emptyDescription="Try adjusting your search."
         />
       )}
+
+      <FormDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        title="Add Supplier"
+        onSubmit={handleCreateSupplier}
+        submitLabel="Create Supplier"
+        isSubmitting={isSubmitting}
+      >
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="supplier-name">Name</Label>
+          <Input
+            id="supplier-name"
+            data-testid="input-supplier-name"
+            value={formData.name}
+            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Supplier name"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="supplier-country">Country</Label>
+          <Input
+            id="supplier-country"
+            data-testid="input-supplier-country"
+            value={formData.country}
+            onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
+            placeholder="Country"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="supplier-website">Website</Label>
+          <Input
+            id="supplier-website"
+            data-testid="input-supplier-website"
+            value={formData.website}
+            onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+            placeholder="https://example.com"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="supplier-description">Description</Label>
+          <Input
+            id="supplier-description"
+            data-testid="input-supplier-description"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Brief description"
+          />
+        </div>
+      </FormDialog>
     </PageShell>
   )
 }
