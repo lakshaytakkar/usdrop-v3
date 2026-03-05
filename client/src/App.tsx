@@ -38,6 +38,10 @@ import AdminPlanDetail from "@/pages/admin/plans/[id]/page";
 import AdminCompetitorStores from "@/pages/admin/competitor-stores/page";
 import AdminCompetitorStoreDetail from "@/pages/admin/competitor-stores/[id]/page";
 import AdminShopifyStores from "@/pages/admin/shopify-stores/page";
+import AdminPipeline from "@/pages/admin/pipeline/page";
+import AdminAccessControl from "@/pages/admin/access-control/page";
+import AdminPaymentLinks from "@/pages/admin/payment-links/page";
+import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
 import DevTasks from "@/pages/dev/tasks/page";
@@ -239,6 +243,12 @@ function Router() {
       <Route path="/admin/competitor-stores" component={() => <AdminGuard><AdminLayout><AdminCompetitorStores /></AdminLayout></AdminGuard>} />
       <Route path="/admin/competitor-stores/:id" component={() => <AdminGuard><AdminLayout><AdminCompetitorStoreDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/shopify-stores" component={() => <AdminGuard><AdminLayout><AdminShopifyStores /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/pipeline" component={() => <AdminGuard><AdminLayout><AdminPipeline /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/access-control" component={() => <AdminGuard><AdminLayout><AdminAccessControl /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/payment-links" component={() => <AdminGuard><AdminLayout><AdminPaymentLinks /></AdminLayout></AdminGuard>} />
+
+      {/* Public payment page */}
+      <Route path="/payment/:id" component={PublicPaymentPage} />
 
       {/* Dev */}
       <Route path="/dev" component={() => <DevLayout><DevDashboard /></DevLayout>} />

@@ -7,6 +7,10 @@ import { registerPublicRoutes } from "./routes/public";
 import { registerCROChecklistRoutes } from "./routes/cro-checklist";
 import { registerMentorshipLeadRoutes } from "./routes/mentorship-leads";
 import { registerLearningProgressRoutes } from "./routes/learning-progress";
+import { registerActivityTrackingRoutes } from "./routes/activity-tracking";
+import { registerLeadScoringRoutes } from "./routes/lead-scoring";
+import { registerPaymentLinkRoutes } from "./routes/payment-links";
+import { registerAccessControlRoutes } from "./routes/access-control";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -15,4 +19,8 @@ export async function registerRoutes(server: Server, app: Express) {
   registerCROChecklistRoutes(app);
   registerMentorshipLeadRoutes(app);
   registerLearningProgressRoutes(app);
+  registerActivityTrackingRoutes(app);
+  registerLeadScoringRoutes(app);
+  registerPaymentLinkRoutes(app);
+  registerAccessControlRoutes(app);
 }

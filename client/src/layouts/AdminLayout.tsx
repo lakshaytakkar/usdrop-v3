@@ -62,6 +62,21 @@ const navCategories: NavCategory[] = [
       { title: "Shopify Stores", url: "/admin/shopify-stores" },
     ],
   },
+  {
+    title: "CRM",
+    defaultUrl: "/admin/pipeline",
+    items: [
+      { title: "Pipeline", url: "/admin/pipeline" },
+      { title: "Payment Links", url: "/admin/payment-links" },
+    ],
+  },
+  {
+    title: "Settings",
+    defaultUrl: "/admin/access-control",
+    items: [
+      { title: "Access Control", url: "/admin/access-control" },
+    ],
+  },
 ];
 
 function getActiveCategory(location: string): NavCategory | null {

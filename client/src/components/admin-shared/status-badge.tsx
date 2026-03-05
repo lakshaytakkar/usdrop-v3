@@ -72,6 +72,12 @@ const variantMap: Record<string, StatusVariant> = {
   moderator: "neutral",
   Trending: "success",
   trending: "success",
+  Paid: "success",
+  paid: "success",
+  Expired: "error",
+  expired: "error",
+  Cancelled: "neutral",
+  cancelled: "neutral",
 };
 
 const variantStyles: Record<StatusVariant, string> = {

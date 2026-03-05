@@ -4,6 +4,7 @@ import { useParams } from "@/hooks/use-router"
 import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, LockOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, markLessonCompletedOnServer, syncCompletedLessonsFromServer, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
+import { trackActivity } from "@/lib/activity-tracker"
 import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
 
 function Sidebar({
@@ -134,6 +135,12 @@ export default function FreeLearningLessonPage() {
       markLessonCompleted(lessonId)
       markLessonCompletedOnServer(lessonId)
       setCompletionVersion(v => v + 1)
+      const found = findLesson(lessonId)
+      trackActivity('lesson_complete', {
+        lessonId,
+        moduleId: found?.module?.id,
+        lessonTitle: found?.lesson?.title,
+      })
     }
   }, [lessonId])
 
