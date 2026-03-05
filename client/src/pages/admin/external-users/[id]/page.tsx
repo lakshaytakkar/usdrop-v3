@@ -70,6 +70,31 @@ import {
   Circle,
   Users,
   BarChart3,
+  ChevronDown,
+  ChevronRight,
+  Home,
+  Bookmark,
+  MonitorPlay,
+  FlaskConical,
+  UserCircle,
+  TrendingUp,
+  Trophy,
+  Grid3x3,
+  Flame,
+  Video,
+  Building2,
+  Palette,
+  User,
+  PenTool,
+  Receipt,
+  Calculator,
+  Truck,
+  ClipboardCheck,
+  Wrench,
+  FolderOpen,
+  Package,
+  Globe,
+  Route,
 } from "lucide-react"
 
 const TOTAL_FREE_LESSONS = freeLearningModules.reduce((acc, m) => acc + m.lessons.length, 0)
@@ -77,6 +102,78 @@ const TOTAL_FREE_LESSONS = freeLearningModules.reduce((acc, m) => acc + m.lesson
 const allFreeLessons = freeLearningModules.flatMap(m =>
   m.lessons.map(l => ({ ...l, moduleName: m.title }))
 )
+
+interface ModuleGroupDef {
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  modules: Array<{
+    moduleId: string
+    name: string
+    description: string
+    icon: React.ComponentType<{ className?: string }>
+  }>
+}
+
+const MODULE_GROUPS: ModuleGroupDef[] = [
+  {
+    label: "My Mentorship",
+    icon: Compass,
+    modules: [
+      { moduleId: "mentorship", name: "Framework & Sessions", description: "Home dashboard, My Sessions", icon: Home },
+      { moduleId: "my-products", name: "My Products", description: "Saved products picklist", icon: Bookmark },
+      { moduleId: "my-store", name: "My Store", description: "Shopify store management", icon: ShoppingBag },
+      { moduleId: "my-roadmap", name: "My Roadmap", description: "Business roadmap tasks", icon: Map },
+      { moduleId: "courses", name: "My Learning", description: "Free learning & paid courses", icon: GraduationCap },
+      { moduleId: "my-credentials", name: "My Credentials", description: "Stored credentials vault", icon: KeyRound },
+    ],
+  },
+  {
+    label: "Products",
+    icon: Package,
+    modules: [
+      { moduleId: "product-hunt", name: "Product Hunt", description: "AI product discovery", icon: TrendingUp },
+      { moduleId: "winning-products", name: "Winning & Trending", description: "Winning products, trending items", icon: Trophy },
+      { moduleId: "categories", name: "Categories", description: "Product categories browser", icon: Grid3x3 },
+      { moduleId: "seasonal-collections", name: "Seasonal Collections", description: "Seasonal product sets", icon: Calendar },
+      { moduleId: "competitor-stores", name: "Competitor Stores", description: "Competitor store analysis", icon: Store },
+    ],
+  },
+  {
+    label: "Videos & Ads",
+    icon: Video,
+    modules: [
+      { moduleId: "meta-ads", name: "Videos & Meta Ads", description: "Ad intelligence and creatives", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Marketplaces",
+    icon: Globe,
+    modules: [
+      { moduleId: "selling-channels", name: "Selling Channels", description: "Marketplace integrations", icon: Store },
+    ],
+  },
+  {
+    label: "LLC",
+    icon: Building2,
+    modules: [
+      { moduleId: "fulfillment", name: "LLC Formation", description: "Business entity setup", icon: Building2 },
+    ],
+  },
+  {
+    label: "AI Studio",
+    icon: Palette,
+    modules: [
+      { moduleId: "studio", name: "Model Studio & Whitelabelling", description: "AI creative tools", icon: Palette },
+    ],
+  },
+  {
+    label: "Tools",
+    icon: Wrench,
+    modules: [
+      { moduleId: "tools", name: "All Tools", description: "Description gen, emails, invoices, calculators", icon: Wrench },
+    ],
+  },
+]
 
 interface JourneyData {
   userId: string
@@ -163,6 +260,8 @@ export default function ExternalUserDetailPage() {
 
   const [learningProgress, setLearningProgress] = useState<LessonProgress[]>([])
   const [learningProgressLoading, setLearningProgressLoading] = useState(true)
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
   const [editOpen, setEditOpen] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
@@ -951,98 +1050,486 @@ export default function ExternalUserDetailPage() {
     </div>
   )
 
+  const toggleGroup = useCallback((label: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label)
+      else next.add(label)
+      return next
+    })
+  }, [])
+
+  const getSessionModule = useCallback((moduleId: string): SessionModule | undefined => {
+    return sessions.find(s => s.moduleId === moduleId)
+  }, [sessions])
+
+  const getEffectiveAccess = useCallback((moduleId: string): string | null => {
+    if (pendingOverrides[moduleId] !== undefined) return pendingOverrides[moduleId]
+    const mod = getSessionModule(moduleId)
+    return mod?.hasOverride ? mod.accessLevel : null
+  }, [pendingOverrides, getSessionModule])
+
+  const handleApplyAllInGroup = useCallback((group: ModuleGroupDef, value: string) => {
+    const updates: Record<string, string | null> = {}
+    for (const mod of group.modules) {
+      updates[mod.moduleId] = value === "plan_default" ? null : value
+    }
+    setPendingOverrides(prev => ({ ...prev, ...updates }))
+  }, [])
+
+  const pendingCount = Object.keys(pendingOverrides).length
+
   const accessControlTab = (
     <div className="space-y-4">
       {sessionsLoading ? (
-        <Card>
-          <CardContent className="py-6 space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex items-center justify-between">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-8 w-32" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="py-4 space-y-3">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+        <>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Settings className="h-4 w-4 text-muted-foreground" />
                 Module Access Controls
-              </CardTitle>
-              {Object.keys(pendingOverrides).length > 0 && (
-                <Button
-                  size="sm"
-                  onClick={handleSaveModuleOverrides}
-                  disabled={sessionsSaving}
-                  data-testid="button-save-overrides"
-                >
-                  {sessionsSaving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
-                  Save Changes ({Object.keys(pendingOverrides).length})
-                </Button>
-              )}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Override module access for {user?.name || "this user"}. Leave as "Plan Default" to use their {user?.plan || "plan"} access.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Override module access for this specific user. Leave as "Plan Default" to use the access level from their subscription plan.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-0">
-              <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-2 px-2 text-xs font-medium text-muted-foreground border-b">
-                <span>Module</span>
-                <span className="w-24 text-center">Current</span>
-                <span className="w-40 text-center">Override</span>
-              </div>
-              {sessions.map((mod) => {
-                const currentOverride = pendingOverrides[mod.moduleId] !== undefined
-                  ? pendingOverrides[mod.moduleId]
-                  : mod.accessLevel
-                const hasPendingChange = pendingOverrides[mod.moduleId] !== undefined
+            {pendingCount > 0 && (
+              <Button
+                size="sm"
+                onClick={handleSaveModuleOverrides}
+                disabled={sessionsSaving}
+                className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                data-testid="button-save-overrides"
+              >
+                {sessionsSaving && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                Save Changes ({pendingCount})
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-4">
+            <div className="space-y-3">
+              {MODULE_GROUPS.map((group) => {
+                const isCollapsed = collapsedGroups.has(group.label)
+                const overrideCount = group.modules.filter(m => {
+                  const eff = getEffectiveAccess(m.moduleId)
+                  return eff !== null
+                }).length
+                const GroupIcon = group.icon
+
                 return (
-                  <div
-                    key={mod.moduleId}
-                    className={cn(
-                      "grid grid-cols-[1fr_auto_auto] gap-4 items-center py-2.5 px-2 border-b last:border-b-0",
-                      hasPendingChange && "bg-primary/5"
-                    )}
-                    data-testid={`session-module-${mod.moduleId}`}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{mod.moduleName}</p>
-                      {mod.hasOverride && pendingOverrides[mod.moduleId] === undefined && (
-                        <p className="text-[10px] text-muted-foreground">Override set {mod.overriddenAt ? formatDate(mod.overriddenAt) : ''}</p>
-                      )}
-                    </div>
-                    <div className="w-24 flex justify-center">
-                      {getAccessLevelBadge(mod.hasOverride ? mod.accessLevel : null)}
-                    </div>
-                    <Select
-                      value={currentOverride || "plan_default"}
-                      onValueChange={(value) => {
-                        if (value === "plan_default") {
-                          setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: null }))
-                        } else {
-                          setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: value }))
-                        }
-                      }}
+                  <Card key={group.label}>
+                    <div
+                      className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-muted/30 transition-colors"
+                      onClick={() => toggleGroup(group.label)}
+                      data-testid={`group-toggle-${group.label.toLowerCase().replace(/\s+/g, "-")}`}
                     >
-                      <SelectTrigger className="w-40" data-testid={`select-module-${mod.moduleId}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="plan_default">Plan Default</SelectItem>
-                        <SelectItem value="full_access">Full Access</SelectItem>
-                        <SelectItem value="limited_access">Limited Access</SelectItem>
-                        <SelectItem value="locked">Locked</SelectItem>
-                        <SelectItem value="hidden">Hidden</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="flex items-center gap-2.5">
+                        {isCollapsed ? (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <GroupIcon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold">{group.label}</span>
+                        {overrideCount > 0 && (
+                          <Badge variant="outline" className="text-[10px] ml-1">{overrideCount} override{overrideCount !== 1 ? "s" : ""}</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Select
+                          value=""
+                          onValueChange={(value) => handleApplyAllInGroup(group, value)}
+                        >
+                          <SelectTrigger className="h-7 w-[110px] text-[11px]" data-testid={`select-group-all-${group.label.toLowerCase().replace(/\s+/g, "-")}`}>
+                            <SelectValue placeholder="Apply all..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="plan_default">Plan Default</SelectItem>
+                            <SelectItem value="full_access">Full Access</SelectItem>
+                            <SelectItem value="locked">Locked</SelectItem>
+                            <SelectItem value="hidden">Hidden</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    {!isCollapsed && (
+                      <CardContent className="pt-0 pb-2 px-4">
+                        <div className="border-t">
+                          {group.modules.map((mod) => {
+                            const sessionMod = getSessionModule(mod.moduleId)
+                            const effectiveAccess = getEffectiveAccess(mod.moduleId)
+                            const hasPendingChange = pendingOverrides[mod.moduleId] !== undefined
+                            const ModIcon = mod.icon
+
+                            return (
+                              <div
+                                key={mod.moduleId}
+                                className={cn(
+                                  "flex items-center gap-3 py-2.5 border-b last:border-b-0",
+                                  hasPendingChange && "bg-primary/5 -mx-2 px-2 rounded"
+                                )}
+                                data-testid={`session-module-${mod.moduleId}`}
+                              >
+                                <div className="h-8 w-8 rounded-lg bg-muted/50 border flex items-center justify-center flex-shrink-0">
+                                  <ModIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium leading-tight">{mod.name}</p>
+                                  <p className="text-[11px] text-muted-foreground leading-tight">{mod.description}</p>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <div className="w-20 flex justify-center">
+                                    {getAccessLevelBadge(effectiveAccess)}
+                                  </div>
+                                  <Select
+                                    value={effectiveAccess || "plan_default"}
+                                    onValueChange={(value) => {
+                                      if (value === "plan_default") {
+                                        setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: null }))
+                                      } else {
+                                        setPendingOverrides((prev) => ({ ...prev, [mod.moduleId]: value }))
+                                      }
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-[130px] h-8 text-xs" data-testid={`select-module-${mod.moduleId}`}>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="plan_default">Plan Default</SelectItem>
+                                      <SelectItem value="full_access">Full Access</SelectItem>
+                                      <SelectItem value="limited_access">Limited</SelectItem>
+                                      <SelectItem value="locked">Locked</SelectItem>
+                                      <SelectItem value="hidden">Hidden</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
                 )
               })}
             </div>
+
+            <div className="xl:sticky xl:top-4 self-start">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-semibold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
+                    <Eye className="h-3.5 w-3.5" />
+                    Nav Preview
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground">What {user?.name?.split(" ")[0] || "user"} sees in the sidebar</p>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2">
+                    {MODULE_GROUPS.map((group) => {
+                      const visibleModules = group.modules.filter(m => {
+                        const access = getEffectiveAccess(m.moduleId)
+                        return access !== "hidden"
+                      })
+                      if (visibleModules.length === 0) return null
+                      const GroupIcon = group.icon
+                      return (
+                        <div key={group.label}>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <GroupIcon className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</span>
+                          </div>
+                          <div className="space-y-0.5 pl-[18px]">
+                            {visibleModules.map(m => {
+                              const access = getEffectiveAccess(m.moduleId)
+                              const isLocked = access === "locked"
+                              return (
+                                <div key={m.moduleId} className={cn(
+                                  "flex items-center gap-1.5 text-[11px] py-0.5",
+                                  isLocked && "opacity-50"
+                                )}>
+                                  <span className="truncate">{m.name}</span>
+                                  {isLocked && <Lock className="h-2.5 w-2.5 text-muted-foreground flex-shrink-0" />}
+                                  {access === "full_access" && <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 flex-shrink-0" />}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+
+  const journeyTab = (
+    <div className="space-y-4">
+      {journeyLoading ? (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <Card key={i}><CardContent className="py-4"><Skeleton className="h-10 w-full" /></CardContent></Card>
+            ))}
+          </div>
+          {[1, 2].map(i => (
+            <Card key={i}><CardContent className="py-6 space-y-3"><Skeleton className="h-4 w-32" /><Skeleton className="h-20 w-full" /></CardContent></Card>
+          ))}
+        </div>
+      ) : !journey ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Route className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No journey data available</p>
           </CardContent>
         </Card>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <Card>
+              <CardContent className="pt-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Onboarding</p>
+                <p className="text-lg font-semibold" data-testid="stat-onboarding">{journey.onboarding?.progress ?? 0}%</p>
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-1">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.onboarding?.progress ?? 0}%` }} />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Courses</p>
+                <p className="text-lg font-semibold" data-testid="stat-courses">{journey.courses?.completed ?? 0}/{journey.courses?.started ?? 0}</p>
+                <p className="text-[10px] text-muted-foreground">completed / enrolled</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Roadmap</p>
+                <p className="text-lg font-semibold" data-testid="stat-roadmap">{journey.roadmap?.progressPercent ?? 0}%</p>
+                <p className="text-[10px] text-muted-foreground">{journey.roadmap?.completed ?? 0}/{journey.roadmap?.total ?? 0} tasks</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Stores</p>
+                <p className="text-lg font-semibold" data-testid="stat-stores">{journey.shopifyStores?.length ?? 0}</p>
+                <p className="text-[10px] text-muted-foreground">{journey.shopifyConnected ? "Connected" : "Not connected"}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-3 pb-2.5">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Products</p>
+                <p className="text-lg font-semibold" data-testid="stat-saved-products">{journey.productsSaved}</p>
+                <p className="text-[10px] text-muted-foreground">saved to picklist</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                Onboarding Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-sm mb-1.5">
+                  <span className="text-muted-foreground">Overall completion</span>
+                  <span className="font-medium">{journey.onboarding?.completedSteps ?? 0}/{journey.onboarding?.totalSteps ?? 0} steps</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.onboarding?.progress ?? 0}%` }} />
+                </div>
+              </div>
+              {(journey.onboarding?.steps?.length ?? 0) > 0 ? (
+                <div className="space-y-1">
+                  {(journey.onboarding?.steps ?? []).map((step, idx) => (
+                    <div key={step.id || idx} className="flex items-center justify-between py-1.5 border-b last:border-b-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {step.completed ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                        ) : (
+                          <Circle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        )}
+                        <span className="text-sm truncate">{step.moduleId || `Step ${idx + 1}`}</span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {step.watchDuration > 0 && (
+                          <span className="text-[10px] text-muted-foreground">{Math.round(step.watchDuration / 60)}m watched</span>
+                        )}
+                        {step.completedAt && (
+                          <span className="text-[10px] text-muted-foreground">{formatDate(step.completedAt)}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No onboarding steps recorded</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {(journey.courses?.enrollments?.length ?? 0) > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  Course Enrollments ({journey.courses?.enrollments?.length ?? 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {(journey.courses?.enrollments ?? []).map((enrollment) => (
+                    <div key={enrollment.id} className="flex items-center justify-between gap-4 py-2 border-b last:border-b-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{enrollment.courseTitle}</p>
+                        <p className="text-xs text-muted-foreground">Enrolled: {formatDate(enrollment.enrolledAt)}</p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-20">
+                          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${enrollment.progressPercentage}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 text-right">{Math.round(enrollment.progressPercentage)}%</p>
+                        </div>
+                        {enrollment.completedAt ? (
+                          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">Done</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px]">In Progress</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(journey.roadmap?.total ?? 0) > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Map className="h-4 w-4 text-muted-foreground" />
+                  Roadmap Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="text-muted-foreground">Completion</span>
+                    <span className="font-medium">{journey.roadmap?.completed ?? 0}/{journey.roadmap?.total ?? 0} tasks</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${journey.roadmap?.progressPercent ?? 0}%` }} />
+                  </div>
+                </div>
+                {(journey.roadmap?.items?.length ?? 0) > 0 && (
+                  <div className="space-y-1">
+                    {(journey.roadmap?.items ?? []).map((item, idx) => (
+                      <div key={item.id || idx} className="flex items-center justify-between py-1.5 border-b last:border-b-0">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {item.status === "completed" ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                          ) : item.status === "in_progress" ? (
+                            <Clock className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                          ) : (
+                            <Circle className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                          )}
+                          <span className="text-sm truncate">{item.taskId}</span>
+                        </div>
+                        <Badge variant="outline" className={cn(
+                          "text-[10px]",
+                          item.status === "completed" && "bg-emerald-50 text-emerald-700 border-emerald-200",
+                          item.status === "in_progress" && "bg-amber-50 text-amber-700 border-amber-200"
+                        )}>
+                          {item.status.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {(journey.shopifyStores?.length ?? 0) > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Store className="h-4 w-4 text-muted-foreground" />
+                  Shopify Stores ({journey.shopifyStores?.length ?? 0})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(journey.shopifyStores ?? []).map((store) => (
+                    <div key={store.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{store.storeName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{store.storeUrl}</p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{formatDate(store.createdAt)}</span>
+                        <Badge variant="outline" className={cn(
+                          "text-[10px]",
+                          store.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : ""
+                        )}>{store.status}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 border flex items-center justify-center">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold" data-testid="stat-credentials">{journey.credentialsCount}</p>
+                    <p className="text-xs text-muted-foreground">Stored Credentials</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-4 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 border flex items-center justify-center">
+                    <Bookmark className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold">{journey.productsSaved}</p>
+                    <p className="text-xs text-muted-foreground">Products Saved</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </>
       )}
     </div>
   )
@@ -1191,6 +1678,7 @@ export default function ExternalUserDetailPage() {
 
   const tabs = [
     { value: "overview", label: "Overview", icon: <BarChart3 className="h-3.5 w-3.5" />, content: overviewTab },
+    { value: "journey", label: "Journey", icon: <Route className="h-3.5 w-3.5" />, content: journeyTab },
     { value: "learning", label: "Learning", icon: <GraduationCap className="h-3.5 w-3.5" />, content: learningTab },
     { value: "access", label: "Access Control", icon: <Shield className="h-3.5 w-3.5" />, content: accessControlTab, count: sessions.filter(s => s.hasOverride).length || undefined },
     { value: "activity", label: "Activity", icon: <ActivityIcon className="h-3.5 w-3.5" />, content: activityTab, count: activities.length || undefined },

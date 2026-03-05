@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -25,6 +26,7 @@ export default function VideosPage() {
   }, [searchQuery, selectedCategory])
 
   return (
+    <ModuleAccessGuard moduleId="meta-ads">
     <>
       <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
         <FrameworkBanner
@@ -97,5 +99,6 @@ export default function VideosPage() {
         onClose={() => setIsUpsellOpen(false)}
       />
     </>
+    </ModuleAccessGuard>
   )
 }

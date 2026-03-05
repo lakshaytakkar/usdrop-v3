@@ -2,6 +2,7 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -274,6 +275,7 @@ export default function CompetitorStoresPage() {
   }
 
   return (
+    <ModuleAccessGuard moduleId="competitor-stores">
     <>
       <>
           <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
@@ -716,5 +718,6 @@ export default function CompetitorStoresPage() {
         onClose={() => setIsUpsellOpen(false)} 
       />
     </>
+    </ModuleAccessGuard>
   )
 }

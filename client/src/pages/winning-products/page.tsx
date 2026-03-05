@@ -1,6 +1,7 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useMemo, useEffect, useCallback } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -646,6 +647,7 @@ export default function WinningProductsPage() {
   ]
 
   return (
+    <ModuleAccessGuard moduleId="winning-products">
     <>
       <>
           <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
@@ -756,6 +758,7 @@ export default function WinningProductsPage() {
         onClose={() => setIsUpsellOpen(false)} 
       />
     </>
+    </ModuleAccessGuard>
   )
 }
 

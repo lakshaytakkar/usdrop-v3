@@ -2,6 +2,7 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Play, CheckCircle2, Users } from "lucide-react"
@@ -108,6 +109,7 @@ export default function AcademyPage() {
   }, [fetchCourses])
 
   return (
+    <ModuleAccessGuard moduleId="courses">
     <>
         <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
           <FrameworkBanner
@@ -215,6 +217,7 @@ export default function AcademyPage() {
         onClose={() => setIsUpsellOpen(false)} 
       />
     </>
+    </ModuleAccessGuard>
   )
 }
 

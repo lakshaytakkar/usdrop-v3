@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -453,6 +454,7 @@ export default function MetaAdsPage() {
   )
 
   return (
+    <ModuleAccessGuard moduleId="meta-ads">
     <>
       {toolbarTarget && createPortal(toolbarContent, toolbarTarget)}
       <div className="flex flex-col flex-1">
@@ -604,5 +606,6 @@ export default function MetaAdsPage() {
         />
       </div>
     </>
+    </ModuleAccessGuard>
   )
 }

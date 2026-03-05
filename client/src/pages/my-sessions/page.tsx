@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { format } from "date-fns"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -129,6 +130,7 @@ export default function MySessionsPage() {
   }
 
   return (
+    <ModuleAccessGuard moduleId="mentorship">
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-sessions">
       <FrameworkBanner
         title="My Sessions"
@@ -284,5 +286,6 @@ export default function MySessionsPage() {
         onClose={() => setIsUpsellOpen(false)}
       />
     </div>
+    </ModuleAccessGuard>
   )
 }

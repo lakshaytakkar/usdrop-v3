@@ -1,11 +1,13 @@
 
 
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
 import { Link } from "wouter"
 export default function FulfillmentPage() {
   return (
+    <ModuleAccessGuard moduleId="fulfillment">
     <>
       <div className="flex flex-1 flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
         {/* Hero Section */}
@@ -204,6 +206,7 @@ export default function FulfillmentPage() {
 
       </div>
     </>
+    </ModuleAccessGuard>
   )
 }
 

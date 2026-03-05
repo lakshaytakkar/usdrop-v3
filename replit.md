@@ -22,7 +22,7 @@ The platform is built with a modern web stack: Vite for frontend, Express for th
 - **Design System:** Emphasizes a clean aesthetic with a flat `#F5F5F7` background, white cards with subtle borders, and specific design tokens (`ds-*` utility classes). The primary font is General Sans. Glass-morphism elements have been replaced with a cleaner, Creatify-style design.
 - **Navigation:** The "Framework" serves as the user's central hub. All logged-in user routes follow a `/menu/submenu` pattern.
 - **Visuals:** Standardized loading with `BlueSpinner` and `Skeleton` components.
-- **Admin Panel:** A streamlined control panel with 5 sections: Dashboard | Clients | Products | Courses | Team. It features a horizontal top navigation bar (`AdminTopNavigation`) and a shared component library for consistent UI elements. Admin client pages include detailed user views with multiple tabs (Overview, Learning, Access Control, Activity, Notes) and comprehensive editing capabilities. The course builder is a 2-panel layout for module/lesson management and content editing.
+- **Admin Panel:** A streamlined control panel with 5 sections: Dashboard | Clients | Products | Courses | Team. It features a horizontal top navigation bar (`AdminTopNavigation`) and a shared component library for consistent UI elements. Admin client pages include detailed user views with 6 tabs (Overview, Journey, Learning, Access Control, Activity, Notes) and comprehensive editing capabilities. The Access Control tab is organized by nav groups (My Mentorship, Products, Videos & Ads, etc.) with collapsible sections, per-module dropdowns, "Apply All" group controls, and a live nav preview panel. The Journey tab shows onboarding progress, course enrollments, roadmap status, Shopify stores, products saved, and credentials. The course builder is a 2-panel layout for module/lesson management and content editing.
 - **Learning System:** Courses are accessible via `/mentorship` and `/mentorship/[id]`, with dynamic content from the `/api/courses` endpoint. Free learning lessons are tracked via server-side progress and can lead to a mentorship activation flow.
 
 **Project Structure:**
@@ -36,7 +36,7 @@ The platform is built with a modern web stack: Vite for frontend, Express for th
 - **Wouter for Routing:** Lightweight client-side routing with Next.js-compatible `useRouter()` APIs.
 - **Unified API Pattern:** All API calls use `apiFetch()` for consistent authentication.
 - **Core Framework & Navigation:** "Framework" serves as the user's central and personalized hub.
-- **Module Access Control:** Implemented server-side module access overrides for users, controlling navigation visibility and access based on plan or admin settings.
+- **Module Access Control:** Implemented server-side module access overrides for users, controlling navigation visibility and access based on plan or admin settings. Page-level enforcement via `ModuleAccessGuard` component (`client/src/components/auth/module-access-guard.tsx`) wraps user-facing pages to block access when modules are set to `hidden` or `locked`.
 
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).

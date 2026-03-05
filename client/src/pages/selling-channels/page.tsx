@@ -1,6 +1,7 @@
 
 
 import { useState } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { MarketplaceCard } from "./components/marketplace-card"
 import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"
@@ -13,6 +14,7 @@ export default function SellingChannelsPage() {
   const { isFree } = useOnboarding()
 
   return (
+    <ModuleAccessGuard moduleId="selling-channels">
     <>
         <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2 min-h-0 relative">
           <FrameworkBanner
@@ -49,6 +51,7 @@ export default function SellingChannelsPage() {
         onClose={() => setIsUpsellOpen(false)} 
       />
     </>
+    </ModuleAccessGuard>
   )
 }
 

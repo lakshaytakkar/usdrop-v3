@@ -2,6 +2,7 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { ProductCard } from "./components/product-card"
 import { ChevronDown, ChevronRight, RotateCcw, Filter } from "lucide-react"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
@@ -436,6 +437,7 @@ export default function ProductHuntPage() {
   }
 
   return (
+    <ModuleAccessGuard moduleId="product-hunt">
     <>
       <div className="flex flex-1">
         <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8">
@@ -548,5 +550,6 @@ export default function ProductHuntPage() {
         </div>
       </div>
     </>
+    </ModuleAccessGuard>
   )
 }

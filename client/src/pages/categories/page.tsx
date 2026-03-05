@@ -1,6 +1,7 @@
 
 import { apiFetch } from '@/lib/supabase'
 import { useMemo, useEffect, useState } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { Category } from "@/types/categories"
 import { AlertCircle, ArrowRight, TrendingUp, Package } from "lucide-react"
@@ -139,5 +140,9 @@ function CategoriesPageContent() {
 }
 
 export default function CategoriesPage() {
-  return <CategoriesPageContent />
+  return (
+    <ModuleAccessGuard moduleId="categories">
+      <CategoriesPageContent />
+    </ModuleAccessGuard>
+  )
 }

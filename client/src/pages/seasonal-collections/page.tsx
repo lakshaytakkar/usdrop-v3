@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalBanner } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
@@ -76,5 +77,9 @@ function SeasonalCollectionsPageContent() {
 }
 
 export default function SeasonalCollectionsPage() {
-  return <SeasonalCollectionsPageContent />
+  return (
+    <ModuleAccessGuard moduleId="seasonal-collections">
+      <SeasonalCollectionsPageContent />
+    </ModuleAccessGuard>
+  )
 }
