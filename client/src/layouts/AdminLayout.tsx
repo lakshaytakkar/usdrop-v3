@@ -112,11 +112,9 @@ function AdminTopNavigation() {
       >
         <div className="flex items-center gap-6 min-w-0">
           <Link href="/admin" data-testid="link-brand">
-            <div className="flex items-center gap-2.5 cursor-pointer">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-                U
-              </div>
-              <span className="text-lg font-bold font-heading tracking-tight" data-testid="text-brand-name">USDrop AI</span>
+            <div className="flex items-baseline gap-1 cursor-pointer">
+              <span className="text-xl font-semibold tracking-tight text-foreground" data-testid="text-brand-name">USDrop</span>
+              <span className="text-xl font-bold text-blue-600">AI</span>
             </div>
           </Link>
 
