@@ -1,4 +1,4 @@
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,106 +13,210 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AdminSidebar } from "@/components/layout/admin-sidebar";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
-const routeTitles: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/external-users": "Clients",
-  "/admin/internal-users": "Team",
-  "/admin/products": "Products",
-  "/admin/categories": "Categories",
-  "/admin/suppliers": "Suppliers",
-  "/admin/courses": "Courses",
-  "/admin/leads": "Leads",
-  "/admin/plans": "Plans",
-  "/admin/competitor-stores": "Competitor Stores",
-  "/admin/shopify-stores": "Shopify Stores",
-};
-
-function getPageTitle(location: string): string {
-  if (routeTitles[location]) return routeTitles[location];
-  for (const [path, title] of Object.entries(routeTitles)) {
-    if (location.startsWith(path + "/")) return title;
-  }
-  if (location.startsWith("/admin/courses/")) return "Course Builder";
-  return "Admin";
+interface NavCategory {
+  title: string;
+  defaultUrl: string;
+  items: { title: string; url: string }[];
 }
 
-function AdminTopbar() {
+const navCategories: NavCategory[] = [
+  {
+    title: "Dashboard",
+    defaultUrl: "/admin",
+    items: [],
+  },
+  {
+    title: "Users",
+    defaultUrl: "/admin/external-users",
+    items: [
+      { title: "Clients", url: "/admin/external-users" },
+      { title: "Team", url: "/admin/internal-users" },
+      { title: "Leads", url: "/admin/leads" },
+    ],
+  },
+  {
+    title: "Catalog",
+    defaultUrl: "/admin/products",
+    items: [
+      { title: "Products", url: "/admin/products" },
+      { title: "Categories", url: "/admin/categories" },
+      { title: "Suppliers", url: "/admin/suppliers" },
+    ],
+  },
+  {
+    title: "Content",
+    defaultUrl: "/admin/courses",
+    items: [
+      { title: "Courses", url: "/admin/courses" },
+    ],
+  },
+  {
+    title: "Sales",
+    defaultUrl: "/admin/plans",
+    items: [
+      { title: "Plans", url: "/admin/plans" },
+      { title: "Competitor Stores", url: "/admin/competitor-stores" },
+      { title: "Shopify Stores", url: "/admin/shopify-stores" },
+    ],
+  },
+];
+
+function getActiveCategory(location: string): NavCategory | null {
+  for (const cat of navCategories) {
+    if (cat.items.length === 0 && location === cat.defaultUrl) return cat;
+    for (const item of cat.items) {
+      if (location === item.url || location.startsWith(item.url + "/")) return cat;
+    }
+  }
+  if (location.startsWith("/admin/courses/")) {
+    return navCategories.find(c => c.title === "Content") || null;
+  }
+  return null;
+}
+
+function isItemActive(location: string, itemUrl: string): boolean {
+  return location === itemUrl || location.startsWith(itemUrl + "/");
+}
+
+function AdminTopNavigation() {
   const [location] = useLocation();
   const { signOut } = useAuth();
   const { fullName, internalRole } = useUserMetadata();
   const initials = (fullName || "A").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
-  const pageTitle = getPageTitle(location);
+  const activeCategory = getActiveCategory(location);
+  const showSubNav = activeCategory && activeCategory.items.length > 1;
 
   return (
-    <header
-      className="flex h-14 shrink-0 items-center gap-2 border-b px-4"
-      data-testid="topbar-main"
-    >
-      <SidebarTrigger className="-ml-1" data-testid="button-sidebar-trigger" />
-      <Separator orientation="vertical" className="mr-2 !h-4" />
-      <span className="text-sm font-semibold font-heading" data-testid="text-page-title">{pageTitle}</span>
+    <div className="shrink-0 overflow-y-hidden px-4 sm:px-8 lg:px-16 xl:px-24 pt-3 space-y-2">
+      <header
+        className="flex h-14 items-center justify-between gap-2 rounded-xl border bg-background px-5 overflow-hidden"
+        data-testid="topbar-main"
+      >
+        <div className="flex items-center gap-6 min-w-0">
+          <Link href="/admin" data-testid="link-brand">
+            <div className="flex items-center gap-2.5 cursor-pointer">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+                U
+              </div>
+              <span className="text-lg font-bold font-heading tracking-tight" data-testid="text-brand-name">USDrop AI</span>
+            </div>
+          </Link>
 
-      <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden md:block">
-          <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="h-8 w-56 pl-8 text-sm bg-muted/30"
-            data-testid="input-global-search"
-          />
+          <Separator orientation="vertical" className="h-6 hidden sm:block" />
+
+          <nav className="flex items-center gap-0.5 overflow-x-auto overflow-y-hidden scrollbar-hide" data-testid="nav-level-1">
+            {navCategories.map((cat) => {
+              const isActive = activeCategory?.title === cat.title;
+              return (
+                <Link
+                  key={cat.title}
+                  href={cat.defaultUrl}
+                  data-testid={`nav-l1-${cat.title.toLowerCase().replace(/\s+/g, "-")}`}
+                  className={cn(
+                    "relative whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors",
+                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {cat.title}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-l1-indicator"
+                      className="absolute bottom-0 left-1 right-1 h-[2px] rounded-full bg-primary"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        <Button size="icon" variant="ghost" className="relative" data-testid="button-notifications">
-          <Bell className="size-4" />
-          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-destructive animate-pulse" />
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="relative hidden md:block">
+            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="h-8 w-56 pl-8 text-sm bg-muted/30"
+              data-testid="input-global-search"
+            />
+          </div>
 
-        <Separator orientation="vertical" className="!h-5" />
+          <Button size="icon" variant="ghost" className="relative" data-testid="button-notifications">
+            <Bell className="size-4" />
+            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-destructive animate-pulse" />
+          </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-user-menu">
-              <Avatar className="size-8">
-                <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="flex items-center gap-3 px-2 py-2.5">
-              <Avatar className="size-10">
-                <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{fullName || "Admin"}</span>
-                <span className="text-xs text-muted-foreground capitalize">{internalRole || "Admin"}</span>
+          <Separator orientation="vertical" className="h-5" />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-user-menu">
+                <Avatar className="size-8">
+                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="flex items-center gap-3 px-2 py-2.5">
+                <Avatar className="size-10">
+                  <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{fullName || "Admin"}</span>
+                  <span className="text-xs text-muted-foreground capitalize">{internalRole || "Admin"}</span>
+                </div>
               </div>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm" data-testid="menu-item-profile">My Profile</DropdownMenuItem>
-            <DropdownMenuItem className="text-sm" data-testid="menu-item-settings">Account Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm" onClick={() => signOut()} data-testid="menu-item-logout">Log Out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-sm" data-testid="menu-item-profile">My Profile</DropdownMenuItem>
+              <DropdownMenuItem className="text-sm" data-testid="menu-item-settings">Account Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-sm" onClick={() => signOut()} data-testid="menu-item-logout">Log Out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+
+      {showSubNav && (
+        <div
+          className="flex items-center gap-1 rounded-xl bg-primary px-5 py-2 overflow-x-auto overflow-y-hidden scrollbar-hide"
+          data-testid="nav-level-2"
+        >
+          {activeCategory.items.map((item, index) => {
+            const active = isItemActive(location, item.url);
+            return (
+              <Link
+                key={item.url}
+                href={item.url}
+                data-testid={`nav-l2-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
+                className={cn(
+                  "relative whitespace-nowrap px-4 py-1.5 text-sm rounded-lg transition-all",
+                  active
+                    ? "bg-white/20 text-white font-semibold"
+                    : "text-white/70 font-medium hover:text-white hover:bg-white/10"
+                )}
+              >
+                <span className="text-white/50 mr-1.5">{index + 1})</span>
+                {item.title}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <AdminSidebar />
-      <SidebarInset>
-        <AdminTopbar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="min-h-screen bg-background">
+      <AdminTopNavigation />
+      <main className="flex-1 overflow-auto">
+        {children}
+      </main>
+    </div>
   );
 }
