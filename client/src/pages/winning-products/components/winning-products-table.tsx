@@ -53,7 +53,7 @@ export function WinningProductsTable({
   onProductClick,
   onLockedClick 
 }: WinningProductsTableProps) {
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
   
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -82,7 +82,7 @@ export function WinningProductsTable({
               // For free users: lock products starting from the 7th (index 6)
               // First 6 products (indices 0-5) are visible, rest are locked
               // Respect product.isLocked from metadata if set
-              const teaserLocked = isFree && index >= 6
+              const teaserLocked = isFree && !hasCompletedFreeLearning && index >= 4
               const isLocked = product.isLocked || teaserLocked
               const rank = index + 1
 

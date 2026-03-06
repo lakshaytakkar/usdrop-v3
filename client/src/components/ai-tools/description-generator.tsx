@@ -6,8 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { FileText, Wand2, Copy, Download, Type, Users, AlignLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
-export function DescriptionGenerator() {
+interface DescriptionGeneratorProps {
+  locked?: boolean
+}
+
+export function DescriptionGenerator({ locked }: DescriptionGeneratorProps) {
   const [productName, setProductName] = useState("")
   const [productDetails, setProductDetails] = useState("")
   const [targetAudience, setTargetAudience] = useState("")
@@ -100,15 +105,17 @@ export function DescriptionGenerator() {
                 />
               </div>
 
-              <Button
-                onClick={handleGenerate}
-                disabled={!productName || !productDetails || isGenerating}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-generate-description"
-              >
-                <Wand2 className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generating..." : "Generate Description"}
-              </Button>
+              <TeaserButtonLock locked={locked} message="Complete Free Learning to generate descriptions">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!productName || !productDetails || isGenerating}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-generate-description"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {isGenerating ? "Generating..." : "Generate Description"}
+                </Button>
+              </TeaserButtonLock>
             </div>
 
             <div className="space-y-4">

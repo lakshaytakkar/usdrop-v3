@@ -12,6 +12,7 @@ import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
 import { ButtonSpinner } from "@/components/ui/blue-spinner"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 
 interface Session {
   id: string
@@ -327,6 +328,10 @@ export default function MySessionsPage() {
           )
         })}
       </div>
+
+      {isFree && sessions.length > 3 && (
+        <FreeLearningCutoff itemCount={3} contentType="sessions" />
+      )}
 
       <UpsellDialog
         isOpen={isUpsellOpen}

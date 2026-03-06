@@ -8,6 +8,8 @@ import {
   Film,
 } from "lucide-react"
 import { ResourcePreviewModal } from "./components/resource-preview-modal"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 
 type FileType = "all" | "spreadsheet" | "pdf" | "video" | "template"
 
@@ -165,8 +167,11 @@ function getTypeLabel(type: ResourceFile["type"]) {
 export default function ResourcesPage() {
   const [activeTab, setActiveTab] = useState<FileType>("all")
   const [previewFile, setPreviewFile] = useState<ResourceFile | null>(null)
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const isTeased = isFree && !hasCompletedFreeLearning
 
   const filtered = activeTab === "all" ? resources : resources.filter(r => r.type === activeTab)
+  const displayFiltered = isTeased ? filtered.slice(0, 3) : filtered
 
   const currentPreviewIndex = previewFile ? filtered.findIndex(f => f.id === previewFile.id) : -1
   const hasPrev = currentPreviewIndex > 0
@@ -207,7 +212,7 @@ export default function ResourcesPage() {
         </div>
 
         <div className="divide-y divide-gray-50">
-          {filtered.map(file => {
+          {displayFiltered.map(file => {
             const colors = getFileColor(file.type)
             return (
               <div
@@ -256,6 +261,10 @@ export default function ResourcesPage() {
           })}
         </div>
       </div>
+
+      {isTeased && filtered.length > 3 && (
+        <FreeLearningCutoff itemCount={3} contentType="resources" />
+      )}
 
       <ResourcePreviewModal
         file={previewFile}

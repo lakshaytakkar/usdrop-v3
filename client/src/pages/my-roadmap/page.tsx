@@ -14,11 +14,15 @@ import {
 } from "lucide-react";
 import { FrameworkBanner } from "@/components/framework-banner";
 import { Link } from "wouter";
+import { useOnboarding } from "@/contexts/onboarding-context";
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff";
 
 type TaskStatus = "not_started" | "in_progress" | "completed";
 
 export default function MyJourneyPage() {
   const { user, loading: authLoading } = useAuth()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const isTeased = isFree && !hasCompletedFreeLearning
   const [taskStatuses, setTaskStatuses] = useState<Record<string, TaskStatus>>({});
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
   const [isLoading, setIsLoading] = useState(true);
@@ -346,9 +350,29 @@ export default function MyJourneyPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {gridItems}
-      </div>
+      {isTeased ? (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {gridItems.slice(0, 3)}
+          </div>
+          <div className="relative mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 blur-[3px] opacity-40 pointer-events-none select-none">
+              {gridItems.slice(3, 5)}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+              <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm border border-gray-200">
+                <Lock className="size-3" />
+                Locked
+              </div>
+            </div>
+          </div>
+          <FreeLearningCutoff itemCount={3} contentType="steps" />
+        </>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {gridItems}
+        </div>
+      )}
 
       </div>
     </div>

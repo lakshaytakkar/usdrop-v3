@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Shield, Wand2, Copy, Download, Store, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
 const POLICY_TYPES = [
   { id: "privacy", label: "Privacy Policy" },
@@ -16,7 +17,11 @@ const POLICY_TYPES = [
   { id: "returns", label: "Returns Policy" },
 ]
 
-export function PolicyGenerator() {
+interface PolicyGeneratorProps {
+  locked?: boolean
+}
+
+export function PolicyGenerator({ locked }: PolicyGeneratorProps) {
   const [policyType, setPolicyType] = useState("privacy")
   const [storeName, setStoreName] = useState("")
   const [storeDetails, setStoreDetails] = useState("")
@@ -119,15 +124,17 @@ export function PolicyGenerator() {
                 />
               </div>
 
-              <Button
-                onClick={handleGenerate}
-                disabled={!storeName || isGenerating}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-generate-policy"
-              >
-                <Wand2 className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generating..." : "Generate Policy"}
-              </Button>
+              <TeaserButtonLock locked={locked} message="Complete Free Learning to generate policies">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!storeName || isGenerating}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-generate-policy"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {isGenerating ? "Generating..." : "Generate Policy"}
+                </Button>
+              </TeaserButtonLock>
             </div>
 
             <div className="space-y-4">

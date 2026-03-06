@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Receipt, Wand2, Download, Plus, X, Building2, User, Percent, Hash, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
 interface InvoiceItem {
   id: string
@@ -13,7 +14,11 @@ interface InvoiceItem {
   price: string
 }
 
-export function InvoiceGenerator() {
+interface InvoiceGeneratorProps {
+  locked?: boolean
+}
+
+export function InvoiceGenerator({ locked }: InvoiceGeneratorProps) {
   const [businessName, setBusinessName] = useState("")
   const [businessAddress, setBusinessAddress] = useState("")
   const [customerName, setCustomerName] = useState("")
@@ -263,15 +268,17 @@ Thank you for your business!`
                 />
               </div>
 
-              <Button
-                onClick={handleGenerate}
-                disabled={!businessName || !customerName || !invoiceNumber || isGenerating}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-generate-invoice"
-              >
-                <Wand2 className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generating..." : "Generate Invoice"}
-              </Button>
+              <TeaserButtonLock locked={locked} message="Complete Free Learning to generate invoices">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!businessName || !customerName || !invoiceNumber || isGenerating}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-generate-invoice"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {isGenerating ? "Generating..." : "Generate Invoice"}
+                </Button>
+              </TeaserButtonLock>
             </div>
 
             <div className="space-y-4">

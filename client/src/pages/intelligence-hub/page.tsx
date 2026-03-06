@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Header } from '@/components/landing-deprecated/Header';
 import { Footer } from '@/components/landing-deprecated/Footer';
@@ -9,10 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ArticleCard } from "@/pages/blogs/components/article-card"
 import { sampleArticles, type Article } from "@/pages/blogs/data/articles"
 import { apiFetch } from "@/lib/supabase"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { ArrowRight, TrendingUp, Target, Zap } from "lucide-react"
 import { Link } from "wouter"
 
 export default function IntelligenceHubPage() {
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const isTeased = isFree && !hasCompletedFreeLearning
   const [articles, setArticles] = useState<Article[]>(sampleArticles);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -225,13 +228,16 @@ export default function IntelligenceHubPage() {
                   </div>
                 ))
               ) : (
-                recentArticles.map((article) => (
+                (isTeased ? recentArticles.slice(0, 3) : recentArticles).map((article) => (
                   <div key={article.id} className="h-[420px]">
                     <ArticleCard article={article} />
                   </div>
                 ))
               )}
             </div>
+            {isTeased && recentArticles.length > 3 && (
+              <FreeLearningCutoff itemCount={3} contentType="reports" />
+            )}
           </Container>
         </section>
 

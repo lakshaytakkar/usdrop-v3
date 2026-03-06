@@ -57,6 +57,7 @@ import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { LockOverlay } from "@/components/ui/lock-overlay"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 type SortOption = "revenue" | "traffic" | "growth" | "rating"
@@ -94,7 +95,7 @@ export default function CompetitorStoresPage() {
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
   const [countryFilterOpen, setCountryFilterOpen] = useState(false)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
 
   // Fetch categories for filter
   const fetchCategories = useCallback(async () => {
@@ -624,7 +625,7 @@ export default function CompetitorStoresPage() {
                           const { isLocked } = getTeaserLockState(index, isFree, {
                             freeVisibleCount: 4,
                             strategy: "first-n-items"
-                          })
+                          }, hasCompletedFreeLearning)
                           return (
                       <TableRow 
                         key={store.id} 
@@ -707,6 +708,10 @@ export default function CompetitorStoresPage() {
                   </Table>
                 </div>
               </Card>
+            )}
+
+            {!loading && !error && isFree && !hasCompletedFreeLearning && filteredAndSortedStores.length > 4 && (
+              <FreeLearningCutoff itemCount={4} contentType="stores" />
             )}
           </div>
 

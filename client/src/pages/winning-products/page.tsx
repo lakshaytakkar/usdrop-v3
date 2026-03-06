@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { TrendingUp, DollarSign, Star, SlidersHorizontal, ArrowUpDown, X, TrendingDown, Lock, Unlock } from "lucide-react"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
 // Local types
@@ -90,7 +91,7 @@ export default function WinningProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
   
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -425,16 +426,21 @@ export default function WinningProductsPage() {
                 }}
               />
             ) : (
-              <WinningProductsTable
-                products={filteredProducts.map((product, index) => ({
-                  ...product,
-                  isLocked: product.isLocked || (isFree && index >= 6)
-                }))}
-                onProductClick={(product) => {
-                  console.log("View product:", product.id)
-                }}
-                onLockedClick={() => setIsUpsellOpen(true)}
-              />
+              <div>
+                <WinningProductsTable
+                  products={filteredProducts.map((product, index) => ({
+                    ...product,
+                    isLocked: product.isLocked || (isFree && !hasCompletedFreeLearning && index >= 4)
+                  }))}
+                  onProductClick={(product) => {
+                    console.log("View product:", product.id)
+                  }}
+                  onLockedClick={() => setIsUpsellOpen(true)}
+                />
+                {isFree && !hasCompletedFreeLearning && filteredProducts.length > 4 && (
+                  <FreeLearningCutoff itemCount={4} contentType="products" />
+                )}
+              </div>
             )}
           </div>
       </>

@@ -7,11 +7,13 @@ import { marketplaces } from "./data/marketplaces"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { FrameworkBanner } from "@/components/framework-banner"
 
 export default function SellingChannelsPage() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const isTeased = isFree && !hasCompletedFreeLearning
 
   return (
     <ModuleAccessGuard moduleId="selling-channels">
@@ -42,6 +44,9 @@ export default function SellingChannelsPage() {
                 )
               })}
             </div>
+            {isTeased && marketplaces.length > 3 && (
+              <FreeLearningCutoff itemCount={3} contentType="channels" />
+            )}
           </div>
         </div>
       

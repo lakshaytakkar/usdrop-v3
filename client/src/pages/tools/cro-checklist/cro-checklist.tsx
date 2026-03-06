@@ -9,6 +9,8 @@ import {
 import { cn } from "@/lib/utils"
 import { apiFetch } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
+import { usePageTeaser } from "@/hooks/use-page-teaser"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 
 interface ChecklistItem {
   id: string
@@ -154,6 +156,8 @@ const priorityConfig = {
 
 export function CROChecklist() {
   const { user } = useAuth()
+  const { isLocked, config } = usePageTeaser("/tools/cro-checklist")
+  const visibleCategories = config?.visibleItems ?? categories.length
   const [checked, setChecked] = useState<Record<string, boolean>>({})
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
     Object.fromEntries(categories.map(c => [c.id, true]))
@@ -286,90 +290,129 @@ export function CROChecklist() {
         </button>
       </div>
 
-      <div className="space-y-3">
-        {categories.map(category => {
-          const filteredItems = category.items.filter(item => {
-            if (filterPriority !== "all" && item.priority !== filterPriority) return false
-            if (!showCompleted && checked[item.id]) return false
-            return true
-          })
+      <div className="relative">
+        <div className="space-y-3">
+          {categories.map((category, categoryIndex) => {
+            const isCategoryLocked = isLocked && categoryIndex >= visibleCategories
 
-          if (filteredItems.length === 0) return null
+            const filteredItems = category.items.filter(item => {
+              if (filterPriority !== "all" && item.priority !== filterPriority) return false
+              if (!showCompleted && checked[item.id]) return false
+              return true
+            })
 
-          const catChecked = category.items.filter(i => checked[i.id]).length
-          const catPercent = Math.round((catChecked / category.items.length) * 100)
-          const isExpanded = expandedCategories[category.id]
+            if (filteredItems.length === 0) return null
 
-          return (
-            <Card key={category.id} className="bg-white border-gray-100 overflow-hidden">
-              <button
-                onClick={() => toggleCategory(category.id)}
-                className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                data-testid={`button-category-${category.id}`}
-              >
-                <div className="shrink-0 w-9 h-9 flex items-center justify-center">
-                  <img src={category.icon} alt={category.title} className="w-9 h-9 object-contain" />
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[15px] font-bold text-gray-900">{category.title}</h3>
-                    <span className="text-[11px] text-gray-400 font-medium">{catChecked}/{category.items.length}</span>
-                  </div>
-                  <div className="w-full max-w-[200px] h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1.5">
-                    <div
-                      className={cn("h-full rounded-full transition-all duration-500", category.color.progress)}
-                      style={{ width: `${catPercent}%` }}
-                    />
-                  </div>
-                </div>
-                <span className={cn("text-sm font-bold", catPercent === 100 ? "text-emerald-500" : "text-gray-400")}>{catPercent}%</span>
-                {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" /> : <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />}
-              </button>
+            const catChecked = category.items.filter(i => checked[i.id]).length
+            const catPercent = Math.round((catChecked / category.items.length) * 100)
+            const isExpanded = expandedCategories[category.id]
 
-              {isExpanded && (
-                <div className="border-t border-gray-50">
-                  {filteredItems.map((item, idx) => {
-                    const isChecked = !!checked[item.id]
-                    const pConfig = priorityConfig[item.priority]
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => toggleCheck(item.id)}
-                        className={cn(
-                          "flex items-start gap-3 px-5 py-3.5 transition-all cursor-pointer group",
-                          idx < filteredItems.length - 1 && "border-b border-gray-50",
-                          isChecked ? "bg-emerald-50/30" : "hover:bg-gray-50/50"
-                        )}
-                        data-testid={`checklist-item-${item.id}`}
-                      >
-                        <div className="shrink-0 mt-0.5">
-                          {isChecked ? (
-                            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                          ) : (
-                            <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400 transition-colors" />
-                          )}
+            if (isCategoryLocked) {
+              return (
+                <div key={category.id} className="relative select-none" data-testid={`teaser-category-locked-${category.id}`}>
+                  <div className="blur-[3px] opacity-50 pointer-events-none saturate-50">
+                    <Card className="bg-white border-gray-100 overflow-hidden">
+                      <div className="w-full flex items-center gap-3 px-5 py-4">
+                        <div className="shrink-0 w-9 h-9 flex items-center justify-center">
+                          <img src={category.icon} alt={category.title} className="w-9 h-9 object-contain" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={cn("text-[14px] font-medium transition-all", isChecked ? "text-gray-400 line-through" : "text-gray-900")}>
-                              {item.label}
-                            </span>
-                            <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full border", pConfig.className)}>
-                              {pConfig.label}
-                            </span>
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-[15px] font-bold text-gray-900">{category.title}</h3>
                           </div>
-                          <p className={cn("text-[12px] mt-0.5 leading-relaxed", isChecked ? "text-gray-300" : "text-gray-500")}>
-                            {item.description}
-                          </p>
+                          <div className="w-full max-w-[200px] h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1.5">
+                            <div className={cn("h-full rounded-full", category.color.progress)} style={{ width: "0%" }} />
+                          </div>
                         </div>
                       </div>
-                    )
-                  })}
+                    </Card>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm border border-gray-200">
+                      <svg className="size-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                      </svg>
+                      Locked
+                    </div>
+                  </div>
                 </div>
-              )}
-            </Card>
-          )
-        })}
+              )
+            }
+
+            return (
+              <Card key={category.id} className="bg-white border-gray-100 overflow-hidden">
+                <button
+                  onClick={() => toggleCategory(category.id)}
+                  className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  data-testid={`button-category-${category.id}`}
+                >
+                  <div className="shrink-0 w-9 h-9 flex items-center justify-center">
+                    <img src={category.icon} alt={category.title} className="w-9 h-9 object-contain" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[15px] font-bold text-gray-900">{category.title}</h3>
+                      <span className="text-[11px] text-gray-400 font-medium">{catChecked}/{category.items.length}</span>
+                    </div>
+                    <div className="w-full max-w-[200px] h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1.5">
+                      <div
+                        className={cn("h-full rounded-full transition-all duration-500", category.color.progress)}
+                        style={{ width: `${catPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className={cn("text-sm font-bold", catPercent === 100 ? "text-emerald-500" : "text-gray-400")}>{catPercent}%</span>
+                  {isExpanded ? <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" /> : <ChevronRight className="h-4 w-4 text-gray-400 shrink-0" />}
+                </button>
+
+                {isExpanded && (
+                  <div className="border-t border-gray-50">
+                    {filteredItems.map((item, idx) => {
+                      const isChecked = !!checked[item.id]
+                      const pConfig = priorityConfig[item.priority]
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => toggleCheck(item.id)}
+                          className={cn(
+                            "flex items-start gap-3 px-5 py-3.5 transition-all cursor-pointer group",
+                            idx < filteredItems.length - 1 && "border-b border-gray-50",
+                            isChecked ? "bg-emerald-50/30" : "hover:bg-gray-50/50"
+                          )}
+                          data-testid={`checklist-item-${item.id}`}
+                        >
+                          <div className="shrink-0 mt-0.5">
+                            {isChecked ? (
+                              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400 transition-colors" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={cn("text-[14px] font-medium transition-all", isChecked ? "text-gray-400 line-through" : "text-gray-900")}>
+                                {item.label}
+                              </span>
+                              <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded-full border", pConfig.className)}>
+                                {pConfig.label}
+                              </span>
+                            </div>
+                            <p className={cn("text-[12px] mt-0.5 leading-relaxed", isChecked ? "text-gray-300" : "text-gray-500")}>
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </Card>
+            )
+          })}
+        </div>
+        {isLocked && (
+          <FreeLearningCutoff itemCount={visibleCategories} contentType="checklist categories" />
+        )}
       </div>
     </div>
   )

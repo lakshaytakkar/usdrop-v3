@@ -18,6 +18,7 @@ import {
   Save,
 } from "lucide-react"
 import { FrameworkBanner } from "@/components/framework-banner"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 
 type RnDCategory = "learning" | "products" | "ads" | "store" | "research" | "fulfilment" | "other"
 
@@ -134,6 +135,7 @@ export default function MyRnDPage() {
   }
 
   return (
+    <ProPageWrapper featureName="R&D Workspace" featureDescription="Track your daily work, learning, and research in one place">
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-rnd">
       <FrameworkBanner
         title="My R&D Workspace"
@@ -274,5 +276,6 @@ export default function MyRnDPage() {
         )}
       </div>
     </div>
+    </ProPageWrapper>
   )
 }

@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { ProPageWrapper } from "@/components/ui/pro-page-wrapper"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { apiFetch } from "@/lib/supabase"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -128,6 +128,10 @@ export default function SuppliersPage() {
   }, [])
 
   return (
+    <ProPageWrapper
+      featureName="Private Supplier"
+      featureDescription="Access your own private supplier with fast US shipping. Complete Free Learning to unlock."
+    >
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2 min-h-0 relative">
       <FrameworkBanner
         title="Private Supplier"
@@ -434,5 +438,6 @@ export default function SuppliersPage() {
         <div className="pb-8" />
       </div>
     </div>
+    </ProPageWrapper>
   )
 }

@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { TeaserListFade } from "@/components/ui/teaser-list-fade"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 import {
   Table,
   TableBody,
@@ -784,14 +786,16 @@ export default function MyProductsPage() {
                   {filteredItems.length} {filteredItems.length === 1 ? "product" : "products"} saved
                 </p>
               )}
-              <Button
-                onClick={() => setAddModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 rounded-lg text-sm font-semibold"
-                data-testid="button-add-product"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Add Product
-              </Button>
+              <TeaserButtonLock message="Complete Free Learning to manage products">
+                <Button
+                  onClick={() => setAddModalOpen(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-4 rounded-lg text-sm font-semibold"
+                  data-testid="button-add-product"
+                >
+                  <Plus className="h-4 w-4 mr-1.5" />
+                  Add Product
+                </Button>
+              </TeaserButtonLock>
             </div>
           </div>
 
@@ -843,106 +847,108 @@ export default function MyProductsPage() {
               </div>
             </Card>
           ) : (
-            <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[320px]">Product</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Buy Price</TableHead>
-                    <TableHead>Sell Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Added On</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id} className="hover:bg-muted/50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50">
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.target as HTMLImageElement).src = '/demo-products/Screenshot 2024-07-24 185228.png' }}
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate max-w-[220px]" data-testid={`text-product-title-${item.id}`}>{item.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 capitalize">{item.source.replace(/-/g, " ")}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-gray-600">{item.category}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium text-gray-900" data-testid={`text-buy-price-${item.id}`}>${Number(item.buyPrice).toFixed(2)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium text-gray-900" data-testid={`text-sell-price-${item.id}`}>${Number(item.price).toFixed(2)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`text-[11px] font-semibold px-2 py-0.5 ${item.inStock ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50" : "bg-red-50 text-red-700 border-red-200 hover:bg-red-50"}`}
-                          variant="outline"
-                          data-testid={`badge-stock-${item.id}`}
-                        >
-                          {item.inStock ? "In Stock" : "Out of Stock"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">{formatDate(item.addedDate)}</span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 text-xs"
-                            onClick={() => setViewItem(item)}
-                            data-testid={`button-view-${item.id}`}
-                          >
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs bg-[#95BF47] hover:bg-[#7FA737] text-white border-0"
-                          >
-                            <img src="/shopify_glyph.svg" alt="Shopify" width={14} height={14} className="mr-1" />
-                            Shopify
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setEditItem(item)} data-testid={`button-edit-${item.id}`}>
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => handleRemove(item.id)}
-                                data-testid={`button-remove-${item.id}`}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
+            <TeaserListFade visibleItems={3} contentType="products">
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[320px]">Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Buy Price</TableHead>
+                      <TableHead>Sell Price</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Added On</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item) => (
+                      <TableRow key={item.id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50">
+                              <img
+                                src={item.image}
+                                alt={item.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).src = '/demo-products/Screenshot 2024-07-24 185228.png' }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate max-w-[220px]" data-testid={`text-product-title-${item.id}`}>{item.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5 capitalize">{item.source.replace(/-/g, " ")}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-gray-600">{item.category}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium text-gray-900" data-testid={`text-buy-price-${item.id}`}>${Number(item.buyPrice).toFixed(2)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium text-gray-900" data-testid={`text-sell-price-${item.id}`}>${Number(item.price).toFixed(2)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`text-[11px] font-semibold px-2 py-0.5 ${item.inStock ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50" : "bg-red-50 text-red-700 border-red-200 hover:bg-red-50"}`}
+                            variant="outline"
+                            data-testid={`badge-stock-${item.id}`}
+                          >
+                            {item.inStock ? "In Stock" : "Out of Stock"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">{formatDate(item.addedDate)}</span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs"
+                              onClick={() => setViewItem(item)}
+                              data-testid={`button-view-${item.id}`}
+                            >
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-8 text-xs bg-[#95BF47] hover:bg-[#7FA737] text-white border-0"
+                            >
+                              <img src="/shopify_glyph.svg" alt="Shopify" width={14} height={14} className="mr-1" />
+                              Shopify
+                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => setEditItem(item)} data-testid={`button-edit-${item.id}`}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleRemove(item.id)}
+                                  data-testid={`button-remove-${item.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </TeaserListFade>
           )}
         </div>
       </div>

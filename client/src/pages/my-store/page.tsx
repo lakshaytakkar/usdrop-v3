@@ -13,6 +13,7 @@ import { ShopifyStore } from "./data/stores"
 import { useToast } from "@/hooks/use-toast"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
 import { FrameworkBanner } from "@/components/framework-banner"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
 function ShopifyStoresContent() {
   const { showSuccess, showError } = useToast()
@@ -116,10 +117,12 @@ function ShopifyStoresContent() {
                 <p className="ds-body mb-8 max-w-md">
                   Connect your Shopify stores to start tracking and analyzing your performance.
                 </p>
-                <Button onClick={() => setIsModalOpen(true)} size="lg">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Connect Store
-                </Button>
+                <TeaserButtonLock message="Complete Free Learning to connect your store">
+                  <Button onClick={() => setIsModalOpen(true)} size="lg">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Connect Store
+                  </Button>
+                </TeaserButtonLock>
               </CardContent>
             </Card>
           ) : (

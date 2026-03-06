@@ -1,10 +1,10 @@
-
-
 import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, Truck, Package, Clock, Globe, ArrowRight, XCircle } from "lucide-react"
 import { Link } from "wouter"
+
 export default function FulfillmentPage() {
   return (
     <ModuleAccessGuard moduleId="fulfillment">
@@ -27,11 +27,13 @@ export default function FulfillmentPage() {
                   Stop waiting 3 weeks for AliExpress orders. Ship directly from our US warehouses and keep your customers happy with fast, reliable delivery.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/#trial">
-                    <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 h-12 px-8 font-semibold shadow-lg shadow-blue-600/20">
-                      Start Shipping
-                    </Button>
-                  </Link>
+                  <TeaserButtonLock message="Complete Free Learning to access fulfillment">
+                    <Link href="/#trial">
+                      <Button size="lg" className="bg-blue-600 text-white hover:bg-blue-700 h-12 px-8 font-semibold shadow-lg shadow-blue-600/20">
+                        Start Shipping
+                      </Button>
+                    </Link>
+                  </TeaserButtonLock>
                   <div className="flex items-center gap-2 text-sm text-slate-500 px-4 py-3">
                     <CheckCircle2 className="h-5 w-5 text-green-600" />
                     <span>No minimum order quantity</span>
@@ -193,11 +195,13 @@ export default function FulfillmentPage() {
                   Join 8,000+ merchants shipping from the US. No credit card required to start.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Link href="/#trial">
-                    <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 font-bold h-12 px-8">
-                      Start Free Trial
-                    </Button>
-                  </Link>
+                  <TeaserButtonLock message="Complete Free Learning to access fulfillment">
+                    <Link href="/#trial">
+                      <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 font-bold h-12 px-8">
+                        Start Free Trial
+                      </Button>
+                    </Link>
+                  </TeaserButtonLock>
                 </div>
               </div>
             </div>

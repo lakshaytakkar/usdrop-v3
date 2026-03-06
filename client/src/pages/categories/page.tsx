@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { LockOverlay } from "@/components/ui/lock-overlay"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { Link } from "wouter"
 
 function CategoriesPageContent() {
@@ -16,7 +17,7 @@ function CategoriesPageContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -69,7 +70,7 @@ function CategoriesPageContent() {
               const { isLocked } = getTeaserLockState(index, isFree, {
                 freeVisibleCount: 4,
                 strategy: "first-n-items"
-              })
+              }, hasCompletedFreeLearning)
               const productCount = category.product_count || 0
               const growth = category.growth_percentage || 0
               const slug = category.slug || category.name.toLowerCase().replace(/\s+/g, '-')
@@ -128,6 +129,10 @@ function CategoriesPageContent() {
               )
             })}
           </div>
+        )}
+
+        {!isLoading && isFree && !hasCompletedFreeLearning && sortedCategories.length > 4 && (
+          <FreeLearningCutoff itemCount={4} contentType="categories" />
         )}
       </div>
 

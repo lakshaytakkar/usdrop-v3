@@ -1,6 +1,9 @@
 import { useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
+import { useOnboarding } from "@/contexts/onboarding-context"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -274,6 +277,8 @@ const defaultFilters: FilterState = {
 }
 
 export default function MetaAdsPage() {
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const isTeased = isFree && !hasCompletedFreeLearning
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState("publication")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -523,14 +528,20 @@ export default function MetaAdsPage() {
                   </Button>
                 </div>
               ) : viewMode === "grid" ? (
+                <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                  {filteredAds.map((ad) => (
+                  {filteredAds.slice(0, isTeased ? 4 : undefined).map((ad) => (
                     <AdCard key={ad.id} ad={ad} onClick={handleAdClick} />
                   ))}
                 </div>
+                {isTeased && filteredAds.length > 4 && (
+                  <FreeLearningCutoff itemCount={4} contentType="ads" />
+                )}
+                </>
               ) : (
+                <>
                 <div className="space-y-3">
-                  {filteredAds.map((ad) => (
+                  {filteredAds.slice(0, isTeased ? 4 : undefined).map((ad) => (
                     <div
                       key={ad.id}
                       onClick={() => handleAdClick(ad)}
@@ -594,6 +605,10 @@ export default function MetaAdsPage() {
                     </div>
                   ))}
                 </div>
+                {isTeased && filteredAds.length > 4 && (
+                  <FreeLearningCutoff itemCount={4} contentType="ads" />
+                )}
+                </>
               )}
             </div>
           </div>

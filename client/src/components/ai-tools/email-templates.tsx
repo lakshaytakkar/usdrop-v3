@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mail, Wand2, Copy, Download, User, FileText } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
 const EMAIL_TYPES = [
   { id: "order-confirmation", label: "Order Confirmation" },
@@ -17,7 +18,11 @@ const EMAIL_TYPES = [
   { id: "abandoned-cart", label: "Abandoned Cart" },
 ]
 
-export function EmailTemplates() {
+interface EmailTemplatesProps {
+  locked?: boolean
+}
+
+export function EmailTemplates({ locked }: EmailTemplatesProps) {
   const [emailType, setEmailType] = useState("order-confirmation")
   const [customerName, setCustomerName] = useState("")
   const [orderDetails, setOrderDetails] = useState("")
@@ -121,15 +126,17 @@ export function EmailTemplates() {
                 />
               </div>
 
-              <Button
-                onClick={handleGenerate}
-                disabled={!customerName || isGenerating}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                data-testid="button-generate-email"
-              >
-                <Wand2 className="h-4 w-4 mr-2" />
-                {isGenerating ? "Generating..." : "Generate Email"}
-              </Button>
+              <TeaserButtonLock locked={locked} message="Complete Free Learning to generate email templates">
+                <Button
+                  onClick={handleGenerate}
+                  disabled={!customerName || isGenerating}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-testid="button-generate-email"
+                >
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  {isGenerating ? "Generating..." : "Generate Email"}
+                </Button>
+              </TeaserButtonLock>
             </div>
 
             <div className="space-y-4">

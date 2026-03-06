@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
 import { cn } from "@/lib/utils"
@@ -257,7 +258,7 @@ export default function ProductHuntPage() {
   const [savedProductIds, setSavedProductIds] = useState<Set<string>>(new Set())
   const sentinelRef = useRef<HTMLDivElement>(null)
   const categoriesRef = useRef<Category[]>([])
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
 
   categoriesRef.current = categories
 
@@ -492,12 +493,13 @@ export default function ProductHuntPage() {
               ) : (
                 <>
                   {productCardData.length > 0 ? (
+                    <>
                     <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {productCardData.map((product, index) => {
                         const { isLocked } = getTeaserLockState(index, isFree, { 
-                          freeVisibleCount: 6,
+                          freeVisibleCount: 4,
                           strategy: "first-n-items"
-                        })
+                        }, hasCompletedFreeLearning)
                         
                         return (
                           <div key={product.id}>
@@ -511,6 +513,10 @@ export default function ProductHuntPage() {
                         )
                       })}
                     </div>
+                    {isFree && !hasCompletedFreeLearning && (
+                      <FreeLearningCutoff itemCount={4} contentType="products" />
+                    )}
+                    </>
                   ) : (
                     <EmptyState
                       title="No products found"

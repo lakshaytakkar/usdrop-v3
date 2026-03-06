@@ -3,6 +3,7 @@ import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { SeasonalCard } from "./components/seasonal-banner"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 export interface SeasonalCollection {
@@ -176,7 +177,7 @@ const seasonalCollections: SeasonalCollection[] = [
 
 function SeasonalCollectionsPageContent() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
-  const { isFree } = useOnboarding()
+  const { isFree, hasCompletedFreeLearning } = useOnboarding()
 
   return (
     <>
@@ -186,7 +187,7 @@ function SeasonalCollectionsPageContent() {
             const { isLocked } = getTeaserLockState(index, isFree, {
               freeVisibleCount: 4,
               strategy: "first-n-items"
-            })
+            }, hasCompletedFreeLearning)
             return (
               <SeasonalCard
                 key={collection.slug}
@@ -197,6 +198,10 @@ function SeasonalCollectionsPageContent() {
             )
           })}
         </div>
+
+        {isFree && !hasCompletedFreeLearning && seasonalCollections.length > 4 && (
+          <FreeLearningCutoff itemCount={4} contentType="collections" />
+        )}
       </div>
 
       <UpsellDialog

@@ -1,10 +1,9 @@
-
-
 import { Header } from '@/components/landing-deprecated/Header';
 import { Footer } from '@/components/landing-deprecated/Footer';
 import { Container, GeneratedImage } from '@/components/landing-deprecated/ui';
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 import { Search, LineChart, Eye, Globe, ShoppingBag, ArrowRight, TrendingUp } from "lucide-react"
 import { Link } from "wouter"
 
@@ -29,11 +28,13 @@ export default function ResearchToolsPage() {
               Stop guessing. Use real-time data to spy on competitors, track sales trends, and uncover high-margin opportunities in seconds.
             </p>
             <div className="flex justify-center gap-4">
-              <Link href="/#trial">
-                <Button size="lg" className="bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-8 font-semibold shadow-xl shadow-indigo-600/20">
-                  Start Researching
-                </Button>
-              </Link>
+              <TeaserButtonLock message="Complete Free Learning to use research tools">
+                <Link href="/#trial">
+                  <Button size="lg" className="bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-8 font-semibold shadow-xl shadow-indigo-600/20">
+                    Start Researching
+                  </Button>
+                </Link>
+              </TeaserButtonLock>
             </div>
           </Container>
 
@@ -181,11 +182,13 @@ export default function ResearchToolsPage() {
                 <p className="text-indigo-200 text-lg mb-8">
                   Get access to the data that gives you an unfair advantage.
                 </p>
-                <Link href="/#trial">
-                  <Button size="lg" className="bg-white text-indigo-900 hover:bg-indigo-50 font-bold h-12 px-8">
-                    Start 7-Day Free Trial
-                  </Button>
-                </Link>
+                <TeaserButtonLock message="Complete Free Learning to use research tools">
+                  <Link href="/#trial">
+                    <Button size="lg" className="bg-white text-indigo-900 hover:bg-indigo-50 font-bold h-12 px-8">
+                      Start 7-Day Free Trial
+                    </Button>
+                  </Link>
+                </TeaserButtonLock>
               </div>
             </div>
           </Container>

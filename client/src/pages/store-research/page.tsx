@@ -1,9 +1,8 @@
-
-
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Search as SearchIcon } from "lucide-react"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 import { StoreSearch } from "./components/store-search"
 import { StoreAnalysisCard } from "./components/store-analysis-card"
 import { RevenueEstimates } from "./components/revenue-estimates"
@@ -49,10 +48,9 @@ export default function StoreResearchPage() {
             </p>
           </div>
 
-          {/* Search Section */}
-          <div>
+          <TeaserButtonLock message="Complete Free Learning to research stores">
             <StoreSearch onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+          </TeaserButtonLock>
 
           {/* Loading State */}
           {isLoading && (

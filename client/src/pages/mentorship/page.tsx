@@ -11,6 +11,7 @@ import { AlertCircle } from "lucide-react"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
+import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 
 function formatDuration(minutes: number | null): string {
@@ -305,24 +306,29 @@ export default function AcademyPage() {
         )}
 
         {!loading && !error && courses.length > 0 && (
-          <div className="space-y-4">
-            {courses.map((course, index) => {
-              const { isLocked } = getTeaserLockState(index, isFree, {
-                freeVisibleCount: 3,
-                strategy: "first-n-items"
-              })
-              return (
-                <CourseAccordion
-                  key={course.id}
-                  course={course}
-                  courseIndex={index}
-                  defaultOpen={index === 0}
-                  locked={isLocked}
-                  onLockedClick={() => setIsUpsellOpen(true)}
-                />
-              )
-            })}
-          </div>
+          <>
+            <div className="space-y-4">
+              {courses.map((course, index) => {
+                const { isLocked } = getTeaserLockState(index, isFree, {
+                  freeVisibleCount: 2,
+                  strategy: "first-n-items"
+                })
+                return (
+                  <CourseAccordion
+                    key={course.id}
+                    course={course}
+                    courseIndex={index}
+                    defaultOpen={index === 0}
+                    locked={isLocked}
+                    onLockedClick={() => setIsUpsellOpen(true)}
+                  />
+                )
+              })}
+            </div>
+            {isFree && courses.length > 2 && (
+              <FreeLearningCutoff itemCount={2} contentType="courses" />
+            )}
+          </>
         )}
       </div>
 

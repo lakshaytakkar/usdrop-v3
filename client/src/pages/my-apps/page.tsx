@@ -50,6 +50,7 @@ import {
   SiSlack,
 } from "react-icons/si"
 import { FrameworkBanner } from "@/components/framework-banner"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 
 interface UserApp {
   id: string
@@ -315,23 +316,27 @@ export default function MyAppsPage() {
             </Select>
           </div>
           <div className="flex gap-2">
-            <Button
-              data-testid="btn-quick-add"
-              variant="outline"
-              onClick={openQuickAdd}
-              className="border-gray-200"
-            >
-              <Globe className="h-4 w-4 mr-1.5" />
-              Popular Apps
-            </Button>
-            <Button
-              data-testid="btn-add-app"
-              onClick={openAdd}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-            >
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add App
-            </Button>
+            <TeaserButtonLock message="Complete Free Learning to manage your apps">
+              <Button
+                data-testid="btn-quick-add"
+                variant="outline"
+                onClick={openQuickAdd}
+                className="border-gray-200"
+              >
+                <Globe className="h-4 w-4 mr-1.5" />
+                Popular Apps
+              </Button>
+            </TeaserButtonLock>
+            <TeaserButtonLock message="Complete Free Learning to manage your apps">
+              <Button
+                data-testid="btn-add-app"
+                onClick={openAdd}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add App
+              </Button>
+            </TeaserButtonLock>
           </div>
         </div>
 
@@ -367,22 +372,26 @@ export default function MyAppsPage() {
             </p>
             {!search && filterCategory === "all" && (
               <div className="flex gap-2">
-                <Button
-                  data-testid="btn-empty-quick-add"
-                  variant="outline"
-                  onClick={openQuickAdd}
-                >
-                  <Globe className="h-4 w-4 mr-1.5" />
-                  Popular Apps
-                </Button>
-                <Button
-                  data-testid="btn-empty-add"
-                  onClick={openAdd}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-1.5" />
-                  Add App
-                </Button>
+                <TeaserButtonLock message="Complete Free Learning to manage your apps">
+                  <Button
+                    data-testid="btn-empty-quick-add"
+                    variant="outline"
+                    onClick={openQuickAdd}
+                  >
+                    <Globe className="h-4 w-4 mr-1.5" />
+                    Popular Apps
+                  </Button>
+                </TeaserButtonLock>
+                <TeaserButtonLock message="Complete Free Learning to manage your apps">
+                  <Button
+                    data-testid="btn-empty-add"
+                    onClick={openAdd}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Add App
+                  </Button>
+                </TeaserButtonLock>
               </div>
             )}
           </div>

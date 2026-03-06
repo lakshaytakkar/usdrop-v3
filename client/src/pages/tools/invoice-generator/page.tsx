@@ -1,22 +1,16 @@
 
 
-import { Button } from "@/components/ui/button"
-import { Play } from "lucide-react"
 import { InvoiceGenerator } from "@/components/ai-tools/invoice-generator"
-export default function InvoiceGeneratorPage() {
-  const toolContent = (
-    <>
+import { usePageTeaser } from "@/hooks/use-page-teaser"
 
-      <InvoiceGenerator />
-    </>
-  )
+export default function InvoiceGeneratorPage() {
+  const { isLocked } = usePageTeaser("/tools/invoice-generator")
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
-          {toolContent}
-
-        </div>
+      <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+        <InvoiceGenerator locked={isLocked} />
+      </div>
     </>
   )
 }

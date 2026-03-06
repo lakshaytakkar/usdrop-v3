@@ -146,7 +146,7 @@ export default function IntelligencePage() {
                 {filteredArticles.map((article, index) => {
                   // Use details-locked strategy: show all articles but lock "Read more" buttons
                   const { isLocked } = getTeaserLockState(index, isFree, {
-                    freeVisibleCount: 3,
+                    freeVisibleCount: 4,
                     strategy: "first-n-items"
                   })
                   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { TeaserButtonLock } from "@/components/ui/teaser-button-lock"
 import { Plus, ArrowRight } from "lucide-react"
 import { Link } from "wouter"
 import { FrameworkBanner } from "@/components/framework-banner"
@@ -53,10 +54,12 @@ export default function ShopifyStoresPage() {
               <p className="text-muted-foreground mb-8 max-w-md">
                 Connect your Shopify stores to start tracking and analyzing your performance.
               </p>
-              <Button onClick={() => setIsModalOpen(true)} size="lg" data-testid="button-connect-store-empty">
-                <Plus className="h-4 w-4 mr-2" />
-                Connect Store
-              </Button>
+              <TeaserButtonLock message="Complete Free Learning to connect stores">
+                <Button onClick={() => setIsModalOpen(true)} size="lg" data-testid="button-connect-store-empty">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Connect Store
+                </Button>
+              </TeaserButtonLock>
             </CardContent>
           </Card>
         ) : (
@@ -65,10 +68,12 @@ export default function ShopifyStoresPage() {
               <p className="text-sm text-muted-foreground">
                 {stores.length} {stores.length === 1 ? "store" : "stores"} connected
               </p>
-              <Button onClick={() => setIsModalOpen(true)} size="sm" variant="outline" className="text-xs" data-testid="button-connect-store">
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Connect Store
-              </Button>
+              <TeaserButtonLock message="Complete Free Learning to connect stores">
+                <Button onClick={() => setIsModalOpen(true)} size="sm" variant="outline" className="text-xs" data-testid="button-connect-store">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Connect Store
+                </Button>
+              </TeaserButtonLock>
             </div>
 
             <StoreList stores={stores} onStoresChange={handleStoreAdded} />
