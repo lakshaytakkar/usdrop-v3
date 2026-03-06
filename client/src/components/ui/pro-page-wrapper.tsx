@@ -1,6 +1,6 @@
 
 
-import { useUserPlan } from "@/hooks/use-user-plan"
+import { useOnboarding } from "@/contexts/onboarding-context"
 import { UpgradeOverlay } from "@/components/ui/upgrade-overlay"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
 
@@ -15,7 +15,7 @@ export function ProPageWrapper({
   featureDescription,
   children,
 }: ProPageWrapperProps) {
-  const { isPro, isFree, isLoading } = useUserPlan()
+  const { isFree, hasCompletedFreeLearning, isLoading } = useOnboarding()
 
   if (isLoading) {
     return (
@@ -25,7 +25,7 @@ export function ProPageWrapper({
     )
   }
 
-  if (isFree) {
+  if (isFree && !hasCompletedFreeLearning) {
     return (
       <UpgradeOverlay
         featureName={featureName}

@@ -46,6 +46,8 @@
           isAiStudio?: boolean
           iconSrc?: string
           description?: string
+          hideForFree?: boolean
+          moduleId?: string
         }
 
         export interface NavGroup {
@@ -79,7 +81,7 @@
               { title: "My Sessions", icon: MonitorPlay, url: "/framework/my-sessions", isPro: false },
               { title: "My R&D", icon: FlaskConical, url: "/framework/my-rnd", isPro: false },
               { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
-              { title: "My Plan", icon: Shield, url: "/framework/my-plan", isPro: false },
+              { title: "My Plan", icon: Shield, url: "/framework/my-plan", isPro: false, hideForFree: true },
               { title: "My Apps", icon: AppWindow, url: "/framework/my-apps", isPro: false },
             ],
           },

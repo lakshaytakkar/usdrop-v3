@@ -168,11 +168,12 @@ export function SubNavTabs() {
   const filteredItems = useMemo(() => {
     if (!activeGroup) return []
     return activeGroup.items.filter((item) => {
+      if (isFree && item.hideForFree) return false
       const access = getModuleAccess(item.moduleId)
       if (access === "hidden") return false
       return true
     })
-  }, [activeGroup, getModuleAccess])
+  }, [activeGroup, getModuleAccess, isFree])
 
   if (!activeGroup) return null
 

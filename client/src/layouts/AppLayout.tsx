@@ -5,6 +5,7 @@ import { SubNavTabs } from "@/components/layout/sub-nav-tabs";
 import { Toaster } from "@/components/ui/toast";
 import { VerifyEmailBanner } from "@/components/feedback/banners/verify-email-banner";
 import { ContactTeamButton } from "@/components/ui/contact-team-button";
+import { FreeLearningBanner } from "@/components/layout/free-learning-banner";
 import { MobileDesktopBanner } from "@/components/layout/mobile-desktop-banner";
 import { PwaInstallPrompt } from "@/components/layout/pwa-install-prompt";
 import { trackActivity } from "@/lib/activity-tracker";
@@ -23,6 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         background: '#F5F5F7',
       }}
     >
+      <FreeLearningBanner />
       <VerifyEmailBanner />
       <AppTopNavigation />
       <SubNavTabs />

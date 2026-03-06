@@ -145,6 +145,9 @@ export default function ExternalUserDetailPage() {
   const [editedNotes, setEditedNotes] = useState("")
   const [editedStage, setEditedStage] = useState("")
 
+  const [freeLearningProgress, setFreeLearningProgress] = useState<{ lesson_id: string; completed_at: string; source: string }[]>([])
+  const [freeLearningLoading, setFreeLearningLoading] = useState(false)
+
   useEffect(() => {
     if (!userId) return
     const fetchUser = async () => {
@@ -172,6 +175,25 @@ export default function ExternalUserDetailPage() {
       }
     }
     fetchUser()
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const fetchFreeLearning = async () => {
+      try {
+        setFreeLearningLoading(true)
+        const response = await apiFetch(`/api/admin/external-users/${userId}/learning-progress`)
+        if (response.ok) {
+          const data = await response.json()
+          setFreeLearningProgress(data.lessons || [])
+        }
+      } catch (err) {
+        console.error('Error fetching free learning progress:', err)
+      } finally {
+        setFreeLearningLoading(false)
+      }
+    }
+    fetchFreeLearning()
   }, [userId])
 
   useEffect(() => {
@@ -641,6 +663,66 @@ export default function ExternalUserDetailPage() {
                 icon={Clock}
               />
             </StatGrid>
+
+            {(() => {
+              const allLessonIds = freeLearningModules.flatMap(m => m.lessons.map(l => l.id))
+              const totalLessons = allLessonIds.length
+              const completedLessonIds = freeLearningProgress.map(p => p.lesson_id)
+              const completedCount = allLessonIds.filter(id => completedLessonIds.includes(id)).length
+              const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
+              const isComplete = completedCount >= totalLessons
+              const lastCompletedAt = freeLearningProgress.length > 0
+                ? freeLearningProgress.reduce((latest, p) => {
+                    const d = new Date(p.completed_at)
+                    return d > latest ? d : latest
+                  }, new Date(0))
+                : null
+
+              return (
+                <DetailSection title="Free Learning Progress">
+                  {freeLearningLoading ? (
+                    <div className="py-4"><Skeleton className="h-16 rounded-lg" /></div>
+                  ) : (
+                    <div className="space-y-3 py-2">
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
+                        <div className="flex items-center gap-3">
+                          <BookOpen className="size-5 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium" data-testid="text-free-learning-count">
+                              {completedCount} of {totalLessons} lessons completed
+                            </p>
+                            <p className="text-xs text-muted-foreground" data-testid="text-free-learning-percent">
+                              {progressPercent}% complete
+                            </p>
+                          </div>
+                        </div>
+                        <Badge
+                          variant={isComplete ? "default" : "secondary"}
+                          data-testid="badge-free-learning-status"
+                        >
+                          {isComplete ? (
+                            <><CheckCircle2 className="size-3 mr-1" />Completed</>
+                          ) : (
+                            "In Progress"
+                          )}
+                        </Badge>
+                      </div>
+                      <Progress value={progressPercent} className="h-2" data-testid="progress-free-learning" />
+                      {isComplete && lastCompletedAt && lastCompletedAt.getTime() > 0 && (
+                        <p className="text-xs text-muted-foreground" data-testid="text-free-learning-completion-date">
+                          Completed on {formatDate(lastCompletedAt)}
+                        </p>
+                      )}
+                      {!isComplete && completedCount > 0 && lastCompletedAt && lastCompletedAt.getTime() > 0 && (
+                        <p className="text-xs text-muted-foreground" data-testid="text-free-learning-last-activity">
+                          Last lesson completed on {formatDate(lastCompletedAt)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </DetailSection>
+              )
+            })()}
 
             <SectionGrid>
               <DetailSection title="Account Information">

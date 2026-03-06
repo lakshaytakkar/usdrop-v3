@@ -1,6 +1,7 @@
-import { Lock } from "lucide-react";
+import { Lock, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 interface TeaserLockOverlayProps {
   message?: string;
@@ -10,8 +11,8 @@ interface TeaserLockOverlayProps {
 }
 
 export function TeaserLockOverlay({
-  message = "Upgrade your plan to unlock all content",
-  ctaText = "Upgrade Now",
+  message = "Complete all Free Learning videos to unlock this content",
+  ctaText = "Go to Free Learning",
   onUpgrade,
   className,
 }: TeaserLockOverlayProps) {
@@ -24,16 +25,23 @@ export function TeaserLockOverlay({
       )}
       data-testid="teaser-lock-overlay"
     >
-      <div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-        <Lock className="size-6 text-primary" />
+      <div className="flex size-14 items-center justify-center rounded-full bg-amber-50">
+        <BookOpen className="size-6 text-amber-600" />
       </div>
       <p className="text-center text-sm text-muted-foreground max-w-sm">
         {message}
       </p>
-      {onUpgrade && (
-        <Button onClick={onUpgrade} data-testid="button-upgrade-teaser">
+      {onUpgrade ? (
+        <Button onClick={onUpgrade} data-testid="button-learning-teaser" className="cursor-pointer">
           {ctaText}
         </Button>
+      ) : (
+        <Link href="/free-learning">
+          <Button data-testid="button-learning-teaser-link" className="cursor-pointer">
+            <BookOpen className="size-4 mr-2" />
+            {ctaText}
+          </Button>
+        </Link>
       )}
     </div>
   );
@@ -55,7 +63,7 @@ export function TeaserItemOverlay({ children, locked = false }: TeaserItemOverla
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="flex items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm border">
           <Lock className="size-3" />
-          Pro
+          Locked
         </div>
       </div>
     </div>

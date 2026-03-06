@@ -1,6 +1,6 @@
 
 import { apiFetch, setAccessToken } from '@/lib/supabase'
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "@/hooks/use-router"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -17,11 +17,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { validateEmail } from "@/lib/utils/validation"
 import { getRedirectUrl } from "@/lib/utils/auth"
-import { getUserRedirectPath } from "@/lib/utils/user-redirects"
-import type { UserMetadata } from "@/types/user-metadata"
 import { Link } from "wouter"
-import { Mail, ArrowLeft } from "lucide-react"
-import { OTPInput } from "@/components/auth/otp-input"
+import { Eye, EyeOff } from "lucide-react"
 
 export function SignupForm({
   className,
@@ -31,97 +28,78 @@ export function SignupForm({
   const [searchParams] = useSearchParams()
   const { showSuccess, showError } = useToast()
 
-  const [step, setStep] = useState<"email" | "otp">("email")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
-  const [otp, setOtp] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [resendCooldown, setResendCooldown] = useState(0)
   const [errors, setErrors] = useState<{
     email?: string
     fullName?: string
-    otp?: string
+    password?: string
+    confirmPassword?: string
     general?: string
   }>({})
 
-  useEffect(() => {
-    if (resendCooldown <= 0) return
-    const interval = setInterval(() => {
-      setResendCooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [resendCooldown])
-
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
+
+    const newErrors: typeof errors = {}
+
+    if (!fullName.trim()) {
+      newErrors.fullName = "Full name is required"
+    }
 
     const emailValidation = validateEmail(email)
     if (!emailValidation.valid) {
-      setErrors({ email: emailValidation.error })
+      newErrors.email = emailValidation.error
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required"
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters"
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = "Password must contain a lowercase letter"
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = "Password must contain an uppercase letter"
+    } else if (!/\d/.test(password)) {
+      newErrors.password = "Password must contain a number"
+    }
+
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password"
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match"
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
 
     setLoading(true)
 
     try {
-      const response = await apiFetch("/api/auth/otp/request", {
+      const response = await apiFetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, full_name: fullName || undefined }),
+        body: JSON.stringify({
+          email,
+          password,
+          full_name: fullName.trim(),
+        }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        setErrors({ general: data.error || "Failed to send verification code" })
-        showError(data.error || "Failed to send verification code")
-        setLoading(false)
-        return
-      }
-
-      setStep("otp")
-      setResendCooldown(60)
-      showSuccess("Verification code sent! Check your email.")
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to send verification code."
-      setErrors({ general: errorMessage })
-      showError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({})
-
-    if (otp.length !== 6) {
-      setErrors({ otp: "Please enter the complete 6-digit code" })
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      const response = await apiFetch("/api/auth/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, token: otp }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setErrors({ general: data.error || "Invalid verification code" })
-        showError(data.error || "Invalid verification code")
+        setErrors({ general: data.error || "Failed to create account" })
+        showError(data.error || "Failed to create account")
         setLoading(false)
         return
       }
@@ -139,38 +117,10 @@ export function SignupForm({
         return
       }
 
-      if (data.requiresOnboarding) {
-        router.push("/home?onboarding=true")
-      } else if (data.isInternal) {
-        router.push("/admin/internal-users")
-      } else {
-        const userRes = await apiFetch("/api/auth/user")
-        if (userRes.ok) {
-          const userData = await userRes.json()
-          const metadata: UserMetadata = {
-            id: userData.user?.id || data.user?.id || '',
-            email: userData.user?.email || data.user?.email || '',
-            fullName: userData.user?.full_name || null,
-            username: null,
-            avatarUrl: userData.user?.avatar_url || null,
-            isInternal: userData.user?.internal_role != null,
-            internalRole: userData.user?.internal_role || null,
-            isExternal: userData.user?.internal_role == null,
-            plan: userData.plan || 'free',
-            planName: userData.planName || 'Free',
-            status: userData.user?.status || 'active',
-            onboardingCompleted: userData.user?.onboarding_completed || false,
-            subscriptionStatus: null,
-          }
-          const redirectUrl = getUserRedirectPath(metadata)
-          router.push(redirectUrl)
-        } else {
-          router.push('/home')
-        }
-      }
+      router.push("/free-learning")
       router.refresh()
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Verification failed. Please try again."
+      const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again."
       setErrors({ general: errorMessage })
       showError(errorMessage)
     } finally {
@@ -178,128 +128,11 @@ export function SignupForm({
     }
   }
 
-  const handleResendOTP = async () => {
-    if (resendCooldown > 0) return
-
-    setErrors({})
-    setLoading(true)
-
-    try {
-      const response = await apiFetch("/api/auth/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, full_name: fullName || undefined }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setErrors({ general: data.error || "Failed to resend code" })
-        showError(data.error || "Failed to resend code")
-        return
-      }
-
-      setOtp("")
-      setResendCooldown(60)
-      showSuccess("New verification code sent!")
-    } catch (error) {
-      showError("Failed to resend code. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (step === "otp") {
-    return (
-      <div className={cn("flex flex-col gap-4", className)} {...props}>
-        <Card className="overflow-hidden p-0">
-          <CardContent className="grid p-0 md:grid-cols-2">
-            <form className="p-[18px] md:p-6" onSubmit={handleVerifyOTP}>
-              <FieldGroup className="gap-5">
-                <div className="flex flex-col items-center gap-1.5 text-center">
-                  <div className="mb-2 rounded-full bg-primary/10 p-3">
-                    <Mail className="h-6 w-6 text-primary" />
-                  </div>
-                  <h1 className="text-xl font-bold" data-testid="text-otp-title">Verify your email</h1>
-                  <p className="text-muted-foreground text-balance text-sm">
-                    We sent a 6-digit code to <strong>{email}</strong>
-                  </p>
-                </div>
-
-                {errors.general && (
-                  <div className="rounded-md bg-destructive/15 p-2 text-xs text-destructive">
-                    {errors.general}
-                  </div>
-                )}
-
-                <Field className="gap-2">
-                  <FieldLabel className="text-sm text-center">Enter code</FieldLabel>
-                  <OTPInput
-                    value={otp}
-                    onChange={setOtp}
-                    disabled={loading}
-                    error={!!errors.otp}
-                  />
-                  <FieldError className="text-xs text-center">{errors.otp}</FieldError>
-                </Field>
-
-                <Field>
-                  <Button
-                    type="submit"
-                    className="w-full h-9 text-sm"
-                    disabled={loading || otp.length !== 6}
-                    data-testid="button-verify-otp"
-                  >
-                    {loading ? "Verifying..." : "Create account"}
-                  </Button>
-                </Field>
-
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep("email")
-                      setOtp("")
-                      setErrors({})
-                    }}
-                    className="flex items-center gap-1 underline underline-offset-2"
-                    data-testid="button-back-to-email"
-                  >
-                    <ArrowLeft className="h-3 w-3" />
-                    Change email
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResendOTP}
-                    disabled={resendCooldown > 0 || loading}
-                    className="underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-testid="button-resend-otp"
-                  >
-                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
-                  </button>
-                </div>
-              </FieldGroup>
-            </form>
-            <div className="bg-muted relative hidden md:block">
-              <img
-                src="/images/ui/login-bg-vertical.png"
-                alt="Background"
-                className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 via-purple-900/40 to-violet-900/40 mix-blend-overlay" />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className={cn("flex flex-col gap-4", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-[18px] md:p-6" onSubmit={handleSendOTP}>
+          <form className="p-[18px] md:p-6" onSubmit={handleSignup}>
             <FieldGroup className="gap-5">
               <div className="flex flex-col items-center gap-1.5 text-center">
                 <h1 className="text-xl font-bold" data-testid="text-signup-title">Create an account</h1>
@@ -365,11 +198,16 @@ export function SignupForm({
                   type="text"
                   placeholder="John Doe"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={(e) => {
+                    setFullName(e.target.value)
+                    setErrors((prev) => ({ ...prev, fullName: undefined }))
+                  }}
                   disabled={loading}
+                  aria-invalid={errors.fullName ? "true" : "false"}
                   className="h-9 text-sm"
                   data-testid="input-full-name"
                 />
+                <FieldError className="text-xs">{errors.fullName}</FieldError>
               </Field>
 
               <Field className="gap-2">
@@ -392,14 +230,76 @@ export function SignupForm({
                 <FieldError className="text-xs">{errors.email}</FieldError>
               </Field>
 
+              <Field className="gap-2">
+                <FieldLabel htmlFor="password" className="text-sm">Password</FieldLabel>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      setErrors((prev) => ({ ...prev, password: undefined }))
+                    }}
+                    required
+                    disabled={loading}
+                    aria-invalid={errors.password ? "true" : "false"}
+                    className="h-9 text-sm pr-9"
+                    data-testid="input-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    tabIndex={-1}
+                    data-testid="button-toggle-password"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <FieldError className="text-xs">{errors.password}</FieldError>
+              </Field>
+
+              <Field className="gap-2">
+                <FieldLabel htmlFor="confirmPassword" className="text-sm">Confirm Password</FieldLabel>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      setErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+                    }}
+                    required
+                    disabled={loading}
+                    aria-invalid={errors.confirmPassword ? "true" : "false"}
+                    className="h-9 text-sm pr-9"
+                    data-testid="input-confirm-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    tabIndex={-1}
+                    data-testid="button-toggle-confirm-password"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <FieldError className="text-xs">{errors.confirmPassword}</FieldError>
+              </Field>
+
               <Field>
                 <Button
                   type="submit"
                   className="w-full h-9 text-sm"
-                  disabled={loading || !email}
-                  data-testid="button-send-otp"
+                  disabled={loading || !email || !password || !confirmPassword}
+                  data-testid="button-create-account"
                 >
-                  {loading ? "Sending code..." : "Continue with email"}
+                  {loading ? "Creating account..." : "Create account"}
                 </Button>
               </Field>
 

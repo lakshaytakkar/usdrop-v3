@@ -5,24 +5,22 @@ import { usePathname } from "@/hooks/use-router"
 import { Coins } from "lucide-react"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
 import { cn } from "@/lib/utils"
+import { useUserPlan } from "@/hooks/use-user-plan"
 
 export function SidebarCreditsFooter() {
   const pathname = usePathname()
   const [isUpsellOpen, setIsUpsellOpen] = useState(false)
   const [credits, setCredits] = useState(0)
+  const { isFree } = useUserPlan()
 
-  // Hide footer on admin routes
   const isOnAdminRoute = pathname === "/admin" ||
                          (pathname?.startsWith("/admin/") ?? false)
 
-  // Fetch user credits (placeholder - replace with actual API call)
   useEffect(() => {
-    // TODO: Replace with actual credits fetching logic
-    // For now, defaulting to 0
     setCredits(0)
   }, [])
 
-  if (isOnAdminRoute) {
+  if (isOnAdminRoute || isFree) {
     return null
   }
 

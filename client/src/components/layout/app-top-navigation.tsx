@@ -280,7 +280,7 @@ export function AppTopNavigation() {
                   {group.label}
                 </span>
                 <div className="mt-1 space-y-0">
-                  {group.items.map((item) => {
+                  {group.items.filter(item => !(isFree && item.hideForFree)).map((item) => {
                     const isItemActive = pathname === item.url || pathname?.startsWith(item.url + "/")
                     return (
                       <Link

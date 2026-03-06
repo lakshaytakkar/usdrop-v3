@@ -1,6 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { X, TrendingUp, BarChart3, Store, Palette, GraduationCap, Phone } from "lucide-react"
+import { X, TrendingUp, BarChart3, Store, Palette, GraduationCap, Phone, BookOpen } from "lucide-react"
+import { useUserPlan } from "@/hooks/use-user-plan"
+import { Link } from "wouter"
 
 interface UpsellDialogProps {
   isOpen: boolean
@@ -36,6 +38,53 @@ const features = [
 ]
 
 export function UpsellDialog({ isOpen, onClose }: UpsellDialogProps) {
+  const { isFree } = useUserPlan()
+
+  if (isFree) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-[90vw] sm:max-w-[480px] p-0 overflow-hidden gap-0 border-0 rounded-2xl" showCloseButton={false}>
+          <div className="p-6 sm:p-8 md:p-10 flex flex-col">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 z-10 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+              data-testid="button-close-upsell"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 mb-5">
+                <BookOpen className="h-7 w-7 text-blue-600" />
+              </div>
+
+              <h2 className="text-[22px] sm:text-[24px] font-semibold text-black tracking-[-0.5px] leading-[1.2] mb-2" data-testid="text-upsell-title">
+                Complete Free Learning First
+              </h2>
+              <p className="text-[13px] sm:text-[14px] text-[#666] leading-relaxed mb-6" data-testid="text-upsell-description">
+                Finish all Free Learning videos to unlock the full platform. Once complete, your point of contact will reach out to help you get full access.
+              </p>
+
+              <Link
+                href="/free-learning"
+                onClick={onClose}
+                className="inline-flex items-center justify-center w-full h-11 sm:h-12 text-[14px] font-semibold rounded-xl gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white transition-colors cursor-pointer"
+                data-testid="link-go-to-free-learning"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Go to Free Learning
+              </Link>
+
+              <p className="text-[12px] text-[#999] mt-3" data-testid="text-poc-message">
+                Your POC will reach out to help you upgrade once you complete your learning
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] sm:max-w-[820px] max-h-[90vh] p-0 overflow-hidden gap-0 border-0 rounded-2xl" showCloseButton={false}>

@@ -5,6 +5,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { OnboardingStatus } from "@/types/onboarding"
 import { useUserPlanContext } from "@/contexts/user-plan-context"
 import { useAuth } from "@/contexts/auth-context"
+import { useFreeLearningStatus } from "@/hooks/use-free-learning-status"
 
 interface OnboardingContextType {
   isComplete: boolean
@@ -19,6 +20,11 @@ interface OnboardingContextType {
   isPro: boolean
   isAdmin: boolean
   internalRole: string | null
+
+  hasCompletedFreeLearning: boolean
+  freeLearningProgress: number
+  freeLearningCompletedLessons: number
+  freeLearningTotalLessons: number
   
   isLoading: boolean
   error: string | null
@@ -38,6 +44,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [error, setError] = useState<string | null>(null)
   const { user, loading: authLoading } = useAuth()
   const { plan, isFree, isPro, isAdmin, internalRole, isLoading: planLoading } = useUserPlanContext()
+  const { isFreeLearningComplete, freeLearningProgress, completedLessons: freeLearningCompletedLessons, totalLessons: freeLearningTotalLessons, isLoading: freeLearningLoading } = useFreeLearningStatus()
 
   const fetchOnboardingStatus = useCallback(async () => {
     if (!user) {
@@ -126,7 +133,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     isPro,
     isAdmin,
     internalRole,
-    isLoading: authLoading || planLoading || isLoadingOnboarding,
+    hasCompletedFreeLearning: isFreeLearningComplete,
+    freeLearningProgress,
+    freeLearningCompletedLessons,
+    freeLearningTotalLessons,
+    isLoading: authLoading || planLoading || isLoadingOnboarding || freeLearningLoading,
     error,
     refetch: fetchOnboardingStatus,
   }
@@ -154,6 +165,10 @@ export function useOnboarding(): OnboardingContextType {
       isPro: false,
       isAdmin: false,
       internalRole: null,
+      hasCompletedFreeLearning: false,
+      freeLearningProgress: 0,
+      freeLearningCompletedLessons: 0,
+      freeLearningTotalLessons: 25,
       isLoading: false,
       error: null,
       refetch: async () => {},
