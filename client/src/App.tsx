@@ -117,6 +117,7 @@ import MyProfile from "@/pages/my-profile/page";
 import MyCredentials from "@/pages/my-credentials/page";
 import MyRnD from "@/pages/my-rnd/page";
 import MyPlan from "@/pages/my-plan/page";
+import MyApps from "@/pages/my-apps/page";
 import MyLLC from "@/pages/my-llc/page";
 
 const queryClient = new QueryClient({
@@ -276,6 +277,7 @@ function Router() {
       <Route path="/framework/my-rnd" component={() => <UserGuard><AppLayout><MyRnD /></AppLayout></UserGuard>} />
       <Route path="/framework/my-profile" component={() => <UserGuard><AppLayout><MyProfile /></AppLayout></UserGuard>} />
       <Route path="/framework/my-credentials" component={() => <UserGuard><AppLayout><MyCredentials /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-apps" component={() => <UserGuard><AppLayout><MyApps /></AppLayout></UserGuard>} />
       <Route path="/framework/my-plan" component={() => <UserGuard><AppLayout><MyPlan /></AppLayout></UserGuard>} />
 
       {/* Products — /products/* */}
@@ -295,7 +297,7 @@ function Router() {
       <Route path="/private-supplier" component={() => <UserGuard><AppLayout><SuppliersPage /></AppLayout></UserGuard>} />
 
       {/* LLC */}
-      <Route path="/llc" component={() => <UserGuard><AppLayout><MyLLC /></AppLayout></UserGuard>} />
+      <Route path="/llc" component={() => <MarketingLayout><MyLLC /></MarketingLayout>} />
 
       {/* AI Studio — /ai-studio/* */}
       <Route path="/ai-studio/model-studio" component={() => <UserGuard><AppLayout><ModelStudio /></AppLayout></UserGuard>} />

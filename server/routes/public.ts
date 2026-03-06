@@ -3531,6 +3531,118 @@ export function registerPublicRoutes(app: Express) {
     }
   });
 
+  // ==================== USER APPS (External Apps) ====================
+
+  app.get('/api/user-apps', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { data, error } = await supabaseRemote
+        .from('user_apps')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json(data || []);
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/user-apps', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { app_name, app_url, app_icon, category, api_key, api_secret, access_token, client_id, client_secret, webhook_url, notes } = req.body;
+
+      if (!app_name) {
+        return res.status(400).json({ error: 'App name is required' });
+      }
+
+      const { data, error } = await supabaseRemote
+        .from('user_apps')
+        .insert({
+          user_id: user.id,
+          app_name,
+          app_url: app_url || null,
+          app_icon: app_icon || null,
+          category: category || 'other',
+          api_key: api_key || null,
+          api_secret: api_secret || null,
+          access_token: access_token || null,
+          client_id: client_id || null,
+          client_secret: client_secret || null,
+          webhook_url: webhook_url || null,
+          notes: notes || null,
+        })
+        .select()
+        .single();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(201).json(data);
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/user-apps', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { id, app_name, app_url, app_icon, category, api_key, api_secret, access_token, client_id, client_secret, webhook_url, notes, status } = req.body;
+
+      if (!id) return res.status(400).json({ error: 'App ID is required' });
+      if (!app_name) return res.status(400).json({ error: 'App name is required' });
+
+      const { data, error } = await supabaseRemote
+        .from('user_apps')
+        .update({
+          app_name,
+          app_url: app_url || null,
+          app_icon: app_icon || null,
+          category: category || 'other',
+          api_key: api_key || null,
+          api_secret: api_secret || null,
+          access_token: access_token || null,
+          client_id: client_id || null,
+          client_secret: client_secret || null,
+          webhook_url: webhook_url || null,
+          notes: notes || null,
+          status: status || 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json(data);
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/user-apps', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      let id = req.query.id as string | undefined;
+      if (!id) {
+        try { id = req.body?.id; } catch {}
+      }
+      if (!id) return res.status(400).json({ error: 'App ID is required' });
+
+      const { error } = await supabaseRemote
+        .from('user_apps')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) return res.status(500).json({ error: error.message });
+      return res.json({ success: true });
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ==================== USER DETAILS ====================
 
   // GET /api/user-details

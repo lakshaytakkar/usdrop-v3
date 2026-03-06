@@ -149,7 +149,7 @@ export default function MyLLCPage() {
         </div>
 
         <div className="relative z-[1]">
-          <section className="pt-12 pb-6 px-6 md:px-12 lg:px-20">
+          <section className="pt-28 pb-6 px-6 md:px-12 lg:px-20">
             <div className="max-w-5xl mx-auto">
               <MotionFadeIn direction="up" distance={DISTANCE.md} duration={DURATION.slow}>
                 <div className="text-center space-y-6">

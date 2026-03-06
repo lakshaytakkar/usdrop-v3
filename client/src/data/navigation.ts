@@ -25,6 +25,7 @@
           Calendar,
           UserCircle,
           KeyRound,
+          AppWindow,
           Compass,
           Palette,
           Wrench,
@@ -81,6 +82,7 @@
               { title: "My Profile", icon: UserCircle, url: "/framework/my-profile", isPro: false },
               { title: "My Credentials", icon: KeyRound, url: "/framework/my-credentials", isPro: false },
               { title: "My Plan", icon: Shield, url: "/framework/my-plan", isPro: false },
+              { title: "My Apps", icon: AppWindow, url: "/framework/my-apps", isPro: false },
             ],
           },
           {
