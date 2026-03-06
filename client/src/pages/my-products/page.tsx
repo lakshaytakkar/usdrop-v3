@@ -644,6 +644,8 @@ function EditProductModal({
   )
 }
 
+type SourceTab = "all" | "usdrop" | "mine"
+
 export default function MyProductsPage() {
   const { user, loading: authLoading } = useAuth()
   const { showSuccess, showError } = useToast()
@@ -653,6 +655,7 @@ export default function MyProductsPage() {
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [viewItem, setViewItem] = useState<PicklistItem | null>(null)
   const [editItem, setEditItem] = useState<PicklistItem | null>(null)
+  const [activeTab, setActiveTab] = useState<SourceTab>("all")
 
   const fetchPicklist = async () => {
     try {
@@ -692,14 +695,31 @@ export default function MyProductsPage() {
     }
   }
 
+  const usdropSources: PicklistItem["source"][] = ["winning-products", "product-hunt"]
+  const userSources: PicklistItem["source"][] = ["manual", "url-import"]
+
   const filteredItems = useMemo(() => {
-    if (!searchQuery) return items
-    const query = searchQuery.toLowerCase()
-    return items.filter(item =>
-      item.title.toLowerCase().includes(query) ||
-      item.category.toLowerCase().includes(query)
-    )
-  }, [items, searchQuery])
+    let filtered = items
+    if (activeTab === "usdrop") {
+      filtered = filtered.filter(item => usdropSources.includes(item.source))
+    } else if (activeTab === "mine") {
+      filtered = filtered.filter(item => userSources.includes(item.source) || item.source === "other")
+    }
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query)
+      )
+    }
+    return filtered
+  }, [items, searchQuery, activeTab])
+
+  const tabCounts = useMemo(() => ({
+    all: items.length,
+    usdrop: items.filter(item => usdropSources.includes(item.source)).length,
+    mine: items.filter(item => userSources.includes(item.source) || item.source === "other").length,
+  }), [items])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -716,6 +736,37 @@ export default function MyProductsPage() {
           tutorialVideoUrl=""
         />
         <div>
+          <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
+            {([
+              { key: "all" as SourceTab, label: "All Products" },
+              { key: "usdrop" as SourceTab, label: "Saved from USDrop" },
+              { key: "mine" as SourceTab, label: "Added by Me" },
+            ]).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`relative px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === tab.key
+                    ? "text-indigo-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+                data-testid={`tab-${tab.key}`}
+              >
+                <span>{tab.label}</span>
+                <span className={`ml-1.5 text-xs font-semibold px-1.5 py-0.5 rounded-full ${
+                  activeTab === tab.key
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "bg-gray-100 text-gray-500"
+                }`}>
+                  {tabCounts[tab.key]}
+                </span>
+                {activeTab === tab.key && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 rounded-t" />
+                )}
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center justify-between gap-3 mb-4">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -764,10 +815,22 @@ export default function MyProductsPage() {
               <div className="text-center">
                 <img src="/images/3d-icons/pin-icon.png" alt="No products" width={48} height={48} className="mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">
-                  {searchQuery ? "No products match your search" : "No products saved"}
+                  {searchQuery
+                    ? "No products match your search"
+                    : activeTab === "usdrop"
+                    ? "No products saved from USDrop"
+                    : activeTab === "mine"
+                    ? "No products added by you"
+                    : "No products saved"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery ? "Try a different search term." : "Start by adding products to your list."}
+                  {searchQuery
+                    ? "Try a different search term."
+                    : activeTab === "usdrop"
+                    ? "Browse Product Hunt or Winning Products to save items here."
+                    : activeTab === "mine"
+                    ? "Use the Add Product button to create your own products."
+                    : "Start by adding products to your list."}
                 </p>
                 {!searchQuery && (
                   <div className="flex items-center justify-center gap-3">
