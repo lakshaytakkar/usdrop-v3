@@ -98,6 +98,7 @@ import LiveDashboardMarketing from "@/pages/(marketing)/live-dashboard/page";
 import LiveSessionsMarketing from "@/pages/(marketing)/live-sessions/page";
 import CoursesMarketing from "@/pages/(marketing)/courses/page";
 import FulfilmentMarketing from "@/pages/(marketing)/fulfilment/page";
+import MentorshipMarketingPage from "@/pages/(marketing)/mentorship/page";
 import WhoIsThisFor from "@/pages/who-is-this-for/page";
 import HelpCenter from "@/pages/help-center/page";
 import HelpPage from "@/pages/help/page";
@@ -214,6 +215,8 @@ function Router() {
       <Route path="/features/live-sessions" component={LiveSessionsMarketing} />
       <Route path="/features/courses" component={CoursesMarketing} />
       <Route path="/features/fulfilment" component={FulfilmentMarketing} />
+      <Route path="/mentorship" component={MentorshipPage} />
+      <Route path="/1on1-mentorship" component={MentorshipMarketingPage} />
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />
