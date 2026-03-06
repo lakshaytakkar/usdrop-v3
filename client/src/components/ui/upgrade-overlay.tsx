@@ -1,11 +1,10 @@
-
-
 import { motion } from "motion/react"
-import { Lock, BookOpen, ArrowLeft } from "lucide-react"
+import { Lock, BookOpen, ArrowRight, Eye } from "lucide-react"
 import { useRouter } from "@/hooks/use-router"
 import { Button } from "@/components/ui/button"
 import { DURATION, EASING } from "@/lib/motion"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { Link } from "wouter"
 
 interface UpgradeOverlayProps {
   featureName: string
@@ -28,88 +27,96 @@ export function UpgradeOverlay({
       {children && (
         <div
           className="pointer-events-none select-none"
-          style={{ filter: "blur(8px)" }}
+          style={{ filter: "blur(3px)", opacity: 0.7 }}
           aria-hidden="true"
         >
           {children}
         </div>
       )}
 
+      <div className="absolute inset-0 z-40 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
+
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{
           duration: DURATION.slow,
           ease: [...EASING.easeOut],
         }}
-        className="absolute inset-0 z-50 flex items-center justify-center"
+        className="absolute inset-x-0 bottom-0 z-50 flex justify-center pb-12 pointer-events-none"
+        style={{ top: "min(40%, 280px)" }}
       >
-        <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: DURATION.slower,
-            ease: [...EASING.easeOutExpo],
-            delay: 0.1,
-          }}
-          className="relative z-10 flex flex-col items-center text-center max-w-md mx-auto px-6"
-        >
-          <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gray-100 mb-6">
-            <Lock className="w-7 h-7 text-gray-600" />
-          </div>
-
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-semibold uppercase tracking-wider text-amber-600" data-testid="text-overlay-label">
-              {showLearningMessage ? "Complete Free Learning" : "Locked Feature"}
-            </span>
-          </div>
-
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight" data-testid="text-overlay-title">
-            {featureName}
-          </h2>
-
-          <p className="text-gray-500 text-sm leading-relaxed mb-4 max-w-sm" data-testid="text-overlay-description">
-            {showLearningMessage
-              ? "Complete all Free Learning videos to unlock this feature. Your progress is being tracked."
-              : featureDescription}
-          </p>
-
-          {showLearningMessage && (
-            <div className="w-full max-w-xs mb-6">
-              <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-                <span>{completedLessons} of {totalLessons} lessons</span>
-                <span>{freeLearningProgress}%</span>
+        <div className="pointer-events-auto w-full max-w-lg mx-4">
+          <div className="rounded-2xl border border-gray-200/80 bg-white/95 backdrop-blur-sm shadow-xl shadow-black/5 p-6">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-amber-50 border border-amber-100">
+                <Eye className="w-5 h-5 text-amber-600" />
               </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden" data-testid="progress-overlay-bar">
-                <div
-                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
-                  style={{ width: `${freeLearningProgress}%` }}
-                />
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600" data-testid="text-overlay-label">
+                    Preview Mode
+                  </span>
+                </div>
+
+                <h3 className="text-base font-bold text-gray-900 mb-1" data-testid="text-overlay-title">
+                  {featureName}
+                </h3>
+
+                <p className="text-[13px] text-gray-500 leading-relaxed mb-4" data-testid="text-overlay-description">
+                  {showLearningMessage
+                    ? "You're previewing this feature. Complete Free Learning to unlock full access and start using it."
+                    : featureDescription}
+                </p>
+
+                {showLearningMessage && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+                      <span>{completedLessons} of {totalLessons} lessons done</span>
+                      <span className="font-semibold text-amber-600">{freeLearningProgress}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden" data-testid="progress-overlay-bar">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${freeLearningProgress}%` }}
+                        transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                        className="h-full bg-amber-500 rounded-full"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <Link href={showLearningMessage ? "/free-learning" : "/framework"}>
+                    <Button
+                      className="bg-gray-900 text-white hover:bg-gray-800 rounded-lg px-5 h-9 text-[13px] font-medium cursor-pointer"
+                      data-testid="button-overlay-action"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 mr-1.5" />
+                      {showLearningMessage ? "Continue Learning" : "Contact Your POC"}
+                    </Button>
+                  </Link>
+
+                  <button
+                    onClick={() => router.back()}
+                    className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    data-testid="button-overlay-back"
+                  >
+                    Go Back
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+          </div>
 
-          <Button
-            onClick={() => router.push(showLearningMessage ? "/free-learning" : "/framework")}
-            className="bg-gradient-to-r from-gray-900 to-black text-white hover:from-gray-800 hover:to-gray-900 rounded-xl px-8 h-11 text-sm font-medium shadow-lg shadow-gray-900/20 transition-all hover:shadow-xl hover:shadow-gray-900/30 cursor-pointer"
-            data-testid="button-overlay-action"
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
-            {showLearningMessage ? "Go to Free Learning" : "Contact Your POC"}
-          </Button>
-
-          <button
-            onClick={() => router.back()}
-            className="mt-4 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-            data-testid="button-overlay-back"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Go Back
-          </button>
-        </motion.div>
+          <div className="mt-3 text-center">
+            <p className="text-[11px] text-gray-400">
+              <Lock className="w-3 h-3 inline mr-1 -mt-0.5" />
+              Full access unlocks after completing all lessons
+            </p>
+          </div>
+        </div>
       </motion.div>
     </div>
   )

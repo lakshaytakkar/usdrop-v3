@@ -40,13 +40,13 @@ export function TeaserButtonLock({
               {children}
             </div>
             <Link href="/free-learning" className="absolute inset-0 flex items-center justify-center" data-testid="button-teaser-unlock">
-              <Lock className="size-4 text-amber-600" />
+              <Lock className="size-4 text-gray-500" />
             </Link>
           </div>
         </TooltipTrigger>
-        <TooltipContent side="bottom" className="bg-amber-50 border-amber-200 text-amber-800 text-xs font-medium">
+        <TooltipContent side="bottom" className="bg-white border-gray-200 text-gray-600 text-xs font-medium shadow-sm">
           <div className="flex items-center gap-1.5">
-            <BookOpen className="size-3" />
+            <Lock className="size-3" />
             {message}
           </div>
         </TooltipContent>
@@ -72,11 +72,12 @@ export function TeaserActionGuard({ children, fallback }: TeaserActionGuardProps
     <Link href="/free-learning">
       <Button
         variant="outline"
-        className="gap-2 border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 cursor-pointer"
+        size="sm"
+        className="gap-2 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
         data-testid="button-teaser-guard"
       >
-        <BookOpen className="size-4" />
-        Complete Free Learning to unlock
+        <Lock className="size-3.5" />
+        Complete lessons to unlock
       </Button>
     </Link>
   )

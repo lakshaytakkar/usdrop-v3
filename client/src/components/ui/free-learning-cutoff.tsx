@@ -1,7 +1,8 @@
-import { BookOpen, ArrowRight } from "lucide-react"
+import { BookOpen, ArrowRight, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Link } from "wouter"
 import { useOnboarding } from "@/contexts/onboarding-context"
+import { motion } from "motion/react"
 
 interface FreeLearningCutoffProps {
   itemCount?: number
@@ -15,48 +16,64 @@ export function FreeLearningCutoff({
   const { freeLearningCompletedLessons: completedLessons, freeLearningTotalLessons: totalLessons, freeLearningProgress } = useOnboarding()
 
   return (
-    <div
-      className="relative mt-4 rounded-xl border border-amber-200 bg-gradient-to-b from-amber-50/80 to-white p-8 text-center"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.1 }}
+      className="relative mt-2 rounded-xl border border-gray-200 bg-white p-5"
       data-testid="free-learning-cutoff"
     >
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex size-14 items-center justify-center rounded-full bg-amber-100">
-          <BookOpen className="size-6 text-amber-600" />
+      <div className="flex items-center gap-4">
+        <div className="shrink-0 flex size-10 items-center justify-center rounded-lg bg-amber-50 border border-amber-100">
+          <Eye className="size-4.5 text-amber-600" />
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1" data-testid="text-cutoff-title">
-            Complete Free Learning to see more
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md mx-auto" data-testid="text-cutoff-description">
-            You're viewing the first {itemCount} {contentType}. Complete all Free Learning
-            videos to unlock full access to this page.
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-gray-900" data-testid="text-cutoff-title">
+            You're previewing {itemCount} {contentType}
+          </p>
+          <p className="text-[12px] text-gray-400 mt-0.5" data-testid="text-cutoff-description">
+            Complete Free Learning to unlock everything on this page
           </p>
         </div>
 
-        <div className="w-full max-w-xs">
-          <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-            <span>{completedLessons} of {totalLessons} lessons</span>
-            <span>{freeLearningProgress}%</span>
+        <div className="shrink-0 hidden sm:flex items-center gap-3">
+          <div className="text-right mr-1">
+            <div className="text-[11px] text-gray-400">{completedLessons}/{totalLessons} lessons</div>
+            <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden mt-1" data-testid="progress-cutoff-bar">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${freeLearningProgress}%` }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                className="h-full bg-amber-500 rounded-full"
+              />
+            </div>
           </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden" data-testid="progress-cutoff-bar">
-            <div
-              className="h-full bg-amber-500 rounded-full transition-all duration-500"
-              style={{ width: `${freeLearningProgress}%` }}
-            />
-          </div>
+
+          <Link href="/free-learning">
+            <Button
+              size="sm"
+              className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg cursor-pointer"
+              data-testid="button-cutoff-learning"
+            >
+              Continue
+              <ArrowRight className="size-3.5 ml-1" />
+            </Button>
+          </Link>
         </div>
 
-        <Link href="/free-learning">
-          <Button
-            className="bg-amber-600 hover:bg-amber-700 text-white cursor-pointer"
-            data-testid="button-cutoff-learning"
-          >
-            Go to Free Learning
-            <ArrowRight className="size-4 ml-2" />
-          </Button>
-        </Link>
+        <div className="shrink-0 sm:hidden">
+          <Link href="/free-learning">
+            <Button
+              size="sm"
+              className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg cursor-pointer"
+              data-testid="button-cutoff-learning-mobile"
+            >
+              <ArrowRight className="size-3.5" />
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
