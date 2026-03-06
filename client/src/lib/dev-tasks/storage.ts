@@ -1,21 +1,13 @@
-// Client-side storage functions - safe to import in client components
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/supabase'
 import { MAX_FILE_SIZE, ALLOWED_FILE_TYPES } from './storage-utils'
 
-// Re-export utility functions for backward compatibility
 export { formatFileSize, validateFile } from './storage-utils'
 
-const BUCKET_NAME = 'dev-task-attachments'
-
-// Client-side upload (for browser)
 export async function uploadTaskAttachment(
   file: File,
   taskId: string,
-  userId: string
+  _userId: string
 ): Promise<{ path: string; url: string }> {
-  
-
-  // Validate file
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(`File size exceeds maximum of ${MAX_FILE_SIZE / 1024 / 1024}MB`)
   }
@@ -24,67 +16,50 @@ export async function uploadTaskAttachment(
     throw new Error(`File type ${file.type} is not allowed`)
   }
 
-  // Generate unique file path
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${taskId}/${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-  const filePath = `tasks/${fileName}`
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('taskId', taskId)
 
-  // Upload to Supabase Storage
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
-    })
+  const res = await apiFetch(`/api/dev-tasks/${taskId}/attachments/upload`, {
+    method: 'POST',
+    body: formData,
+  })
 
-  if (error) {
-    console.error('Error uploading file:', error)
-    throw error
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Upload failed' }))
+    throw new Error(err.error || 'Upload failed')
   }
 
-  // Get public URL (or signed URL if bucket is private)
-  const { data: urlData } = await supabase.storage
-    .from(BUCKET_NAME)
-    .createSignedUrl(filePath, 31536000) // 1 year expiry
-
-  return {
-    path: filePath,
-    url: urlData?.signedUrl || ''
-  }
+  const data = await res.json()
+  return { path: data.path, url: data.url }
 }
 
-// Generate signed URL for viewing an attachment
 export async function getAttachmentSignedUrl(
   filePath: string,
   expiresIn = 3600
 ): Promise<string> {
-  
+  const res = await apiFetch(`/api/dev-tasks/attachments/signed-url`, {
+    method: 'POST',
+    body: JSON.stringify({ filePath, expiresIn }),
+  })
 
-  const { data, error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .createSignedUrl(filePath, expiresIn)
-
-  if (error) {
-    console.error('Error generating signed URL:', error)
-    throw error
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to get URL' }))
+    throw new Error(err.error || 'Failed to get signed URL')
   }
 
+  const data = await res.json()
   return data.signedUrl
 }
 
-// Delete file from storage
 export async function deleteAttachmentFile(filePath: string): Promise<void> {
-  
+  const res = await apiFetch(`/api/dev-tasks/attachments/delete`, {
+    method: 'POST',
+    body: JSON.stringify({ filePath }),
+  })
 
-  const { error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .remove([filePath])
-
-  if (error) {
-    console.error('Error deleting file:', error)
-    throw error
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Delete failed' }))
+    throw new Error(err.error || 'Delete failed')
   }
 }
-
-
-

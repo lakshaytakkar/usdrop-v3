@@ -1,11 +1,10 @@
 import { ProductResearch } from "@/types/products"
 import { GoogleGenAI } from "@google/genai"
 
-// Prefer Gemini for product research
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
+const GEMINI_API_KEY = ''
 
 if (!GEMINI_API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY not set. Product research will use mock data.")
+  console.warn("Product research uses server-side API. Client will use mock data.")
 }
 
 const genAI = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null

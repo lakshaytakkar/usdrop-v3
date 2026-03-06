@@ -11,12 +11,8 @@ interface Message {
   text: string;
 }
 
-// Get API key from environment variables (same as gemini-service.ts)
 const getApiKey = () => {
-  return import.meta.env.VITE_GEMINI_API_KEY || 
-         import.meta.env.VITE_API_KEY || 
-         import.meta.env.VITE_GEMINI_API_KEY || 
-         import.meta.env.VITE_API_KEY;
+  return '';
 };
 
 export const ChatBot: React.FC = () => {

@@ -1,9 +1,9 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const API_KEY = '';
 
 if (!API_KEY) {
-  console.warn("VITE_GEMINI_API_KEY not set. Using mock service.");
+  console.warn("Gemini AI Studio features use server-side API. Using mock service for client-side calls.");
 }
 
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
