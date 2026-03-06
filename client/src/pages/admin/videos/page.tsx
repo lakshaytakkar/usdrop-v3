@@ -317,10 +317,10 @@ export default function AdminVideosPage() {
       />
 
       <StatGrid>
-        <StatCard label="Total Videos" value={stats.total} icon={<Film className="h-4 w-4" />} />
-        <StatCard label="Published" value={stats.published} icon={<Eye className="h-4 w-4" />} />
-        <StatCard label="Hidden" value={stats.unpublished} icon={<EyeOff className="h-4 w-4" />} />
-        <StatCard label="Top Category" value={stats.topCategory} icon={<FileVideo className="h-4 w-4" />} />
+        <StatCard label="Total Videos" value={stats.total} icon={Film} />
+        <StatCard label="Published" value={stats.published} icon={Eye} />
+        <StatCard label="Hidden" value={stats.unpublished} icon={EyeOff} />
+        <StatCard label="Top Category" value={stats.topCategory} icon={FileVideo} />
       </StatGrid>
 
       <DataTable
