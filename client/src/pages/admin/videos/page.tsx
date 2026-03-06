@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { apiFetch } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
-import { Film, Upload, Eye, EyeOff, Plus, FileVideo } from "lucide-react"
+import { Film, Upload, Eye, EyeOff, Plus, FileVideo, Play, ExternalLink, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,7 +50,55 @@ const VIDEO_CATEGORIES = [
   "Sports & Fitness",
   "Pets",
   "Travel",
+  "Fashion",
+  "Kids",
+  "Auto",
+  "Outdoor",
+  "Other",
 ]
+
+function VideoThumbnail({ video }: { video: AdVideo }) {
+  const [showPreview, setShowPreview] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  return (
+    <div
+      className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-900 shrink-0 group cursor-pointer"
+      onMouseEnter={() => {
+        setShowPreview(true)
+        videoRef.current?.play()
+      }}
+      onMouseLeave={() => {
+        setShowPreview(false)
+        videoRef.current?.pause()
+        if (videoRef.current) videoRef.current.currentTime = 0
+      }}
+    >
+      {video.video_url && (
+        <video
+          ref={videoRef}
+          src={video.video_url}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
+      {!showPreview && (
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+          <Play className="h-4 w-4 text-white/90 fill-white/90" />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + " B"
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB"
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+}
 
 export default function AdminVideosPage() {
   const { showSuccess, showError } = useToast()
@@ -59,6 +107,7 @@ export default function AdminVideosPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [editingVideo, setEditingVideo] = useState<AdVideo | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formTitle, setFormTitle] = useState("")
@@ -68,6 +117,10 @@ export default function AdminVideosPage() {
   const [formPublished, setFormPublished] = useState(true)
   const [formFile, setFormFile] = useState<File | null>(null)
   const [formFileName, setFormFileName] = useState("")
+  const [formFileSize, setFormFileSize] = useState("")
+  const [formVideoPreview, setFormVideoPreview] = useState<string | null>(null)
+
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null)
 
   const fetchVideos = useCallback(async () => {
     try {
@@ -107,6 +160,12 @@ export default function AdminVideosPage() {
     setFormPublished(true)
     setFormFile(null)
     setFormFileName("")
+    setFormFileSize("")
+    setUploadProgress(0)
+    if (formVideoPreview) {
+      URL.revokeObjectURL(formVideoPreview)
+      setFormVideoPreview(null)
+    }
     if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
@@ -125,6 +184,9 @@ export default function AdminVideosPage() {
     setFormPublished(video.is_published)
     setFormFile(null)
     setFormFileName("")
+    setFormFileSize("")
+    setFormVideoPreview(null)
+    setUploadProgress(0)
     if (fileInputRef.current) fileInputRef.current.value = ""
     setDialogOpen(true)
   }
@@ -133,7 +195,7 @@ export default function AdminVideosPage() {
     const file = e.target.files?.[0]
     if (file) {
       if (!file.type.startsWith("video/")) {
-        showError("Please select a video file")
+        showError("Please select a video file (MP4, MOV, WebM)")
         return
       }
       if (file.size > 50 * 1024 * 1024) {
@@ -142,12 +204,56 @@ export default function AdminVideosPage() {
       }
       setFormFile(file)
       setFormFileName(file.name)
+      setFormFileSize(formatFileSize(file.size))
+
+      if (formVideoPreview) URL.revokeObjectURL(formVideoPreview)
+      setFormVideoPreview(URL.createObjectURL(file))
+
+      if (!formTitle) {
+        const nameWithoutExt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ")
+        setFormTitle(nameWithoutExt.charAt(0).toUpperCase() + nameWithoutExt.slice(1))
+      }
+    }
+  }
+
+  const clearFile = () => {
+    setFormFile(null)
+    setFormFileName("")
+    setFormFileSize("")
+    if (formVideoPreview) {
+      URL.revokeObjectURL(formVideoPreview)
+      setFormVideoPreview(null)
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith("video/")) {
+      if (file.size > 50 * 1024 * 1024) {
+        showError("File must be under 50MB")
+        return
+      }
+      setFormFile(file)
+      setFormFileName(file.name)
+      setFormFileSize(formatFileSize(file.size))
+      if (formVideoPreview) URL.revokeObjectURL(formVideoPreview)
+      setFormVideoPreview(URL.createObjectURL(file))
+      if (!formTitle) {
+        const nameWithoutExt = file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " ")
+        setFormTitle(nameWithoutExt.charAt(0).toUpperCase() + nameWithoutExt.slice(1))
+      }
     }
   }
 
   const handleSubmit = async () => {
-    if (!formTitle.trim() || !formCategory) {
-      showError("Title and category are required")
+    if (!formTitle.trim()) {
+      showError("Title is required")
+      return
+    }
+    if (!formCategory) {
+      showError("Category is required")
       return
     }
     if (!editingVideo && !formFile) {
@@ -157,6 +263,8 @@ export default function AdminVideosPage() {
 
     try {
       setSubmitting(true)
+      setUploadProgress(10)
+
       const formData = new FormData()
       formData.append("title", formTitle.trim())
       formData.append("category", formCategory)
@@ -169,18 +277,25 @@ export default function AdminVideosPage() {
         formData.append("video", formFile)
       }
 
+      setUploadProgress(30)
+
       const url = editingVideo
         ? `/api/admin/videos/${editingVideo.id}`
         : "/api/admin/videos"
       const method = editingVideo ? "PATCH" : "POST"
+
+      setUploadProgress(50)
 
       const res = await apiFetch(url, {
         method,
         body: formData,
       })
 
+      setUploadProgress(90)
+
       if (res.ok) {
-        showSuccess(editingVideo ? "Video updated" : "Video uploaded")
+        setUploadProgress(100)
+        showSuccess(editingVideo ? "Video updated successfully" : "Video uploaded successfully")
         setDialogOpen(false)
         resetForm()
         fetchVideos()
@@ -189,14 +304,15 @@ export default function AdminVideosPage() {
         showError(err.error || "Failed to save video")
       }
     } catch {
-      showError("Failed to save video")
+      showError("Failed to save video. Check file size and format.")
     } finally {
       setSubmitting(false)
+      setUploadProgress(0)
     }
   }
 
   const handleDelete = async (video: AdVideo) => {
-    if (!confirm(`Delete "${video.title}"? This will also remove the video file.`)) return
+    if (!confirm(`Delete "${video.title}"? This will remove the video file from storage.`)) return
 
     try {
       const res = await apiFetch(`/api/admin/videos/${video.id}`, { method: "DELETE" })
@@ -235,9 +351,7 @@ export default function AdminVideosPage() {
       header: "Video",
       render: (v) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-            <Film className="h-4 w-4 text-blue-600" />
-          </div>
+          <VideoThumbnail video={v} />
           <div className="min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate" data-testid={`text-video-title-${v.id}`}>
               {v.title}
@@ -288,6 +402,16 @@ export default function AdminVideosPage() {
 
   const rowActions: RowAction<AdVideo>[] = [
     {
+      label: "Preview",
+      onClick: (v) => setPreviewVideoUrl(v.video_url),
+      icon: <Play className="h-3.5 w-3.5" />,
+    },
+    {
+      label: "Open URL",
+      onClick: (v) => window.open(v.video_url, "_blank"),
+      icon: <ExternalLink className="h-3.5 w-3.5" />,
+    },
+    {
       label: "Edit",
       onClick: openEdit,
     },
@@ -336,14 +460,94 @@ export default function AdminVideosPage() {
 
       <FormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open)
+          if (!open) resetForm()
+        }}
         title={editingVideo ? "Edit Video" : "Upload Video"}
         onSubmit={handleSubmit}
-        submitLabel={editingVideo ? "Save Changes" : "Upload"}
+        submitLabel={submitting ? (formFile ? "Uploading..." : "Saving...") : (editingVideo ? "Save Changes" : "Upload Video")}
         isSubmitting={submitting}
       >
-        <div className="space-y-1">
-          <Label>Title</Label>
+        <div className="space-y-1.5">
+          <Label>{editingVideo ? "Replace Video (optional)" : "Video File *"}</Label>
+
+          {formVideoPreview ? (
+            <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-black">
+              <video
+                src={formVideoPreview}
+                controls
+                className="w-full max-h-48 object-contain"
+                data-testid="video-preview"
+              />
+              <button
+                type="button"
+                onClick={clearFile}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
+                data-testid="button-clear-file"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+              <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <span className="text-xs text-gray-600 truncate">{formFileName}</span>
+                <span className="text-xs text-gray-400 shrink-0 ml-2">{formFileSize}</span>
+              </div>
+            </div>
+          ) : editingVideo?.video_url ? (
+            <div className="rounded-xl overflow-hidden border border-gray-200 bg-black">
+              <video
+                src={editingVideo.video_url}
+                controls
+                className="w-full max-h-48 object-contain"
+                data-testid="video-current-preview"
+              />
+              <div className="px-3 py-2 bg-gray-50 border-t border-gray-200">
+                <span className="text-xs text-gray-500">Current video — select a new file below to replace</span>
+              </div>
+            </div>
+          ) : null}
+
+          {!formVideoPreview && (
+            <div
+              className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+              data-testid="dropzone-video"
+            >
+              <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+              <p className="text-sm text-gray-600">Click or drag and drop a video file</p>
+              <p className="text-xs text-gray-400 mt-1">MP4, MOV, WebM — max 50MB</p>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            onChange={handleFileChange}
+            className="hidden"
+            data-testid="input-video-file"
+          />
+        </div>
+
+        {submitting && formFile && uploadProgress > 0 && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Uploading to storage...</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          <Label>Title *</Label>
           <Input
             value={formTitle}
             onChange={(e) => setFormTitle(e.target.value)}
@@ -352,8 +556,8 @@ export default function AdminVideosPage() {
           />
         </div>
 
-        <div className="space-y-1">
-          <Label>Category</Label>
+        <div className="space-y-1.5">
+          <Label>Category *</Label>
           <Select value={formCategory} onValueChange={setFormCategory}>
             <SelectTrigger data-testid="select-video-category">
               <SelectValue placeholder="Select category" />
@@ -368,35 +572,8 @@ export default function AdminVideosPage() {
           </Select>
         </div>
 
-        <div className="space-y-1">
-          <Label>{editingVideo ? "Replace Video (optional)" : "Video File"}</Label>
-          <div
-            className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-colors"
-            onClick={() => fileInputRef.current?.click()}
-            data-testid="dropzone-video"
-          >
-            <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-            {formFileName ? (
-              <p className="text-sm font-medium text-gray-700">{formFileName}</p>
-            ) : (
-              <>
-                <p className="text-sm text-gray-600">Click to select a video file</p>
-                <p className="text-xs text-gray-400 mt-1">MP4, MOV, WebM — max 50MB</p>
-              </>
-            )}
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="video/*"
-            onChange={handleFileChange}
-            className="hidden"
-            data-testid="input-video-file"
-          />
-        </div>
-
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label>Views</Label>
             <Input
               type="number"
@@ -406,7 +583,7 @@ export default function AdminVideosPage() {
               data-testid="input-video-views"
             />
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <Label>Likes</Label>
             <Input
               type="number"
@@ -427,6 +604,33 @@ export default function AdminVideosPage() {
           />
         </div>
       </FormDialog>
+
+      {previewVideoUrl && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setPreviewVideoUrl(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewVideoUrl(null)}
+              className="absolute -top-10 right-0 text-white/80 hover:text-white transition-colors cursor-pointer"
+              data-testid="button-close-preview"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <video
+              src={previewVideoUrl}
+              controls
+              autoPlay
+              className="w-full rounded-xl shadow-2xl"
+              data-testid="video-fullscreen-preview"
+            />
+          </div>
+        </div>
+      )}
     </PageShell>
   )
 }

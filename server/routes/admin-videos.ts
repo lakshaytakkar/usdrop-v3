@@ -30,8 +30,6 @@ function handleMulterUpload(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-const VALID_CATEGORIES = ['Beauty', 'Tech', 'Home', 'Fashion', 'Fitness', 'Kitchen', 'Pets', 'Kids', 'Auto', 'Outdoor', 'Other'];
-
 const BUCKET = 'videos';
 
 export function registerAdminVideoRoutes(app: Express) {
@@ -59,14 +57,15 @@ export function registerAdminVideoRoutes(app: Express) {
 
   router.post('/videos', handleMulterUpload, async (req: Request, res: Response) => {
     try {
-      const { title, category, views, likes, is_published, order_index } = req.body;
+      const { title, category, views, likes, is_published, order_index, thumbnail_url } = req.body;
 
       if (!title || typeof title !== 'string' || title.trim().length === 0) {
-        return res.status(400).json({ error: 'title is required' });
+        return res.status(400).json({ error: 'Title is required' });
       }
-      if (!category || !VALID_CATEGORIES.includes(category)) {
-        return res.status(400).json({ error: `category must be one of: ${VALID_CATEGORIES.join(', ')}` });
+      if (!category) {
+        return res.status(400).json({ error: 'Category is required' });
       }
+
       const parsedViews = views ? Math.max(0, parseInt(views) || 0) : 0;
       const parsedLikes = likes ? Math.max(0, parseInt(likes) || 0) : 0;
 
@@ -75,7 +74,8 @@ export function registerAdminVideoRoutes(app: Express) {
       if (req.file) {
         const timestamp = Date.now();
         const safeName = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const filePath = `${safeName}-${timestamp}.mp4`;
+        const ext = req.file.originalname.split('.').pop() || 'mp4';
+        const filePath = `${safeName}-${timestamp}.${ext}`;
 
         const { error: uploadError } = await supabaseRemote.storage
           .from(BUCKET)
@@ -86,7 +86,7 @@ export function registerAdminVideoRoutes(app: Express) {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          return res.status(500).json({ error: 'Failed to upload video file' });
+          return res.status(500).json({ error: `Failed to upload video: ${uploadError.message}` });
         }
 
         const { data: urlData } = supabaseRemote.storage.from(BUCKET).getPublicUrl(filePath);
@@ -94,7 +94,7 @@ export function registerAdminVideoRoutes(app: Express) {
       } else if (req.body.video_url) {
         videoUrl = req.body.video_url;
       } else {
-        return res.status(400).json({ error: 'A video file or video_url is required' });
+        return res.status(400).json({ error: 'A video file or video URL is required' });
       }
 
       const { data, error } = await supabaseRemote
@@ -102,6 +102,7 @@ export function registerAdminVideoRoutes(app: Express) {
         .insert({
           title: title.trim(),
           video_url: videoUrl,
+          thumbnail_url: thumbnail_url || '',
           category,
           views: parsedViews,
           likes: parsedLikes,
@@ -114,7 +115,7 @@ export function registerAdminVideoRoutes(app: Express) {
 
       if (error) {
         console.error('Insert ad_video error:', error);
-        return res.status(500).json({ error: 'Failed to create video' });
+        return res.status(500).json({ error: 'Failed to create video record' });
       }
 
       res.status(201).json(data);
@@ -131,25 +132,35 @@ export function registerAdminVideoRoutes(app: Express) {
 
       if (req.body.title !== undefined) {
         if (typeof req.body.title !== 'string' || req.body.title.trim().length === 0) {
-          return res.status(400).json({ error: 'title cannot be empty' });
+          return res.status(400).json({ error: 'Title cannot be empty' });
         }
         updates.title = req.body.title.trim();
       }
-      if (req.body.category !== undefined) {
-        if (!VALID_CATEGORIES.includes(req.body.category)) {
-          return res.status(400).json({ error: `category must be one of: ${VALID_CATEGORIES.join(', ')}` });
-        }
-        updates.category = req.body.category;
-      }
+      if (req.body.category !== undefined) updates.category = req.body.category;
       if (req.body.views !== undefined) updates.views = Math.max(0, parseInt(req.body.views) || 0);
       if (req.body.likes !== undefined) updates.likes = Math.max(0, parseInt(req.body.likes) || 0);
       if (req.body.is_published !== undefined) updates.is_published = req.body.is_published === 'true';
       if (req.body.order_index !== undefined) updates.order_index = parseInt(req.body.order_index) || 0;
+      if (req.body.thumbnail_url !== undefined) updates.thumbnail_url = req.body.thumbnail_url;
 
       if (req.file) {
+        const { data: existing } = await supabaseRemote
+          .from('ad_videos')
+          .select('video_url')
+          .eq('id', id)
+          .single();
+
+        if (existing?.video_url?.includes('supabase.co/storage')) {
+          const oldPath = existing.video_url.split('/videos/').pop();
+          if (oldPath) {
+            await supabaseRemote.storage.from(BUCKET).remove([decodeURIComponent(oldPath)]);
+          }
+        }
+
         const timestamp = Date.now();
         const safeName = (req.body.title || 'video').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const filePath = `${safeName}-${timestamp}.mp4`;
+        const ext = req.file.originalname.split('.').pop() || 'mp4';
+        const filePath = `${safeName}-${timestamp}.${ext}`;
 
         const { error: uploadError } = await supabaseRemote.storage
           .from(BUCKET)
@@ -160,7 +171,7 @@ export function registerAdminVideoRoutes(app: Express) {
 
         if (uploadError) {
           console.error('Upload error:', uploadError);
-          return res.status(500).json({ error: 'Failed to upload video file' });
+          return res.status(500).json({ error: `Failed to upload video: ${uploadError.message}` });
         }
 
         const { data: urlData } = supabaseRemote.storage.from(BUCKET).getPublicUrl(filePath);
@@ -203,7 +214,7 @@ export function registerAdminVideoRoutes(app: Express) {
       if (existing?.video_url?.includes('supabase.co/storage')) {
         const path = existing.video_url.split('/videos/').pop();
         if (path) {
-          await supabaseRemote.storage.from(BUCKET).remove([path]);
+          await supabaseRemote.storage.from(BUCKET).remove([decodeURIComponent(path)]);
         }
       }
 
