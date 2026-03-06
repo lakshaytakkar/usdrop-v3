@@ -11,6 +11,7 @@ import { registerActivityTrackingRoutes } from "./routes/activity-tracking";
 import { registerLeadScoringRoutes } from "./routes/lead-scoring";
 import { registerPaymentLinkRoutes } from "./routes/payment-links";
 import { registerAccessControlRoutes } from "./routes/access-control";
+import { registerAdminSessionRoutes } from "./routes/admin-sessions";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -23,4 +24,5 @@ export async function registerRoutes(server: Server, app: Express) {
   registerLeadScoringRoutes(app);
   registerPaymentLinkRoutes(app);
   registerAccessControlRoutes(app);
+  registerAdminSessionRoutes(app);
 }

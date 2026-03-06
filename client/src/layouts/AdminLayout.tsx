@@ -51,6 +51,8 @@ const navCategories: NavCategory[] = [
     defaultUrl: "/admin/courses",
     items: [
       { title: "Courses", url: "/admin/courses" },
+      { title: "Sessions", url: "/admin/sessions" },
+      { title: "Enrollments", url: "/admin/enrollments" },
     ],
   },
   {

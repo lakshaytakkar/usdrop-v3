@@ -41,6 +41,8 @@ import AdminShopifyStores from "@/pages/admin/shopify-stores/page";
 import AdminPipeline from "@/pages/admin/pipeline/page";
 import AdminAccessControl from "@/pages/admin/access-control/page";
 import AdminPaymentLinks from "@/pages/admin/payment-links/page";
+import AdminSessions from "@/pages/admin/sessions/page";
+import AdminEnrollments from "@/pages/admin/enrollments/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -246,6 +248,8 @@ function Router() {
       <Route path="/admin/pipeline" component={() => <AdminGuard><AdminLayout><AdminPipeline /></AdminLayout></AdminGuard>} />
       <Route path="/admin/access-control" component={() => <AdminGuard><AdminLayout><AdminAccessControl /></AdminLayout></AdminGuard>} />
       <Route path="/admin/payment-links" component={() => <AdminGuard><AdminLayout><AdminPaymentLinks /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/sessions" component={() => <AdminGuard><AdminLayout><AdminSessions /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/enrollments" component={() => <AdminGuard><AdminLayout><AdminEnrollments /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />

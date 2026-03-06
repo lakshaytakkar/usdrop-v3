@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import {
   ArrowLeft,
   Calendar,
@@ -34,6 +36,11 @@ import {
   ChevronDown,
   Save,
   RefreshCw,
+  Zap,
+  Crown,
+  Video,
+  Play,
+  CheckCircle2,
 } from "lucide-react"
 import {
   PageShell,
@@ -123,6 +130,10 @@ export default function ExternalUserDetailPage() {
   const [contentLoading, setContentLoading] = useState(false)
   const [togglingContent, setTogglingContent] = useState<Set<string>>(new Set())
 
+  const [contentJourney, setContentJourney] = useState<any>(null)
+  const [contentJourneyLoading, setContentJourneyLoading] = useState(false)
+  const [journeyActionLoading, setJourneyActionLoading] = useState(false)
+
   const [activities, setActivities] = useState<ActivityLogItem[]>([])
   const [activityTotal, setActivityTotal] = useState(0)
   const [activityPage, setActivityPage] = useState(0)
@@ -196,6 +207,106 @@ export default function ExternalUserDetailPage() {
     }
   }, [userId])
 
+  const fetchContentJourney = useCallback(async () => {
+    if (!userId) return
+    try {
+      setContentJourneyLoading(true)
+      const response = await apiFetch(`/api/admin/users/${userId}/journey`)
+      if (response.ok) {
+        setContentJourney(await response.json())
+      }
+    } catch (err) {
+      console.error('Error fetching content journey:', err)
+    } finally {
+      setContentJourneyLoading(false)
+    }
+  }, [userId])
+
+  const handleJourneyAction = async (action: string, extra?: Record<string, any>) => {
+    if (!userId) return
+    try {
+      setJourneyActionLoading(true)
+      const response = await apiFetch(`/api/admin/users/${userId}/unlock-journey`, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...extra }),
+      })
+      if (response.ok) {
+        showSuccess(
+          action === 'lock_everything' ? 'Everything locked' :
+          action === 'unlock_everything' ? 'Everything unlocked' :
+          action === 'lock_all_sessions' ? 'All sessions locked' :
+          'Action completed'
+        )
+        await Promise.all([fetchContentJourney(), fetchContentAccess()])
+      } else {
+        showError('Action failed')
+      }
+    } catch {
+      showError('Action failed')
+    } finally {
+      setJourneyActionLoading(false)
+    }
+  }
+
+  const isSessionUnlocked = (sessionId: string) => {
+    if (!contentJourney) return false
+    return (contentJourney.contentAccess || []).some(
+      (ca: any) => ca.content_type === 'session' && ca.content_id === sessionId && ca.is_unlocked
+    )
+  }
+
+  const toggleSession = async (sessionId: string, currentlyUnlocked: boolean) => {
+    const key = `session:${sessionId}`
+    setTogglingContent((prev) => new Set(prev).add(key))
+    try {
+      if (currentlyUnlocked) {
+        const item = (contentJourney?.contentAccess || []).find(
+          (ca: any) => ca.content_type === 'session' && ca.content_id === sessionId && ca.is_unlocked
+        )
+        if (item) {
+          await apiFetch(`/api/admin/users/${userId}/content-access/${item.id}`, { method: 'DELETE' })
+        }
+      } else {
+        await apiFetch(`/api/admin/users/${userId}/content-access`, {
+          method: 'POST',
+          body: JSON.stringify({ content_type: 'session', content_id: sessionId }),
+        })
+      }
+      await Promise.all([fetchContentJourney(), fetchContentAccess()])
+    } catch {
+      showError('Failed to update session access')
+    } finally {
+      setTogglingContent((prev) => {
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
+    }
+  }
+
+  const toggleCourseEnrollment = async (courseId: string, isEnrolled: boolean) => {
+    const key = `course:${courseId}`
+    setTogglingContent((prev) => new Set(prev).add(key))
+    try {
+      await apiFetch(`/api/admin/users/${userId}/unlock-journey`, {
+        method: 'POST',
+        body: JSON.stringify({
+          action: isEnrolled ? 'unenroll_course' : 'enroll_course',
+          course_id: courseId,
+        }),
+      })
+      await fetchContentJourney()
+    } catch {
+      showError('Failed to update enrollment')
+    } finally {
+      setTogglingContent((prev) => {
+        const next = new Set(prev)
+        next.delete(key)
+        return next
+      })
+    }
+  }
+
   const fetchActivities = useCallback(async (page = 0) => {
     if (!userId) return
     try {
@@ -238,10 +349,13 @@ export default function ExternalUserDetailPage() {
   }, [userId])
 
   useEffect(() => {
-    if (activeTab === "content") fetchContentAccess()
+    if (activeTab === "content") {
+      fetchContentAccess()
+      fetchContentJourney()
+    }
     if (activeTab === "activity") fetchActivities(0)
     if (activeTab === "lead") fetchLeadScore()
-  }, [activeTab, fetchContentAccess, fetchActivities, fetchLeadScore])
+  }, [activeTab, fetchContentAccess, fetchContentJourney, fetchActivities, fetchLeadScore])
 
   const handleSuspend = useCallback(async () => {
     if (!user) return
@@ -582,51 +696,262 @@ export default function ExternalUserDetailPage() {
 
         <TabsContent value="content">
           <div className="space-y-6">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkAction('unlock')}
-                disabled={contentLoading}
-                data-testid="button-unlock-all"
-              >
-                <Unlock className="size-4 mr-1.5" />
-                Unlock All
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleBulkAction('lock')}
-                disabled={contentLoading}
-                data-testid="button-lock-all"
-              >
-                <Lock className="size-4 mr-1.5" />
-                Lock All
-              </Button>
-              <Select
-                onValueChange={(val) => handleBulkAction('unlock', val)}
-                disabled={contentLoading}
-              >
-                <SelectTrigger className="w-[200px]" data-testid="select-unlock-module">
-                  <SelectValue placeholder="Unlock Module..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {freeLearningModules.map((mod) => (
-                    <SelectItem key={mod.id} value={mod.id} data-testid={`select-module-${mod.id}`}>
-                      {mod.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="rounded-lg border bg-card p-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <h3 className="text-sm font-semibold font-heading whitespace-nowrap">Journey Control</h3>
+                  {contentJourney?.summary && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="secondary" data-testid="badge-enrolled-courses">
+                        <GraduationCap className="size-3 mr-1" />
+                        {contentJourney.summary.enrolledCourses}/{contentJourney.summary.totalCourses} Courses
+                      </Badge>
+                      <Badge variant="secondary" data-testid="badge-unlocked-sessions">
+                        <Video className="size-3 mr-1" />
+                        {contentJourney.summary.unlockedSessions}/{contentJourney.summary.totalSessions} Sessions
+                      </Badge>
+                      <Badge variant="secondary" data-testid="badge-unlocked-chapters">
+                        <BookOpen className="size-3 mr-1" />
+                        {contentJourney.summary.unlockedChapters} Chapters
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleJourneyAction('unlock_everything')}
+                    disabled={journeyActionLoading || contentJourneyLoading}
+                    data-testid="button-unlock-everything"
+                  >
+                    <Zap className="size-4 mr-1.5" />
+                    Unlock Everything
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleJourneyAction('lock_everything')}
+                    disabled={journeyActionLoading || contentJourneyLoading}
+                    data-testid="button-lock-everything"
+                  >
+                    <Lock className="size-4 mr-1.5" />
+                    Lock Everything
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        setJourneyActionLoading(true)
+                        await apiFetch(`/api/admin/external-users/${userId}`, {
+                          method: 'PATCH',
+                          body: JSON.stringify({ account_type: 'mentorship' }),
+                        })
+                        await handleJourneyAction('unlock_everything')
+                        showSuccess('Upgraded to Mentorship')
+                      } catch {
+                        showError('Failed to upgrade')
+                      } finally {
+                        setJourneyActionLoading(false)
+                      }
+                    }}
+                    disabled={journeyActionLoading || contentJourneyLoading}
+                    data-testid="button-upgrade-mentorship"
+                  >
+                    <Crown className="size-4 mr-1.5" />
+                    Upgrade to Mentorship
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            {contentLoading ? (
+            {(contentLoading || contentJourneyLoading) ? (
               <div className="space-y-4">
                 {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-lg" />)}
               </div>
             ) : (
               <>
+                <DetailSection title="Course Enrollments">
+                  <div className="flex items-center justify-between py-2 px-1">
+                    <span className="text-xs text-muted-foreground">
+                      {contentJourney?.summary?.enrolledCourses || 0} of {contentJourney?.summary?.totalCourses || 0} enrolled
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleJourneyAction('unlock_all_courses')}
+                      disabled={journeyActionLoading}
+                      data-testid="button-enroll-all-courses"
+                    >
+                      <GraduationCap className="size-4 mr-1.5" />
+                      Enroll in All
+                    </Button>
+                  </div>
+                  <div className="divide-y">
+                    {(contentJourney?.allCourses || []).map((course: any) => {
+                      const enrollment = (contentJourney?.enrollments || []).find(
+                        (e: any) => e.course_id === course.id
+                      )
+                      const isEnrolled = !!enrollment
+                      const toggling = togglingContent.has(`course:${course.id}`)
+                      return (
+                        <div
+                          key={course.id}
+                          className="flex items-center justify-between gap-3 py-2.5 px-1"
+                          data-testid={`course-row-${course.id}`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium truncate">{course.title}</span>
+                              {course.category && (
+                                <Badge variant="outline" className="text-[10px] shrink-0">
+                                  {course.category}
+                                </Badge>
+                              )}
+                            </div>
+                            {isEnrolled && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <Progress value={enrollment.progress_percentage || 0} className="h-1.5 flex-1 max-w-[200px]" />
+                                <span className="text-xs text-muted-foreground">
+                                  {Math.round(enrollment.progress_percentage || 0)}%
+                                </span>
+                                {enrollment.completed_at && (
+                                  <CheckCircle2 className="size-3.5 text-green-500 shrink-0" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Switch
+                            checked={isEnrolled}
+                            onCheckedChange={() => toggleCourseEnrollment(course.id, isEnrolled)}
+                            disabled={toggling || journeyActionLoading}
+                            data-testid={`switch-course-${course.id}`}
+                          />
+                        </div>
+                      )
+                    })}
+                    {(!contentJourney?.allCourses || contentJourney.allCourses.length === 0) && (
+                      <div className="py-6 text-center">
+                        <p className="text-sm text-muted-foreground">No published courses found</p>
+                      </div>
+                    )}
+                  </div>
+                </DetailSection>
+
+                <DetailSection title="Mentorship Sessions">
+                  <div className="flex items-center justify-between gap-2 py-2 px-1 flex-wrap">
+                    <span className="text-xs text-muted-foreground">
+                      {contentJourney?.summary?.unlockedSessions || 0} of {contentJourney?.summary?.totalSessions || 0} unlocked
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleJourneyAction('unlock_all_sessions')}
+                        disabled={journeyActionLoading}
+                        data-testid="button-unlock-all-sessions"
+                      >
+                        <Unlock className="size-4 mr-1.5" />
+                        Unlock All Sessions
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleJourneyAction('lock_all_sessions')}
+                        disabled={journeyActionLoading}
+                        data-testid="button-lock-all-sessions"
+                      >
+                        <Lock className="size-4 mr-1.5" />
+                        Lock All Sessions
+                      </Button>
+                      <Select
+                        onValueChange={(val) => handleJourneyAction('unlock_category', { category: val })}
+                        disabled={journeyActionLoading}
+                      >
+                        <SelectTrigger className="w-[200px]" data-testid="select-unlock-category">
+                          <SelectValue placeholder="Unlock Category..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.keys(contentJourney?.summary?.sessionsByCategory || {}).map((cat) => (
+                            <SelectItem key={cat} value={cat} data-testid={`select-category-${cat}`}>
+                              {cat} ({(contentJourney?.summary?.sessionsByCategory || {})[cat]?.unlocked || 0}/{(contentJourney?.summary?.sessionsByCategory || {})[cat]?.total || 0})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="divide-y">
+                    {(() => {
+                      const sessions = contentJourney?.allSessions || []
+                      const grouped: Record<string, any[]> = {}
+                      for (const s of sessions) {
+                        if (!grouped[s.category]) grouped[s.category] = []
+                        grouped[s.category].push(s)
+                      }
+                      return Object.entries(grouped).map(([category, categorySessions]) => (
+                        <SessionCategorySection
+                          key={category}
+                          category={category}
+                          sessions={categorySessions}
+                          isSessionUnlocked={isSessionUnlocked}
+                          toggleSession={toggleSession}
+                          togglingContent={togglingContent}
+                          journeyActionLoading={journeyActionLoading}
+                          unlockCount={contentJourney?.summary?.sessionsByCategory?.[category]?.unlocked || 0}
+                        />
+                      ))
+                    })()}
+                    {(!contentJourney?.allSessions || contentJourney.allSessions.length === 0) && (
+                      <div className="py-6 text-center">
+                        <p className="text-sm text-muted-foreground">No published sessions found</p>
+                      </div>
+                    )}
+                  </div>
+                </DetailSection>
+
                 <DetailSection title="Learning Chapters">
+                  <div className="flex items-center justify-between gap-2 py-2 px-1 flex-wrap">
+                    <span className="text-xs text-muted-foreground">Free learning module toggles</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction('unlock')}
+                        disabled={contentLoading}
+                        data-testid="button-unlock-all-chapters"
+                      >
+                        <Unlock className="size-4 mr-1.5" />
+                        Unlock All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleBulkAction('lock')}
+                        disabled={contentLoading}
+                        data-testid="button-lock-all-chapters"
+                      >
+                        <Lock className="size-4 mr-1.5" />
+                        Lock All
+                      </Button>
+                      <Select
+                        onValueChange={(val) => handleBulkAction('unlock', val)}
+                        disabled={contentLoading}
+                      >
+                        <SelectTrigger className="w-[200px]" data-testid="select-unlock-module">
+                          <SelectValue placeholder="Unlock Module..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {freeLearningModules.map((mod) => (
+                            <SelectItem key={mod.id} value={mod.id} data-testid={`select-module-${mod.id}`}>
+                              {mod.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                   <div className="divide-y">
                     {freeLearningModules.map((mod) => (
                       <ModuleLessonsSection
@@ -637,14 +962,6 @@ export default function ExternalUserDetailPage() {
                         togglingContent={togglingContent}
                       />
                     ))}
-                  </div>
-                </DetailSection>
-
-                <DetailSection title="Mentorship Sessions">
-                  <div className="py-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Mentorship session controls will be available here when sessions are configured.
-                    </p>
                   </div>
                 </DetailSection>
               </>
@@ -885,6 +1202,74 @@ function ModuleLessonsSection({
                   onCheckedChange={() => toggleLesson(lesson.id, unlocked)}
                   disabled={toggling}
                   data-testid={`switch-lesson-${lesson.id}`}
+                />
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SessionCategorySection({
+  category,
+  sessions,
+  isSessionUnlocked,
+  toggleSession,
+  togglingContent,
+  journeyActionLoading,
+  unlockCount,
+}: {
+  category: string
+  sessions: any[]
+  isSessionUnlocked: (id: string) => boolean
+  toggleSession: (id: string, unlocked: boolean) => void
+  togglingContent: Set<string>
+  journeyActionLoading: boolean
+  unlockCount: number
+}) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div data-testid={`session-category-${category}`}>
+      <button
+        type="button"
+        className="flex items-center justify-between w-full py-3 text-left hover-elevate rounded-md px-2"
+        onClick={() => setExpanded(!expanded)}
+        data-testid={`button-toggle-category-${category}`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <ChevronDown className={`size-4 shrink-0 transition-transform ${expanded ? "" : "-rotate-90"}`} />
+          <span className="text-sm font-medium truncate">{category}</span>
+        </div>
+        <span className="text-xs text-muted-foreground shrink-0 ml-2">
+          {unlockCount}/{sessions.length} unlocked
+        </span>
+      </button>
+      {expanded && (
+        <div className="pl-6 pb-2 space-y-1">
+          {sessions.map((session) => {
+            const unlocked = isSessionUnlocked(session.id)
+            const toggling = togglingContent.has(`session:${session.id}`)
+            return (
+              <div
+                key={session.id}
+                className="flex items-center justify-between py-1.5 px-2 rounded-md"
+                data-testid={`session-row-${session.id}`}
+              >
+                <div className="flex items-center gap-2 min-w-0 mr-2">
+                  <Play className="size-3.5 shrink-0 text-muted-foreground" />
+                  <span className="text-sm truncate">{session.title}</span>
+                  {session.duration && (
+                    <span className="text-[10px] text-muted-foreground shrink-0">{session.duration}</span>
+                  )}
+                </div>
+                <Switch
+                  checked={unlocked}
+                  onCheckedChange={() => toggleSession(session.id, unlocked)}
+                  disabled={toggling || journeyActionLoading}
+                  data-testid={`switch-session-${session.id}`}
                 />
               </div>
             )
