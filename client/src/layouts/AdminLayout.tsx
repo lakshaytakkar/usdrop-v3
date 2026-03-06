@@ -61,6 +61,7 @@ const navCategories: NavCategory[] = [
       { title: "Free Learning", url: "/admin/content/free-learning" },
       { title: "Courses", url: "/admin/courses" },
       { title: "Sessions", url: "/admin/sessions" },
+      { title: "Ad Videos", url: "/admin/videos" },
       { title: "Products", url: "/admin/products" },
       { title: "Categories", url: "/admin/categories" },
     ],

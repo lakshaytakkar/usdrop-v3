@@ -18,8 +18,9 @@ export async function getSessionToken(): Promise<string | null> {
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getAccessToken();
+  const isFormData = options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string> || {}),
   };
   if (token) {
