@@ -134,7 +134,7 @@ function ModuleAccordion({ module, moduleIndex, defaultOpen, completedIds }: { m
       </button>
 
       {isOpen && (
-        <div className="space-y-3 pt-3 pl-4">
+        <div className="space-y-3 pt-4 pl-5">
           {module.lessons.map((lesson, idx) => (
             <LessonCard key={lesson.id} lesson={lesson} index={idx} moduleIndex={moduleIndex} completedIds={completedIds} />
           ))}
@@ -167,7 +167,7 @@ export default function FreeLearningPage() {
   const [showActivation, setShowActivation] = useState(false)
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+    <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
       <div
         className="relative overflow-hidden rounded-xl w-full"
         style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
@@ -296,14 +296,14 @@ export default function FreeLearningPage() {
         </span>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {freeLearningModules.map((module, idx) => (
           <ModuleAccordion key={module.id} module={module} moduleIndex={idx} defaultOpen={idx === 0} completedIds={completedIds} />
         ))}
       </div>
 
       {allCompleted ? (
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center" data-testid="banner-cta-mentorship">
           <GraduationCap className="h-8 w-8 text-blue-500 mx-auto mb-3" />
           <h3 className="text-xl font-bold text-gray-900 mb-2">You've completed the course!</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
@@ -318,7 +318,7 @@ export default function FreeLearningPage() {
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center mt-4 mb-4" data-testid="banner-cta-mentorship">
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center" data-testid="banner-cta-mentorship">
           <h3 className="text-xl font-bold text-gray-900 mb-2">Ready for the next level?</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
             Complete all lessons to unlock your personalized mentorship program with expert guidance.
