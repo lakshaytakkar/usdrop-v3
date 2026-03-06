@@ -12,17 +12,26 @@ type UserProfile = {
   onboarding_completed: boolean
 }
 
+type AuthResponseData = {
+  user: UserProfile
+  plan: string
+  planName: string
+  metadata: any
+} | null
+
 type AuthContextType = {
   user: UserProfile | null
   loading: boolean
   signOut: () => Promise<void>
   refreshUser: () => Promise<void>
+  authData: AuthResponseData
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [authData, setAuthData] = useState<AuthResponseData>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchUser = useCallback(async () => {
@@ -30,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = getAccessToken()
       if (!token) {
         setUser(null)
+        setAuthData(null)
         setLoading(false)
         return
       }
@@ -37,14 +47,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.ok) {
         const data = await res.json()
         setUser(data.user || null)
+        setAuthData(data)
       } else {
         setUser(null)
+        setAuthData(null)
         if (res.status === 401) {
           clearAccessToken()
         }
       }
     } catch {
       setUser(null)
+      setAuthData(null)
     } finally {
       setLoading(false)
     }
@@ -62,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     clearAccessToken()
     setUser(null)
+    setAuthData(null)
     window.location.href = '/login'
   }, [])
 
@@ -70,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchUser])
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, signOut, refreshUser, authData }}>
       {children}
     </AuthContext.Provider>
   )

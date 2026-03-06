@@ -251,6 +251,10 @@ export function registerAuthRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to fetch profile' });
       }
 
+      const isInternal = profile.internal_role !== null && profile.internal_role !== undefined;
+      const plan = profile.plan_slug || profile.account_type || 'free';
+      const planName = profile.plan_name || 'Free';
+
       return res.json({
         user: {
           id: profile.id,
@@ -263,8 +267,23 @@ export function registerAuthRoutes(app: Express) {
           status: profile.status || 'active',
           onboarding_completed: profile.onboarding_completed,
         },
-        plan: profile.plan_slug || profile.account_type || 'free',
-        planName: profile.plan_name || 'Free',
+        plan,
+        planName,
+        metadata: {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+          is_internal: isInternal,
+          internal_role: profile.internal_role,
+          is_external: !isInternal,
+          plan,
+          plan_name: planName,
+          status: profile.status || 'active',
+          onboarding_completed: profile.onboarding_completed ?? false,
+          subscription_status: (profile as any).subscription_status || null,
+        },
       });
     } catch (error) {
       console.error('Error fetching user:', error);

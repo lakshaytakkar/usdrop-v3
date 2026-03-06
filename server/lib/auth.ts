@@ -26,6 +26,30 @@ declare global {
   }
 }
 
+const AUTH_CACHE_TTL = 30_000;
+const authCache = new Map<string, { user: AuthUser; expires: number }>();
+
+function getCachedUser(userId: string): AuthUser | null {
+  const entry = authCache.get(userId);
+  if (entry && Date.now() < entry.expires) return entry.user;
+  if (entry) authCache.delete(userId);
+  return null;
+}
+
+function setCachedUser(user: AuthUser): void {
+  authCache.set(user.id, { user, expires: Date.now() + AUTH_CACHE_TTL });
+  if (authCache.size > 500) {
+    const now = Date.now();
+    for (const [key, val] of authCache) {
+      if (now >= val.expires) authCache.delete(key);
+    }
+  }
+}
+
+export function invalidateUserCache(userId: string): void {
+  authCache.delete(userId);
+}
+
 export function generateToken(userId: string): string {
   return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -43,6 +67,9 @@ export async function getCurrentUser(accessToken: string): Promise<AuthUser | nu
     const payload = verifyToken(accessToken);
     if (!payload) return null;
 
+    const cached = getCachedUser(payload.sub);
+    if (cached) return cached;
+
     const { data, error } = await supabaseRemote
       .from('profiles')
       .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id')
@@ -51,28 +78,43 @@ export async function getCurrentUser(accessToken: string): Promise<AuthUser | nu
       .single();
 
     if (error || !data) return null;
-    return data as AuthUser;
+    const user = data as AuthUser;
+    setCachedUser(user);
+    return user;
   } catch {
     return null;
   }
 }
 
+const planCache = new Map<string, { data: any; expires: number }>();
+
 export async function getUserWithPlan(userId: string) {
+  const cached = planCache.get(userId);
+  if (cached && Date.now() < cached.expires) return cached.data;
+
   const { data, error } = await supabaseRemote
     .from('profiles')
-    .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id, onboarding_progress, subscription_plans(slug, name, price_monthly)')
+    .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id, onboarding_progress, subscription_status, subscription_plans(slug, name, price_monthly)')
     .eq('id', userId)
     .single();
 
   if (error || !data) return null;
 
   const plan = data.subscription_plans as any;
-  return {
+  const result = {
     ...data,
     plan_slug: plan?.slug || null,
     plan_name: plan?.name || null,
     price_monthly: plan?.price_monthly || null,
   };
+
+  planCache.set(userId, { data: result, expires: Date.now() + AUTH_CACHE_TTL });
+  return result;
+}
+
+export function invalidateAllUserCaches(userId: string): void {
+  authCache.delete(userId);
+  planCache.delete(userId);
 }
 
 function extractToken(req: Request): string | null {
