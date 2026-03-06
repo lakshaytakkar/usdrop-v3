@@ -9,6 +9,8 @@ interface VideoCardProps {
   onLockedClick?: () => void
 }
 
+const SUPABASE_HOST = "wecbybtxmkdkvqqahyuu.supabase.co"
+
 const GRADIENT_PALETTES = [
   ["#1a1a2e", "#16213e", "#0f3460"],
   ["#2d1b69", "#11052c", "#3d2c8d"],
@@ -31,6 +33,10 @@ function formatViews(n: number): string {
   return n.toString()
 }
 
+function isSupabaseVideo(url: string): boolean {
+  return url.includes(SUPABASE_HOST)
+}
+
 export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -39,9 +45,27 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
   const [isVideoReady, setIsVideoReady] = useState(false)
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false)
 
+  const autoplay = isSupabaseVideo(video.videoUrl)
+
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+
+    if (autoplay) {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          setIsVisible(entry.isIntersecting)
+          if (!entry.isIntersecting && videoRef.current) {
+            videoRef.current.pause()
+          } else if (entry.isIntersecting && videoRef.current && videoRef.current.src) {
+            videoRef.current.play().catch(() => {})
+          }
+        },
+        { rootMargin: "50px", threshold: 0 }
+      )
+      observer.observe(el)
+      return () => observer.disconnect()
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -55,7 +79,7 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [autoplay])
 
   useEffect(() => {
     if (video.thumbnailUrl && isVisible) {
@@ -76,12 +100,13 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
   }, [])
 
   const handleMouseEnter = useCallback(() => {
-    if (isLocked) return
+    if (isLocked || autoplay) return
     setIsHovering(true)
     setIsVideoReady(false)
-  }, [isLocked])
+  }, [isLocked, autoplay])
 
   const handleMouseLeave = useCallback(() => {
+    if (autoplay) return
     if (videoRef.current) {
       videoRef.current.pause()
       videoRef.current.removeAttribute("src")
@@ -89,7 +114,7 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
     }
     setIsHovering(false)
     setIsVideoReady(false)
-  }, [])
+  }, [autoplay])
 
   const handleCanPlay = useCallback(() => {
     setIsVideoReady(true)
@@ -102,7 +127,9 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
     }
   }
 
-  const showVideo = isHovering && isVisible && !isLocked
+  const showVideo = autoplay
+    ? isVisible && !isLocked
+    : isHovering && isVisible && !isLocked
   const hasThumbnail = !!video.thumbnailUrl
   const gradientBg = getCardGradient(video.id)
 
@@ -120,14 +147,14 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
           <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
         ) : (
           <>
-            {hasThumbnail && thumbnailLoaded ? (
+            {!autoplay && hasThumbnail && thumbnailLoaded ? (
               <img
                 src={video.thumbnailUrl}
                 alt={video.title}
                 className="absolute inset-0 w-full h-full object-cover"
                 loading="lazy"
               />
-            ) : (
+            ) : !autoplay ? (
               <div
                 className="absolute inset-0"
                 style={{ background: gradientBg }}
@@ -141,15 +168,24 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
                   </div>
                 </div>
               </div>
+            ) : null}
+
+            {autoplay && !isVideoReady && (
+              <div
+                className="absolute inset-0"
+                style={{ background: gradientBg }}
+              />
             )}
 
             {showVideo && (
               <video
                 ref={videoRef}
                 src={video.videoUrl}
+                autoPlay={autoplay}
                 muted
                 loop
                 playsInline
+                preload={autoplay ? "auto" : "none"}
                 onCanPlay={handleCanPlay}
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
                   isVideoReady ? "opacity-100" : "opacity-0"
@@ -171,15 +207,17 @@ export function VideoCard({ video, isLocked, onLockedClick }: VideoCardProps) {
           </>
         )}
 
-        <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 z-10 ${
-            isHovering || !isVisible ? "opacity-0" : "opacity-100"
-          }`}
-        >
-          <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+        {!autoplay && (
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 z-10 ${
+              isHovering || !isVisible ? "opacity-0" : "opacity-100"
+            }`}
+          >
+            <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-16 pb-3 px-3 z-10">
           <Badge
