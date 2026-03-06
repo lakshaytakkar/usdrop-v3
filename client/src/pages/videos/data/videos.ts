@@ -1,3 +1,5 @@
+const SUPABASE_STORAGE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co/storage/v1/object/public/videos"
+
 export interface ProductVideo {
     id: number
     title: string
@@ -26,7 +28,7 @@ export interface ProductVideo {
   {
       id: 1,
       title: "LED Sunset Lamp",
-      videoUrl: "https://scontent-lax3-1.cdninstagram.com/o1/v/t2/f2/m86/AQOr1mtZyppU5w40UdzMMrQp6vma4yzVwPEJ_RUOL0LI4xCbP8xLDoTQzGnZq1X7hG-7myBMl1h75Pv5FqSb9RncWoB1Hy9e6nh9TvM.mp4?_nc_cat=109&_nc_sid=5e9851&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_ohc=M1okq5dmy2sQ7kNvwEisoBG&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuMzYwLmRhc2hfYmFzZWxpbmVfM192MSIsInhwdl9hc3NldF9pZCI6MTc5NDE0ODAzNDQ2MTc1NCwiYXNzZXRfYWdlX2RheXMiOjI0MCwidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjE3LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=PIMBsld5D7uNKhPenZkjww&_nc_zt=28&vs=b778e0779af339c0&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC84MjRGNkQ1RjdGN0IwMDNBMEREQTkxNEE3NENCNDlBOV92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HR3ZxR3gxOWZ6RW81dEFFQUxzbC1GWmFOaGxjYnFfRUFBQUYVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAm9ICmxJTxrwYVAigCQzMsF0Axqn752yLRGBJkYXNoX2Jhc2VsaW5lXzNfdjERAHX-B2XmnQEA&oh=00_AfjbO6jde-mP4CYDbZcar2BN86CgtwTNZbzp5-n-d7ZC9g&oe=692DDCB6",
+      videoUrl: `${SUPABASE_STORAGE_URL}/product-video-1.mp4`,
       thumbnailUrl: "",
       category: "Home Decor",
       views: 300727,
@@ -36,7 +38,7 @@ export interface ProductVideo {
   {
       id: 2,
       title: "Portable Blender Pro",
-      videoUrl: "https://scontent-lax3-1.cdninstagram.com/o1/v/t2/f2/m86/AQPdC5wAdY2H0iq12RDXKXYAb4DwFjIDCOsy1zY7OcWloM-lbA_OJX7rZoncKD7JcG9ii-q2CzTPeafHCSSiWVD-wYeVRRDVGrYftNc.mp4?_nc_cat=108&_nc_sid=5e9851&_nc_ht=scontent-lax3-1.cdninstagram.com&_nc_ohc=rH1tCON7yNEQ7kNvwEu7afl&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuMzYwLmRhc2hfYmFzZWxpbmVfM192MSIsInhwdl9hc3NldF9pZCI6ODQ0MDk0OTY1NjAwODA0MCwiYXNzZXRfYWdlX2RheXMiOjM1NiwidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjExLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=a1b2b3cf80dbb89e&_nc_vs=HBksFQIYUmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC80NzRGQTM2Rjg2RDkxMjhEOUU5QjU5MzZBRTI0NjM5Nl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYRmlnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC82NDI0MjgxMzE4NjI4NjZfMTk1OTg4OTM1NzgzNzMxNTQ2OC5tcDQVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAm0NWB3fe__h0VAigCQzMsF0Am7peNT987GBJkYXNoX2Jhc2VsaW5lXzNfdjERAHX-B2XmnQEA&_nc_gid=9EvRuM54AV5O5lgSEh_uzg&_nc_zt=28&oh=00_AftVvyaRNgRKhzNbUSXLsiJ3ueaLnit-x7iBeVXTSaHLWQ&oe=699D337D",
+      videoUrl: `${SUPABASE_STORAGE_URL}/product-video-2.mp4`,
       thumbnailUrl: "",
       category: "Kitchen",
       views: 249047,
@@ -46,7 +48,7 @@ export interface ProductVideo {
   {
       id: 3,
       title: "Smart Posture Corrector",
-      videoUrl: "https://scontent-lga3-2.cdninstagram.com/o1/v/t2/f2/m367/AQNiIEiQAN33QFyZfIPKRcieo6iS5arpvvOM0o5XSG1gvRhmDjBu8IOEpM5_7Pg7sL_E18jr7dyzF7xYFVsNRuJYqkOFMY7g-A9l31U.mp4?_nc_cat=101&_nc_sid=5e9851&_nc_ht=scontent-lga3-2.cdninstagram.com&_nc_ohc=U_Mo-DL17CQQ7kNvwEs_sjT&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6NDI2NDEzOTY2MDQ3ODk5OSwiYXNzZXRfYWdlX2RheXMiOjQ5NSwidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjEyLCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&vs=496c6aa86a7a5249&_nc_vs=HBksFQIYQGlnX2VwaGVtZXJhbC83QTRBOEQ0NjMzNTVBQjczQjBGQjg4N0Y2RDAzNDhBQl92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYR2lnX3hwdl9yZWVsc19wZXJtYW5lbnRfc3JfcHJvZC8xMjE0NTM3MTk5ODEzNTczXzM2NzEyODIyNjI1NTE3OTgxODUubXA0FQICyAESACgAGAAbAogHdXNlX29pbAExEnByb2dyZXNzaXZlX3JlY2lwZQExFQAAJq6o4pvMjZMPFQIoAkMzLBdAKRDlYEGJNxgSZGFzaF9iYXNlbGluZV8xX3YxEQB1_gdl5p0BAA&_nc_gid=UwOb4EkaORsOdDzxsdDP8Q&_nc_zt=28&oh=00_AfsMcBl2vveAWFTZ5gEwW76Yf4lbGwZFqSW7ZiWsV-SgAg&oe=69A19D4E",
+      videoUrl: `${SUPABASE_STORAGE_URL}/product-video-3.mp4`,
       thumbnailUrl: "",
       category: "Health & Wellness",
       views: 224028,
@@ -56,7 +58,7 @@ export interface ProductVideo {
   {
       id: 4,
       title: "Magnetic Phone Mount",
-      videoUrl: "https://scontent-dfw5-2.cdninstagram.com/o1/v/t2/f2/m82/AQP0JEgTYJUN2lNj8SWHHIFpOuyFFXGNdgsPGF5YiqwQ13o6gIVWuM1RIoooHxrkd1dbs9lYjpHmFBvFJGDRvIgMOpxDnvEc5m3Mfvk.mp4?_nc_cat=102&_nc_sid=5e9851&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_ohc=C7fNer9oCtcQ7kNvwEWNCF8&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6OTc5NjY0MDQ2MzUyNzQ1LCJhc3NldF9hZ2VfZGF5cyI6MTA1MywidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjU4LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=kmEUSgEnHsFQiYp1PBktMA&_nc_zt=28&vs=c19565cf0fdae722&_nc_vs=HBksFQIYT2lnX3hwdl9yZWVsc19wZXJtYW5lbnRfcHJvZC9BOTQwODlBMEZFMjdBNjhGRTg1RjgzOTgxREZERkU4NF92aWRlb19kYXNoaW5pdC5tcDQVAALIARIAFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HQU5MS0JSbHgyYmdBbjBNQUFYbEV2RDY3QXBVYnFfRUFBQUYVAgLIARIAKAAYABsCiAd1c2Vfb2lsATEScHJvZ3Jlc3NpdmVfcmVjaXBlATEVAAAm0qXb9_m_vQMVAigCQzMsF0BNWZmZmZmaGBJkYXNoX2Jhc2VsaW5lXzFfdjERAHX-B2XmnQEA&oh=00_AfvuuczJg2-6DO6vZVaTk5VoRY_pqRf7126BfekZk4pgEw&oe=699E28E7",
+      videoUrl: `${SUPABASE_STORAGE_URL}/product-video-4.mp4`,
       thumbnailUrl: "",
       category: "Gadgets",
       views: 28699,
@@ -66,7 +68,7 @@ export interface ProductVideo {
   {
       id: 5,
       title: "Mini Projector HD",
-      videoUrl: "https://scontent-dfw5-2.cdninstagram.com/o1/v/t16/f2/m69/AQMOqdWptFFT9m90T-lIpM32JT1MM_Hgblvp67EjfefL4XbL47CevGYPXDTuzuZ43EEWSGizlIWrJKDZO-htEYGU.mp4?strext=1&_nc_cat=100&_nc_sid=5e9851&_nc_ht=scontent-dfw5-2.cdninstagram.com&_nc_ohc=7Qs8W5ylUKIQ7kNvwHT9ul5&efg=eyJ2ZW5jb2RlX3RhZyI6Inhwdl9wcm9ncmVzc2l2ZS5JTlNUQUdSQU0uQ0xJUFMuQzMuNzIwLmRhc2hfYmFzZWxpbmVfMV92MSIsInhwdl9hc3NldF9pZCI6MTg0NDIyMDM4NzQxMDQ4NTgsImFzc2V0X2FnZV9kYXlzIjozMSwidmlfdXNlY2FzZV9pZCI6MTAwOTksImR1cmF0aW9uX3MiOjE1LCJ1cmxnZW5fc291cmNlIjoid3d3In0%3D&ccb=17-1&_nc_gid=9WO4q6gC1ZGH6_ZrelCVZQ&_nc_zt=28&vs=4d6d7dd5cde75476&_nc_vs=HBksFQIYOnBhc3N0aHJvdWdoX2V2ZXJzdG9yZS9HSVZvMlNTelpMUm56UWtGQUdwUm9KZE11OXRUYnNwVEFRQUYVAALIARIAFQIYUWlnX3hwdl9wbGFjZW1lbnRfcGVybWFuZW50X3YyL0MyNEM5MzU5NDFFQTY2QkVCMDUyNTVDRDgyMDc4MDhBX2F1ZGlvX2Rhc2hpbml0Lm1wNBUCAsgBEgAoABgAGwKIB3VzZV9vaWwBMRJwcm9ncmVzc2l2ZV9yZWNpcGUBMRUAACa02NSsxsXCQRUCKAJDMywXQC-qfvnbItEYEmRhc2hfYmFzZWxpbmVfMV92MREAdf4HZeadAQA&oh=00_AfsBsPKZDQ81Qa0KiHwxH6LKqlXNlGIGs7PzcINwIhmsLA&oe=69A16A44",
+      videoUrl: `${SUPABASE_STORAGE_URL}/product-video-5.mp4`,
       thumbnailUrl: "",
       category: "Electronics",
       views: 29905,
