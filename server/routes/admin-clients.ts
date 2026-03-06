@@ -212,11 +212,15 @@ export function registerAdminClientRoutes(app: Express) {
         return res.status(400).json({ error: 'name is required' });
       }
 
+      if (!start_date) {
+        return res.status(400).json({ error: 'start_date is required' });
+      }
+
       const { data, error } = await supabaseRemote
         .from('batches')
         .insert({
           name,
-          start_date: start_date || null,
+          start_date,
           end_date: end_date || null,
           max_size: max_size || null,
           status: batchStatus || 'active',

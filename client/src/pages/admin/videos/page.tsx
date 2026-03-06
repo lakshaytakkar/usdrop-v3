@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { apiFetch } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
-import { Film, Upload, Eye, EyeOff, Plus, Trash2, FileVideo } from "lucide-react"
+import { Film, Upload, Eye, EyeOff, Plus, FileVideo } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -232,7 +232,7 @@ export default function AdminVideosPage() {
   const columns: Column<AdVideo>[] = [
     {
       key: "title",
-      label: "Video",
+      header: "Video",
       render: (v) => (
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
@@ -249,7 +249,7 @@ export default function AdminVideosPage() {
     },
     {
       key: "views",
-      label: "Views",
+      header: "Views",
       render: (v) => (
         <span className="text-sm text-gray-700" data-testid={`text-video-views-${v.id}`}>
           {v.views.toLocaleString()}
@@ -258,7 +258,7 @@ export default function AdminVideosPage() {
     },
     {
       key: "likes",
-      label: "Likes",
+      header: "Likes",
       render: (v) => (
         <span className="text-sm text-gray-700" data-testid={`text-video-likes-${v.id}`}>
           {v.likes.toLocaleString()}
@@ -267,7 +267,7 @@ export default function AdminVideosPage() {
     },
     {
       key: "is_published",
-      label: "Status",
+      header: "Status",
       render: (v) => (
         <StatusBadge
           status={v.is_published ? "active" : "inactive"}
@@ -277,7 +277,7 @@ export default function AdminVideosPage() {
     },
     {
       key: "date_added",
-      label: "Added",
+      header: "Added",
       render: (v) => (
         <span className="text-sm text-gray-500">
           {v.date_added}
@@ -292,15 +292,14 @@ export default function AdminVideosPage() {
       onClick: openEdit,
     },
     {
-      label: (v) => (v.is_published ? "Hide" : "Publish"),
-      icon: (v) => (v.is_published ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />),
+      label: "Toggle Publish",
       onClick: handleTogglePublish,
     },
     {
       label: "Delete",
-      icon: <Trash2 className="h-3.5 w-3.5" />,
       onClick: handleDelete,
       variant: "destructive" as const,
+      separator: true,
     },
   ]
 
@@ -328,7 +327,7 @@ export default function AdminVideosPage() {
         data={videos}
         columns={columns}
         rowActions={rowActions}
-        loading={loading}
+        isLoading={loading}
         searchKey="title"
         searchPlaceholder="Search videos..."
         emptyTitle="No Videos Yet"

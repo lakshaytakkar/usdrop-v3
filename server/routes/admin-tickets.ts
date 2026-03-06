@@ -72,7 +72,7 @@ export function registerAdminTicketRoutes(app: Express) {
         .insert({
           user_id: user_id || null,
           title,
-          type: type || 'general',
+          type: type || 'technical',
           priority: priority || 'medium',
           status: ticketStatus || 'open',
           assigned_to: req.user!.id,

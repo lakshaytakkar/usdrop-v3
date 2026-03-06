@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/auth-context"
+import { apiFetch } from "@/lib/supabase"
 
 type AccessLevel = "full_access" | "limited_access" | "locked" | "hidden"
 
@@ -17,6 +18,11 @@ export function useModuleAccess() {
 
   const { data, isLoading } = useQuery<ModuleOverridesResponse>({
     queryKey: ["/api/user/module-overrides"],
+    queryFn: async () => {
+      const res = await apiFetch("/api/user/module-overrides");
+      if (!res.ok) return { overrides: [] };
+      return res.json();
+    },
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

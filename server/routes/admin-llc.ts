@@ -88,6 +88,10 @@ export function registerAdminLLCRoutes(app: Express) {
         return res.status(400).json({ error: 'user_id and llc_name are required' });
       }
 
+      if (!package_type) {
+        return res.status(400).json({ error: 'package_type is required' });
+      }
+
       const { data, error } = await supabaseRemote
         .from('llc_applications')
         .insert({
