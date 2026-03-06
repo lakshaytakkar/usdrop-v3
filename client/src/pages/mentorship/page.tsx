@@ -2,14 +2,12 @@ import { apiFetch } from '@/lib/supabase'
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
 import { Link } from "wouter"
-import { Play, ChevronDown, ChevronRight, Clock, Lock, Video, Layers, BookOpen, BadgeCheck } from "lucide-react"
+import { Play, ChevronDown, ChevronRight, Clock, Lock, Video, Layers, BookOpen, BadgeCheck, GraduationCap, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Course as APICourse, CourseModule } from "@/types/courses"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
 import { useOnboarding } from "@/contexts/onboarding-context"
-import { FrameworkBanner } from "@/components/framework-banner"
 import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
 import { UpsellDialog } from "@/components/ui/upsell-dialog"
@@ -222,6 +220,13 @@ function CourseAccordion({
   )
 }
 
+const learningStats = [
+  { icon: Video, label: "Video Lessons" },
+  { icon: Layers, label: "Multiple Courses" },
+  { icon: BookOpen, label: "All Levels" },
+  { icon: BadgeCheck, label: "Pro Access" },
+]
+
 export default function AcademyPage() {
   const [courses, setCourses] = useState<APICourse[]>([])
   const [loading, setLoading] = useState(true)
@@ -258,12 +263,103 @@ export default function AcademyPage() {
   return (
     <ModuleAccessGuard moduleId="courses">
       <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
-        <FrameworkBanner
-          title="My Learning"
-          description="Videos, tutorials, and training about dropshipping fundamentals"
-          iconSrc="/images/banners/3d-learning.png"
-          tutorialVideoUrl=""
-        />
+        <div
+          className="relative overflow-hidden rounded-xl w-full"
+          style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
+          data-testid="banner-my-learning-hero"
+        >
+          <div
+            className="absolute -top-24 -right-24 w-80 h-80 rounded-full opacity-[0.08] pointer-events-none"
+            style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.06] pointer-events-none"
+            style={{ background: "radial-gradient(circle, #60a5fa 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.04] pointer-events-none"
+            style={{ background: "radial-gradient(circle, #818cf8 0%, transparent 70%)" }}
+          />
+
+          <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10 p-6 md:p-8">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-3">
+                <span data-testid="badge-pro-courses" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-[11px] font-semibold uppercase tracking-wider text-blue-300">
+                  <GraduationCap className="h-3 w-3" />
+                  Pro Courses
+                </span>
+              </div>
+
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight" data-testid="text-hero-title">
+                My Learning
+              </h1>
+              <p className="text-sm md:text-[15px] text-white/60 mb-5 max-w-lg leading-relaxed" data-testid="text-hero-description">
+                Videos, tutorials, and in-depth training about dropshipping fundamentals, advanced strategies, and scaling your business.
+              </p>
+
+              <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm" data-testid="stats-learning-hero">
+                {learningStats.map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-2" data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.08] shrink-0">
+                      <stat.icon className="h-3.5 w-3.5 text-blue-400" />
+                    </div>
+                    <span className="text-xs text-white/70 font-medium">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {!loading && courses.length > 0 && (
+                <Link
+                  href={`/framework/my-learning/${courses[0].id}`}
+                  data-testid="button-start-learning-hero"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all shadow-lg shadow-black/20"
+                >
+                  <Play className="h-4 w-4" />
+                  Start Learning
+                </Link>
+              )}
+            </div>
+
+            <div className="shrink-0 flex flex-col items-center">
+              <div className="w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border-2 border-white/15 shadow-2xl bg-slate-800 flex items-center justify-center">
+                <img
+                  src="/images/banners/3d-learning.png"
+                  alt="Learning"
+                  className="w-24 h-24 md:w-28 md:h-28 object-contain drop-shadow-lg"
+                  data-testid="img-learning-icon"
+                />
+              </div>
+              <div className="mt-3 text-center">
+                <div className="flex items-center gap-1.5 mb-1 justify-center">
+                  <BookOpen className="h-3 w-3 text-blue-300" />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">Course Library</span>
+                </div>
+                {!loading && (
+                  <div className="space-y-1.5 mt-2">
+                    <div className="flex items-center gap-2" data-testid="text-course-count">
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/20 shrink-0">
+                        <Video className="h-2.5 w-2.5 text-blue-400" />
+                      </span>
+                      <span className="text-[12px] text-white/60">{courses.length} Course{courses.length !== 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="flex items-center gap-2" data-testid="text-module-count">
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/20 shrink-0">
+                        <Layers className="h-2.5 w-2.5 text-blue-400" />
+                      </span>
+                      <span className="text-[12px] text-white/60">{totalModules} Module{totalModules !== 1 ? "s" : ""}</span>
+                    </div>
+                    <div className="flex items-center gap-2" data-testid="text-lesson-count">
+                      <span className="flex items-center justify-center w-4 h-4 rounded-full bg-blue-500/20 shrink-0">
+                        <BookOpen className="h-2.5 w-2.5 text-blue-400" />
+                      </span>
+                      <span className="text-[12px] text-white/60">{totalLessons} Lesson{totalLessons !== 1 ? "s" : ""}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-gray-900" data-testid="text-course-content">
