@@ -3,6 +3,12 @@ import { Button } from "@/components/ui/button"
 import { Link } from "wouter"
 import { useOnboarding } from "@/contexts/onboarding-context"
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface TeaserButtonLockProps {
   children: React.ReactNode
@@ -26,25 +32,26 @@ export function TeaserButtonLock({
   }
 
   return (
-    <div className={cn("relative inline-flex group", className)} data-testid="teaser-button-lock">
-      <div className="pointer-events-none opacity-40 select-none blur-[1px]">
-        {children}
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Link href="/free-learning">
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 text-xs font-medium border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 shadow-sm cursor-pointer"
-            data-testid="button-teaser-unlock"
-          >
-            <Lock className="size-3" />
-            <span className="hidden sm:inline">{message}</span>
-            <span className="sm:hidden">Unlock</span>
-          </Button>
-        </Link>
-      </div>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={cn("relative inline-flex", className)} data-testid="teaser-button-lock">
+            <div className="pointer-events-none opacity-30 select-none grayscale">
+              {children}
+            </div>
+            <Link href="/free-learning" className="absolute inset-0 flex items-center justify-center" data-testid="button-teaser-unlock">
+              <Lock className="size-4 text-amber-600" />
+            </Link>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="bg-amber-50 border-amber-200 text-amber-800 text-xs font-medium">
+          <div className="flex items-center gap-1.5">
+            <BookOpen className="size-3" />
+            {message}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }
 
