@@ -21,7 +21,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "New Year's & January Sales",
     slug: "new-years",
-    thumbnail: "/images/seasonal-collections/christmas-thumbnail-1.png",
+    thumbnail: "/images/seasonal-collections/new-years.webp",
     season: "Winter",
     dateRange: "Dec 26 - Jan 15",
     marketingDateRange: "Dec 20 - Jan 15",
@@ -32,7 +32,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Valentine's Day",
     slug: "valentines-day",
-    thumbnail: "/images/seasonal-collections/christmas-thumbnail-2.png",
+    thumbnail: "/images/seasonal-collections/valentines-day.webp",
     season: "Winter",
     dateRange: "Jan 20 - Feb 14",
     marketingDateRange: "Jan 15 - Feb 14",
@@ -43,7 +43,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "St. Patrick's Day",
     slug: "st-patricks-day",
-    thumbnail: "/images/seasonal-collections/halloween-thumbnail-1.png",
+    thumbnail: "/images/seasonal-collections/st-patricks-day.webp",
     season: "Spring",
     dateRange: "Feb 20 - Mar 17",
     marketingDateRange: "Feb 25 - Mar 17",
@@ -54,7 +54,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Easter",
     slug: "easter",
-    thumbnail: "/images/seasonal-collections/thanksgiving-thumbnail-1.png",
+    thumbnail: "/images/seasonal-collections/easter.webp",
     season: "Spring",
     dateRange: "Mar 15 - Apr 20",
     marketingDateRange: "Mar 1 - Apr 20",
@@ -65,7 +65,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Mother's Day",
     slug: "mothers-day",
-    thumbnail: "/images/seasonal-collections/fathers-day-thumbnail-1.png",
+    thumbnail: "/images/seasonal-collections/mothers-day.webp",
     season: "Spring",
     dateRange: "Apr 15 - May 11",
     marketingDateRange: "Apr 10 - May 11",
@@ -76,7 +76,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Memorial Day & Summer Kickoff",
     slug: "memorial-day",
-    thumbnail: "/images/seasonal-collections/christmas-thumbnail-3.png",
+    thumbnail: "/images/seasonal-collections/memorial-day.webp",
     season: "Spring",
     dateRange: "May 10 - May 27",
     marketingDateRange: "May 1 - May 27",
@@ -87,7 +87,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Father's Day",
     slug: "fathers-day",
-    thumbnail: "/images/seasonal-collections/fathers-day-thumbnail.png",
+    thumbnail: "/images/seasonal-collections/fathers-day.webp",
     season: "Summer",
     dateRange: "May 25 - Jun 15",
     marketingDateRange: "May 20 - Jun 15",
@@ -98,7 +98,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "4th of July / Independence Day",
     slug: "independence-day",
-    thumbnail: "/images/seasonal-collections/halloween-thumbnail-2.png",
+    thumbnail: "/images/seasonal-collections/independence-day.webp",
     season: "Summer",
     dateRange: "Jun 15 - Jul 4",
     marketingDateRange: "Jun 1 - Jul 4",
@@ -109,7 +109,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Back to School",
     slug: "back-to-school",
-    thumbnail: "/images/seasonal-collections/thanksgiving-thumbnail-2.png",
+    thumbnail: "/images/seasonal-collections/back-to-school.webp",
     season: "Summer",
     dateRange: "Jul 15 - Sep 5",
     marketingDateRange: "Jun 15 - Sep 5",
@@ -120,7 +120,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Labor Day",
     slug: "labor-day",
-    thumbnail: "/images/seasonal-collections/fathers-day-thumbnail-2.png",
+    thumbnail: "/images/seasonal-collections/labor-day.webp",
     season: "Fall",
     dateRange: "Aug 20 - Sep 2",
     marketingDateRange: "Aug 15 - Sep 2",
@@ -131,7 +131,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Halloween",
     slug: "halloween",
-    thumbnail: "/images/seasonal-collections/halloween-thumbnail.png",
+    thumbnail: "/images/seasonal-collections/halloween.webp",
     season: "Fall",
     dateRange: "Sep 15 - Oct 31",
     marketingDateRange: "Sep 1 - Oct 31",
@@ -142,7 +142,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Thanksgiving",
     slug: "thanksgiving",
-    thumbnail: "/images/seasonal-collections/thanksgiving-thumbnail.png",
+    thumbnail: "/images/seasonal-collections/thanksgiving.webp",
     season: "Fall",
     dateRange: "Nov 1 - Nov 28",
     marketingDateRange: "Oct 20 - Nov 28",
@@ -153,7 +153,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Black Friday & Cyber Monday",
     slug: "black-friday",
-    thumbnail: "/images/seasonal-collections/halloween-thumbnail-3.png",
+    thumbnail: "/images/seasonal-collections/black-friday.webp",
     season: "Fall",
     dateRange: "Nov 25 - Dec 2",
     marketingDateRange: "Nov 1 - Dec 2",
@@ -164,7 +164,7 @@ const seasonalCollections: SeasonalCollection[] = [
   {
     name: "Christmas & Holiday Season",
     slug: "christmas",
-    thumbnail: "/images/seasonal-collections/christmas-thumbnail.png",
+    thumbnail: "/images/seasonal-collections/christmas.webp",
     season: "Winter",
     dateRange: "Nov 15 - Dec 25",
     marketingDateRange: "Nov 1 - Dec 25",
