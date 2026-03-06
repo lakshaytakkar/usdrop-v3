@@ -1,0 +1,430 @@
+You are rebuilding the COMPLETE ADMIN PANEL for USDrop.ai — a Next.js 14 + Supabase + Tailwind CSS platform. The current admin pages exist but are not production-ready. Rewrite them fully based on the flows below. Every page must have working CRUD, real DB connections, proper loading/empty/error states, and all buttons/actions must function.
+
+STACK: Next.js 14 App Router, Supabase JS client, Tailwind CSS
+BRAND: Primary dark navy #1E1B4B, accent electric indigo #4F46E5, dark admin layout
+AUTH GUARD: All /admin/* routes — check profiles.internal_role IN ('admin','dev') on server side, redirect to /dashboard if unauthorized
+
+════════════════════════════════════════════
+ADMIN SIDEBAR NAVIGATION (always visible)
+════════════════════════════════════════════
+- Dashboard (overview)
+- Pipeline (pre-sales) [badge: count of hot leads]
+- Clients (post-sales) [badge: count of stalled]
+- LLC Tracker [badge: count of pending]
+- Tickets [badge: count of open]
+- Users (all users list)
+- Content > Free Learning
+- Content > Courses
+- Content > Sessions
+- Content > Products
+- Content > Categories
+- Settings
+
+════════════════════════════════════════════
+THE COMPLETE USER JOURNEY (context for admin)
+════════════════════════════════════════════
+
+PRE-SALES JOURNEY (what admin tracks in Pipeline):
+- User discovers Suprans via Instagram/events/referrals → lands on suprans.in
+- Signs up for free on USDrop.ai → profile created, lead record auto-created with stage = new_lead
+- Explores platform → activity logged (page views, feature clicks) → lead_scores.engagement_level moves cold → warm
+- Watches free onboarding chapters (onboarding_videos) → each completion logged in onboarding_progress
+- Completes ALL free chapters → lead_scores.auto_stage flips to 'hot' automatically → admin gets badge alert
+- Admin sees hot lead → reviews their activity, chapter completions, last active date
+- Admin sends payment link (₹29,999 for Mr. Suprans mentorship) → payment_links record created
+- Admin calls lead or lead books call → outcome logged in notes
+- Lead pays → admin confirms payment → lead stage moves to 'converted' → client journey begins
+
+POST-SALES JOURNEY (what admin tracks in Clients):
+- Admin assigns client to next rolling batch (new batch every 2 weeks) → batch_members record created
+- Welcome WhatsApp message copied and sent manually by admin
+- Client starts Week 1-2: fundamentals + product research modules → module_completions tracked
+- Week 1-2 completion → product explorer + video library features unlock automatically
+- Client starts Week 3-4: store setup begins → admin introduces LLC upsell contextually
+- LLC need becomes obvious (US marketplaces require US entity) → client purchases LLC package
+- Admin creates llc_applications record → LLC journey begins in parallel
+- Week 3-4 completion → ad creative tools + meta ads library unlock
+- LLC milestones updated manually by admin: filed → EIN → BOI → bank setup → Stripe setup → complete
+- LLC complete → full platform access unlocked (including order fulfillment tools)
+- Week 5-6: ads + marketing phase → client runs first ads with USDrop tools
+- Week 7-8: fulfillment + scaling phase → first orders managed
+- Graduation: admin marks client complete → certificate issued → alumni status
+- Post-graduation: alumni community access, optional advanced cohort upsell
+
+SUPPORT JOURNEY (parallel to both):
+- Client raises ticket from /dashboard/support at any point
+- Admin triages: assigns type (technical/llc/course/shopify/payment/escalation) and priority
+- Admin or rep replies → client notified
+- Complex issues escalated to Lakshay
+- Ticket resolved → archived after 30 days
+
+════════════════════════════════════════════
+PAGE 1: /admin — DASHBOARD
+════════════════════════════════════════════
+
+TOPBAR: "Admin Dashboard" title | "Refresh" button | last updated timestamp
+
+STAT CARDS ROW (4 cards):
+- Total Free Users (COUNT profiles WHERE account_type='free')
+- Hot Leads Today (COUNT lead_scores WHERE auto_stage='hot' AND updated_at today)
+- Active Clients (COUNT batch_members WHERE status='active')
+- Open Tickets (COUNT support_tickets WHERE status IN ('open','in_progress'))
+
+PIPELINE FUNNEL (horizontal bar chart using recharts):
+- Stages: Signups → Engaged → Hot → Converted
+- Count + drop-off % at each stage
+- Date filter: 7d / 30d / 90d tabs
+
+LLC STATUS BREAKDOWN (horizontal bar or donut):
+- Count per stage: pending / filed / ein_applied / boi_filed / bank_setup / stripe_setup / complete
+- Click any segment → navigates to /admin/llc filtered to that stage
+
+STALLED CLIENTS TABLE (bottom left):
+- Columns: Name | Batch | Week | Last Active | Days Stalled
+- Filtered: batch_members WHERE no user_activity_log entry in 7 days
+- Row action: [View Client] links to /admin/users/[id]
+
+RECENT ACTIVITY FEED (bottom right):
+- Latest 15 entries from user_activity_log across all users
+- Shows: user initials avatar | activity_type | time ago
+- Auto-refreshes every 2 minutes
+
+════════════════════════════════════════════
+PAGE 2: /admin/pipeline — PRE-SALES
+════════════════════════════════════════════
+
+TOPBAR: "Pipeline" title | Stage count badges (7 stages) | [+ Add Lead Manually] button | Date filter dropdown (today/7d/30d/all)
+
+TWO TABS:
+TAB A — KANBAN BOARD:
+- 7 columns: New Lead | Engaged | Hot Lead | Call Booked | Payment Sent | Converted | Lost
+- Each card: avatar initials | full_name | phone_number | email | engagement badge (cold/warm/hot) | free_lessons_completed | time since last_activity_at
+- Hot Lead cards get pulsing indigo ring
+- Drag card to new column OR use card dropdown menu → updates leads.stage + lead_scores.manual_stage_override + logs change timestamp
+- Column has "Load more" if >10 cards
+
+TAB B — HOT LEADS LIST (priority view):
+- Table: Name | Phone | Email | Chapters Done | Completed Date | Days Since | Actions
+- Sorted: oldest completion first (most urgent top)
+- ROW ACTIONS: [📤 Payment Link] [📞 Mark Called] [👤 View Profile] [🚫 Mark Lost]
+- Bulk select checkboxes → bulk [Assign Rep] or [Send to Lost]
+
+CLICK ANY CARD OR ROW → SLIDE-OVER DRAWER (480px, right side):
+- Header: avatar | name | email | phone | signup date | source badge | stage dropdown (updates on change)
+- SECTION — Activity Summary: page views count | lessons completed | last active | top pages visited (from user_activity_log activity_data)
+- SECTION — Payment Links: list existing payment_links (amount | status badge | created_at). Empty state: "No links sent yet"
+- [+ Send Payment Link] button → MODAL:
+  - Amount field (default: 29999)
+  - Title field (default: "Mr. Suprans Mentorship Program")
+  - Description field
+  - Expiry date (optional)
+  - [Create & Copy WhatsApp Message] → INSERTs payment_links record → shows copyable text: "Hi [name] 👋 Here's your payment link for [title]: [url] — Amount: ₹[amount]. Valid till [expiry]. Reply here if you have any questions!"
+- SECTION — Notes: textarea editable inline → saves to leads.notes on blur. Shows last_contacted_at.
+- SECTION — Call Log: [+ Log Call] → modal with date/time, outcome dropdown (interested/not interested/follow-up/no answer), notes. Saves to leads.notes as appended entry + updates leads.last_contacted_at.
+- Footer: [View Full Profile →] links to /admin/users/[id]
+
+════════════════════════════════════════════
+PAGE 3: /admin/clients — CLIENT MANAGEMENT
+════════════════════════════════════════════
+
+TOPBAR: "Clients" title | Search bar (name/email) | Filter: [All Batches ▾] [All Statuses ▾] [All Weeks ▾] | [+ Add Client] button | Export CSV button
+
+CLIENTS TABLE:
+Columns: Checkbox | Avatar+Name | Email | Phone | Batch | Week | Progress % (progress bar) | LLC Status badge | Last Active | Status badge | Actions
+
+Status badges: Active (green) | Stalled (amber, >7 days inactive) | Completed (blue) | Churned (red)
+LLC badges: None / Pending / In Progress / Complete (color coded)
+
+ROW ACTIONS (always visible): [👤 View] [📤 Payment Link] [📋 Ticket] [⋮ More → Change Batch / Mark Stalled / Mark Graduated / Mark Churned]
+
+BULK ACTIONS (appear when rows selected): [Assign Batch] [Send Batch Message] [Export Selected]
+
+CLICK NAME → /admin/users/[id]
+
+BATCH MANAGER TAB (second tab on same page):
+- List of batches: Name | Start Date | Status badge | Members / Max | Progress avg %
+- [+ New Batch] button → modal: name, start_date, end_date, max_size (default 30)
+- ROW ACTIONS: [View Members] [Edit] [Archive]
+- CLICK BATCH → /admin/batches/[id]:
+  - Header: batch name | dates | status | X/30 members | [Edit Batch] [Archive Batch]
+  - Members table: Name | Week | Status | Last Active | Progress % | [Remove from Batch]
+  - [+ Add Member] → search by email → select → INSERT batch_members
+  - [Advance All to Week X] → modal confirms → bulk UPDATE batch_members.current_week
+  - [Message This Batch] → textarea with {name} variable → generates list of personalized WhatsApp messages, one per member → copy all button
+
+════════════════════════════════════════════
+PAGE 4: /admin/llc — LLC TRACKER
+════════════════════════════════════════════
+
+TOPBAR: "LLC Tracker" title | Stage filter tabs (All | Pending | Filed | EIN | BOI | Bank | Stripe | Complete) with counts | [+ New Application] button | Search by name/LLC name
+
+KANBAN VIEW (7 columns):
+- pending | filed | ein_applied | boi_filed | bank_setup | stripe_setup | complete
+- Each card: client name + avatar | LLC name | days in current stage | package type badge | amount paid
+- Card color: green if <7 days in stage | amber 7-14 days | red >14 days
+- Drag OR use card [Move →] button to advance stage → updates llc_applications.status + sets corresponding date field (filed_at, ein_at etc.) + updated_at
+
+CLICK CARD → MODAL (not separate page):
+- Header: client name | LLC name | package type | amount paid
+- TIMELINE: 7 milestones vertical list, each with: status icon | label | date field (editable inline) | notes
+- [Move to Next Stage] button → confirms → updates status + date
+- [Save Notes] button → PATCH admin_notes
+- [WhatsApp Update] button → copies stage-appropriate message:
+  - filed: "Hi [name]! Your LLC has been filed successfully. EIN application is next — we'll update you shortly! 🎉"
+  - ein_applied: "Hi [name]! EIN has been applied for your LLC. This takes 2-4 weeks. We'll notify you immediately once received!"
+  - boi_filed: "Hi [name]! BOI filing is complete — your compliance is on track. Bank setup guidance coming next!"
+  - bank_setup: "Hi [name]! Time to set up your US business bank account. Check your email for the detailed guide we've sent!"
+  - stripe_setup: "Hi [name]! Almost there — Stripe setup is the final step. Here's your setup guide: [link]"
+  - complete: "Hi [name]! 🎉 Congratulations! Your US LLC is fully set up and operational. Your full USDrop platform access has been unlocked. Welcome to the big leagues!"
+- [View Full Client →] links to /admin/users/[id]
+
+[+ New Application] MODAL:
+- Search and select client (by email)
+- LLC name field
+- State dropdown (default: Wyoming)
+- Package type dropdown: Basic / Standard / Premium
+- Amount paid field
+- Admin notes
+- [Create Application] → INSERT llc_applications
+
+════════════════════════════════════════════
+PAGE 5: /admin/tickets — TICKET MANAGEMENT
+════════════════════════════════════════════
+
+TOPBAR: "Support Tickets" title | Filter: [Status ▾] [Type ▾] [Priority ▾] [Assigned To ▾] | Date range | Search | [+ Create Ticket for Client] button
+
+TICKETS TABLE:
+Columns: ID | Client Name | Type badge (color: technical=blue, llc=purple, course=green, shopify=orange, payment=yellow, escalation=red) | Priority badge (urgent=red, high=orange, medium=blue, low=gray) | Status badge | Assigned To | Created | Last Updated | Actions
+
+ROW ACTIONS: [Open] [Assign] [Resolve] [⋮ More → Escalate / Close / Delete]
+
+CLICK ROW → TICKET DETAIL PAGE /admin/tickets/[id]:
+- TOPBAR: Ticket #[id] | Type badge | Priority badge | Status dropdown (change inline → UPDATE) | [Assign ▾] dropdown | [Escalate to Lakshay] button | [Mark Resolved] button | [Close Ticket] button
+- TWO COLUMN LAYOUT:
+  LEFT (70%) — MESSAGE THREAD:
+  - Messages from ticket_messages, chronological
+  - Client messages: white bubble, left-aligned, client avatar
+  - Admin replies: indigo bubble, right-aligned, admin avatar
+  - Internal notes: gray background, "🔒 Internal Note" label, not visible to client
+  - Empty state: "No messages yet"
+  REPLY BOX (bottom of left column):
+  - Textarea placeholder "Write a reply..."
+  - Toggle: [Client Reply] / [Internal Note]
+  - [Send Reply] button → INSERT ticket_messages (is_internal based on toggle) → UPDATE support_tickets.updated_at
+  - [Copy WhatsApp Message] button → copies "Hi [name], your ticket #[id] regarding '[title]' has been updated by our team. Reply here if you need anything further."
+  RIGHT (30%) — TICKET INFO PANEL:
+  - Client card: avatar | name | email | phone | [View Profile]
+  - Ticket details: type | priority | created_at | updated_at | ticket_id
+  - Assignment: assigned_to dropdown (all admin/dev profiles) → UPDATE on change
+  - Escalation: escalated_to field (shows "Escalated to Lakshay" if set)
+  - Resolution notes field (shown only when resolving)
+
+════════════════════════════════════════════
+PAGE 6: /admin/users — ALL USERS
+════════════════════════════════════════════
+
+TOPBAR: "All Users" title | Search (name/email/phone) | Filter: [Account Type ▾] [Plan ▾] [Internal Role ▾] | [Export CSV] button | Total count shown
+
+USERS TABLE:
+Columns: Checkbox | Avatar+Name | Email | Phone | Account Type badge | Plan | Signup Date | Last Active | Internal Role badge | Status badge | Actions
+
+ROW ACTIONS: [👤 View] [✏️ Edit Role] [💳 Change Plan] [🚫 Suspend]
+
+CLICK NAME OR [View] → /admin/users/[id]
+
+════════════════════════════════════════════
+PAGE 7: /admin/users/[id] — USER DETAIL (COMPREHENSIVE)
+════════════════════════════════════════════
+
+TOPBAR: ← Back to Users | "[Full Name]" | Account type badge | Plan badge | Status badge
+ACTION BUTTONS ROW: [📱 Copy WhatsApp] [🎫 Create Ticket] [💳 Send Payment Link] [📝 Edit Profile] [🔄 Change Plan ▾]
+
+Change Plan dropdown: free → mentorship → pro → applies plan defaults to user_content_access
+
+7 TABS:
+
+─── TAB 1: OVERVIEW ───
+Two-column layout:
+LEFT — Profile Card:
+- Avatar (initials fallback, indigo background)
+- full_name (editable inline on click)
+- email, phone_number, created_at, last active
+- account_type badge, subscription_plan name
+- internal_role badge (editable: none/admin/dev)
+- ecommerce_experience, preferred_niche
+- onboarding_completed badge + date
+
+RIGHT — Business Snapshot:
+- Batch: batch name + week number (from batch_members) — link to /admin/batches/[id]
+- LLC Status: status badge + current stage (from llc_applications) — link to /admin/llc
+- Shopify: connected store domain or "Not connected" (from shopify_stores)
+- Progress: X/total chapters complete
+- Pipeline Stage: current leads.stage badge
+- Source: leads.source badge
+- Assigned Rep: leads.assigned_to name
+
+─── TAB 2: LLC STATUS ───
+- If no llc_application: empty state with [Create LLC Application] button
+- If exists: vertical timeline (7 milestones)
+  - Each milestone: completion icon | label | date (editable inline admin only) | sub-notes
+  - Current stage highlighted with indigo ring
+  - [Move to Next Stage] button
+  - Admin Notes textarea (saves to llc_applications.admin_notes)
+  - Package type, amount paid shown at top
+
+─── TAB 3: LEARNING PROGRESS ───
+- Enrolled courses list (from course_enrollments)
+- Each course: title | progress bar (progress_percentage%) | enrolled_at | last_accessed_at | [View Details ▾]
+- Expand course → module list with: completion checkmark | title | time_spent_minutes | watch_duration | last_position
+- Stats row: Total chapters done | Total time spent (hrs) | Avg quiz score | Last accessed
+- Onboarding progress: list of onboarding_videos with completion status per video
+
+─── TAB 4: FEATURE ACCESS ───
+TOPBAR of tab: [Apply Plan Defaults] [Unlock All (Plan)] [Lock All]
+- Table: Resource Key | Type | Default (plan-based from access_rules) | Override Status | Unlocked By | Unlocked At | Notes | Toggle
+- Toggle switch per row → INSERT or UPDATE user_content_access
+  - If turning ON: set is_unlocked=true, unlocked_by=current_admin_id, unlocked_at=now()
+  - If turning OFF: set is_unlocked=false
+- Notes field per row (editable inline)
+- Rows grouped by resource_type (page / feature / content)
+- Visual key: indigo = manually unlocked | gray = locked | green = plan default access
+
+─── TAB 5: BUSINESS INFO ───
+Editable form — all fields from user_details:
+- Full Name, Batch ID, Enrolled Number, Contact Number, Email
+- Website Name, FB Page, IG Account
+- LLC Name, EIN Name
+- Learning Videos Link, Useful Links
+- Tools URL, Tools Username, Tools Password (password field with show/hide toggle)
+- [Save All Changes] button → UPSERT user_details
+- Shopify stores section below: list of shopify_stores rows (store_name, shop_domain, plan, is_active toggle, last_synced_at). [Disconnect Store] per row.
+
+─── TAB 6: ACTIVITY LOG ───
+- Full list from user_activity_log for this user, sorted newest first
+- Filter bar: date range picker | activity_type multiselect (page_view / lesson_complete / login / signup / feature_click)
+- Each entry: icon for type | activity_data (JSON rendered readable) | created_at
+- Pagination: 20 per page
+- Export button (CSV of filtered results)
+
+─── TAB 7: NOTES & HISTORY ───
+THREE SECTIONS:
+Admin Notes:
+- Large textarea, current value from leads.notes
+- [Save Notes] button → PATCH leads.notes
+- "Last edited" timestamp shown
+
+Payment History:
+- Table from payment_links: Amount | Title | Status badge | Created | Paid At | Expires At
+- [+ Send New Payment Link] → same modal as pipeline page
+- Empty state: "No payment links sent yet"
+
+Support History:
+- Table from support_tickets: ID | Title | Type | Status | Created | Resolved
+- Click row → opens ticket in /admin/tickets/[id]
+- Empty state: "No tickets raised yet"
+
+════════════════════════════════════════════
+PAGE 8: /admin/content/free-learning
+════════════════════════════════════════════
+
+TOPBAR: "Free Learning" title | [+ Add Module] button | Reorder mode toggle
+
+- onboarding_modules listed as expandable accordion sections, ordered by order_index
+- Module header: drag handle (reorder mode) | title | video count | [Edit Title] [+ Add Video] [Delete Module]
+- Edit Title → inline edit → PATCH onboarding_modules.title
+- Expanded: onboarding_videos list with drag handles for reorder
+- Each video row: thumbnail (40px) | title | duration | order | [Edit] [Delete]
+- Edit Video → slide-over modal: title, description, video_url, video_duration (seconds), thumbnail URL → PATCH
+- Add Video → same modal empty → INSERT with module_id and next order_index
+- Delete: confirm dialog → DELETE (warn if users have progress on it)
+- Reorder: drag-drop updates order_index for affected rows in bulk PATCH
+
+════════════════════════════════════════════
+PAGE 9: /admin/content/sessions
+════════════════════════════════════════════
+
+TOPBAR: "Mentorship Sessions" title | Category filter dropdown (from distinct categories) | [+ New Session] button | Reorder mode toggle
+
+- Table/list of mentorship_sessions ordered by order_index
+- Columns: # | Drag | Thumbnail | Title | Category badge | Duration | Session Date | Published toggle | Actions
+- Published toggle → PATCH is_published inline
+- ROW ACTIONS: [Edit] [Delete]
+- [+ New Session] and [Edit] → MODAL:
+  - Title (required)
+  - Description
+  - URL (video/recording link)
+  - Category (text input with datalist autocomplete from existing categories)
+  - Duration (text, e.g. "45 min")
+  - Session Date (date picker)
+  - Order Index (number)
+  - Published toggle
+  - [Save] → INSERT or PATCH
+
+════════════════════════════════════════════
+PAGE 10: /admin/content/products
+════════════════════════════════════════════
+
+TOPBAR: "Products" title | Search | Category filter | [Trending ▾] [Winning ▾] [Locked ▾] filter toggles | [+ Add Product] button | Bulk Actions (when selected): [Mark Trending] [Mark Winning] [Toggle Lock] [Delete]
+
+PRODUCTS TABLE:
+Columns: Checkbox | Thumb | Title | Category | Buy Price | Sell Price | Profit | In Stock toggle | Trending badge | Winning badge | Locked badge | Display Order | Actions
+
+- In Stock toggle → PATCH products.in_stock
+- ROW ACTIONS: [Edit] [View Metadata] [Delete]
+
+CLICK [Edit] → /admin/content/products/[id]:
+TOPBAR: ← Back | Product title | [Save Changes] [Delete Product]
+TWO COLUMN:
+LEFT:
+- Title, Description (textarea)
+- category_id (dropdown from categories), subcategory_id (filtered by category)
+- buy_price, sell_price, profit_per_order (auto-calc)
+- display_order, in_stock toggle
+- Additional Images: array of URLs → [+ Add Image URL] [Remove] per row
+RIGHT:
+- Metadata section (from product_metadata):
+  - is_winning, is_trending, is_locked toggles
+  - unlock_price (shown if is_locked)
+  - profit_margin %, pot_revenue, items_sold
+  - is_trending toggle
+- [Save All] → PATCH products + UPSERT product_metadata
+
+════════════════════════════════════════════
+PAGE 11: /admin/content/courses
+════════════════════════════════════════════
+
+TOPBAR: "Courses" title | [+ New Course] button
+
+COURSE LIST:
+- Each course: title | published toggle | student count | level badge | [Manage Modules →]
+- [+ New Course] → modal: title, slug, description, level, category, thumbnail URL
+
+CLICK [Manage Modules →] → /admin/content/courses/[courseId]:
+TOPBAR: ← Courses | [Course Title] | published toggle | student count | [Edit Course Details]
+- Module list with drag reorder, ordered by order_index
+- Each module: drag | title | chapter count | duration | is_preview toggle | [Manage Chapters →] [Edit] [Delete]
+- [+ Add Module] → modal: title, description, order_index, is_preview toggle
+
+CLICK [Manage Chapters →] → /admin/content/courses/[courseId]/modules/[moduleId]:
+TOPBAR: ← Modules | [Module Title] | [Edit Module]
+- Chapter list drag reorder
+- Each chapter row: drag | title | content_type badge (video/text/quiz) | duration | is_preview toggle | [Edit] [Delete]
+- [+ Add Chapter] → modal: title, description, content_type dropdown, video_url (if video), duration_minutes, is_preview toggle
+- Edit Chapter → same modal prefilled
+
+════════════════════════════════════════════
+GLOBAL REQUIREMENTS
+════════════════════════════════════════════
+- Every table must have: loading skeleton state | empty state with helpful message | error state with retry button
+- Every form must have: validation, loading state on submit, success toast, error toast
+- All DELETE actions: confirmation dialog "Are you sure? This cannot be undone."
+- All modals: close on escape key + backdrop click + X button
+- Pagination on all tables: 20 rows per page default, page controls at bottom
+- All admin pages protected: server-side check profiles.internal_role IN ('admin','dev')
+- Topbar breadcrumb on all sub-pages showing navigation path
+- Back button on all detail pages
+- All links between pages must work: user cards link to user detail, batch names link to batch detail, ticket IDs link to ticket detail
+- Sidebar active state highlights current section
+- Mobile responsive: sidebar collapses to hamburger menu, tables scroll horizontally
+
+IMPORTANT: Do not use mock data anywhere. All data must come from real Supabase queries. If a table is empty, show empty state. Build each page fully before moving to the next. Start with the shared layout (sidebar + topbar) first, then build pages in order: Dashboard → Pipeline → Clients → LLC → Tickets → Users → User Detail → Content pages.
