@@ -315,8 +315,8 @@ export default function MyAppsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
-            <TeaserButtonLock message="Complete Free Learning to manage your apps">
+          <TeaserButtonLock message="Complete Free Learning to manage your apps">
+            <div className="flex gap-2">
               <Button
                 data-testid="btn-quick-add"
                 variant="outline"
@@ -326,8 +326,6 @@ export default function MyAppsPage() {
                 <Globe className="h-4 w-4 mr-1.5" />
                 Popular Apps
               </Button>
-            </TeaserButtonLock>
-            <TeaserButtonLock message="Complete Free Learning to manage your apps">
               <Button
                 data-testid="btn-add-app"
                 onClick={openAdd}
@@ -336,8 +334,8 @@ export default function MyAppsPage() {
                 <Plus className="h-4 w-4 mr-1.5" />
                 Add App
               </Button>
-            </TeaserButtonLock>
-          </div>
+            </div>
+          </TeaserButtonLock>
         </div>
 
         {loading ? (
@@ -371,8 +369,8 @@ export default function MyAppsPage() {
                 : "Add your first external app to manage credentials and API keys"}
             </p>
             {!search && filterCategory === "all" && (
-              <div className="flex gap-2">
-                <TeaserButtonLock message="Complete Free Learning to manage your apps">
+              <TeaserButtonLock message="Complete Free Learning to manage your apps">
+                <div className="flex gap-2">
                   <Button
                     data-testid="btn-empty-quick-add"
                     variant="outline"
@@ -381,8 +379,6 @@ export default function MyAppsPage() {
                     <Globe className="h-4 w-4 mr-1.5" />
                     Popular Apps
                   </Button>
-                </TeaserButtonLock>
-                <TeaserButtonLock message="Complete Free Learning to manage your apps">
                   <Button
                     data-testid="btn-empty-add"
                     onClick={openAdd}
@@ -391,8 +387,8 @@ export default function MyAppsPage() {
                     <Plus className="h-4 w-4 mr-1.5" />
                     Add App
                   </Button>
-                </TeaserButtonLock>
-              </div>
+                </div>
+              </TeaserButtonLock>
             )}
           </div>
         ) : (
