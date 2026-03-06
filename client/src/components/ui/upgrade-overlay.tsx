@@ -44,7 +44,7 @@ export function UpgradeOverlay({
         }}
         className="absolute inset-0 z-50 flex items-center justify-center"
       >
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl" />
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-md" />
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}
