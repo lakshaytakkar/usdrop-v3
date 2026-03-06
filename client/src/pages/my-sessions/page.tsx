@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react"
-import { format } from "date-fns"
 import { useQuery } from "@tanstack/react-query"
 import { apiFetch } from "@/lib/supabase"
 import { ModuleAccessGuard } from "@/components/auth/module-access-guard"
@@ -255,8 +254,7 @@ export default function MySessionsPage() {
 
               {isExpanded && (
                 <div className="space-y-1.5 ml-6">
-                  {catSessions.map((session) => {
-                    const sessionDate = session.session_date ? new Date(session.session_date) : null
+                  {catSessions.map((session, idx) => {
                     const unlocked = isSessionUnlocked(session.id)
                     const locked = !isFree && !unlocked
 
@@ -266,15 +264,9 @@ export default function MySessionsPage() {
                         className="relative group flex items-center gap-4 p-3 rounded-lg border border-gray-100 bg-white hover:border-blue-200 hover:shadow-sm transition-all"
                         data-testid={`session-${session.id}`}
                       >
-                        {sessionDate && (
-                          <div className="flex-shrink-0 flex flex-col items-center justify-center leading-none" data-testid={`date-${session.id}`}>
-                            <div className="flex items-baseline gap-1">
-                              <span className="text-[22px] font-bold text-gray-800">{format(sessionDate, "d")}</span>
-                              <span className="text-[13px] font-semibold text-gray-500 uppercase">{format(sessionDate, "MMM")}</span>
-                            </div>
-                            <span className="text-[11px] text-gray-400">{format(sessionDate, "yyyy")}</span>
-                          </div>
-                        )}
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center" data-testid={`sno-${session.id}`}>
+                          <span className="text-[13px] font-semibold text-gray-500">{idx + 1}</span>
+                        </div>
 
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate" data-testid={`text-title-${session.id}`}>
