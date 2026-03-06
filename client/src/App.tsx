@@ -39,6 +39,7 @@ import AdminUserDetail from "@/pages/admin/users/[id]/page";
 import AdminBatchDetail from "@/pages/admin/batches/[id]/page";
 import AdminFreeLearning from "@/pages/admin/content/free-learning/page";
 import AdminVideos from "@/pages/admin/videos/page";
+import AdminImportantLinks from "@/pages/admin/important-links/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -245,6 +246,7 @@ function Router() {
       <Route path="/admin/batches/:id" component={() => <AdminGuard><AdminLayout><AdminBatchDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/content/free-learning" component={() => <AdminGuard><AdminLayout><AdminFreeLearning /></AdminLayout></AdminGuard>} />
       <Route path="/admin/videos" component={() => <AdminGuard><AdminLayout><AdminVideos /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/important-links" component={() => <AdminGuard><AdminLayout><AdminImportantLinks /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />

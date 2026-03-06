@@ -3829,6 +3829,24 @@ export function registerPublicRoutes(app: Express) {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
+
+  // ==================== IMPORTANT LINKS ====================
+
+  app.get('/api/important-links', async (_req: Request, res: Response) => {
+    try {
+      const { data, error } = await supabaseRemote
+        .from('important_links')
+        .select('*')
+        .eq('is_published', true)
+        .order('order_index', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      res.json(data || []);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 }
 
 // ==================== HELPER FUNCTIONS ====================

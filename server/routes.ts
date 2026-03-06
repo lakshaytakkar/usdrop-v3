@@ -16,6 +16,7 @@ import { registerAdminTicketRoutes } from "./routes/admin-tickets";
 import { registerAdminClientRoutes } from "./routes/admin-clients";
 import { registerAdminLLCRoutes } from "./routes/admin-llc";
 import { registerAdminVideoRoutes } from "./routes/admin-videos";
+import { registerAdminLinkRoutes } from "./routes/admin-links";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -33,4 +34,5 @@ export async function registerRoutes(server: Server, app: Express) {
   registerAdminClientRoutes(app);
   registerAdminLLCRoutes(app);
   registerAdminVideoRoutes(app);
+  registerAdminLinkRoutes(app);
 }

@@ -486,3 +486,20 @@ export type Category = typeof categories.$inferSelect;
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({ id: true, created_at: true, updated_at: true });
 export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+
+export const importantLinks = pgTable("important_links", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"),
+  icon: text("icon"),
+  is_published: boolean("is_published").default(true),
+  order_index: integer("order_index").default(0),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertImportantLinkSchema = createInsertSchema(importantLinks).omit({ id: true, created_at: true, updated_at: true });
+export type InsertImportantLink = z.infer<typeof insertImportantLinkSchema>;
+export type ImportantLink = typeof importantLinks.$inferSelect;

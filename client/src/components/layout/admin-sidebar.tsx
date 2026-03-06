@@ -11,6 +11,7 @@ import {
   Store,
   ShoppingBag,
   Target,
+  Link2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -53,6 +54,7 @@ const navGroups = [
     label: "Content",
     items: [
       { title: "Courses", url: "/admin/courses", icon: GraduationCap },
+      { title: "Important Links", url: "/admin/important-links", icon: Link2 },
     ],
   },
   {
