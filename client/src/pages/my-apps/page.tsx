@@ -280,9 +280,6 @@ export default function MyAppsPage() {
     } catch {}
   }
 
-  const activeCount = apps.filter(a => a.status === "active").length
-  const usedCategories = [...new Set(apps.map(a => a.category))]
-
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
@@ -292,44 +289,6 @@ export default function MyAppsPage() {
           iconSrc="/3d-ecom-icons-blue/Toolbox_Wrench.png"
           tutorialVideoUrl=""
         />
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-1">
-          <Card className="p-4 border border-gray-100 bg-white">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                <AppWindow className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-gray-900" data-testid="text-total-apps">{apps.length}</p>
-                <p className="text-[12px] text-gray-500">Total Apps</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 border border-gray-100 bg-white">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center">
-                <ShieldCheck className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-gray-900" data-testid="text-active-apps">{activeCount}</p>
-                <p className="text-[12px] text-gray-500">Active</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4 border border-gray-100 bg-white">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center">
-                <KeyRound className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-[22px] font-bold text-gray-900" data-testid="text-credentials-count">
-                  {apps.filter(a => a.api_key || a.api_secret || a.access_token || a.client_id).length}
-                </p>
-                <p className="text-[12px] text-gray-500">With Credentials</p>
-              </div>
-            </div>
-          </Card>
-        </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
