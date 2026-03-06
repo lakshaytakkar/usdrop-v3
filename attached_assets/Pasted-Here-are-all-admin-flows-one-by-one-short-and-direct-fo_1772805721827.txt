@@ -1,0 +1,115 @@
+Here are all admin flows, one by one, short and direct for Replit to strategize from:
+
+---
+
+**1. Admin Layout & Auth Guard**
+Build a shared admin layout with a dark sidebar nav. Sidebar has links to all admin sections with badge counters. Every `/admin/*` route must check `profiles.internal_role` is `admin` or `dev` — redirect to `/dashboard` if not. This wraps everything else.
+
+---
+
+**2. Admin Dashboard**
+Overview page with 4 stat cards (free users, hot leads, active clients, open tickets), a pipeline funnel showing drop-off from signup to converted, an LLC stage breakdown, a stalled clients table, and a live activity feed from `user_activity_log`. All real Supabase queries, no mock data.
+
+---
+
+**3. Pre-Sales Pipeline**
+Two tabs — kanban board with 7 lead stages and a hot leads priority list. Each lead card shows name, phone, engagement level, chapters done. Clicking a card opens a right drawer with activity summary, notes, call log, and a payment link sender that generates a pre-written WhatsApp message to copy. Stage changes update `leads` and `lead_scores` tables.
+
+---
+
+**4. Payment Link Flow**
+Inside the pipeline drawer, admin fills amount (default ₹29,999), title, expiry — this creates a row in `payment_links` and generates a copyable WhatsApp message with the link. Admin manually sends it. Payment link list shows status: pending / paid / expired.
+
+---
+
+**5. Client Management — All Clients**
+Table of all paying clients joined with batch, progress, LLC status, and last active. Filter by batch, week, status. Stalled clients (no activity 7+ days) highlighted in amber. Row actions: view profile, send payment link, create ticket, change batch, mark graduated.
+
+---
+
+**6. Batch Manager**
+Create rolling batches (every 2 weeks). View all batches with member count. Click a batch to see all members with their week number, status, and progress. Admin can add members by email search, advance all members to next week, and generate personalized WhatsApp messages for the whole batch using a `{name}` template.
+
+---
+
+**7. LLC Tracker**
+Kanban with 7 columns: pending → filed → EIN → BOI → bank setup → Stripe → complete. Each client card shows days stuck in current stage, color-coded red/amber/green. Clicking a card opens a modal to update the stage, set milestone dates, add notes, and copy a stage-specific WhatsApp update message. Moving a stage auto-sets the date field.
+
+---
+
+**8. Ticket System — Admin Side**
+Table of all support tickets with type and priority color badges. Click a ticket to open full detail page with a two-column layout: message thread on the left (client visible vs internal note toggle), ticket info panel on the right with assign, escalate, and resolve actions. Reply box at bottom sends to `ticket_messages`.
+
+---
+
+**9. Ticket System — Client Side**
+Simple form on `/dashboard/support` — title, type dropdown, description. Submits to `support_tickets`. Below the form, client sees their own ticket history with status and a read-only thread showing only non-internal replies.
+
+---
+
+**10. All Users List**
+Full table of every profile with account type, plan, signup date, last active, and internal role badge. Search by name/email/phone. Filter by account type and role. Row actions: view profile, edit role, change plan, suspend. Links to User Detail page.
+
+---
+
+**11. User Detail Page — Overview Tab**
+Two-column header: profile info on left (name, email, phone, plan, role — all editable), business snapshot on right (batch, week, LLC status, Shopify connected, pipeline stage). Quick action buttons always visible: copy WhatsApp, create ticket, send payment link, change plan.
+
+---
+
+**12. User Detail — LLC Tab**
+Vertical timeline of 7 LLC milestones. Admin edits dates inline per milestone. Current stage highlighted. Move to next stage button. If no LLC record exists, show a create button that inserts into `llc_applications`.
+
+---
+
+**13. User Detail — Learning Progress Tab**
+List of enrolled courses with progress bar. Expand each course to see module-level completion, time spent, and watch duration. Onboarding video completions shown separately from paid modules. Stats row: total chapters done, total hours, last accessed.
+
+---
+
+**14. User Detail — Feature Access Tab**
+Table of all `access_rules` entries. Per row shows current unlock status, who unlocked it, when. Toggle switch to manually grant or revoke access — writes to `user_content_access`. Bulk buttons: apply plan defaults, unlock all for plan, lock all.
+
+---
+
+**15. User Detail — Business Info Tab**
+Editable form for `user_details` table: LLC name, EIN, website, FB page, IG, tools credentials (password with show/hide). Shopify stores listed below with disconnect option. Single save button does an upsert.
+
+---
+
+**16. User Detail — Activity Log Tab**
+Chronological list from `user_activity_log` for this user. Filter by date range and activity type. Shows activity type icon, readable summary of `activity_data` JSON, and timestamp. Paginated 20 per page.
+
+---
+
+**17. User Detail — Notes & History Tab**
+Three sections stacked: admin-only notes textarea (saves to `leads.notes`), payment link history table with status badges, support ticket history table linking to each ticket. None of this is visible to the client.
+
+---
+
+**18. Free Learning Content Manager**
+Accordion list of `onboarding_modules`. Each expands to show videos with drag-to-reorder. Edit video in a slide-over: title, description, video URL, duration, thumbnail. Add video per module. Delete with confirmation. Reorder updates `order_index` in bulk.
+
+---
+
+**19. Mentorship Sessions Manager**
+Table of `mentorship_sessions` with drag reorder. Published toggle inline. Add/edit in a modal: title, URL, category, duration, session date. Category field uses autocomplete from existing values. Order index controls display sequence.
+
+---
+
+**20. Products Manager**
+Table with thumbnail, pricing, profit (auto-calc), and toggle badges for trending/winning/locked. Bulk actions for marking products. Click product → detail edit page with all fields plus metadata (is_winning, is_trending, is_locked, unlock_price). Additional images managed as a URL array.
+
+---
+
+**21. Courses & Modules Manager**
+Course list with published toggle. Click course → module list with reorder. Click module → chapter list with reorder. Each level has add/edit/delete. Chapter editor includes content type (video/text/quiz), video URL, duration, and `is_preview` toggle which controls free vs paid access.
+
+---
+
+**22. Categories Manager**
+Two-panel layout: categories on left, subcategories on right filtered by selected category. Add/edit/delete categories with trending flag. Add/edit subcategories with keywords array. Product counts shown read-only.
+
+---
+
+That's all 22 flows. Feed them to Replit one at a time in order — each one is a self-contained build instruction. Start with flow 1 (layout + auth) since everything depends on it.

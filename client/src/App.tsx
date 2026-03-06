@@ -106,6 +106,7 @@ import Whitelabelling from "@/pages/studio/whitelabelling/page";
 import ResourcesPage from "@/pages/resources/page";
 import FreeLearningPage from "@/pages/free-learning/page";
 import FreeLearningLessonPage from "@/pages/free-learning/[lessonId]/page";
+import SupportPage from "@/pages/support/page";
 
 import MyProducts from "@/pages/my-products/page";
 import MyStore from "@/pages/my-store/page";
@@ -322,6 +323,7 @@ function Router() {
       <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
       <Route path="/who-is-this-for" component={() => <UserGuard><AppLayout><WhoIsThisFor /></AppLayout></UserGuard>} />
       <Route path="/help-center" component={() => <UserGuard><AppLayout><HelpCenter /></AppLayout></UserGuard>} />
+      <Route path="/support" component={() => <UserGuard><AppLayout><SupportPage /></AppLayout></UserGuard>} />
       <Route path="/help" component={() => <UserGuard><AppLayout><HelpPage /></AppLayout></UserGuard>} />
 
       {/* Legacy redirects → new /menu/submenu routes */}

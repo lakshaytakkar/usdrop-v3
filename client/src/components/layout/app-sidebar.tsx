@@ -53,6 +53,7 @@ import {
   PenTool,
   Calendar,
   CheckSquare,
+  LifeBuoy,
 } from "lucide-react"
 import { Link } from "wouter"
 
@@ -504,6 +505,27 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            {/* SUPPORT Section */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="uppercase tracking-wider font-mono">SUPPORT</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip="Support"
+                      isActive={isActive("/support")}
+                    >
+                      <Link href="/support" className="flex items-center gap-2">
+                        <LifeBuoy className="h-4 w-4" />
+                        <span className="flex-1">My Tickets</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
