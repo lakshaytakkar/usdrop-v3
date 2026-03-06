@@ -209,5 +209,155 @@ export function registerLeadScoringRoutes(app: Express) {
     }
   });
 
+  router.get('/pipeline/:userId/drawer', async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+
+      const [
+        leadScoreResult,
+        profileResult,
+        activityResult,
+        paymentLinksResult,
+        notesResult,
+      ] = await Promise.all([
+        supabaseRemote
+          .from('lead_scores')
+          .select(`
+            *,
+            user:profiles!lead_scores_user_id_fkey(id, email, full_name, avatar_url, account_type, created_at, status, phone_number),
+            rep:profiles!lead_scores_assigned_rep_id_fkey(id, full_name, email, avatar_url)
+          `)
+          .eq('user_id', userId)
+          .single(),
+        supabaseRemote
+          .from('profiles')
+          .select('id, email, full_name, avatar_url, account_type, created_at, phone_number, onboarding_completed, onboarding_progress')
+          .eq('id', userId)
+          .single(),
+        supabaseRemote
+          .from('user_activity_log')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabaseRemote
+          .from('payment_links')
+          .select(`
+            *,
+            creator:profiles!payment_links_created_by_fkey(id, full_name, email)
+          `)
+          .eq('lead_user_id', userId)
+          .order('created_at', { ascending: false }),
+        supabaseRemote
+          .from('user_admin_notes')
+          .select('*, profiles!user_admin_notes_admin_id_fkey(id, full_name, email)')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]);
+
+      const leadScore = leadScoreResult.data;
+      const profile = profileResult.data;
+
+      if (!profile) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const recentActivity = (activityResult.data || []).map((a: any) => ({
+        id: a.id,
+        activity_type: a.activity_type,
+        description: a.description || a.activity_type,
+        metadata: a.metadata,
+        created_at: a.created_at,
+      }));
+
+      const activitySummary = {
+        total_activities: recentActivity.length,
+        last_activity_at: recentActivity.length > 0 ? recentActivity[0].created_at : null,
+        page_views: recentActivity.filter((a: any) => a.activity_type === 'page_view').length,
+        lessons_completed: recentActivity.filter((a: any) => a.activity_type === 'lesson_complete').length,
+      };
+
+      const paymentLinks = (paymentLinksResult.data || []).map((pl: any) => ({
+        id: pl.id,
+        title: pl.title,
+        amount: pl.amount,
+        currency: pl.currency || 'USD',
+        status: pl.status,
+        payment_url: pl.payment_url,
+        paid_at: pl.paid_at,
+        created_at: pl.created_at,
+        creator_name: pl.creator?.full_name || null,
+      }));
+
+      const notes = (notesResult.data || []).map((n: any) => ({
+        id: n.id,
+        note: n.note,
+        admin_name: n.profiles?.full_name || 'Unknown',
+        created_at: n.created_at,
+      }));
+
+      res.json({
+        profile: {
+          id: profile.id,
+          full_name: profile.full_name,
+          email: profile.email,
+          avatar_url: profile.avatar_url,
+          account_type: profile.account_type,
+          phone_number: profile.phone_number,
+          onboarding_completed: profile.onboarding_completed,
+          onboarding_progress: profile.onboarding_progress,
+          created_at: profile.created_at,
+        },
+        lead_score: leadScore ? {
+          score: leadScore.score,
+          engagement_level: leadScore.engagement_level,
+          auto_stage: leadScore.auto_stage,
+          manual_stage_override: leadScore.manual_stage_override,
+          effective_stage: leadScore.manual_stage_override || leadScore.auto_stage,
+          assigned_rep: leadScore.rep ? {
+            id: leadScore.rep.id,
+            full_name: leadScore.rep.full_name,
+            email: leadScore.rep.email,
+          } : null,
+          notes: leadScore.notes,
+          last_activity_at: leadScore.last_activity_at,
+        } : null,
+        activity_summary: activitySummary,
+        recent_activity: recentActivity,
+        payment_links: paymentLinks,
+        notes,
+      });
+    } catch (err) {
+      console.error('Pipeline drawer error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/pipeline/:userId/payment-links', async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('payment_links')
+        .select(`
+          *,
+          creator:profiles!payment_links_created_by_fkey(id, full_name, email)
+        `)
+        .eq('lead_user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Pipeline payment links error:', error);
+        return res.status(500).json({ error: 'Failed to fetch payment links' });
+      }
+
+      res.json(data || []);
+    } catch (err) {
+      console.error('Pipeline payment links error:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   app.use('/api/admin', router);
 }

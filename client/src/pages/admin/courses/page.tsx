@@ -184,7 +184,7 @@ export default function AdminCoursesPage() {
 
   const rowActions: RowAction<Course>[] = [
     {
-      label: "Open Builder",
+      label: "Manage Modules",
       onClick: handleEdit,
     },
     {

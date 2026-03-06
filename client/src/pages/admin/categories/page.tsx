@@ -28,6 +28,8 @@ interface CategoryRow {
   product_count: number
   trending: boolean
   created_at: string
+  parent_category_id: string | null
+  subcategory_count: number
 }
 
 export default function AdminCategoriesPage() {
@@ -46,7 +48,8 @@ export default function AdminCategoriesPage() {
       const response = await apiFetch("/api/admin/categories?include_subcategories=true")
       if (!response.ok) throw new Error("Failed to fetch categories")
       const data = await response.json()
-      const rows: CategoryRow[] = (data.categories || []).map((c: Category) => ({
+      const allCats = data.categories || []
+      const rows: CategoryRow[] = allCats.map((c: Category) => ({
         id: c.id,
         name: c.name,
         slug: c.slug,
@@ -54,6 +57,8 @@ export default function AdminCategoriesPage() {
         product_count: c.product_count || 0,
         trending: c.trending || false,
         created_at: c.created_at,
+        parent_category_id: c.parent_category_id || null,
+        subcategory_count: allCats.filter((sub: Category) => sub.parent_category_id === c.id).length,
       }))
       setCategories(rows)
     } catch (err) {
@@ -138,6 +143,12 @@ export default function AdminCategoriesPage() {
       header: "Products",
       sortable: true,
       render: (cat) => <span className="text-sm" data-testid={`text-products-${cat.id}`}>{cat.product_count}</span>,
+    },
+    {
+      key: "subcategory_count",
+      header: "Subcategories",
+      sortable: true,
+      render: (cat) => <span className="text-sm" data-testid={`text-subcategories-${cat.id}`}>{cat.subcategory_count}</span>,
     },
     {
       key: "trending",

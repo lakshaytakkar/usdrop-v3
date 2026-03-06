@@ -30,6 +30,12 @@ export function registerAdminRoutes(app: Express) {
         leadsResult,
         suppliersResult,
         shopifyStoresResult,
+        hotLeadsResult,
+        openTicketsResult,
+        llcAppsResult,
+        stalledClientsResult,
+        activeClientsResult,
+        recentActivityResult,
       ] = await Promise.all([
         supabaseRemote
           .from('profiles')
@@ -72,7 +78,44 @@ export function registerAdminRoutes(app: Express) {
         supabaseRemote
           .from('shopify_stores')
           .select('id', { count: 'exact', head: true }),
+        supabaseRemote
+          .from('lead_scores')
+          .select('id', { count: 'exact', head: true })
+          .eq('engagement_level', 'hot'),
+        supabaseRemote
+          .from('support_tickets')
+          .select('id', { count: 'exact', head: true })
+          .in('status', ['open', 'in_progress']),
+        supabaseRemote
+          .from('llc_applications')
+          .select('status'),
+        supabaseRemote
+          .from('batch_members')
+          .select('id, status, updated_at')
+          .eq('status', 'active'),
+        supabaseRemote
+          .from('batch_members')
+          .select('id', { count: 'exact', head: true }),
+        supabaseRemote
+          .from('user_activity_log')
+          .select('id, user_id, activity_type, created_at, metadata')
+          .order('created_at', { ascending: false })
+          .limit(20),
       ]);
+
+      const llcApps = llcAppsResult.data || [];
+      const llcBreakdown: Record<string, number> = {};
+      for (const app of llcApps) {
+        llcBreakdown[app.status] = (llcBreakdown[app.status] || 0) + 1;
+      }
+
+      const stalledThresholdDays = 7;
+      const now = new Date();
+      const stalledMembers = (stalledClientsResult.data || []).filter((m: any) => {
+        const lastUpdate = new Date(m.updated_at);
+        const daysSince = Math.floor((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+        return daysSince >= stalledThresholdDays;
+      });
 
       return res.json({
         totalExternalUsers: usersResult.count ?? 0,
@@ -88,6 +131,13 @@ export function registerAdminRoutes(app: Express) {
         totalLeads: leadsResult.count ?? 0,
         totalSuppliers: suppliersResult.count ?? 0,
         totalShopifyStores: shopifyStoresResult.count ?? 0,
+        hotLeads: hotLeadsResult.count ?? 0,
+        openTickets: openTicketsResult.count ?? 0,
+        activeClients: activeClientsResult.count ?? 0,
+        stalledClients: stalledMembers.length,
+        llcBreakdown,
+        llcTotal: llcApps.length,
+        recentActivity: recentActivityResult.data || [],
       });
     } catch (error) {
       console.error('Error in GET /api/admin/dashboard:', error);
@@ -4248,7 +4298,533 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
-  // USER DETAILS
+  // UNIFIED USERS ENDPOINTS (for new admin panel)
+  // =============================================
+
+  router.get('/users', async (req: Request, res: Response) => {
+    try {
+      const search = req.query.search as string | undefined;
+      const accountType = req.query.account_type as string | undefined;
+      const plan = req.query.plan as string | undefined;
+      const role = req.query.role as string | undefined;
+      const status = req.query.status as string | undefined;
+      const page = parseInt((req.query.page as string) || '1');
+      const pageSize = parseInt((req.query.pageSize as string) || '50');
+
+      let countQuery = supabaseRemote.from('profiles').select('id', { count: 'exact', head: true });
+      let dataQuery = supabaseRemote.from('profiles').select('*, subscription_plans(id, name, slug, price_monthly)');
+
+      if (search) {
+        countQuery = countQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
+        dataQuery = dataQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
+      }
+      if (accountType) {
+        countQuery = countQuery.eq('account_type', accountType);
+        dataQuery = dataQuery.eq('account_type', accountType);
+      }
+      if (status) {
+        countQuery = countQuery.eq('status', status);
+        dataQuery = dataQuery.eq('status', status);
+      }
+      if (role) {
+        if (role === 'external') {
+          countQuery = countQuery.is('internal_role', null);
+          dataQuery = dataQuery.is('internal_role', null);
+        } else {
+          countQuery = countQuery.eq('internal_role', role);
+          dataQuery = dataQuery.eq('internal_role', role);
+        }
+      }
+
+      const offset = (page - 1) * pageSize;
+      dataQuery = dataQuery.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
+
+      const [{ count: totalCount }, { data, error }] = await Promise.all([countQuery, dataQuery]);
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      const users = (data || []).map((u: any) => ({
+        id: u.id,
+        full_name: u.full_name || '',
+        email: u.email,
+        username: u.username || null,
+        avatar_url: u.avatar_url || null,
+        account_type: u.account_type || 'free',
+        internal_role: u.internal_role || null,
+        status: u.status || 'active',
+        phone_number: u.phone_number || null,
+        onboarding_completed: u.onboarding_completed || false,
+        subscription_plan_id: u.subscription_plan_id || null,
+        plan_name: u.subscription_plans?.name || null,
+        plan_slug: u.subscription_plans?.slug || null,
+        created_at: u.created_at,
+        updated_at: u.updated_at,
+      }));
+
+      return res.json({
+        users,
+        total: totalCount || 0,
+        page,
+        pageSize,
+        totalPages: Math.ceil((totalCount || 0) / pageSize),
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { data: profile, error: profileError } = await supabaseRemote
+        .from('profiles')
+        .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
+        .eq('id', id)
+        .single();
+
+      if (profileError || !profile) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const [
+        batchResult,
+        llcResult,
+        leadScoreResult,
+        shopifyResult,
+        userDetailsResult,
+        enrollmentsResult,
+        notesResult,
+      ] = await Promise.all([
+        supabaseRemote
+          .from('batch_members')
+          .select('*, batches(id, name, start_date, end_date, status)')
+          .eq('user_id', id)
+          .order('joined_at', { ascending: false })
+          .limit(5),
+        supabaseRemote
+          .from('llc_applications')
+          .select('*')
+          .eq('user_id', id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabaseRemote
+          .from('lead_scores')
+          .select('*')
+          .eq('user_id', id)
+          .single(),
+        supabaseRemote
+          .from('shopify_stores')
+          .select('id, store_name, store_url, status, created_at')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('user_details')
+          .select('*')
+          .eq('user_id', id)
+          .single(),
+        supabaseRemote
+          .from('course_enrollments')
+          .select('id, course_id, enrolled_at, completed_at, progress_percentage, courses(id, title)')
+          .eq('user_id', id),
+        supabaseRemote
+          .from('user_admin_notes')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', id),
+      ]);
+
+      const plan = profile.subscription_plans as any;
+
+      return res.json({
+        id: profile.id,
+        full_name: profile.full_name || '',
+        email: profile.email,
+        username: profile.username || null,
+        avatar_url: profile.avatar_url || null,
+        account_type: profile.account_type || 'free',
+        internal_role: profile.internal_role || null,
+        status: profile.status || 'active',
+        phone_number: profile.phone_number || null,
+        onboarding_completed: profile.onboarding_completed || false,
+        onboarding_progress: profile.onboarding_progress || 0,
+        subscription_plan_id: profile.subscription_plan_id || null,
+        subscription_started_at: profile.subscription_started_at || null,
+        subscription_ends_at: profile.subscription_ends_at || null,
+        is_trial: profile.is_trial || false,
+        created_at: profile.created_at,
+        updated_at: profile.updated_at,
+        plan: plan ? {
+          id: plan.id,
+          name: plan.name,
+          slug: plan.slug,
+          price_monthly: plan.price_monthly,
+        } : null,
+        batches: (batchResult.data || []).map((bm: any) => ({
+          id: bm.id,
+          batch_id: bm.batch_id,
+          current_week: bm.current_week,
+          status: bm.status,
+          joined_at: bm.joined_at,
+          batch: bm.batches ? {
+            id: bm.batches.id,
+            name: bm.batches.name,
+            start_date: bm.batches.start_date,
+            end_date: bm.batches.end_date,
+            status: bm.batches.status,
+          } : null,
+        })),
+        llc_applications: (llcResult.data || []).map((llc: any) => ({
+          id: llc.id,
+          llc_name: llc.llc_name,
+          state: llc.state,
+          package_type: llc.package_type,
+          status: llc.status,
+          amount_paid: llc.amount_paid,
+          created_at: llc.created_at,
+        })),
+        lead_score: leadScoreResult.data ? {
+          score: leadScoreResult.data.score,
+          engagement_level: leadScoreResult.data.engagement_level,
+          auto_stage: leadScoreResult.data.auto_stage,
+          manual_stage_override: leadScoreResult.data.manual_stage_override,
+          effective_stage: leadScoreResult.data.manual_stage_override || leadScoreResult.data.auto_stage,
+          last_activity_at: leadScoreResult.data.last_activity_at,
+        } : null,
+        shopify_stores: (shopifyResult.data || []).map((s: any) => ({
+          id: s.id,
+          store_name: s.store_name,
+          store_url: s.store_url,
+          status: s.status,
+          created_at: s.created_at,
+        })),
+        user_details: userDetailsResult.data || null,
+        courses: {
+          total: (enrollmentsResult.data || []).length,
+          completed: (enrollmentsResult.data || []).filter((e: any) => e.completed_at !== null).length,
+          enrollments: (enrollmentsResult.data || []).map((e: any) => ({
+            id: e.id,
+            course_id: e.course_id,
+            course_title: (e as any).courses?.title || 'Unknown',
+            enrolled_at: e.enrolled_at,
+            completed_at: e.completed_at,
+            progress_percentage: e.progress_percentage ? parseFloat(e.progress_percentage) : 0,
+          })),
+        },
+        notes_count: notesResult.count ?? 0,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/users/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { full_name, internal_role, account_type, status, phone_number, subscription_plan_id } = req.body;
+
+      const updateData: Record<string, any> = {};
+
+      if (full_name !== undefined) updateData.full_name = full_name;
+      if (internal_role !== undefined) updateData.internal_role = internal_role || null;
+      if (account_type !== undefined) updateData.account_type = account_type;
+      if (status !== undefined) updateData.status = status;
+      if (phone_number !== undefined) updateData.phone_number = phone_number || null;
+      if (subscription_plan_id !== undefined) updateData.subscription_plan_id = subscription_plan_id || null;
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: result, error } = await supabaseRemote
+        .from('profiles')
+        .update(updateData)
+        .eq('id', id)
+        .select('*, subscription_plans(id, name, slug, price_monthly)')
+        .single();
+
+      if (error || !result) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      return res.json({
+        id: result.id,
+        full_name: result.full_name || '',
+        email: result.email,
+        username: result.username || null,
+        avatar_url: result.avatar_url || null,
+        account_type: result.account_type || 'free',
+        internal_role: result.internal_role || null,
+        status: result.status || 'active',
+        phone_number: result.phone_number || null,
+        subscription_plan_id: result.subscription_plan_id || null,
+        plan_name: (result as any).subscription_plans?.name || null,
+        plan_slug: (result as any).subscription_plans?.slug || null,
+        updated_at: result.updated_at,
+      });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/users/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/details', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('user_details')
+        .select('*')
+        .eq('user_id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user details:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      return res.json(data || null);
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/details:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.put('/users/:id/details', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const body = req.body;
+
+      const { data, error } = await supabaseRemote
+        .from('user_details')
+        .upsert(
+          {
+            ...body,
+            user_id: id,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        )
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error upserting user details:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      return res.json(data);
+    } catch (error) {
+      console.error('Error in PUT /api/admin/users/:id/details:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/notes', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('user_admin_notes')
+        .select('*, profiles!user_admin_notes_admin_id_fkey(id, full_name, email, avatar_url)')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') {
+          return res.json({ notes: [] });
+        }
+        console.error('Error fetching user notes:', error);
+        return res.status(500).json({ error: 'Failed to fetch notes' });
+      }
+
+      const notes = (data || []).map((n: any) => ({
+        id: n.id,
+        user_id: n.user_id,
+        admin_id: n.admin_id,
+        admin_name: n.profiles?.full_name || 'Unknown Admin',
+        admin_email: n.profiles?.email || null,
+        admin_avatar_url: n.profiles?.avatar_url || null,
+        note: n.note,
+        created_at: n.created_at,
+        updated_at: n.updated_at,
+      }));
+
+      return res.json({ notes });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/notes:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.post('/users/:id/notes', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { note } = req.body;
+
+      if (!note || typeof note !== 'string' || note.trim() === '') {
+        return res.status(400).json({ error: 'note is required and must be a non-empty string' });
+      }
+
+      const adminId = req.user?.id || null;
+
+      const { data, error } = await supabaseRemote
+        .from('user_admin_notes')
+        .insert({
+          user_id: id,
+          admin_id: adminId,
+          note: note.trim(),
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        if (error?.code === 'PGRST205' || error?.code === '42P01') {
+          return res.status(503).json({ error: 'Notes feature is not yet configured.' });
+        }
+        console.error('Error creating user note:', error);
+        return res.status(500).json({ error: 'Failed to create note' });
+      }
+
+      return res.status(201).json({
+        id: data.id,
+        user_id: data.user_id,
+        admin_id: data.admin_id,
+        note: data.note,
+        created_at: data.created_at,
+      });
+    } catch (error) {
+      console.error('Error in POST /api/admin/users/:id/notes:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/users/:id/notes', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { note } = req.body;
+
+      if (!note || typeof note !== 'string') {
+        return res.status(400).json({ error: 'note is required' });
+      }
+
+      const adminId = req.user?.id || null;
+
+      const { data, error } = await supabaseRemote
+        .from('user_admin_notes')
+        .insert({
+          user_id: id,
+          admin_id: adminId,
+          note: note.trim(),
+        })
+        .select()
+        .single();
+
+      if (error || !data) {
+        console.error('Error saving user note:', error);
+        return res.status(500).json({ error: 'Failed to save note' });
+      }
+
+      return res.json({
+        id: data.id,
+        user_id: data.user_id,
+        admin_id: data.admin_id,
+        note: data.note,
+        created_at: data.created_at,
+      });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/users/:id/notes:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/payment-links', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('payment_links')
+        .select(`
+          *,
+          creator:profiles!payment_links_created_by_fkey(id, full_name, email)
+        `)
+        .eq('lead_user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user payment links:', error);
+        return res.status(500).json({ error: 'Failed to fetch payment history' });
+      }
+
+      const paymentLinks = (data || []).map((pl: any) => ({
+        id: pl.id,
+        title: pl.title,
+        description: pl.description,
+        amount: pl.amount,
+        currency: pl.currency || 'USD',
+        status: pl.status,
+        payment_url: pl.payment_url,
+        expires_at: pl.expires_at,
+        paid_at: pl.paid_at,
+        created_by: pl.created_by,
+        creator_name: pl.creator?.full_name || null,
+        created_at: pl.created_at,
+      }));
+
+      return res.json({ payment_links: paymentLinks });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/payment-links:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/tickets', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { data, error } = await supabaseRemote
+        .from('support_tickets')
+        .select(`
+          *,
+          assigned:profiles!support_tickets_assigned_to_fkey(id, full_name, email)
+        `)
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') {
+          return res.json({ tickets: [] });
+        }
+        console.error('Error fetching user tickets:', error);
+        return res.status(500).json({ error: 'Failed to fetch support history' });
+      }
+
+      const tickets = (data || []).map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        type: t.type,
+        priority: t.priority,
+        status: t.status,
+        assigned_to: t.assigned_to,
+        assigned_name: t.assigned?.full_name || null,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+      }));
+
+      return res.json({ tickets });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/tickets:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
+  // USER DETAILS (legacy endpoints)
   // =============================================
   router.get('/user-details/:userId', async (req: Request, res: Response) => {
     try {
@@ -4355,6 +4931,239 @@ export function registerAdminRoutes(app: Express) {
       });
     } catch (error) {
       console.error('Error in GET /api/admin/user-progress/[userId]:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
+  // FREE LEARNING (Onboarding Modules & Videos)
+  // =============================================
+  router.get('/free-learning/modules', async (req: Request, res: Response) => {
+    try {
+      const { data: modules, error: modError } = await supabaseRemote
+        .from('onboarding_modules')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (modError) {
+        console.error('Error fetching onboarding modules:', modError);
+        return res.status(500).json({ error: 'Failed to fetch modules' });
+      }
+
+      const { data: videos, error: vidError } = await supabaseRemote
+        .from('onboarding_videos')
+        .select('*')
+        .order('order_index', { ascending: true });
+
+      if (vidError) {
+        console.error('Error fetching onboarding videos:', vidError);
+        return res.status(500).json({ error: 'Failed to fetch videos' });
+      }
+
+      const modulesWithVideos = (modules || []).map((mod: any) => ({
+        ...mod,
+        videos: (videos || []).filter((v: any) => v.module_id === mod.id),
+      }));
+
+      return res.json({ modules: modulesWithVideos });
+    } catch (error) {
+      console.error('Error in GET /api/admin/free-learning/modules:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.post('/free-learning/modules', async (req: Request, res: Response) => {
+    try {
+      const { title, description, order_index, thumbnail } = req.body;
+      if (!title) return res.status(400).json({ error: 'Title is required' });
+
+      const { data, error } = await supabaseRemote
+        .from('onboarding_modules')
+        .insert({
+          title,
+          description: description || null,
+          order_index: order_index ?? 0,
+          thumbnail: thumbnail || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating module:', error);
+        return res.status(500).json({ error: 'Failed to create module' });
+      }
+
+      return res.status(201).json({ module: data });
+    } catch (error) {
+      console.error('Error in POST /api/admin/free-learning/modules:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/free-learning/modules/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates: Record<string, any> = {};
+      const allowedFields = ['title', 'description', 'order_index', 'thumbnail'];
+
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updates[field] = req.body[field];
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      const { data, error } = await supabaseRemote
+        .from('onboarding_modules')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating module:', error);
+        return res.status(500).json({ error: 'Failed to update module' });
+      }
+
+      return res.json({ module: data });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/free-learning/modules/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.delete('/free-learning/modules/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      await supabaseRemote.from('onboarding_videos').delete().eq('module_id', id);
+
+      const { error } = await supabaseRemote.from('onboarding_modules').delete().eq('id', id);
+
+      if (error) {
+        console.error('Error deleting module:', error);
+        return res.status(500).json({ error: 'Failed to delete module' });
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in DELETE /api/admin/free-learning/modules/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.post('/free-learning/videos', async (req: Request, res: Response) => {
+    try {
+      const { title, description, video_url, video_duration, module_id, order_index, thumbnail } = req.body;
+      if (!title || !module_id) return res.status(400).json({ error: 'Title and module_id are required' });
+
+      const { data, error } = await supabaseRemote
+        .from('onboarding_videos')
+        .insert({
+          title,
+          description: description || null,
+          video_url: video_url || null,
+          video_duration: video_duration || null,
+          module_id,
+          order_index: order_index ?? 0,
+          thumbnail: thumbnail || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating video:', error);
+        return res.status(500).json({ error: 'Failed to create video' });
+      }
+
+      return res.status(201).json({ video: data });
+    } catch (error) {
+      console.error('Error in POST /api/admin/free-learning/videos:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/free-learning/videos/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates: Record<string, any> = {};
+      const allowedFields = ['title', 'description', 'video_url', 'video_duration', 'module_id', 'order_index', 'thumbnail'];
+
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updates[field] = req.body[field];
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      const { data, error } = await supabaseRemote
+        .from('onboarding_videos')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating video:', error);
+        return res.status(500).json({ error: 'Failed to update video' });
+      }
+
+      return res.json({ video: data });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/free-learning/videos/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.delete('/free-learning/videos/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const { error } = await supabaseRemote.from('onboarding_videos').delete().eq('id', id);
+
+      if (error) {
+        console.error('Error deleting video:', error);
+        return res.status(500).json({ error: 'Failed to delete video' });
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in DELETE /api/admin/free-learning/videos/:id:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/free-learning/reorder', async (req: Request, res: Response) => {
+    try {
+      const { modules, videos } = req.body;
+
+      if (modules && Array.isArray(modules)) {
+        for (const item of modules) {
+          await supabaseRemote
+            .from('onboarding_modules')
+            .update({ order_index: item.order_index })
+            .eq('id', item.id);
+        }
+      }
+
+      if (videos && Array.isArray(videos)) {
+        for (const item of videos) {
+          await supabaseRemote
+            .from('onboarding_videos')
+            .update({ order_index: item.order_index, module_id: item.module_id })
+            .eq('id', item.id);
+        }
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in PATCH /api/admin/free-learning/reorder:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });

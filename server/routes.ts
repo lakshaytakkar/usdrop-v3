@@ -12,6 +12,9 @@ import { registerLeadScoringRoutes } from "./routes/lead-scoring";
 import { registerPaymentLinkRoutes } from "./routes/payment-links";
 import { registerAccessControlRoutes } from "./routes/access-control";
 import { registerAdminSessionRoutes } from "./routes/admin-sessions";
+import { registerAdminTicketRoutes } from "./routes/admin-tickets";
+import { registerAdminClientRoutes } from "./routes/admin-clients";
+import { registerAdminLLCRoutes } from "./routes/admin-llc";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -25,4 +28,7 @@ export async function registerRoutes(server: Server, app: Express) {
   registerPaymentLinkRoutes(app);
   registerAccessControlRoutes(app);
   registerAdminSessionRoutes(app);
+  registerAdminTicketRoutes(app);
+  registerAdminClientRoutes(app);
+  registerAdminLLCRoutes(app);
 }

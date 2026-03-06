@@ -3,6 +3,10 @@ import { useRouter, useParams } from "@/hooks/use-router"
 import { apiFetch } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import {
   ArrowLeft,
   Package,
@@ -11,7 +15,7 @@ import {
   Building,
   DollarSign,
   TrendingUp,
-  Calendar,
+  Save,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -34,6 +38,15 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const [editTitle, setEditTitle] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [editBuyPrice, setEditBuyPrice] = useState("")
+  const [editSellPrice, setEditSellPrice] = useState("")
+  const [editIsWinning, setEditIsWinning] = useState(false)
+  const [editIsLocked, setEditIsLocked] = useState(false)
+  const [editIsTrending, setEditIsTrending] = useState(false)
 
   const fetchProduct = useCallback(async () => {
     if (!productId || productId === "undefined") {
@@ -46,7 +59,15 @@ export default function ProductDetailPage() {
       const response = await apiFetch(`/api/admin/products/${productId}`)
       if (!response.ok) throw new Error("Failed to fetch product")
       const data = await response.json()
-      setProduct(data.product)
+      const p = data.product
+      setProduct(p)
+      setEditTitle(p.title || "")
+      setEditDescription(p.description || "")
+      setEditBuyPrice(String(p.buy_price || 0))
+      setEditSellPrice(String(p.sell_price || 0))
+      setEditIsWinning(p.metadata?.is_winning ?? false)
+      setEditIsLocked(p.metadata?.is_locked ?? false)
+      setEditIsTrending(p.metadata?.is_trending ?? false)
     } catch {
       showError("Failed to load product")
     } finally {
@@ -57,6 +78,32 @@ export default function ProductDetailPage() {
   useEffect(() => {
     fetchProduct()
   }, [fetchProduct])
+
+  const handleSave = async () => {
+    if (!product) return
+    try {
+      setSaving(true)
+      const response = await apiFetch(`/api/admin/products/${product.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: editTitle,
+          description: editDescription,
+          buy_price: Number(editBuyPrice) || 0,
+          sell_price: Number(editSellPrice) || 0,
+          is_winning: editIsWinning,
+          is_locked: editIsLocked,
+          is_trending: editIsTrending,
+        }),
+      })
+      if (!response.ok) throw new Error("Failed to update product")
+      showSuccess("Product updated successfully")
+      fetchProduct()
+    } catch {
+      showError("Failed to update product")
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!product) return
@@ -108,10 +155,8 @@ export default function ProductDetailPage() {
     )
   }
 
-  const isWinning = product.metadata?.is_winning ?? false
-  const isLocked = product.metadata?.is_locked ?? false
-  const profit = product.profit_per_order || 0
-  const margin = product.sell_price > 0 ? ((profit / product.sell_price) * 100).toFixed(1) : "0.0"
+  const profit = (Number(editSellPrice) || 0) - (Number(editBuyPrice) || 0)
+  const margin = Number(editSellPrice) > 0 ? ((profit / Number(editSellPrice)) * 100).toFixed(1) : "0.0"
 
   return (
     <PageShell>
@@ -132,8 +177,16 @@ export default function ProductDetailPage() {
         subtitle={product.category?.name || "Uncategorized"}
         actions={
           <div className="flex items-center gap-2">
-            {isWinning && <StatusBadge status="Winning" variant="success" />}
-            {isLocked && <StatusBadge status="Locked" variant="warning" />}
+            {editIsWinning && <StatusBadge status="Winning" variant="success" />}
+            {editIsLocked && <StatusBadge status="Locked" variant="warning" />}
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              data-testid="button-save-product"
+            >
+              <Save className="h-4 w-4 mr-1.5" />
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
@@ -149,12 +202,12 @@ export default function ProductDetailPage() {
       <StatGrid>
         <StatCard
           label="Buy Price"
-          value={formatPrice(product.buy_price)}
+          value={formatPrice(Number(editBuyPrice))}
           icon={DollarSign}
         />
         <StatCard
           label="Sell Price"
-          value={formatPrice(product.sell_price)}
+          value={formatPrice(Number(editSellPrice))}
           icon={DollarSign}
           iconBg="rgba(99, 102, 241, 0.1)"
           iconColor="#6366f1"
@@ -210,6 +263,21 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          <DetailSection title="Metadata Toggles">
+            <div className="flex items-center justify-between py-3" data-testid="toggle-winning">
+              <Label>Winning Product</Label>
+              <Switch checked={editIsWinning} onCheckedChange={setEditIsWinning} />
+            </div>
+            <div className="flex items-center justify-between py-3" data-testid="toggle-locked">
+              <Label>Locked</Label>
+              <Switch checked={editIsLocked} onCheckedChange={setEditIsLocked} />
+            </div>
+            <div className="flex items-center justify-between py-3" data-testid="toggle-trending">
+              <Label>Trending</Label>
+              <Switch checked={editIsTrending} onCheckedChange={setEditIsTrending} />
+            </div>
+          </DetailSection>
+
           {product.metadata?.filters && product.metadata.filters.length > 0 && (
             <DetailSection title="Tags">
               <div className="flex flex-wrap gap-2 py-3">
@@ -224,8 +292,55 @@ export default function ProductDetailPage() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          <DetailSection title="Product Details">
-            <InfoRow label="Title" value={product.title} />
+          <DetailSection title="Edit Product Details">
+            <div className="py-3 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-title">Title</Label>
+                <Input
+                  id="edit-title"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  data-testid="input-edit-title"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-buy-price">Buy Price ($)</Label>
+                  <Input
+                    id="edit-buy-price"
+                    type="number"
+                    step="0.01"
+                    value={editBuyPrice}
+                    onChange={(e) => setEditBuyPrice(e.target.value)}
+                    data-testid="input-edit-buy-price"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-sell-price">Sell Price ($)</Label>
+                  <Input
+                    id="edit-sell-price"
+                    type="number"
+                    step="0.01"
+                    value={editSellPrice}
+                    onChange={(e) => setEditSellPrice(e.target.value)}
+                    data-testid="input-edit-sell-price"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={4}
+                  data-testid="input-edit-description"
+                />
+              </div>
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Product Information">
             <InfoRow label="Category" value={product.category?.name || "Uncategorized"} />
             <InfoRow label="Product ID">
               <span className="text-sm font-mono">{product.id}</span>
@@ -233,29 +348,6 @@ export default function ProductDetailPage() {
             <InfoRow label="Created" value={format(new Date(product.created_at), "MMM dd, yyyy")} />
             <InfoRow label="Updated" value={format(new Date(product.updated_at), "MMM dd, yyyy HH:mm")} />
           </DetailSection>
-
-          <DetailSection title="Pricing">
-            <InfoRow label="Buy Price" value={formatPrice(product.buy_price)} />
-            <InfoRow label="Sell Price" value={formatPrice(product.sell_price)} />
-            <InfoRow label="Profit per Order">
-              <span className={`text-sm font-medium ${profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
-                {formatPrice(profit)}
-              </span>
-            </InfoRow>
-            <InfoRow label="Margin">
-              <span className={`text-sm font-medium ${profit >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"}`}>
-                {margin}%
-              </span>
-            </InfoRow>
-          </DetailSection>
-
-          {product.description && (
-            <DetailSection title="Description">
-              <div className="py-3">
-                <p className="text-sm whitespace-pre-wrap" data-testid="text-description">{product.description}</p>
-              </div>
-            </DetailSection>
-          )}
 
           {product.supplier && (
             <DetailSection title="Supplier">
@@ -300,30 +392,6 @@ export default function ProductDetailPage() {
               </div>
             </DetailSection>
           )}
-
-          <DetailSection title="Metadata">
-            <InfoRow label="Winning">
-              <StatusBadge status={isWinning ? "Yes" : "No"} />
-            </InfoRow>
-            <InfoRow label="Locked">
-              <StatusBadge status={isLocked ? "Yes" : "No"} />
-            </InfoRow>
-            <InfoRow label="Trending">
-              <StatusBadge status={product.metadata?.is_trending ? "Yes" : "No"} />
-            </InfoRow>
-            {product.rating !== null && product.rating !== undefined && (
-              <InfoRow label="Rating">
-                <div className="flex items-center gap-1">
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium">{product.rating.toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground">({product.reviews_count} reviews)</span>
-                </div>
-              </InfoRow>
-            )}
-            {product.source && (
-              <InfoRow label="Source Type" value={product.source.source_type.replace(/_/g, " ")} />
-            )}
-          </DetailSection>
         </div>
       </div>
     </PageShell>

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { apiFetch } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { format } from "date-fns"
-import { Video, Eye, EyeOff, Calendar, Clock, Plus, ExternalLink, FolderOpen } from "lucide-react"
+import { Video, Eye, EyeOff, Calendar, Clock, Plus, ExternalLink, FolderOpen, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -57,6 +57,7 @@ export default function AdminSessionsPage() {
   const [formDuration, setFormDuration] = useState("")
   const [formDate, setFormDate] = useState("")
   const [formPublished, setFormPublished] = useState(true)
+  const [reorderMode, setReorderMode] = useState(false)
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -171,6 +172,31 @@ export default function AdminSessionsPage() {
     }
   }
 
+  const handleReorder = async (index: number, direction: "up" | "down") => {
+    const newSessions = [...sessions]
+    const targetIndex = direction === "up" ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= newSessions.length) return
+
+    const temp = newSessions[index]
+    newSessions[index] = newSessions[targetIndex]
+    newSessions[targetIndex] = temp
+
+    const reordered = newSessions.map((s, i) => ({ ...s, order_index: i }))
+    setSessions(reordered)
+
+    try {
+      for (const s of reordered) {
+        await apiFetch(`/api/admin/sessions/${s.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ order_index: s.order_index }),
+        })
+      }
+    } catch {
+      showError("Failed to reorder")
+      fetchSessions()
+    }
+  }
+
   const handleTogglePublished = async (session: MentorshipSession) => {
     try {
       const res = await apiFetch(`/api/admin/sessions/${session.id}`, {
@@ -282,17 +308,28 @@ export default function AdminSessionsPage() {
         title="Sessions"
         subtitle="Manage mentorship session recordings"
         actions={
-          <Button
-            size="sm"
-            onClick={() => {
-              resetForm()
-              setDialogOpen(true)
-            }}
-            data-testid="button-add-session"
-          >
-            <Plus className="size-4 mr-1.5" />
-            Add Session
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={reorderMode ? "default" : "outline"}
+              onClick={() => setReorderMode(!reorderMode)}
+              data-testid="button-toggle-reorder"
+            >
+              <ArrowUpDown className="size-4 mr-1.5" />
+              {reorderMode ? "Done Reordering" : "Reorder"}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                resetForm()
+                setDialogOpen(true)
+              }}
+              data-testid="button-add-session"
+            >
+              <Plus className="size-4 mr-1.5" />
+              Add Session
+            </Button>
+          </div>
         }
       />
 
@@ -321,28 +358,55 @@ export default function AdminSessionsPage() {
         />
       </StatGrid>
 
-      <DataTable
-        data={sessions}
-        columns={columns}
-        rowActions={rowActions}
-        searchPlaceholder="Search sessions..."
-        searchKey="title"
-        isLoading={loading}
-        filters={[
-          {
-            label: "Category",
-            key: "category",
-            options: categories,
-          },
-          {
-            label: "Status",
-            key: "is_published",
-            options: ["true", "false"],
-          },
-        ]}
-        emptyTitle="No sessions yet"
-        emptyDescription="Add your first mentorship session recording."
-      />
+      {reorderMode ? (
+        <div className="rounded-xl border bg-card overflow-hidden" data-testid="section-reorder">
+          <div className="px-4 py-3 border-b">
+            <p className="text-sm text-muted-foreground">Drag sessions up/down to reorder them</p>
+          </div>
+          <div className="divide-y">
+            {sessions.map((s, i) => (
+              <div key={s.id} className="flex items-center gap-3 px-4 py-3" data-testid={`reorder-row-${s.id}`}>
+                <span className="text-xs text-muted-foreground w-6 text-right">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{s.title}</p>
+                  <p className="text-xs text-muted-foreground">{s.category}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button size="icon" variant="ghost" disabled={i === 0} onClick={() => handleReorder(i, "up")} data-testid={`button-reorder-up-${s.id}`}>
+                    <ArrowUp className="size-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" disabled={i === sessions.length - 1} onClick={() => handleReorder(i, "down")} data-testid={`button-reorder-down-${s.id}`}>
+                    <ArrowDown className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <DataTable
+          data={sessions}
+          columns={columns}
+          rowActions={rowActions}
+          searchPlaceholder="Search sessions..."
+          searchKey="title"
+          isLoading={loading}
+          filters={[
+            {
+              label: "Category",
+              key: "category",
+              options: categories,
+            },
+            {
+              label: "Status",
+              key: "is_published",
+              options: ["true", "false"],
+            },
+          ]}
+          emptyTitle="No sessions yet"
+          emptyDescription="Add your first mentorship session recording."
+        />
+      )}
 
       <FormDialog
         open={dialogOpen}

@@ -137,6 +137,9 @@ export default function AdminProductsPage() {
 
   const winningCount = useMemo(() => products.filter(p => p.metadata?.is_winning).length, [products])
 
+  const trendingCount = useMemo(() => products.filter(p => p.metadata?.is_trending).length, [products])
+  const lockedCount = useMemo(() => products.filter(p => p.metadata?.is_locked).length, [products])
+
   const categoryFilterOptions = useMemo(() => {
     return categories.map(c => c.name)
   }, [categories])
@@ -284,9 +287,10 @@ export default function AdminProductsPage() {
         searchPlaceholder="Search products..."
         searchKey="title"
         onRowClick={(item) => router.push(`/admin/products/${item.id}`)}
-        filters={categoryFilterOptions.length > 0 ? [
-          { label: "Category", key: "category", options: categoryFilterOptions },
-        ] : undefined}
+        filters={[
+          ...(categoryFilterOptions.length > 0 ? [{ label: "Category", key: "category", options: categoryFilterOptions }] : []),
+          { label: "Type", key: "metadata_type", options: ["Winning", "Trending", "Locked", "Regular"] },
+        ]}
         emptyTitle="No products found"
         emptyDescription="Add a new product to get started."
         isLoading={loading}

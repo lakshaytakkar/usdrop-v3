@@ -3,6 +3,7 @@ import { Search, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,47 +30,39 @@ const navCategories: NavCategory[] = [
     items: [],
   },
   {
-    title: "Users",
-    defaultUrl: "/admin/external-users",
-    items: [
-      { title: "Clients", url: "/admin/external-users" },
-      { title: "Team", url: "/admin/internal-users" },
-      { title: "Leads", url: "/admin/leads" },
-    ],
+    title: "Pipeline",
+    defaultUrl: "/admin/pipeline",
+    items: [],
   },
   {
-    title: "Catalog",
-    defaultUrl: "/admin/products",
-    items: [
-      { title: "Products", url: "/admin/products" },
-      { title: "Categories", url: "/admin/categories" },
-      { title: "Suppliers", url: "/admin/suppliers" },
-    ],
+    title: "Clients",
+    defaultUrl: "/admin/clients",
+    items: [],
+  },
+  {
+    title: "LLC Tracker",
+    defaultUrl: "/admin/llc",
+    items: [],
+  },
+  {
+    title: "Tickets",
+    defaultUrl: "/admin/tickets",
+    items: [],
+  },
+  {
+    title: "Users",
+    defaultUrl: "/admin/users",
+    items: [],
   },
   {
     title: "Content",
-    defaultUrl: "/admin/courses",
+    defaultUrl: "/admin/content/free-learning",
     items: [
+      { title: "Free Learning", url: "/admin/content/free-learning" },
       { title: "Courses", url: "/admin/courses" },
       { title: "Sessions", url: "/admin/sessions" },
-      { title: "Enrollments", url: "/admin/enrollments" },
-    ],
-  },
-  {
-    title: "Sales",
-    defaultUrl: "/admin/plans",
-    items: [
-      { title: "Plans", url: "/admin/plans" },
-      { title: "Competitor Stores", url: "/admin/competitor-stores" },
-      { title: "Shopify Stores", url: "/admin/shopify-stores" },
-    ],
-  },
-  {
-    title: "CRM",
-    defaultUrl: "/admin/pipeline",
-    items: [
-      { title: "Pipeline", url: "/admin/pipeline" },
-      { title: "Payment Links", url: "/admin/payment-links" },
+      { title: "Products", url: "/admin/products" },
+      { title: "Categories", url: "/admin/categories" },
     ],
   },
   {
@@ -82,14 +75,24 @@ const navCategories: NavCategory[] = [
 ];
 
 function getActiveCategory(location: string): NavCategory | null {
+  if (location.startsWith("/admin/courses/")) {
+    return navCategories.find(c => c.title === "Content") || null;
+  }
+  if (location.startsWith("/admin/batches/")) {
+    return navCategories.find(c => c.title === "Clients") || null;
+  }
   for (const cat of navCategories) {
-    if (cat.items.length === 0 && location === cat.defaultUrl) return cat;
+    if (cat.items.length === 0) {
+      if (cat.defaultUrl === "/admin") {
+        if (location === "/admin") return cat;
+      } else if (location === cat.defaultUrl || location.startsWith(cat.defaultUrl + "/")) {
+        return cat;
+      }
+      continue;
+    }
     for (const item of cat.items) {
       if (location === item.url || location.startsWith(item.url + "/")) return cat;
     }
-  }
-  if (location.startsWith("/admin/courses/")) {
-    return navCategories.find(c => c.title === "Content") || null;
   }
   return null;
 }

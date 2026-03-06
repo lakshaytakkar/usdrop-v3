@@ -24,25 +24,19 @@ import AdminCourses from "@/pages/admin/courses/page";
 import AdminCourseBuilder from "@/pages/admin/courses/[courseId]/builder/page";
 import AdminProducts from "@/pages/admin/products/page";
 import AdminProductDetail from "@/pages/admin/products/[id]/page";
-import AdminExternalUsers from "@/pages/admin/external-users/page";
-import AdminExternalUserDetail from "@/pages/admin/external-users/[id]/page";
-import AdminInternalUsers from "@/pages/admin/internal-users/page";
-import AdminInternalUserDetail from "@/pages/admin/internal-users/[id]/page";
 import AdminCategories from "@/pages/admin/categories/page";
 import AdminCategoryDetail from "@/pages/admin/categories/[id]/page";
-import AdminSuppliers from "@/pages/admin/suppliers/page";
-import AdminLeads from "@/pages/admin/leads/page";
-import AdminLeadDetail from "@/pages/admin/leads/[id]/page";
-import AdminPlans from "@/pages/admin/plans/page";
-import AdminPlanDetail from "@/pages/admin/plans/[id]/page";
-import AdminCompetitorStores from "@/pages/admin/competitor-stores/page";
-import AdminCompetitorStoreDetail from "@/pages/admin/competitor-stores/[id]/page";
-import AdminShopifyStores from "@/pages/admin/shopify-stores/page";
 import AdminPipeline from "@/pages/admin/pipeline/page";
 import AdminAccessControl from "@/pages/admin/access-control/page";
-import AdminPaymentLinks from "@/pages/admin/payment-links/page";
 import AdminSessions from "@/pages/admin/sessions/page";
-import AdminEnrollments from "@/pages/admin/enrollments/page";
+import AdminClients from "@/pages/admin/clients/page";
+import AdminLLC from "@/pages/admin/llc/page";
+import AdminTickets from "@/pages/admin/tickets/page";
+import AdminTicketDetail from "@/pages/admin/tickets/[id]/page";
+import AdminUsers from "@/pages/admin/users/page";
+import AdminUserDetail from "@/pages/admin/users/[id]/page";
+import AdminBatchDetail from "@/pages/admin/batches/[id]/page";
+import AdminFreeLearning from "@/pages/admin/content/free-learning/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -234,25 +228,19 @@ function Router() {
       <Route path="/admin/courses/:courseId/builder" component={() => <AdminGuard><AdminLayout><AdminCourseBuilder /></AdminLayout></AdminGuard>} />
       <Route path="/admin/products" component={() => <AdminGuard><AdminLayout><AdminProducts /></AdminLayout></AdminGuard>} />
       <Route path="/admin/products/:id" component={() => <AdminGuard><AdminLayout><AdminProductDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/external-users" component={() => <AdminGuard><AdminLayout><AdminExternalUsers /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/external-users/:id" component={() => <AdminGuard><AdminLayout><AdminExternalUserDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/internal-users" component={() => <AdminGuard><AdminLayout><AdminInternalUsers /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/internal-users/:id" component={() => <AdminGuard><AdminLayout><AdminInternalUserDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/categories" component={() => <AdminGuard><AdminLayout><AdminCategories /></AdminLayout></AdminGuard>} />
       <Route path="/admin/categories/:id" component={() => <AdminGuard><AdminLayout><AdminCategoryDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/suppliers" component={() => <AdminGuard><AdminLayout><AdminSuppliers /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/leads" component={() => <AdminGuard><AdminLayout><AdminLeads /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/leads/:id" component={() => <AdminGuard><AdminLayout><AdminLeadDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/plans/:id" component={() => <AdminGuard><AdminLayout><AdminPlanDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/competitor-stores" component={() => <AdminGuard><AdminLayout><AdminCompetitorStores /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/competitor-stores/:id" component={() => <AdminGuard><AdminLayout><AdminCompetitorStoreDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/shopify-stores" component={() => <AdminGuard><AdminLayout><AdminShopifyStores /></AdminLayout></AdminGuard>} />
       <Route path="/admin/pipeline" component={() => <AdminGuard><AdminLayout><AdminPipeline /></AdminLayout></AdminGuard>} />
       <Route path="/admin/access-control" component={() => <AdminGuard><AdminLayout><AdminAccessControl /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/payment-links" component={() => <AdminGuard><AdminLayout><AdminPaymentLinks /></AdminLayout></AdminGuard>} />
       <Route path="/admin/sessions" component={() => <AdminGuard><AdminLayout><AdminSessions /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/enrollments" component={() => <AdminGuard><AdminLayout><AdminEnrollments /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/clients" component={() => <AdminGuard><AdminLayout><AdminClients /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/llc" component={() => <AdminGuard><AdminLayout><AdminLLC /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/tickets" component={() => <AdminGuard><AdminLayout><AdminTickets /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/tickets/:id" component={() => <AdminGuard><AdminLayout><AdminTicketDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/users" component={() => <AdminGuard><AdminLayout><AdminUsers /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/users/:id" component={() => <AdminGuard><AdminLayout><AdminUserDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/batches/:id" component={() => <AdminGuard><AdminLayout><AdminBatchDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/content/free-learning" component={() => <AdminGuard><AdminLayout><AdminFreeLearning /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />
