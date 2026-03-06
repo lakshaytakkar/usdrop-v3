@@ -65,6 +65,19 @@ function validatePhoneNumber(phone: string): { valid: boolean; error?: string } 
   return { valid: true };
 }
 
+let cachedFreePlanId: string | null = null;
+
+async function getFreePlanId(): Promise<string | null> {
+  if (cachedFreePlanId) return cachedFreePlanId;
+  const { data } = await supabaseRemote
+    .from('subscription_plans')
+    .select('id')
+    .eq('slug', 'free')
+    .single();
+  if (data?.id) cachedFreePlanId = data.id;
+  return data?.id || null;
+}
+
 async function findOrCreateProfile(email: string, fullName?: string | null, avatarUrl?: string | null) {
   const { data: existing } = await supabaseRemote
     .from('profiles')
@@ -76,11 +89,7 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
     return existing;
   }
 
-  const { data: freePlan } = await supabaseRemote
-    .from('subscription_plans')
-    .select('id')
-    .eq('slug', 'free')
-    .single();
+  const freePlanId = await getFreePlanId();
 
   const { data: newProfile, error: insertError } = await supabaseRemote
     .from('profiles')
@@ -88,7 +97,7 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
       email: email.toLowerCase(),
       full_name: fullName || null,
       avatar_url: avatarUrl || null,
-      subscription_plan_id: freePlan?.id || null,
+      subscription_plan_id: freePlanId,
       status: 'active',
       account_type: 'free',
     })
@@ -100,6 +109,7 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
     return null;
   }
 
+  console.log(`New user created via signup: ${email} (free plan, id: ${newProfile.id})`);
   return newProfile;
 }
 
@@ -431,16 +441,24 @@ export function registerAuthRoutes(app: Express) {
   router.get('/callback', async (req: Request, res: Response) => {
     try {
       const code = req.query.code as string;
+      const errorParam = req.query.error as string;
+      const errorDescription = req.query.error_description as string;
       const redirectTo = sanitizeRedirectPath(req.query.redirectTo as string || '/home');
 
+      if (errorParam) {
+        console.error('OAuth provider error:', errorParam, errorDescription);
+        return res.redirect(`/login?error=${encodeURIComponent(errorDescription || 'Authentication was denied. Please try again.')}`);
+      }
+
       if (!code) {
+        console.error('OAuth callback missing code. Query params:', JSON.stringify(req.query));
         return res.redirect(`/login?error=${encodeURIComponent('Authentication failed. No authorization code received.')}`);
       }
 
       const { data, error } = await supabaseAuth.auth.exchangeCodeForSession(code);
 
       if (error || !data?.user?.email) {
-        console.error('OAuth callback error:', error);
+        console.error('OAuth code exchange error:', error?.message || 'No user email returned');
         return res.redirect(`/login?error=${encodeURIComponent('Authentication failed. Please try again.')}`);
       }
 
@@ -457,13 +475,13 @@ export function registerAuthRoutes(app: Express) {
         return res.redirect(`/login?error=${encodeURIComponent('Your account has been suspended. Please contact support.')}`);
       }
 
-      if (avatarUrl || fullName) {
+      const updates: Record<string, any> = {};
+      if (avatarUrl) updates.avatar_url = avatarUrl;
+      if (fullName && !profile.full_name) updates.full_name = fullName;
+      if (Object.keys(updates).length > 0) {
         await supabaseRemote
           .from('profiles')
-          .update({
-            ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
-            ...(fullName && !profile.full_name ? { full_name: fullName } : {}),
-          })
+          .update(updates)
           .eq('id', profile.id);
       }
 
