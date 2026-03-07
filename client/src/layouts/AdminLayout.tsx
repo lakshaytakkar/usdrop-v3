@@ -71,6 +71,7 @@ const navCategories: NavCategory[] = [
     defaultUrl: "/admin/access-control",
     items: [
       { title: "Access Control", url: "/admin/access-control" },
+      { title: "Plans", url: "/admin/plans" },
     ],
   },
 ];

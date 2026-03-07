@@ -37,9 +37,8 @@ const navGroups = [
   {
     label: "Users",
     items: [
-      { title: "Clients", url: "/admin/external-users", icon: UserCog },
-      { title: "Team", url: "/admin/internal-users", icon: Users },
-      { title: "Leads", url: "/admin/leads", icon: Target },
+      { title: "Users", url: "/admin/users", icon: Users },
+      { title: "Clients", url: "/admin/clients", icon: UserCog },
     ],
   },
   {

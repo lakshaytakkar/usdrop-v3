@@ -27,7 +27,6 @@ import AdminProductDetail from "@/pages/admin/products/[id]/page";
 import AdminCategories from "@/pages/admin/categories/page";
 import AdminCategoryDetail from "@/pages/admin/categories/[id]/page";
 import AdminPipeline from "@/pages/admin/pipeline/page";
-import AdminLeadDetail from "@/pages/admin/pipeline/[id]/page";
 import AdminAccessControl from "@/pages/admin/access-control/page";
 import AdminSessions from "@/pages/admin/sessions/page";
 import AdminClients from "@/pages/admin/clients/page";
@@ -40,6 +39,7 @@ import AdminBatchDetail from "@/pages/admin/batches/[id]/page";
 import AdminFreeLearning from "@/pages/admin/content/free-learning/page";
 import AdminVideos from "@/pages/admin/videos/page";
 import AdminImportantLinks from "@/pages/admin/important-links/page";
+import AdminPlans from "@/pages/admin/plans/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -234,7 +234,7 @@ function Router() {
       <Route path="/admin/products/:id" component={() => <AdminGuard><AdminLayout><AdminProductDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/categories" component={() => <AdminGuard><AdminLayout><AdminCategories /></AdminLayout></AdminGuard>} />
       <Route path="/admin/categories/:id" component={() => <AdminGuard><AdminLayout><AdminCategoryDetail /></AdminLayout></AdminGuard>} />
-      <Route path="/admin/pipeline/:id" component={() => <AdminGuard><AdminLayout><AdminLeadDetail /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/pipeline/:id">{(params: { id: string }) => <Redirect to={`/admin/users/${params.id}`} />}</Route>
       <Route path="/admin/pipeline" component={() => <AdminGuard><AdminLayout><AdminPipeline /></AdminLayout></AdminGuard>} />
       <Route path="/admin/access-control" component={() => <AdminGuard><AdminLayout><AdminAccessControl /></AdminLayout></AdminGuard>} />
       <Route path="/admin/sessions" component={() => <AdminGuard><AdminLayout><AdminSessions /></AdminLayout></AdminGuard>} />
@@ -248,6 +248,7 @@ function Router() {
       <Route path="/admin/content/free-learning" component={() => <AdminGuard><AdminLayout><AdminFreeLearning /></AdminLayout></AdminGuard>} />
       <Route path="/admin/videos" component={() => <AdminGuard><AdminLayout><AdminVideos /></AdminLayout></AdminGuard>} />
       <Route path="/admin/important-links" component={() => <AdminGuard><AdminLayout><AdminImportantLinks /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />

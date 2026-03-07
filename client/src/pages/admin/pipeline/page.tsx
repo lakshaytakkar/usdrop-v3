@@ -232,7 +232,7 @@ export default function AdminPipelinePage() {
   useEffect(() => { fetchData() }, [fetchData])
 
   const openLeadDetail = (userId: string) => {
-    router.push(`/admin/pipeline/${userId}`)
+    router.push(`/admin/users/${userId}`)
   }
 
   const markAsCalled = async (userId: string) => {
@@ -435,7 +435,6 @@ export default function AdminPipelinePage() {
     { label: "View Details", onClick: (lead) => openLeadDetail(lead.user_id) },
     { label: "Send Payment Link", onClick: (lead) => { setSelectedLeadId(lead.user_id); setPaymentDialogOpen(true) } },
     { label: "Mark Called", onClick: (lead) => markAsCalled(lead.user_id) },
-    { label: "View Profile", onClick: (lead) => router.push(`/admin/users/${lead.user_id}`) },
     { label: "Mark Lost", onClick: (lead) => markAsLost(lead.user_id), variant: "destructive", separator: true },
   ]
 
