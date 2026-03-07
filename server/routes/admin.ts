@@ -4824,6 +4824,181 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // USER FRAMEWORK DATA (for comprehensive user detail page)
+  // =============================================
+
+  router.get('/users/:id/picklist', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabaseRemote
+        .from('user_picklist')
+        .select('id, product_id, source, added_at, products(id, title, image_url, category, buy_price, sell_price, in_stock)')
+        .eq('user_id', id)
+        .order('added_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [] });
+        console.error('Error fetching user picklist:', error);
+        return res.status(500).json({ error: 'Failed to fetch picklist' });
+      }
+      return res.json({ items: data || [] });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/picklist:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/apps', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabaseRemote
+        .from('user_apps')
+        .select('id, app_name, app_url, app_icon, category, status, created_at')
+        .eq('user_id', id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [] });
+        console.error('Error fetching user apps:', error);
+        return res.status(500).json({ error: 'Failed to fetch apps' });
+      }
+      return res.json({ items: data || [] });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/apps:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/rnd', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabaseRemote
+        .from('user_rnd_entries')
+        .select('id, date, category, hours, description, created_at')
+        .eq('user_id', id)
+        .order('date', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [], totalHours: 0 });
+        console.error('Error fetching user R&D entries:', error);
+        return res.status(500).json({ error: 'Failed to fetch R&D entries' });
+      }
+
+      const entries = data || [];
+      const totalHours = entries.reduce((sum: number, e: any) => sum + (Number(e.hours) || 0), 0);
+      const categoryBreakdown: Record<string, number> = {};
+      entries.forEach((e: any) => {
+        const cat = e.category || 'other';
+        categoryBreakdown[cat] = (categoryBreakdown[cat] || 0) + (Number(e.hours) || 0);
+      });
+
+      return res.json({ items: entries, totalHours, categoryBreakdown });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/rnd:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/roadmap', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabaseRemote
+        .from('user_roadmap_progress')
+        .select('id, task_id, status, updated_at')
+        .eq('user_id', id);
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [], stats: { total: 0, notStarted: 0, inProgress: 0, completed: 0, percentage: 0 } });
+        console.error('Error fetching user roadmap:', error);
+        return res.status(500).json({ error: 'Failed to fetch roadmap' });
+      }
+
+      const items = data || [];
+      const total = items.length;
+      const completed = items.filter((i: any) => i.status === 'completed').length;
+      const inProgress = items.filter((i: any) => i.status === 'in_progress').length;
+      const notStarted = total - completed - inProgress;
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return res.json({ items, stats: { total, notStarted, inProgress, completed, percentage } });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/roadmap:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/unlocked-sessions', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      const [sessionsResult, unlocksResult] = await Promise.all([
+        supabaseRemote.from('mentorship_sessions').select('id, title, category, duration, session_date, is_published').eq('is_published', true).order('order_index', { ascending: true }),
+        supabaseRemote.from('user_content_access').select('content_id, is_unlocked').eq('user_id', id).eq('content_type', 'session'),
+      ]);
+
+      if (sessionsResult.error) {
+        if (sessionsResult.error.code === 'PGRST205' || sessionsResult.error.code === '42P01') {
+          return res.json({ sessions: [], totalSessions: 0, unlockedCount: 0 });
+        }
+        console.error('Error fetching sessions:', sessionsResult.error);
+        return res.status(500).json({ error: 'Failed to fetch sessions' });
+      }
+
+      if (unlocksResult.error && unlocksResult.error.code !== 'PGRST205' && unlocksResult.error.code !== '42P01') {
+        console.error('Error fetching unlocks:', unlocksResult.error);
+      }
+
+      const sessions = sessionsResult.data || [];
+      const unlockMap = new Map((unlocksResult.data || []).map((u: any) => [u.content_id, u.is_unlocked]));
+
+      const result = sessions.map((s: any) => ({
+        ...s,
+        is_unlocked: unlockMap.get(s.id) || false,
+      }));
+
+      const unlockedCount = result.filter((s: any) => s.is_unlocked).length;
+
+      return res.json({ sessions: result, totalSessions: sessions.length, unlockedCount });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/unlocked-sessions:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.get('/users/:id/free-learning', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabaseRemote
+        .from('learning_progress')
+        .select('id, lesson_id, completed, completed_at')
+        .eq('user_id', id);
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ completedLessons: [], totalCompleted: 0, totalLessons: 25 });
+        console.error('Error fetching free learning progress:', error);
+        return res.status(500).json({ error: 'Failed to fetch free learning progress' });
+      }
+
+      const completed = (data || []).filter((l: any) => l.completed);
+      const lastCompletedAt = completed.length > 0
+        ? completed.sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())[0]?.completed_at
+        : null;
+
+      return res.json({
+        completedLessons: completed.map((l: any) => l.lesson_id),
+        totalCompleted: completed.length,
+        totalLessons: 25,
+        isComplete: completed.length >= 25,
+        lastCompletedAt,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/users/:id/free-learning:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // USER DETAILS (legacy endpoints)
   // =============================================
   router.get('/user-details/:userId', async (req: Request, res: Response) => {
