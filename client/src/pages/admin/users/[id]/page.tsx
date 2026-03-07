@@ -34,6 +34,8 @@ import {
   CreditCard,
   Edit,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Save,
   Download,
   RefreshCw,
@@ -61,7 +63,10 @@ import {
   AlertCircle,
   Video,
   Bookmark,
+  Circle,
+  Loader2,
 } from "lucide-react";
+import { journeyStages } from "@/data/journey-stages";
 
 interface UserProfile {
   id: string;
@@ -680,7 +685,7 @@ export default function AdminUserDetail() {
           <SessionsTab sessionsData={sessionsData} onToggle={handleToggleSession} isSubmitting={isSubmitting} />
         </TabsContent>
         <TabsContent value="workspace" className="space-y-6 mt-0">
-          <WorkspaceTab shopifyStores={user.shopify_stores} apps={userApps} rndData={rndData} roadmapData={roadmapData} />
+          <WorkspaceTab shopifyStores={user.shopify_stores} apps={userApps} rndData={rndData} roadmapData={roadmapData} userId={user.id} onRefresh={() => fetchTabData("workspace")} />
         </TabsContent>
         <TabsContent value="llc" className="space-y-6 mt-0">
           <LLCTab applications={user.llc_applications} onAdvance={handleAdvanceLLC} isSubmitting={isSubmitting} />
@@ -1044,17 +1049,69 @@ function SessionsTab({ sessionsData, onToggle, isSubmitting }: {
 // ================================================================
 // WORKSPACE TAB
 // ================================================================
-function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
+function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData, userId, onRefresh }: {
   shopifyStores: UserProfile["shopify_stores"]; apps: UserApp[];
   rndData: RndData; roadmapData: RoadmapData;
+  userId: string; onRefresh: () => void;
 }) {
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
+  const [updatingTask, setUpdatingTask] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const statusMap = new Map<string, string>();
+  for (const item of roadmapData.items) {
+    statusMap.set(item.task_id, item.status);
+  }
+
+  const allTaskIds = journeyStages.flatMap((s) => s.tasks.map((t) => t.id));
+  const totalTasks = allTaskIds.length;
+  const completedTasks = allTaskIds.filter((id) => statusMap.get(id) === "completed").length;
+  const inProgressTasks = allTaskIds.filter((id) => statusMap.get(id) === "in_progress").length;
+  const overallPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const toggleStage = (stageId: string) => {
+    setExpandedStages((prev) => {
+      const next = new Set(prev);
+      if (next.has(stageId)) next.delete(stageId);
+      else next.add(stageId);
+      return next;
+    });
+  };
+
+  const expandAll = () => setExpandedStages(new Set(journeyStages.map((s) => s.id)));
+  const collapseAll = () => setExpandedStages(new Set());
+
+  const handleStatusChange = async (taskId: string, newStatus: string) => {
+    setUpdatingTask(taskId);
+    try {
+      const res = await apiFetch(`/api/admin/users/${userId}/roadmap`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId, status: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      toast({ title: "Task updated", description: `Status changed to ${newStatus.replace(/_/g, " ")}` });
+      onRefresh();
+    } catch {
+      toast({ title: "Error", description: "Failed to update task status", variant: "destructive" });
+    } finally {
+      setUpdatingTask(null);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    if (status === "completed") return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    if (status === "in_progress") return <Loader2 className="h-4 w-4 text-blue-500" />;
+    return <Circle className="h-4 w-4 text-muted-foreground/40" />;
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Shopify Stores" value={shopifyStores.length} icon={Store} color="text-green-500" />
         <StatCard label="Connected Apps" value={apps.length} icon={Globe} color="text-blue-500" />
         <StatCard label="R&D Hours" value={rndData.totalHours} icon={Timer} color="text-purple-500" />
-        <StatCard label="Roadmap" value={`${roadmapData.stats.percentage}%`} icon={Map} color="text-amber-500" />
+        <StatCard label="Roadmap" value={`${overallPercent}%`} icon={Map} color="text-amber-500" />
       </div>
 
       {/* Shopify Stores */}
@@ -1111,36 +1168,125 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
         )}
       </SectionCard>
 
-      {/* Roadmap Progress */}
-      <SectionCard title="Roadmap Progress">
-        {roadmapData.stats.total === 0 ? (
-          <div className="py-4 text-center">
-            <Map className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-            <p className="text-sm text-muted-foreground">No roadmap tasks tracked</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{roadmapData.stats.completed} of {roadmapData.stats.total} tasks completed</span>
-              <span className="text-sm font-semibold">{roadmapData.stats.percentage}%</span>
-            </div>
-            <Progress value={roadmapData.stats.percentage} className="h-2.5" data-testid="progress-roadmap" />
-            <div className="grid grid-cols-3 gap-2 pt-2">
-              <div className="rounded-lg bg-muted/50 p-2.5 text-center">
-                <p className="text-lg font-bold">{roadmapData.stats.notStarted}</p>
-                <p className="text-sm text-muted-foreground">Not Started</p>
+      {/* Roadmap Checklist */}
+      <SectionCard title="Roadmap Checklist">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{completedTasks} of {totalTasks} tasks completed</span>
+                <span className="text-sm font-semibold">{overallPercent}%</span>
               </div>
-              <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-2.5 text-center">
-                <p className="text-lg font-bold text-blue-600">{roadmapData.stats.inProgress}</p>
-                <p className="text-sm text-muted-foreground">In Progress</p>
-              </div>
-              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-2.5 text-center">
-                <p className="text-lg font-bold text-emerald-600">{roadmapData.stats.completed}</p>
-                <p className="text-sm text-muted-foreground">Completed</p>
-              </div>
+              <Progress value={overallPercent} className="h-2.5" data-testid="progress-roadmap" />
             </div>
           </div>
-        )}
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+              <p className="text-lg font-bold">{totalTasks - completedTasks - inProgressTasks}</p>
+              <p className="text-sm text-muted-foreground">Not Started</p>
+            </div>
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-2.5 text-center">
+              <p className="text-lg font-bold text-blue-600">{inProgressTasks}</p>
+              <p className="text-sm text-muted-foreground">In Progress</p>
+            </div>
+            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-2.5 text-center">
+              <p className="text-lg font-bold text-emerald-600">{completedTasks}</p>
+              <p className="text-sm text-muted-foreground">Completed</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button size="sm" variant="outline" onClick={expandAll} data-testid="button-expand-all-stages">
+              <ChevronDown className="mr-1.5 h-3.5 w-3.5" /> Expand All
+            </Button>
+            <Button size="sm" variant="outline" onClick={collapseAll} data-testid="button-collapse-all-stages">
+              <ChevronUp className="mr-1.5 h-3.5 w-3.5" /> Collapse All
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {journeyStages.map((stage) => {
+              const stageCompleted = stage.tasks.filter((t) => statusMap.get(t.id) === "completed").length;
+              const stageTotal = stage.tasks.length;
+              const stagePercent = stageTotal > 0 ? Math.round((stageCompleted / stageTotal) * 100) : 0;
+              const isExpanded = expandedStages.has(stage.id);
+
+              return (
+                <div key={stage.id} className="rounded-lg border" data-testid={`roadmap-stage-${stage.id}`}>
+                  <button
+                    type="button"
+                    className="flex items-center justify-between w-full p-3 text-left transition-colors rounded-lg"
+                    onClick={() => toggleStage(stage.id)}
+                    data-testid={`button-toggle-stage-${stage.id}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className={`flex items-center justify-center h-7 w-7 rounded-full text-sm font-bold shrink-0 ${
+                        stagePercent === 100 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300" :
+                        stagePercent > 0 ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {stage.number}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{stage.title}</p>
+                        <p className="text-sm text-muted-foreground">{stage.phase} · {stageCompleted}/{stageTotal} done</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-3">
+                      <span className="text-sm font-medium">{stagePercent}%</span>
+                      {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="px-3 pb-3 space-y-1">
+                      <div className="mb-2">
+                        <Progress value={stagePercent} className="h-1.5" />
+                      </div>
+                      {stage.tasks.map((task) => {
+                        const currentStatus = statusMap.get(task.id) || "not_started";
+                        const isUpdating = updatingTask === task.id;
+
+                        return (
+                          <div key={task.id} className="flex items-center gap-3 py-2 px-2 rounded-md" data-testid={`roadmap-task-${task.id}`}>
+                            <div className="shrink-0">
+                              {isUpdating ? <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /> : getStatusIcon(currentStatus)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className={`text-sm ${currentStatus === "completed" ? "line-through text-muted-foreground" : ""}`}>
+                                <span className="text-muted-foreground mr-1.5">#{task.taskNo}</span>
+                                {task.title}
+                              </p>
+                            </div>
+                            <Select
+                              value={currentStatus}
+                              onValueChange={(val) => handleStatusChange(task.id, val)}
+                              disabled={isUpdating}
+                            >
+                              <SelectTrigger className={`w-[130px] text-sm shrink-0 ${
+                                currentStatus === "completed" ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400" :
+                                currentStatus === "in_progress" ? "border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-400" :
+                                ""
+                              }`} data-testid={`select-status-${task.id}`}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="not_started">Not Started</SelectItem>
+                                <SelectItem value="in_progress">In Progress</SelectItem>
+                                <SelectItem value="completed">Completed</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </SectionCard>
 
       {/* R&D Log */}

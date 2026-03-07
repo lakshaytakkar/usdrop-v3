@@ -4904,7 +4904,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const { id } = req.params;
       const { data, error } = await supabaseRemote
-        .from('user_roadmap_progress')
+        .from('roadmap_progress')
         .select('id, task_id, status, updated_at')
         .eq('user_id', id);
 
@@ -4924,6 +4924,55 @@ export function registerAdminRoutes(app: Express) {
       return res.json({ items, stats: { total, notStarted, inProgress, completed, percentage } });
     } catch (error) {
       console.error('Error in GET /api/admin/users/:id/roadmap:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.put('/users/:id/roadmap', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { taskId, status } = req.body;
+
+      if (!taskId || !status) {
+        return res.status(400).json({ error: 'taskId and status are required' });
+      }
+
+      if (!['not_started', 'in_progress', 'completed'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+
+      if (status === 'not_started') {
+        const { error } = await supabaseRemote
+          .from('roadmap_progress')
+          .delete()
+          .eq('user_id', id)
+          .eq('task_id', taskId);
+        if (error) {
+          console.error('Error deleting roadmap progress:', error);
+          return res.status(500).json({ error: 'Failed to reset task status' });
+        }
+      } else {
+        const { error } = await supabaseRemote
+          .from('roadmap_progress')
+          .upsert(
+            {
+              user_id: id,
+              task_id: taskId,
+              status,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,task_id' }
+          );
+
+        if (error) {
+          console.error('Error updating roadmap progress:', error);
+          return res.status(500).json({ error: 'Failed to update roadmap progress' });
+        }
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in PUT /api/admin/users/:id/roadmap:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
