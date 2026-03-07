@@ -565,6 +565,22 @@ export function registerPublicRoutes(app: Express) {
         }
       }
 
+      const courseIds = (data || []).map((c: any) => c.id);
+      let modulesMap: Record<string, any[]> = {};
+      if (courseIds.length > 0) {
+        const { data: allModules } = await supabaseRemote
+          .from('course_modules')
+          .select('*')
+          .in('course_id', courseIds)
+          .order('order_index', { ascending: true });
+        if (allModules) {
+          for (const mod of allModules) {
+            if (!modulesMap[mod.course_id]) modulesMap[mod.course_id] = [];
+            modulesMap[mod.course_id].push({ ...mod, chapters: [] });
+          }
+        }
+      }
+
       const courses = (data || []).map((course: any) => {
         const instructor = course.instructor_id ? instructorMap[course.instructor_id] : null;
         return {
@@ -592,6 +608,7 @@ export function registerPublicRoutes(app: Express) {
           is_onboarding: course.is_onboarding ?? false,
           instructor_name: instructor?.full_name || undefined,
           instructor_avatar: instructor?.avatar_url || undefined,
+          modules: modulesMap[course.id] || [],
         };
       });
 
