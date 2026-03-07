@@ -284,13 +284,13 @@ function StatCard({ label, value, icon: Icon, color = "text-muted-foreground" }:
   label: string; value: string | number; icon: any; color?: string;
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4 flex items-center gap-3" data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}>
-      <div className={`rounded-lg bg-muted p-2.5 ${color}`}>
-        <Icon className="h-4 w-4" />
+    <div className="rounded-xl border bg-card p-5 flex items-center gap-4" data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+      <div className={`rounded-lg bg-muted p-3 ${color}`}>
+        <Icon className="h-5 w-5" />
       </div>
       <div>
         <p className="text-2xl font-bold leading-none">{value}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+        <p className="text-sm text-muted-foreground mt-1">{label}</p>
       </div>
     </div>
   );
@@ -606,7 +606,7 @@ export default function AdminUserDetail() {
               {user.is_trial && <Badge variant="secondary">Trial</Badge>}
             </div>
             <p className="text-sm text-muted-foreground" data-testid="text-user-email">{user.email}</p>
-            <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-muted-foreground">
               {user.phone_number && <span>Phone: {user.phone_number}</span>}
               <span>Joined {formatDate(user.created_at)}</span>
               {user.lead_score?.last_activity_at && <span>Last active {formatDate(user.lead_score.last_activity_at)}</span>}
@@ -632,9 +632,9 @@ export default function AdminUserDetail() {
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>
-          <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex items-center gap-2 ml-auto">
             <Select value={selectedPlan} onValueChange={(val) => setSelectedPlan(val)}>
-              <SelectTrigger className="w-auto min-w-[130px] h-8 text-xs" data-testid="select-change-plan">
+              <SelectTrigger className="w-auto min-w-[140px] h-9 text-sm" data-testid="select-change-plan">
                 <SelectValue placeholder="Change Plan" />
               </SelectTrigger>
               <SelectContent>
@@ -643,7 +643,7 @@ export default function AdminUserDetail() {
               </SelectContent>
             </Select>
             {selectedPlan !== (user.subscription_plan_id || "none") && (
-              <Button size="sm" onClick={handleChangePlan} disabled={isSubmitting} className="h-8 text-xs bg-blue-500 hover:bg-blue-600" data-testid="button-apply-plan">
+              <Button size="sm" onClick={handleChangePlan} disabled={isSubmitting} className="h-9 bg-blue-500 hover:bg-blue-600" data-testid="button-apply-plan">
                 Apply
               </Button>
             )}
@@ -653,18 +653,18 @@ export default function AdminUserDetail() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0 mb-6" data-testid="tabs-user-detail">
-          <TabsTrigger value="summary" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-summary">Summary</TabsTrigger>
-          <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-products">Products</TabsTrigger>
-          <TabsTrigger value="learning" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-learning">Learning</TabsTrigger>
-          <TabsTrigger value="sessions" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="workspace" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-workspace">Workspace</TabsTrigger>
-          <TabsTrigger value="llc" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-llc">LLC</TabsTrigger>
-          <TabsTrigger value="pipeline" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-pipeline">Pipeline</TabsTrigger>
-          <TabsTrigger value="activity" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-activity">Activity</TabsTrigger>
-          <TabsTrigger value="support" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-support">Support</TabsTrigger>
-          <TabsTrigger value="access" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-access">Access</TabsTrigger>
-          <TabsTrigger value="notes" className="data-[state=active]:bg-primary data-[state=active]:text-white rounded-lg px-3 py-1.5 text-xs" data-testid="tab-notes">Notes</TabsTrigger>
+        <TabsList className="flex flex-wrap h-auto w-full gap-0.5 mb-6" data-testid="tabs-user-detail">
+          <TabsTrigger value="summary" data-testid="tab-summary">Summary</TabsTrigger>
+          <TabsTrigger value="products" data-testid="tab-products">Products</TabsTrigger>
+          <TabsTrigger value="learning" data-testid="tab-learning">Learning</TabsTrigger>
+          <TabsTrigger value="sessions" data-testid="tab-sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="workspace" data-testid="tab-workspace">Workspace</TabsTrigger>
+          <TabsTrigger value="llc" data-testid="tab-llc">LLC</TabsTrigger>
+          <TabsTrigger value="pipeline" data-testid="tab-pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="activity" data-testid="tab-activity">Activity</TabsTrigger>
+          <TabsTrigger value="support" data-testid="tab-support">Support</TabsTrigger>
+          <TabsTrigger value="access" data-testid="tab-access">Access</TabsTrigger>
+          <TabsTrigger value="notes" data-testid="tab-notes">Notes</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary" className="space-y-6 mt-0">
@@ -732,7 +732,7 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
             <InfoRow label="Onboarding">
               <div className="flex items-center gap-2">
                 <StatusBadge status={user.onboarding_completed ? "Completed" : "Pending"} />
-                <span className="text-xs text-muted-foreground">{user.onboarding_progress}%</span>
+                <span className="text-sm text-muted-foreground">{user.onboarding_progress}%</span>
               </div>
             </InfoRow>
             <InfoRow label="Shopify Stores" value={user.shopify_stores.length} />
@@ -756,7 +756,7 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
             </div>
             <Progress value={(freeLearning.totalCompleted / freeLearning.totalLessons) * 100} className="h-2.5" data-testid="progress-free-learning" />
             {freeLearning.lastCompletedAt && (
-              <p className="text-xs text-muted-foreground">Last completed: {formatDate(freeLearning.lastCompletedAt)}</p>
+              <p className="text-sm text-muted-foreground">Last completed: {formatDate(freeLearning.lastCompletedAt)}</p>
             )}
             <div className="flex items-center justify-between pt-2 border-t">
               <span className="text-sm text-muted-foreground">Course Enrollments</span>
@@ -776,7 +776,7 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
                   <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{a.description}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTime(a.timestamp)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDateTime(a.timestamp)}</p>
                   </div>
                 </div>
               ))}
@@ -794,7 +794,7 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
                 <div key={t.id} className="flex items-center justify-between rounded-lg border p-2.5" data-testid={`summary-ticket-${t.id}`}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{t.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(t.created_at)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(t.created_at)}</p>
                   </div>
                   <StatusBadge status={t.status} />
                 </div>
@@ -830,7 +830,7 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
       <Card className="p-8 text-center">
         <Bookmark className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
         <p className="text-sm font-medium" data-testid="text-no-products">No Saved Products</p>
-        <p className="text-xs text-muted-foreground mt-1">This user hasn't saved any products yet.</p>
+        <p className="text-sm text-muted-foreground mt-1">This user hasn't saved any products yet.</p>
       </Card>
     );
   }
@@ -841,14 +841,14 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">Product</th>
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">Category</th>
-              <th className="px-3 py-2.5 text-right text-xs font-medium text-muted-foreground">Buy</th>
-              <th className="px-3 py-2.5 text-right text-xs font-medium text-muted-foreground">Sell</th>
-              <th className="px-3 py-2.5 text-center text-xs font-medium text-muted-foreground">Stock</th>
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">Source</th>
-              <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground">Added</th>
-              <th className="px-3 py-2.5 text-right text-xs font-medium text-muted-foreground"></th>
+              <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Product</th>
+              <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Category</th>
+              <th className="px-3 py-3 text-right text-sm font-medium text-muted-foreground">Buy</th>
+              <th className="px-3 py-3 text-right text-sm font-medium text-muted-foreground">Sell</th>
+              <th className="px-3 py-3 text-center text-sm font-medium text-muted-foreground">Stock</th>
+              <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Source</th>
+              <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Added</th>
+              <th className="px-3 py-3 text-right text-sm font-medium text-muted-foreground"></th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -873,14 +873,14 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
                     <StatusBadge status={p?.in_stock ? "In Stock" : "Out"} />
                   </td>
                   <td className="px-3 py-2.5">
-                    <Badge variant="secondary" className="text-[10px]">{item.source || "—"}</Badge>
+                    <Badge variant="secondary" className="text-xs">{item.source || "—"}</Badge>
                   </td>
-                  <td className="px-3 py-2.5 text-xs text-muted-foreground">{formatDate(item.added_at)}</td>
+                  <td className="px-3 py-2.5 text-sm text-muted-foreground">{formatDate(item.added_at)}</td>
                   <td className="px-3 py-2.5 text-right">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-red-500 hover:text-red-600 h-7 px-2 text-xs"
+                      className="text-red-500 hover:text-red-600 h-8 px-3 text-sm"
                       onClick={() => handleRemove(item.id)}
                       disabled={isRemoving === item.id}
                       data-testid={`button-remove-product-${item.id}`}
@@ -929,7 +929,7 @@ function LearningTab({ user, freeLearning, sessionsData }: {
               Completed {freeLearning.lastCompletedAt ? `on ${formatDate(freeLearning.lastCompletedAt)}` : ""}
             </div>
           ) : freeLearning.lastCompletedAt ? (
-            <p className="text-xs text-muted-foreground">Last lesson: {formatDate(freeLearning.lastCompletedAt)}</p>
+            <p className="text-sm text-muted-foreground">Last lesson: {formatDate(freeLearning.lastCompletedAt)}</p>
           ) : null}
         </div>
       </SectionCard>
@@ -964,11 +964,11 @@ function LearningTab({ user, freeLearning, sessionsData }: {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Progress</span>
-                    <span className="text-xs font-medium">{Math.round(enrollment.progress_percentage)}%</span>
+                    <span className="text-sm text-muted-foreground">Progress</span>
+                    <span className="text-sm font-medium">{Math.round(enrollment.progress_percentage)}%</span>
                   </div>
                   <Progress value={enrollment.progress_percentage} className="h-1.5" />
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>Enrolled {formatDate(enrollment.enrolled_at)}</span>
                     {enrollment.completed_at && <span>Completed {formatDate(enrollment.completed_at)}</span>}
                   </div>
@@ -1010,13 +1010,13 @@ function SessionsTab({ sessionsData, onToggle, isSubmitting }: {
                 <div key={session.id} className="flex items-center justify-between py-2 border-b last:border-0" data-testid={`session-${session.id}`}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{session.title}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                       {session.duration && <span>{session.duration}</span>}
                       {session.session_date && <span>· {formatDate(session.session_date)}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span className="text-xs text-muted-foreground">{session.is_unlocked ? "Unlocked" : "Locked"}</span>
+                    <span className="text-sm text-muted-foreground">{session.is_unlocked ? "Unlocked" : "Locked"}</span>
                     <Switch
                       checked={session.is_unlocked}
                       onCheckedChange={() => onToggle(session.id, session.is_unlocked)}
@@ -1062,7 +1062,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
         {shopifyStores.length === 0 ? (
           <div className="py-4 text-center">
             <Store className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-            <p className="text-xs text-muted-foreground">No stores connected</p>
+            <p className="text-sm text-muted-foreground">No stores connected</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -1070,7 +1070,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
               <div key={store.id} className="flex items-center justify-between rounded-lg border p-3" data-testid={`store-${store.id}`}>
                 <div>
                   <p className="text-sm font-medium">{store.store_name}</p>
-                  <p className="text-xs text-muted-foreground">{store.store_url}</p>
+                  <p className="text-sm text-muted-foreground">{store.store_url}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={store.status || "Connected"} />
@@ -1091,7 +1091,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
         {apps.length === 0 ? (
           <div className="py-4 text-center">
             <Globe className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-            <p className="text-xs text-muted-foreground">No apps connected</p>
+            <p className="text-sm text-muted-foreground">No apps connected</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1102,7 +1102,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{app.app_name}</p>
-                  <p className="text-xs text-muted-foreground">{app.category || "Uncategorized"}</p>
+                  <p className="text-sm text-muted-foreground">{app.category || "Uncategorized"}</p>
                 </div>
                 <StatusBadge status={app.status || "active"} />
               </div>
@@ -1116,7 +1116,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
         {roadmapData.stats.total === 0 ? (
           <div className="py-4 text-center">
             <Map className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-            <p className="text-xs text-muted-foreground">No roadmap tasks tracked</p>
+            <p className="text-sm text-muted-foreground">No roadmap tasks tracked</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -1128,15 +1128,15 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
             <div className="grid grid-cols-3 gap-2 pt-2">
               <div className="rounded-lg bg-muted/50 p-2.5 text-center">
                 <p className="text-lg font-bold">{roadmapData.stats.notStarted}</p>
-                <p className="text-[10px] text-muted-foreground">Not Started</p>
+                <p className="text-sm text-muted-foreground">Not Started</p>
               </div>
               <div className="rounded-lg bg-blue-50 dark:bg-blue-950 p-2.5 text-center">
                 <p className="text-lg font-bold text-blue-600">{roadmapData.stats.inProgress}</p>
-                <p className="text-[10px] text-muted-foreground">In Progress</p>
+                <p className="text-sm text-muted-foreground">In Progress</p>
               </div>
               <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-2.5 text-center">
                 <p className="text-lg font-bold text-emerald-600">{roadmapData.stats.completed}</p>
-                <p className="text-[10px] text-muted-foreground">Completed</p>
+                <p className="text-sm text-muted-foreground">Completed</p>
               </div>
             </div>
           </div>
@@ -1148,7 +1148,7 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
         {rndData.items.length === 0 ? (
           <div className="py-4 text-center">
             <Timer className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-            <p className="text-xs text-muted-foreground">No R&D entries logged</p>
+            <p className="text-sm text-muted-foreground">No R&D entries logged</p>
           </div>
         ) : (
           <>
@@ -1164,10 +1164,10 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData }: {
                 <div key={entry.id} className="flex items-center justify-between py-1.5 border-b last:border-0" data-testid={`rnd-${entry.id}`}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm truncate">{entry.description || entry.category}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(entry.date)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(entry.date)}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <Badge variant="secondary" className="text-[10px]">{entry.category}</Badge>
+                    <Badge variant="secondary" className="text-xs">{entry.category}</Badge>
                     <span className="text-sm font-medium">{entry.hours}h</span>
                   </div>
                 </div>
@@ -1193,7 +1193,7 @@ function LLCTab({ applications, onAdvance, isSubmitting }: {
       <Card className="p-8 text-center">
         <FileText className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
         <p className="text-sm font-medium" data-testid="text-no-llc">No LLC Applications</p>
-        <p className="text-xs text-muted-foreground mt-1">This user has no LLC applications yet.</p>
+        <p className="text-sm text-muted-foreground mt-1">This user has no LLC applications yet.</p>
       </Card>
     );
   }
@@ -1328,7 +1328,7 @@ function PipelineTab({ user, isEditing, editForm, setEditForm, onSave, onCancel,
           ) : (
             <div className="py-4 text-center">
               <BarChart3 className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-              <p className="text-xs text-muted-foreground">No lead score calculated</p>
+              <p className="text-sm text-muted-foreground">No lead score calculated</p>
             </div>
           )}
         </SectionCard>
@@ -1340,7 +1340,7 @@ function PipelineTab({ user, isEditing, editForm, setEditForm, onSave, onCancel,
                 <div key={bm.id} className="flex items-center justify-between py-1.5">
                   <div>
                     <p className="text-sm font-medium">{bm.batch?.name || "Unknown Batch"}</p>
-                    <p className="text-xs text-muted-foreground">Week {bm.current_week}</p>
+                    <p className="text-sm text-muted-foreground">Week {bm.current_week}</p>
                   </div>
                   <StatusBadge status={bm.status} />
                 </div>
@@ -1388,7 +1388,7 @@ function ActivityTab({ activities, onExport }: { activities: ActivityItem[]; onE
               <div className="mt-0.5 h-2 w-2 shrink-0 rounded-full bg-muted-foreground/40" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm">{activity.description}</p>
-                <p className="text-xs text-muted-foreground">{formatDateTime(activity.timestamp)}</p>
+                <p className="text-sm text-muted-foreground">{formatDateTime(activity.timestamp)}</p>
               </div>
               <Badge variant="secondary" className="text-xs shrink-0">{activity.type.replace(/_/g, " ")}</Badge>
             </div>
@@ -1432,7 +1432,7 @@ function SupportTab({ tickets, router }: { tickets: SupportTicket[]; router: Ret
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{ticket.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground">
                     <span>{ticket.type}</span>
                     <span>·</span>
                     <span>{formatDate(ticket.created_at)}</span>
@@ -1508,10 +1508,10 @@ function AccessTab({ rules, userId, planSlug, onRefresh }: {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Resource</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Type</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Access Level</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Toggle</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Resource</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Type</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Access Level</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Toggle</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -1558,10 +1558,10 @@ function NotesTab({ notes, paymentLinks, tickets, newNote, setNewNote, onAddNote
                   <div className="flex items-center gap-2 mb-1.5">
                     <Avatar className="h-5 w-5">
                       <AvatarImage src={note.admin_avatar_url || undefined} />
-                      <AvatarFallback className="text-[10px]">{getInitials(note.admin_name)}</AvatarFallback>
+                      <AvatarFallback className="text-xs">{getInitials(note.admin_name)}</AvatarFallback>
                     </Avatar>
-                    <span className="text-xs font-medium">{note.admin_name}</span>
-                    <span className="text-xs text-muted-foreground">{formatDateTime(note.created_at)}</span>
+                    <span className="text-sm font-medium">{note.admin_name}</span>
+                    <span className="text-sm text-muted-foreground">{formatDateTime(note.created_at)}</span>
                   </div>
                   <p className="text-sm whitespace-pre-wrap">{note.note}</p>
                 </div>
@@ -1576,7 +1576,7 @@ function NotesTab({ notes, paymentLinks, tickets, newNote, setNewNote, onAddNote
           {paymentLinks.length === 0 ? (
             <div className="py-4 text-center">
               <CreditCard className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-              <p className="text-xs text-muted-foreground" data-testid="text-no-payments">No payment history</p>
+              <p className="text-sm text-muted-foreground" data-testid="text-no-payments">No payment history</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -1584,7 +1584,7 @@ function NotesTab({ notes, paymentLinks, tickets, newNote, setNewNote, onAddNote
                 <div key={pl.id} className="flex items-center justify-between rounded-lg border p-3" data-testid={`payment-${pl.id}`}>
                   <div>
                     <p className="text-sm font-medium">{pl.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(pl.created_at)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(pl.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold">${pl.amount}</span>
@@ -1600,7 +1600,7 @@ function NotesTab({ notes, paymentLinks, tickets, newNote, setNewNote, onAddNote
           {tickets.length === 0 ? (
             <div className="py-4 text-center">
               <MessageSquare className="mx-auto h-6 w-6 text-muted-foreground mb-1" />
-              <p className="text-xs text-muted-foreground" data-testid="text-no-tickets-notes">No support tickets</p>
+              <p className="text-sm text-muted-foreground" data-testid="text-no-tickets-notes">No support tickets</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -1609,7 +1609,7 @@ function NotesTab({ notes, paymentLinks, tickets, newNote, setNewNote, onAddNote
                   onClick={() => router.push(`/admin/tickets/${ticket.id}`)} data-testid={`notes-ticket-${ticket.id}`}>
                   <div>
                     <p className="text-sm font-medium">{ticket.title}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(ticket.created_at)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(ticket.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <StatusBadge status={ticket.priority} />
