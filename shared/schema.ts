@@ -503,3 +503,65 @@ export const importantLinks = pgTable("important_links", {
 export const insertImportantLinkSchema = createInsertSchema(importantLinks).omit({ id: true, created_at: true, updated_at: true });
 export type InsertImportantLink = z.infer<typeof insertImportantLinkSchema>;
 export type ImportantLink = typeof importantLinks.$inferSelect;
+
+export const roadmapStages = pgTable("roadmap_stages", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  number: integer("number").notNull(),
+  title: text("title").notNull(),
+  phase: text("phase").notNull(),
+  order_index: integer("order_index").notNull().default(0),
+  is_published: boolean("is_published").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const roadmapTasks = pgTable("roadmap_tasks", {
+  id: text("id").primaryKey(),
+  stage_id: uuid("stage_id").notNull().references(() => roadmapStages.id, { onDelete: "cascade" }),
+  task_no: integer("task_no").notNull(),
+  title: text("title").notNull(),
+  link: text("link"),
+  order_index: integer("order_index").notNull().default(0),
+  is_published: boolean("is_published").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertRoadmapStageSchema = createInsertSchema(roadmapStages).omit({ id: true, created_at: true, updated_at: true });
+export type InsertRoadmapStage = z.infer<typeof insertRoadmapStageSchema>;
+export type RoadmapStage = typeof roadmapStages.$inferSelect;
+
+export const insertRoadmapTaskSchema = createInsertSchema(roadmapTasks).omit({ created_at: true, updated_at: true });
+export type InsertRoadmapTask = z.infer<typeof insertRoadmapTaskSchema>;
+export type RoadmapTask = typeof roadmapTasks.$inferSelect;
+
+export const croCategories = pgTable("cro_categories", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  icon: text("icon"),
+  color_config: jsonb("color_config").notNull().default(sql`'{}'::jsonb`),
+  order_index: integer("order_index").notNull().default(0),
+  is_published: boolean("is_published").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const croItems = pgTable("cro_items", {
+  id: text("id").primaryKey(),
+  category_id: text("category_id").notNull().references(() => croCategories.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  priority: text("priority").notNull().default("medium"),
+  order_index: integer("order_index").notNull().default(0),
+  is_published: boolean("is_published").notNull().default(true),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertCroCategorySchema = createInsertSchema(croCategories).omit({ created_at: true, updated_at: true });
+export type InsertCroCategory = z.infer<typeof insertCroCategorySchema>;
+export type CroCategory = typeof croCategories.$inferSelect;
+
+export const insertCroItemSchema = createInsertSchema(croItems).omit({ created_at: true, updated_at: true });
+export type InsertCroItem = z.infer<typeof insertCroItemSchema>;
+export type CroItem = typeof croItems.$inferSelect;

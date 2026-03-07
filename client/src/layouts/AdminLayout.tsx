@@ -59,6 +59,8 @@ const navCategories: NavCategory[] = [
     defaultUrl: "/admin/content/free-learning",
     items: [
       { title: "Free Learning", url: "/admin/content/free-learning" },
+      { title: "Roadmap", url: "/admin/content/roadmap" },
+      { title: "CRO Checklist", url: "/admin/content/cro-checklist" },
       { title: "Courses", url: "/admin/courses" },
       { title: "Sessions", url: "/admin/sessions" },
       { title: "Ad Videos", url: "/admin/videos" },

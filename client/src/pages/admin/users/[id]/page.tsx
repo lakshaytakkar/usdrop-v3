@@ -66,7 +66,8 @@ import {
   Circle,
   Loader2,
 } from "lucide-react";
-import { journeyStages } from "@/data/journey-stages";
+import { journeyStages as fallbackJourneyStages } from "@/data/journey-stages";
+import type { JourneyStage } from "@/data/journey-stages";
 
 interface UserProfile {
   id: string;
@@ -1054,9 +1055,21 @@ function WorkspaceTab({ shopifyStores, apps, rndData, roadmapData, userId, onRef
   rndData: RndData; roadmapData: RoadmapData;
   userId: string; onRefresh: () => void;
 }) {
+  const [journeyStages, setJourneyStages] = useState<JourneyStage[]>(fallbackJourneyStages);
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [updatingTask, setUpdatingTask] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    apiFetch("/api/roadmap-content")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setJourneyStages(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const statusMap = new Map<string, string>();
   for (const item of roadmapData.items) {

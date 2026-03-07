@@ -1,0 +1,17 @@
+src/data/journey-stages.ts
+src/data/models-library.ts
+src/data/navigation.ts
+src/app/winning-products/data/products.ts
+client/src/pages/winning-products/data/products.ts
+client/src/pages/meta-ads/data/ads.ts
+client/src/pages/videos/data/videos.ts
+client/src/pages/suppliers/data/suppliers.ts
+client/src/pages/store-research/data/store-research-data.ts
+client/src/pages/shopify-stores/data/stores.ts
+client/src/pages/selling-channels/data/marketplaces.ts
+client/src/pages/blogs/data/articles.ts
+client/src/pages/mentorship/data/courses.ts
+client/src/pages/webinars/data/webinars.ts
+src/app/product-hunt/data/products.json
+src/app/product-hunt/data/product-details.json
+client/src/pages/free-learning/data.ts

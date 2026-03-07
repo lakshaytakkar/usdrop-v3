@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from "react"
 import { Link } from "wouter"
 import { useParams } from "@/hooks/use-router"
-import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, LockOpen } from "lucide-react"
+import { ArrowLeft, ArrowRight, Play, CheckCircle2, ChevronDown, ChevronRight, Clock, PlayCircle, ExternalLink, LockOpen, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { freeLearningModules, freeLearningCourse, findLesson, getNextLesson, getPrevLesson, markLessonCompleted, markLessonCompletedOnServer, syncCompletedLessonsFromServer, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
+import { freeLearningCourse, markLessonCompleted, markLessonCompletedOnServer, syncCompletedLessonsFromServer, getCompletedLessons, getCompletionCount, isAllCompleted } from "../data"
+import { useFreeLearningModules } from "../use-free-learning-modules"
 import { trackActivity } from "@/lib/activity-tracker"
 import { MentorshipActivationModal } from "../components/mentorship-activation-modal"
 
@@ -11,13 +12,17 @@ function Sidebar({
   currentLessonId,
   completionVersion,
   onActivate,
+  modules,
+  findLessonFn,
 }: {
   currentLessonId: string
   completionVersion: number
   onActivate: () => void
+  modules: any[]
+  findLessonFn: (id: string) => any
 }) {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>(() => {
-    const result = findLesson(currentLessonId)
+    const result = findLessonFn(currentLessonId)
     if (result) {
       return { [result.module.id]: true }
     }
@@ -28,7 +33,7 @@ function Sidebar({
     setExpandedModules(prev => ({ ...prev, [moduleId]: !prev[moduleId] }))
   }
 
-  const allLessons = freeLearningModules.flatMap(m => m.lessons)
+  const allLessons = modules.flatMap(m => m.lessons)
   const completedCount = getCompletionCount()
   const completedSet = new Set(getCompletedLessons())
   const allDone = completedCount === allLessons.length
@@ -49,13 +54,13 @@ function Sidebar({
         ) : (
           <div className="mt-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-gray-400 font-medium">{Math.round((completedCount / allLessons.length) * 100)}% complete</span>
+              <span className="text-[10px] text-gray-400 font-medium">{allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0}% complete</span>
               <span className="text-[10px] text-gray-400">{completedCount}/{allLessons.length}</span>
             </div>
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                style={{ width: `${(completedCount / allLessons.length) * 100}%` }}
+                style={{ width: `${allLessons.length > 0 ? (completedCount / allLessons.length) * 100 : 0}%` }}
               />
             </div>
           </div>
@@ -63,7 +68,7 @@ function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {freeLearningModules.map((module) => {
+        {modules.map((module) => {
           const isExpanded = expandedModules[module.id] ?? false
 
           return (
@@ -125,10 +130,11 @@ export default function FreeLearningLessonPage() {
   const lessonId = params.lessonId as string
   const [showActivation, setShowActivation] = useState(false)
   const [completionVersion, setCompletionVersion] = useState(0)
+  const { modules, isLoading, findLesson, getNextLesson, getPrevLesson } = useFreeLearningModules()
 
-  const result = useMemo(() => findLesson(lessonId), [lessonId])
-  const nextLesson = useMemo(() => getNextLesson(lessonId), [lessonId])
-  const prevLesson = useMemo(() => getPrevLesson(lessonId), [lessonId])
+  const result = useMemo(() => findLesson(lessonId), [lessonId, findLesson])
+  const nextLesson = useMemo(() => getNextLesson(lessonId), [lessonId, getNextLesson])
+  const prevLesson = useMemo(() => getPrevLesson(lessonId), [lessonId, getPrevLesson])
 
   useEffect(() => {
     if (lessonId) {
@@ -142,7 +148,7 @@ export default function FreeLearningLessonPage() {
         lessonTitle: found?.lesson?.title,
       })
     }
-  }, [lessonId])
+  }, [lessonId, findLesson])
 
   useEffect(() => {
     syncCompletedLessonsFromServer().then(() => {
@@ -151,6 +157,14 @@ export default function FreeLearningLessonPage() {
   }, [])
 
   const allCompleted = useMemo(() => isAllCompleted(), [completionVersion])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
 
   if (!result) {
     return (
@@ -172,7 +186,7 @@ export default function FreeLearningLessonPage() {
   const hasExternalUrl = !!lesson.externalUrl
   const isYouTube = lesson.videoUrl?.includes("youtube") || lesson.videoUrl?.includes("youtu.be") || lesson.videoUrl?.includes("youtube-nocookie")
 
-  const allLessons = freeLearningModules.flatMap(m => m.lessons)
+  const allLessons = modules.flatMap(m => m.lessons)
   const currentIdx = allLessons.findIndex(l => l.id === lessonId)
 
   return (
@@ -217,7 +231,7 @@ export default function FreeLearningLessonPage() {
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-black/[0.04] bg-background mt-2 mb-4">
         <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
-          <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} onActivate={() => setShowActivation(true)} />
+          <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} onActivate={() => setShowActivation(true)} modules={modules} findLessonFn={findLesson} />
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">

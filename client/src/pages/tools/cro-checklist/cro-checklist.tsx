@@ -27,127 +27,6 @@ interface ChecklistCategory {
   items: ChecklistItem[]
 }
 
-const categories: ChecklistCategory[] = [
-  {
-    id: "homepage",
-    title: "Homepage & First Impression",
-    icon: "/images/cro-icons/homepage.png",
-    color: { bg: "bg-purple-50", text: "text-purple-600", border: "border-purple-100", progress: "bg-purple-500" },
-    items: [
-      { id: "hp-1", label: "Clear value proposition above the fold", description: "Visitors should understand what you sell and why within 3 seconds of landing", priority: "critical" },
-      { id: "hp-2", label: "Professional logo and consistent branding", description: "A polished logo, consistent color scheme, and cohesive visual identity", priority: "high" },
-      { id: "hp-3", label: "Hero section with strong CTA", description: "Eye-catching hero banner with a clear call-to-action like 'Shop Now' or 'Browse Collection'", priority: "critical" },
-      { id: "hp-4", label: "Featured products or bestsellers visible", description: "Showcase your top products or categories prominently on the homepage", priority: "high" },
-      { id: "hp-5", label: "Social proof on homepage (reviews, press, numbers)", description: "Display customer count, review scores, press mentions, or trust badges", priority: "high" },
-      { id: "hp-6", label: "Announcement bar for promotions", description: "Top-of-page banner showing free shipping threshold, active sales, or offers", priority: "medium" },
-    ],
-  },
-  {
-    id: "product-pages",
-    title: "Product Pages",
-    icon: "/images/cro-icons/product-pages.png",
-    color: { bg: "bg-blue-50", text: "text-blue-600", border: "border-blue-100", progress: "bg-blue-500" },
-    items: [
-      { id: "pp-1", label: "High-quality product images (5+ per product)", description: "Multiple angles, lifestyle shots, size reference, and zoom functionality", priority: "critical" },
-      { id: "pp-2", label: "Compelling product title with keywords", description: "Descriptive, SEO-friendly titles that clearly communicate the product", priority: "critical" },
-      { id: "pp-3", label: "Detailed product description with benefits", description: "Focus on customer benefits, not just features. Use bullet points for scannability", priority: "critical" },
-      { id: "pp-4", label: "Visible price with compare-at/sale pricing", description: "Show current price clearly, with original price crossed out if on sale", priority: "high" },
-      { id: "pp-5", label: "Customer reviews displayed on product page", description: "Show star ratings, written reviews, and customer photos if available", priority: "critical" },
-      { id: "pp-6", label: "Clear Add to Cart button (contrasting color)", description: "CTA button should stand out with a bold color and be easily clickable", priority: "critical" },
-      { id: "pp-7", label: "Shipping info visible on product page", description: "Show estimated delivery time and shipping cost before checkout", priority: "high" },
-      { id: "pp-8", label: "Size guide or product specifications table", description: "Reduce returns with clear sizing charts or detailed specs", priority: "medium" },
-      { id: "pp-9", label: "Related products / 'You may also like' section", description: "Cross-sell with relevant product recommendations to increase AOV", priority: "high" },
-      { id: "pp-10", label: "Urgency elements (stock counter, timer)", description: "Low stock indicators or limited-time offers to encourage quick decisions", priority: "medium" },
-    ],
-  },
-  {
-    id: "trust-security",
-    title: "Trust & Security",
-    icon: "/images/cro-icons/trust-security.png",
-    color: { bg: "bg-emerald-50", text: "text-emerald-600", border: "border-emerald-100", progress: "bg-emerald-500" },
-    items: [
-      { id: "ts-1", label: "SSL certificate active (HTTPS)", description: "Your entire site should load over HTTPS — essential for security and SEO", priority: "critical" },
-      { id: "ts-2", label: "Trust badges near Add to Cart and checkout", description: "Display payment security badges, money-back guarantee, and secure checkout icons", priority: "critical" },
-      { id: "ts-3", label: "Professional About Us page", description: "Tell your brand story, show the team, and build a human connection", priority: "high" },
-      { id: "ts-4", label: "Clear Contact page with multiple channels", description: "Email, phone, live chat, and physical address (if applicable)", priority: "high" },
-      { id: "ts-5", label: "Return & refund policy clearly accessible", description: "Easy-to-find, clear policy reduces purchase anxiety. Link in footer and product pages", priority: "critical" },
-      { id: "ts-6", label: "Privacy policy and terms of service", description: "Legally required pages that also build trust with cautious shoppers", priority: "high" },
-      { id: "ts-7", label: "Customer testimonials or case studies", description: "Real customer stories with photos add powerful social proof", priority: "medium" },
-    ],
-  },
-  {
-    id: "checkout",
-    title: "Checkout & Payment",
-    icon: "/images/cro-icons/checkout.png",
-    color: { bg: "bg-orange-50", text: "text-orange-600", border: "border-orange-100", progress: "bg-orange-500" },
-    items: [
-      { id: "co-1", label: "Guest checkout option available", description: "Don't force account creation — it's the #1 reason for cart abandonment", priority: "critical" },
-      { id: "co-2", label: "Multiple payment methods (Card, PayPal, Apple Pay)", description: "Offer the payment methods your target market prefers", priority: "critical" },
-      { id: "co-3", label: "Cart abandonment email sequence set up", description: "Automated emails to recover lost sales (send at 1h, 24h, 72h)", priority: "critical" },
-      { id: "co-4", label: "Order summary visible throughout checkout", description: "Show product image, name, quantity, and price at every checkout step", priority: "high" },
-      { id: "co-5", label: "Progress indicator in multi-step checkout", description: "Show customers where they are in the checkout process", priority: "medium" },
-      { id: "co-6", label: "Shipping costs shown before checkout page", description: "Unexpected shipping costs are the #2 reason for cart abandonment", priority: "critical" },
-      { id: "co-7", label: "Upsell / cross-sell in cart", description: "Suggest complementary products or offer a bundle discount in the cart", priority: "high" },
-      { id: "co-8", label: "Discount code field visible but not prominent", description: "Include it but don't make it so visible that people leave to search for codes", priority: "medium" },
-    ],
-  },
-  {
-    id: "speed-mobile",
-    title: "Speed & Mobile Optimization",
-    icon: "/images/cro-icons/speed-mobile.png",
-    color: { bg: "bg-cyan-50", text: "text-cyan-600", border: "border-cyan-100", progress: "bg-cyan-500" },
-    items: [
-      { id: "sm-1", label: "Page load time under 3 seconds", description: "Every extra second of load time reduces conversions by ~7%", priority: "critical" },
-      { id: "sm-2", label: "Mobile-responsive design (test on real devices)", description: "60-80% of ecommerce traffic is mobile — your site must look perfect on phones", priority: "critical" },
-      { id: "sm-3", label: "Images optimized and compressed", description: "Use WebP format, lazy loading, and proper sizing to reduce page weight", priority: "high" },
-      { id: "sm-4", label: "No broken links or 404 errors", description: "Regularly audit for dead links that frustrate visitors and hurt SEO", priority: "high" },
-      { id: "sm-5", label: "Touch-friendly buttons and navigation on mobile", description: "Buttons should be at least 44x44px with adequate spacing for thumb taps", priority: "high" },
-      { id: "sm-6", label: "Sticky Add to Cart on mobile product pages", description: "Keep the buy button always visible as users scroll on mobile", priority: "medium" },
-    ],
-  },
-  {
-    id: "seo-content",
-    title: "SEO & Content",
-    icon: "/images/cro-icons/seo-content.png",
-    color: { bg: "bg-rose-50", text: "text-rose-600", border: "border-rose-100", progress: "bg-rose-500" },
-    items: [
-      { id: "sc-1", label: "Unique meta titles and descriptions for all pages", description: "Every page should have a unique, keyword-rich title tag and meta description", priority: "critical" },
-      { id: "sc-2", label: "Image alt tags with descriptive keywords", description: "Help search engines understand your images and improve accessibility", priority: "high" },
-      { id: "sc-3", label: "Blog or content section with relevant articles", description: "Content marketing drives organic traffic and builds authority", priority: "medium" },
-      { id: "sc-4", label: "Clean URL structure (no random strings)", description: "Use readable URLs like /products/wireless-earbuds instead of /products/12345", priority: "high" },
-      { id: "sc-5", label: "Google Analytics and Search Console connected", description: "Track traffic, conversions, and search performance data", priority: "critical" },
-      { id: "sc-6", label: "Facebook Pixel and conversion tracking installed", description: "Essential for running effective paid ads and building audiences", priority: "critical" },
-    ],
-  },
-  {
-    id: "engagement",
-    title: "Customer Engagement & Retention",
-    icon: "/images/cro-icons/engagement.png",
-    color: { bg: "bg-amber-50", text: "text-amber-600", border: "border-amber-100", progress: "bg-amber-500" },
-    items: [
-      { id: "ce-1", label: "Email capture popup (with incentive)", description: "Offer 10-15% off first order in exchange for email subscription", priority: "critical" },
-      { id: "ce-2", label: "Welcome email sequence for new subscribers", description: "Automated series introducing your brand and best products", priority: "high" },
-      { id: "ce-3", label: "Post-purchase email flow (review request + upsell)", description: "Follow up after delivery to get reviews and suggest next purchase", priority: "high" },
-      { id: "ce-4", label: "Live chat or chatbot for instant support", description: "Answer questions in real-time to remove purchase barriers", priority: "medium" },
-      { id: "ce-5", label: "Social media links in header/footer", description: "Connect visitors to your social presence for ongoing engagement", priority: "medium" },
-      { id: "ce-6", label: "Loyalty or rewards program", description: "Encourage repeat purchases with points, tiers, or exclusive offers", priority: "medium" },
-    ],
-  },
-  {
-    id: "analytics",
-    title: "Analytics & Testing",
-    icon: "/images/cro-icons/analytics.png",
-    color: { bg: "bg-indigo-50", text: "text-indigo-600", border: "border-indigo-100", progress: "bg-indigo-500" },
-    items: [
-      { id: "at-1", label: "Conversion tracking set up for all goals", description: "Track Add to Cart, Initiate Checkout, and Purchase events at minimum", priority: "critical" },
-      { id: "at-2", label: "Heatmap tool installed (Hotjar, Microsoft Clarity)", description: "See where visitors click, scroll, and drop off on your pages", priority: "high" },
-      { id: "at-3", label: "Monitor cart abandonment rate weekly", description: "Track and analyze why carts are being abandoned to find fixes", priority: "high" },
-      { id: "at-4", label: "A/B test product page elements regularly", description: "Test headlines, images, CTA text, and pricing to optimize conversions", priority: "medium" },
-      { id: "at-5", label: "Review site search data for product gaps", description: "Analyze what visitors search for to discover unmet demand", priority: "medium" },
-    ],
-  },
-]
-
 const priorityConfig = {
   critical: { label: "Critical", className: "bg-red-50 text-red-600 border-red-100" },
   high: { label: "High", className: "bg-amber-50 text-amber-600 border-amber-100" },
@@ -157,11 +36,10 @@ const priorityConfig = {
 export function CROChecklist() {
   const { user } = useAuth()
   const { isLocked, config } = usePageTeaser("/tools/cro-checklist")
+  const [categories, setCategories] = useState<ChecklistCategory[]>([])
   const visibleCategories = config?.visibleItems ?? categories.length
   const [checked, setChecked] = useState<Record<string, boolean>>({})
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
-    Object.fromEntries(categories.map(c => [c.id, true]))
-  )
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({})
   const [filterPriority, setFilterPriority] = useState<"all" | "critical" | "high" | "medium">("all")
   const [showCompleted, setShowCompleted] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
@@ -189,16 +67,36 @@ export function CROChecklist() {
 
   useEffect(() => {
     if (!user) { setIsLoading(false); return }
-    apiFetch('/api/cro-checklist/state')
-      .then(res => res.json())
-      .then(data => {
-        if (data.checked_items && typeof data.checked_items === 'object') {
-          setChecked(data.checked_items)
-          latestCheckedRef.current = data.checked_items
+
+    const loadAll = async () => {
+      try {
+        const [stateRes, contentRes] = await Promise.all([
+          apiFetch('/api/cro-checklist/state'),
+          apiFetch('/api/cro-content'),
+        ])
+
+        if (stateRes.ok) {
+          const data = await stateRes.json()
+          if (data.checked_items && typeof data.checked_items === 'object') {
+            setChecked(data.checked_items)
+            latestCheckedRef.current = data.checked_items
+          }
         }
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false))
+
+        if (contentRes.ok) {
+          const cats = await contentRes.json()
+          if (Array.isArray(cats) && cats.length > 0) {
+            setCategories(cats)
+            setExpandedCategories(Object.fromEntries(cats.map((c: ChecklistCategory) => [c.id, true])))
+          }
+        }
+      } catch {
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadAll()
   }, [user])
 
   useEffect(() => {

@@ -37,6 +37,8 @@ import AdminUsers from "@/pages/admin/users/page";
 import AdminUserDetail from "@/pages/admin/users/[id]/page";
 import AdminBatchDetail from "@/pages/admin/batches/[id]/page";
 import AdminFreeLearning from "@/pages/admin/content/free-learning/page";
+import AdminRoadmapContent from "@/pages/admin/content/roadmap/page";
+import AdminCROContent from "@/pages/admin/content/cro-checklist/page";
 import AdminVideos from "@/pages/admin/videos/page";
 import AdminImportantLinks from "@/pages/admin/important-links/page";
 import AdminPlans from "@/pages/admin/plans/page";
@@ -246,6 +248,8 @@ function Router() {
       <Route path="/admin/users/:id" component={() => <AdminGuard><AdminLayout><AdminUserDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/batches/:id" component={() => <AdminGuard><AdminLayout><AdminBatchDetail /></AdminLayout></AdminGuard>} />
       <Route path="/admin/content/free-learning" component={() => <AdminGuard><AdminLayout><AdminFreeLearning /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/content/roadmap" component={() => <AdminGuard><AdminLayout><AdminRoadmapContent /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/content/cro-checklist" component={() => <AdminGuard><AdminLayout><AdminCROContent /></AdminLayout></AdminGuard>} />
       <Route path="/admin/videos" component={() => <AdminGuard><AdminLayout><AdminVideos /></AdminLayout></AdminGuard>} />
       <Route path="/admin/important-links" component={() => <AdminGuard><AdminLayout><AdminImportantLinks /></AdminLayout></AdminGuard>} />
       <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />

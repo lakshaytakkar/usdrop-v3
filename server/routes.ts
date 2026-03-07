@@ -18,6 +18,8 @@ import { registerAdminLLCRoutes } from "./routes/admin-llc";
 import { registerAdminVideoRoutes } from "./routes/admin-videos";
 import { registerAdminLinkRoutes } from "./routes/admin-links";
 import { registerUserTicketRoutes } from "./routes/user-tickets";
+import { registerAdminRoadmapContentRoutes } from "./routes/admin-roadmap-content";
+import { registerAdminCROContentRoutes } from "./routes/admin-cro-content";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -37,4 +39,6 @@ export async function registerRoutes(server: Server, app: Express) {
   registerAdminVideoRoutes(app);
   registerAdminLinkRoutes(app);
   registerUserTicketRoutes(app);
+  registerAdminRoadmapContentRoutes(app);
+  registerAdminCROContentRoutes(app);
 }

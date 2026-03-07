@@ -3,6 +3,9 @@ import { apiFetch } from "@/lib/supabase"
 import { useAuth } from "@/contexts/auth-context"
 import { freeLearningModules } from "@/pages/free-learning/data"
 
+const fallbackLessonIds = freeLearningModules.flatMap(m => m.lessons.map(l => l.id))
+const FALLBACK_TOTAL = fallbackLessonIds.length
+
 interface FreeLearningStatus {
   isFreeLearningComplete: boolean
   freeLearningProgress: number
@@ -14,12 +17,11 @@ interface FreeLearningStatus {
   refetch: () => Promise<void>
 }
 
-const allLessonIds = freeLearningModules.flatMap(m => m.lessons.map(l => l.id))
-const TOTAL_LESSONS = allLessonIds.length
-
 export function useFreeLearningStatus(): FreeLearningStatus {
   const { user, loading: authLoading } = useAuth()
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([])
+  const [totalLessons, setTotalLessons] = useState(FALLBACK_TOTAL)
+  const [allLessonIds, setAllLessonIds] = useState<string[]>(fallbackLessonIds)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,12 +36,28 @@ export function useFreeLearningStatus(): FreeLearningStatus {
       setIsLoading(true)
       setError(null)
 
-      const response = await apiFetch("/api/learning/progress")
+      const [progressRes, modulesRes] = await Promise.all([
+        apiFetch("/api/learning/progress"),
+        apiFetch("/api/learning/modules"),
+      ])
 
-      if (response.ok) {
-        const data = await response.json()
+      let fetchedLessonIds: string[] = fallbackLessonIds
+      if (modulesRes.ok) {
+        const modulesData = await modulesRes.json()
+        const apiIds = (modulesData.modules || []).flatMap((m: any) =>
+          (m.videos || []).map((v: any) => v.id)
+        )
+        if (apiIds.length > 0) {
+          fetchedLessonIds = apiIds
+          setAllLessonIds(apiIds)
+          setTotalLessons(modulesData.totalVideos || apiIds.length)
+        }
+      }
+
+      if (progressRes.ok) {
+        const data = await progressRes.json()
         const serverLessonIds: string[] = (data.lessons || []).map((l: any) => l.lesson_id)
-        const validIds = serverLessonIds.filter(id => allLessonIds.includes(id))
+        const validIds = serverLessonIds.filter(id => fetchedLessonIds.includes(id))
         setCompletedLessonIds(validIds)
       } else {
         setCompletedLessonIds([])
@@ -59,13 +77,13 @@ export function useFreeLearningStatus(): FreeLearningStatus {
   }, [authLoading, fetchProgress])
 
   const completedCount = completedLessonIds.length
-  const progress = TOTAL_LESSONS > 0 ? Math.round((completedCount / TOTAL_LESSONS) * 100) : 0
+  const progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0
 
   return {
-    isFreeLearningComplete: completedCount >= TOTAL_LESSONS,
+    isFreeLearningComplete: totalLessons > 0 && completedCount >= totalLessons,
     freeLearningProgress: progress,
     completedLessons: completedCount,
-    totalLessons: TOTAL_LESSONS,
+    totalLessons,
     completedLessonIds,
     isLoading,
     error,

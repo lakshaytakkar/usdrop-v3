@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { Link } from "wouter"
-import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck, Clock, ExternalLink } from "lucide-react"
+import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck, Clock, ExternalLink, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { freeLearningModules, getTotalLessons, isAllCompleted, getCompletionCount, getYouTubeThumbnail, getCompletedLessons } from "./data"
+import { getYouTubeThumbnail, getCompletedLessons, getCompletionCount, isAllCompleted } from "./data"
 import type { FreeLearningModule, FreeLearningLesson } from "./data"
+import { useFreeLearningModules } from "./use-free-learning-modules"
 import { MentorshipActivationModal } from "./components/mentorship-activation-modal"
 
 function LessonCard({ lesson, index, moduleIndex, completedIds }: { lesson: FreeLearningLesson; index: number; moduleIndex: number; completedIds: string[] }) {
@@ -159,12 +160,20 @@ const mentorCredentials = [
 ]
 
 export default function FreeLearningPage() {
-  const totalLessons = getTotalLessons()
-  const firstLessonId = freeLearningModules[0]?.lessons[0]?.id
+  const { modules, isLoading, totalLessons } = useFreeLearningModules()
+  const firstLessonId = modules[0]?.lessons[0]?.id
   const allCompleted = isAllCompleted()
   const completedCount = getCompletionCount()
   const completedIds = getCompletedLessons()
   const [showActivation, setShowActivation] = useState(false)
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
@@ -292,12 +301,12 @@ export default function FreeLearningPage() {
           {allCompleted && (
             <span className="text-green-500 mr-2">All completed</span>
           )}
-          {freeLearningModules.length} modules · {totalLessons} lessons
+          {modules.length} modules · {totalLessons} lessons
         </span>
       </div>
 
       <div className="space-y-4">
-        {freeLearningModules.map((module, idx) => (
+        {modules.map((module, idx) => (
           <ModuleAccordion key={module.id} module={module} moduleIndex={idx} defaultOpen={idx === 0} completedIds={completedIds} />
         ))}
       </div>

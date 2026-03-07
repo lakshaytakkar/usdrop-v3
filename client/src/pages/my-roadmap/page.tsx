@@ -5,7 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { journeyStages } from "@/data/journey-stages";
+import { journeyStages as fallbackStages } from "@/data/journey-stages";
+import type { JourneyStage } from "@/data/journey-stages";
 import { useAuth } from "@/contexts/auth-context";
 import {
   ChevronRight,
@@ -23,8 +24,9 @@ export default function MyJourneyPage() {
   const { user, loading: authLoading } = useAuth()
   const { isFree, hasCompletedFreeLearning } = useOnboarding()
   const isTeased = isFree && !hasCompletedFreeLearning
+  const [journeyStages, setJourneyStages] = useState<JourneyStage[]>(fallbackStages);
   const [taskStatuses, setTaskStatuses] = useState<Record<string, TaskStatus>>({});
-  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(journeyStages.map(s => s.id)));
+  const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(fallbackStages.map(s => s.id)));
   const [isLoading, setIsLoading] = useState(true);
   const [requestedCalls, setRequestedCalls] = useState<Set<number>>(new Set());
 
@@ -38,21 +40,34 @@ export default function MyJourneyPage() {
 
     let cancelled = false
 
-    const fetchProgress = async () => {
+    const fetchData = async () => {
       try {
-        const res = await apiFetch("/api/roadmap-progress", { credentials: 'include' })
-        if (res.ok && !cancelled) {
-          const data = await res.json()
-          setTaskStatuses(data.statuses || {})
+        const [progressRes, contentRes] = await Promise.all([
+          apiFetch("/api/roadmap-progress", { credentials: 'include' }),
+          apiFetch("/api/roadmap-content", { credentials: 'include' }),
+        ])
+
+        if (!cancelled) {
+          if (progressRes.ok) {
+            const data = await progressRes.json()
+            setTaskStatuses(data.statuses || {})
+          }
+          if (contentRes.ok) {
+            const stages = await contentRes.json()
+            if (Array.isArray(stages) && stages.length > 0) {
+              setJourneyStages(stages)
+              setExpandedStages(new Set(stages.map((s: JourneyStage) => s.id)))
+            }
+          }
         }
       } catch (error) {
-        console.error('Failed to load roadmap progress:', error)
+        console.error('Failed to load roadmap data:', error)
       } finally {
         if (!cancelled) setIsLoading(false)
       }
     }
 
-    fetchProgress()
+    fetchData()
 
     return () => { cancelled = true }
   }, [authLoading, user]);
