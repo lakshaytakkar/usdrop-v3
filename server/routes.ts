@@ -22,11 +22,13 @@ import { registerAdminRoadmapContentRoutes } from "./routes/admin-roadmap-conten
 import { registerAdminCROContentRoutes } from "./routes/admin-cro-content";
 import { registerShopifyRoutes } from "./routes/shopify";
 import { registerStoreClaimRoutes } from "./routes/store-claims";
+import { registerShopifyAppRoutes } from "./routes/shopify-app";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
   registerAdminRoutes(app);
   registerShopifyRoutes(app);
+  registerShopifyAppRoutes(app);
   registerStoreClaimRoutes(app);
   registerPublicRoutes(app);
   registerCROChecklistRoutes(app);

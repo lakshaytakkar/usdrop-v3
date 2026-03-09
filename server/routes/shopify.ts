@@ -9,6 +9,7 @@ import {
   fetchShopifyProducts,
   fetchShopifyOrders,
   createShopifyProduct,
+  updateShopifyProductPrice,
   mapShopifyPlan,
   normalizeShopDomain,
   getOAuthRedirectUri,
@@ -485,6 +486,67 @@ export function registerShopifyRoutes(app: Express) {
     } catch (error: any) {
       console.error('Error pushing product to Shopify:', error);
       return res.status(500).json({ error: error.message || 'Failed to push product to Shopify' });
+    }
+  });
+
+  app.put('/api/shopify-stores/:storeId/products/:productId/price', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { storeId, productId } = req.params;
+      const { price, compare_at_price } = req.body;
+
+      const { data: store, error: storeError } = await supabaseRemote
+        .from('shopify_stores')
+        .select('*')
+        .eq('id', storeId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (storeError || !store) {
+        return res.status(404).json({ error: 'Store not found' });
+      }
+
+      if (!store.is_active) {
+        return res.status(400).json({ error: 'Store is disconnected. Please reconnect it first.' });
+      }
+
+      if (!store.access_token) {
+        return res.status(400).json({ error: 'Store access token is missing. Please reconnect the store.' });
+      }
+
+      const updatedProduct = await updateShopifyProductPrice(
+        store.access_token,
+        store.shop_domain,
+        String(productId),
+        price !== undefined ? price : undefined,
+        compare_at_price !== undefined ? compare_at_price : undefined
+      );
+
+      const firstVariant = updatedProduct.variants?.[0];
+      const newPrice = firstVariant?.price ? parseFloat(firstVariant.price) : null;
+      const newCompareAt = firstVariant?.compare_at_price ? parseFloat(firstVariant.compare_at_price) : null;
+
+      await supabaseRemote
+        .from('shopify_store_products')
+        .update({
+          price: newPrice,
+          compare_at_price: newCompareAt,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('store_id', storeId)
+        .eq('shopify_product_id', productId);
+
+      return res.json({
+        success: true,
+        product: {
+          shopify_product_id: productId,
+          price: newPrice,
+          compare_at_price: newCompareAt,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error updating product price on Shopify:', error);
+      return res.status(500).json({ error: error.message || 'Failed to update product price' });
     }
   });
 

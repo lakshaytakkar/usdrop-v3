@@ -218,6 +218,73 @@ export function mapShopifyPlan(planName: string): 'basic' | 'shopify' | 'advance
   return 'basic';
 }
 
+export async function updateShopifyProductPrice(
+  accessToken: string,
+  shop: string,
+  shopifyProductId: string,
+  price?: number | null,
+  compareAtPrice?: number | null
+): Promise<any> {
+  const normalizedShop = normalizeShopDomain(shop);
+
+  const getUrl = `https://${normalizedShop}/admin/api/2024-01/products/${shopifyProductId}.json?fields=id,variants`;
+  const getResp = await fetch(getUrl, {
+    headers: {
+      'X-Shopify-Access-Token': accessToken,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!getResp.ok) {
+    throw new Error(`Failed to fetch product: ${getResp.status}`);
+  }
+
+  const productData = await getResp.json();
+  const variants = productData.product?.variants || [];
+
+  if (variants.length === 0) {
+    throw new Error('Product has no variants to update');
+  }
+
+  const updatedVariants = variants.map((v: any) => {
+    const updated: any = { id: v.id };
+    if (price !== undefined) {
+      updated.price = price != null ? String(price.toFixed(2)) : v.price;
+    }
+    if (compareAtPrice !== undefined) {
+      updated.compare_at_price = compareAtPrice != null ? String(compareAtPrice.toFixed(2)) : null;
+    }
+    return updated;
+  });
+
+  const putUrl = `https://${normalizedShop}/admin/api/2024-01/products/${shopifyProductId}.json`;
+  const putResp = await fetch(putUrl, {
+    method: 'PUT',
+    headers: {
+      'X-Shopify-Access-Token': accessToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ product: { id: shopifyProductId, variants: updatedVariants } }),
+  });
+
+  if (!putResp.ok) {
+    const errorBody = await putResp.text();
+    let errorMessage = `Shopify API error ${putResp.status}`;
+    try {
+      const parsed = JSON.parse(errorBody);
+      if (parsed.errors) {
+        errorMessage = typeof parsed.errors === 'string'
+          ? parsed.errors
+          : Object.entries(parsed.errors).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('; ');
+      }
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  const result = await putResp.json();
+  return result.product;
+}
+
 export async function createShopifyProduct(
   accessToken: string,
   shop: string,
