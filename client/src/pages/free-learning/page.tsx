@@ -200,7 +200,7 @@ export default function FreeLearningPage() {
             <div className="flex items-center gap-2 mb-3">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-[11px] font-semibold uppercase tracking-wider text-blue-300">
                 <GraduationCap className="h-3 w-3" />
-                Free Course
+                Free Learning
               </span>
             </div>
 
@@ -237,7 +237,7 @@ export default function FreeLearningPage() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all shadow-lg shadow-black/20"
               >
                 <Play className="h-4 w-4" />
-                {completedCount > 0 ? "Continue Course" : "Start Course"}
+                {completedCount > 0 ? "Continue Learning" : "Start Learning"}
               </Link>
             ) : null}
           </div>
@@ -273,7 +273,7 @@ export default function FreeLearningPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-bold text-gray-900" data-testid="text-course-content">
-            Course Content
+            Learning Content
           </h2>
           {allCompleted ? (
             <button
@@ -290,7 +290,7 @@ export default function FreeLearningPage() {
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs transition-colors"
             >
               <Play className="h-3 w-3" />
-              {completedCount > 0 ? "Continue Course" : "Start Course"}
+              {completedCount > 0 ? "Continue Learning" : "Start Learning"}
             </Link>
           ) : null}
         </div>
@@ -314,7 +314,7 @@ export default function FreeLearningPage() {
       {allCompleted ? (
         <div className="rounded-xl border border-blue-100 bg-blue-50 p-6 md:p-8 text-center" data-testid="banner-cta-mentorship">
           <GraduationCap className="h-8 w-8 text-blue-500 mx-auto mb-3" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">You've completed the course!</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">You've completed all the lessons!</h3>
           <p className="text-sm text-gray-500 mb-5 max-w-md mx-auto">
             You're now eligible for personalized mentorship. Apply now to get matched with an expert mentor.
           </p>

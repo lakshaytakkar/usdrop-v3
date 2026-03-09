@@ -173,7 +173,7 @@ export default function FreeLearningLessonPage() {
           <h1 className="text-2xl font-bold mb-2">Lesson not found</h1>
           <p className="text-gray-500 mb-4">This lesson doesn't exist or has been removed.</p>
           <Link href="/free-learning" className="text-blue-500 hover:text-blue-600 font-medium text-sm">
-            Back to course
+            Back to lessons
           </Link>
         </div>
       </div>
@@ -329,7 +329,7 @@ export default function FreeLearningLessonPage() {
             {!nextLesson && allCompleted && (
               <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <h3 className="text-base font-bold text-gray-900 mb-1">Congratulations! You've completed the course!</h3>
+                <h3 className="text-base font-bold text-gray-900 mb-1">Congratulations! You've completed all the lessons!</h3>
                 <p className="text-sm text-gray-500 mb-4">You're ready to activate your personalized mentorship program.</p>
                 <button
                   onClick={() => setShowActivation(true)}
@@ -351,7 +351,7 @@ export default function FreeLearningLessonPage() {
                   data-testid="link-back-to-course-end"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
                 >
-                  Back to Course
+                  Back to Lessons
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
