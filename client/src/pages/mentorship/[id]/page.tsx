@@ -78,9 +78,14 @@ function CourseDetailContent() {
     }
   }, [courseId, fetchCourse])
 
-  const handleModuleSelect = useCallback((moduleId: string) => {
+  const handleModuleSelect = useCallback((moduleId: string, newCourseId?: string) => {
+    const targetCourseId = newCourseId || courseId
+    if (newCourseId && newCourseId !== courseId) {
+      router.push(`/framework/my-learning/${newCourseId}?module=${moduleId}`)
+      return
+    }
     setSelectedModuleId(moduleId)
-    router.push(`/my-learning/${courseId}?module=${moduleId}`, { scroll: false })
+    router.push(`/framework/my-learning/${targetCourseId}?module=${moduleId}`, { scroll: false })
   }, [courseId, router])
 
   const currentModule = course?.modules?.find(m => m.id === selectedModuleId)
@@ -103,7 +108,7 @@ function CourseDetailContent() {
   }, [getNextModule, handleModuleSelect])
 
   const handleClose = useCallback(() => {
-    router.push('/my-learning')
+    router.push('/framework/my-learning')
   }, [router])
 
   if (loading) {
