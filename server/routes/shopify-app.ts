@@ -1,6 +1,13 @@
 import { Express, Request, Response, NextFunction } from 'express';
 import { supabaseRemote } from '../lib/supabase-remote';
-import { updateShopifyProductPrice } from '../lib/shopify-oauth';
+import {
+  updateShopifyProductPrice,
+  normalizeShopDomain,
+  verifyShopifyHmac,
+  exchangeCodeForToken,
+  fetchShopifyStoreInfo,
+  mapShopifyPlan,
+} from '../lib/shopify-oauth';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
@@ -9,31 +16,25 @@ interface ShopifyAppRequest extends Request {
   shopifyStore?: any;
 }
 
-function verifyShopifyHmac(query: Record<string, any>): boolean {
-  const secret = process.env.SHOPIFY_CLIENT_SECRET;
-  if (!secret) return false;
+const embeddedOAuthStates = new Map<string, { shop: string; createdAt: number }>();
 
-  const hmac = query.hmac;
-  if (!hmac) return false;
-
-  const params = { ...query };
-  delete params.hmac;
-
-  const sortedKeys = Object.keys(params).sort();
-  const message = sortedKeys.map(k => `${k}=${params[k]}`).join('&');
-
-  const computed = crypto.createHmac('sha256', secret).update(message).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(computed, 'hex'), Buffer.from(hmac, 'hex'));
-}
-
-function normalizeShopDomain(shop: string): string {
-  let s = shop.trim().toLowerCase();
-  if (!s.includes('.')) s = `${s}.myshopify.com`;
-  return s;
-}
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of embeddedOAuthStates) {
+    if (now - val.createdAt > 10 * 60 * 1000) {
+      embeddedOAuthStates.delete(key);
+    }
+  }
+}, 60 * 1000);
 
 function isValidShopDomain(shop: string): boolean {
   return /^[a-z0-9][a-z0-9\-]*\.myshopify\.com$/i.test(shop);
+}
+
+function getAppBaseUrl(req: Request): string {
+  const domain = process.env.REPLIT_DEV_DOMAIN || process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host') || 'localhost:5000';
+  const protocol = domain.includes('localhost') ? 'http' : 'https';
+  return `${protocol}://${domain}`;
 }
 
 async function requireShopifyShop(req: ShopifyAppRequest, res: Response, next: NextFunction) {
@@ -45,13 +46,6 @@ async function requireShopifyShop(req: ShopifyAppRequest, res: Response, next: N
   const normalizedShop = normalizeShopDomain(shop);
   if (!isValidShopDomain(normalizedShop)) {
     return res.status(400).json({ error: 'Invalid shop domain' });
-  }
-
-  const hmac = req.query.hmac as string;
-  if (hmac) {
-    if (!verifyShopifyHmac(req.query as Record<string, any>)) {
-      return res.status(401).json({ error: 'Invalid HMAC signature' });
-    }
   }
 
   const { data: store, error } = await supabaseRemote
@@ -71,27 +65,164 @@ async function requireShopifyShop(req: ShopifyAppRequest, res: Response, next: N
 
 export function registerShopifyAppRoutes(app: Express) {
 
-  app.get('/shopify-app', (req: Request, res: Response) => {
+  app.get('/shopify-app', async (req: Request, res: Response) => {
     const shop = (req.query.shop as string || '').trim().toLowerCase();
     const host = req.query.host as string || '';
+    const hmac = req.query.hmac as string;
+    const baseUrl = getAppBaseUrl(req);
 
-    if (shop && !isValidShopDomain(normalizeShopDomain(shop))) {
+    if (!shop) {
+      return res.status(400).send('Missing shop parameter. This app must be opened from Shopify Admin.');
+    }
+
+    const normalizedShop = normalizeShopDomain(shop);
+    if (!isValidShopDomain(normalizedShop)) {
       return res.status(400).send('Invalid shop domain');
     }
 
-    const safeShop = normalizeShopDomain(shop || 'unknown');
+    if (hmac) {
+      const queryObj: Record<string, string> = {};
+      for (const [k, v] of Object.entries(req.query)) {
+        queryObj[k] = String(v);
+      }
+      if (!verifyShopifyHmac(queryObj)) {
+        return res.status(401).send('Invalid HMAC signature');
+      }
+    }
+
+    const { data: store } = await supabaseRemote
+      .from('shopify_stores')
+      .select('id, is_active')
+      .eq('shop_domain', normalizedShop)
+      .eq('is_active', true)
+      .single();
+
+    if (!store) {
+      const clientId = process.env.SHOPIFY_CLIENT_ID;
+      const scopes = process.env.SHOPIFY_SCOPES || 'read_products,write_products,read_orders,read_customers,read_inventory';
+      const redirectUri = `${baseUrl}/shopify-app/auth/callback`;
+
+      const state = crypto.randomBytes(32).toString('hex');
+      embeddedOAuthStates.set(state, { shop: normalizedShop, createdAt: Date.now() });
+
+      const oauthUrl = `https://${normalizedShop}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html><head><title>Installing USDrop</title></head>
+        <body>
+          <script>
+            window.top.location.href = "${oauthUrl}";
+          </script>
+          <p>Redirecting to authorize USDrop...</p>
+        </body></html>
+      `);
+    }
+
+    const safeShop = normalizedShop.replace(/[^a-z0-9.\-]/g, '');
+    const safeHost = host.replace(/[^a-zA-Z0-9=]/g, '');
     const appHtmlPath = path.join(import.meta.dirname, '..', 'shopify-app', 'index.html');
 
     try {
       let html = fs.readFileSync(appHtmlPath, 'utf-8');
-      html = html.replace('{{SHOP}}', safeShop.replace(/[^a-z0-9.\-]/g, ''));
-      html = html.replace('{{HOST}}', host.replace(/[^a-zA-Z0-9=]/g, ''));
+      html = html.replace('{{SHOP}}', safeShop);
+      html = html.replace('{{HOST}}', safeHost);
       html = html.replace('{{SHOPIFY_CLIENT_ID}}', process.env.SHOPIFY_CLIENT_ID || '');
       res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Content-Security-Policy', `frame-ancestors https://${safeShop.replace(/[^a-z0-9.\-]/g, '')} https://admin.shopify.com;`);
+      res.setHeader('Content-Security-Policy', `frame-ancestors https://${safeShop} https://admin.shopify.com;`);
       return res.send(html);
     } catch {
       return res.status(500).send('App not available');
+    }
+  });
+
+  app.get('/shopify-app/auth/callback', async (req: Request, res: Response) => {
+    try {
+      const { code, state, shop, error: oauthError, hmac } = req.query;
+      const baseUrl = getAppBaseUrl(req);
+
+      if (oauthError) {
+        return res.status(400).send(`Authorization failed: ${oauthError}`);
+      }
+
+      if (!code || !shop || !state) {
+        return res.status(400).send('Missing required parameters');
+      }
+
+      if (hmac) {
+        const queryObj: Record<string, string> = {};
+        for (const [k, v] of Object.entries(req.query)) {
+          queryObj[k] = String(v);
+        }
+        if (!verifyShopifyHmac(queryObj)) {
+          return res.status(401).send('HMAC verification failed');
+        }
+      }
+
+      const stateStr = String(state);
+      const storedState = embeddedOAuthStates.get(stateStr);
+      if (!storedState) {
+        return res.status(400).send('Invalid or expired state. Please try installing the app again from Shopify Admin.');
+      }
+
+      const shopStr = String(shop);
+      const normalizedShop = normalizeShopDomain(shopStr);
+      if (normalizedShop !== storedState.shop) {
+        embeddedOAuthStates.delete(stateStr);
+        return res.status(400).send('Shop mismatch');
+      }
+      embeddedOAuthStates.delete(stateStr);
+
+      const { access_token } = await exchangeCodeForToken(shopStr, String(code));
+      const storeInfo = await fetchShopifyStoreInfo(access_token, shopStr);
+      const normalizedDomain = normalizeShopDomain(storeInfo.myshopify_domain);
+      const plan = mapShopifyPlan(storeInfo.plan_name);
+      const now = new Date().toISOString();
+
+      const { data: existingStore } = await supabaseRemote
+        .from('shopify_stores')
+        .select('id, user_id')
+        .eq('shop_domain', normalizedDomain)
+        .single();
+
+      if (existingStore) {
+        await supabaseRemote
+          .from('shopify_stores')
+          .update({
+            store_name: storeInfo.name,
+            store_email: storeInfo.email,
+            access_token: access_token,
+            is_active: true,
+            currency: storeInfo.currency,
+            plan: plan,
+            updated_at: now,
+          })
+          .eq('id', existingStore.id);
+      } else {
+        return res.status(400).send(`
+          <!DOCTYPE html>
+          <html><head><title>USDrop</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          </head>
+          <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+            <div class="max-w-md text-center p-8 bg-white rounded-xl shadow-sm border border-gray-200">
+              <div class="h-12 w-12 mx-auto mb-4 rounded-xl bg-blue-500 flex items-center justify-center">
+                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <h1 class="text-xl font-bold text-gray-900 mb-2">Connect via USDrop First</h1>
+              <p class="text-sm text-gray-600 mb-4">To use USDrop tools inside Shopify, please first connect your store through the USDrop platform. This links your store to your USDrop account.</p>
+              <a href="https://usdrop.ai" target="_blank" class="inline-block px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">Go to USDrop</a>
+              <p class="text-xs text-gray-400 mt-4">After connecting, come back to Shopify and open the app again.</p>
+            </div>
+          </body></html>
+        `);
+      }
+
+      const redirectUrl = `https://${normalizedDomain}/admin/apps/${process.env.SHOPIFY_CLIENT_ID || ''}`;
+      return res.redirect(redirectUrl);
+    } catch (error: any) {
+      console.error('Shopify app OAuth callback error:', error);
+      return res.status(500).send('Installation failed. Please try again from Shopify Admin.');
     }
   });
 
