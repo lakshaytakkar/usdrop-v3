@@ -226,6 +226,46 @@ export function registerShopifyAppRoutes(app: Express) {
     }
   });
 
+  app.get('/shopify-app/preview', (_req: Request, res: Response) => {
+    const appHtmlPath = path.join(import.meta.dirname, '..', 'shopify-app', 'index.html');
+    try {
+      let html = fs.readFileSync(appHtmlPath, 'utf-8');
+      html = html.replace('{{SHOP}}', 'preview-store.myshopify.com');
+      html = html.replace('{{HOST}}', '');
+      html = html.replace('{{SHOPIFY_CLIENT_ID}}', '');
+      html = html.replace(
+        "apiFetch('/shopify-app/api/products')",
+        "Promise.resolve({ ok: true, json: () => Promise.resolve({ products: window.__PREVIEW_PRODUCTS }) })"
+      );
+      html = html.replace(
+        "apiFetch('/shopify-app/api/orders')",
+        "Promise.resolve({ ok: true, json: () => Promise.resolve({ orders: window.__PREVIEW_ORDERS }) })"
+      );
+      const previewScript = `
+<script>
+window.__PREVIEW_PRODUCTS = [
+  { id: 'p1', shopify_product_id: '1001', title: 'Premium Wireless Earbuds Pro', price: 49.99, compare_at_price: 79.99, image_url: null, body_html: '<p>High-quality wireless earbuds with <strong>noise cancellation</strong> and 24-hour battery life. Perfect for commuting and workouts.</p><ul><li>Active Noise Cancellation</li><li>IPX5 Water Resistant</li></ul>', tags: ['electronics','earbuds','wireless','audio','bestseller'] },
+  { id: 'p2', shopify_product_id: '1002', title: 'Minimalist Leather Wallet', price: 29.99, compare_at_price: 44.99, image_url: null, body_html: '<p>Slim RFID-blocking wallet made from genuine leather.</p>', tags: ['accessories','wallet','leather'] },
+  { id: 'p3', shopify_product_id: '1003', title: 'LED Desk Lamp', price: 34.99, compare_at_price: null, image_url: null, body_html: 'Simple desk lamp with adjustable brightness', tags: ['home'] },
+  { id: 'p4', shopify_product_id: '1004', title: 'Phone Stand', price: 12.99, compare_at_price: 19.99, image_url: null, body_html: '', tags: [] },
+  { id: 'p5', shopify_product_id: '1005', title: 'Portable Charger 20000mAh', price: 39.99, compare_at_price: 59.99, image_url: null, body_html: '<p>Fast-charging power bank with <strong>USB-C</strong> and dual USB-A ports. Charges iPhone 15 up to 5 times.</p><ul><li>20000mAh capacity</li><li>USB-C PD 20W</li><li>LED indicator</li></ul>', tags: ['electronics','charger','portable','travel','power','bestseller'] },
+];
+window.__PREVIEW_ORDERS = [
+  { id: 'o1', shopify_order_id: '5001', financial_status: 'paid', total_price: 99.98, line_items: [{ product_id: '1001', quantity: 2, price: '49.99' }], shopify_created_at: '2026-03-01T10:00:00Z' },
+  { id: 'o2', shopify_order_id: '5002', financial_status: 'paid', total_price: 79.98, line_items: [{ product_id: '1001', quantity: 1, price: '49.99' },{ product_id: '1002', quantity: 1, price: '29.99' }], shopify_created_at: '2026-03-02T14:30:00Z' },
+  { id: 'o3', shopify_order_id: '5003', financial_status: 'paid', total_price: 34.99, line_items: [{ product_id: '1003', quantity: 1, price: '34.99' }], shopify_created_at: '2026-03-03T09:15:00Z' },
+  { id: 'o4', shopify_order_id: '5004', financial_status: 'paid', total_price: 52.98, line_items: [{ product_id: '1002', quantity: 1, price: '29.99' },{ product_id: '1004', quantity: 1, price: '12.99' }], shopify_created_at: '2026-03-05T16:20:00Z' },
+  { id: 'o5', shopify_order_id: '5005', financial_status: 'paid', total_price: 89.98, line_items: [{ product_id: '1005', quantity: 1, price: '39.99' },{ product_id: '1001', quantity: 1, price: '49.99' }], shopify_created_at: '2026-03-07T11:45:00Z' },
+];
+</script>`;
+      html = html.replace('</head>', previewScript + '\n</head>');
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(html);
+    } catch {
+      return res.status(500).send('Preview not available');
+    }
+  });
+
   app.get('/shopify-app/api/products', requireShopifyShop, async (req: ShopifyAppRequest, res: Response) => {
     try {
       const store = req.shopifyStore;
