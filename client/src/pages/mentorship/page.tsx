@@ -24,7 +24,7 @@ function formatDuration(minutes: number | null): string {
 
 function getYouTubeThumbnail(url?: string): string | null {
   if (!url) return null
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/)
+  const match = url.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/)
   if (match?.[1]) return `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`
   return null
 }

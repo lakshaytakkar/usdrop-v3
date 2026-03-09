@@ -68,7 +68,7 @@ export function CourseVideoPlayer({
         return
       }
 
-      if (storagePath.includes('youtube.com') || storagePath.includes('youtu.be')) {
+      if (storagePath.includes('youtube.com') || storagePath.includes('youtu.be') || storagePath.includes('youtube-nocookie.com')) {
         setVideoUrl(storagePath)
         setIsYouTubeEmbed(true)
         return
@@ -218,7 +218,7 @@ export function CourseVideoPlayer({
 
   const getYouTubeEmbedUrl = (url: string | null): string => {
     if (!url) {
-      return `https://www.youtube.com/embed/${placeholderVideoId}?rel=0`
+      return `https://www.youtube-nocookie.com/embed/${placeholderVideoId}?rel=0`
     }
 
     let videoId = ''
@@ -226,14 +226,19 @@ export function CourseVideoPlayer({
       const urlObj = new URL(url)
       if (urlObj.hostname.includes('youtu.be')) {
         videoId = urlObj.pathname.slice(1)
-      } else if (urlObj.hostname.includes('youtube.com')) {
-        videoId = urlObj.searchParams.get('v') || ''
+      } else if (urlObj.hostname.includes('youtube-nocookie.com') || urlObj.hostname.includes('youtube.com')) {
+        const embedMatch = urlObj.pathname.match(/\/embed\/([^/?]+)/)
+        if (embedMatch) {
+          videoId = embedMatch[1]
+        } else {
+          videoId = urlObj.searchParams.get('v') || ''
+        }
       }
     } catch {
       videoId = placeholderVideoId
     }
 
-    return `https://www.youtube.com/embed/${videoId || placeholderVideoId}?rel=0`
+    return `https://www.youtube-nocookie.com/embed/${videoId || placeholderVideoId}?rel=0`
   }
 
   if (isYouTubeEmbed) {
@@ -254,7 +259,7 @@ export function CourseVideoPlayer({
     return (
       <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
         <iframe
-          src={`https://www.youtube.com/embed/${placeholderVideoId}?rel=0`}
+          src={`https://www.youtube-nocookie.com/embed/${placeholderVideoId}?rel=0`}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
