@@ -26,6 +26,7 @@ import { AudienceDemographicsChart } from "../components/audience-demographics-c
 import { FulfillmentCard } from "../components/fulfillment-card"
 import { CompetitorStoresSection } from "../components/competitor-stores-section"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
+import { ProfitCalculator } from "../components/profit-calculator"
 import { Product, ProductResearch, CompetitorStore } from "@/types/products"
 import { cn } from "@/lib/utils"
 import { BlueSpinner } from "@/components/ui/blue-spinner"
@@ -455,6 +456,17 @@ export default function ProductDetailPage() {
                   competitionLevel={competitionLevel}
                   rating={product.rating}
                   reviewsCount={product.reviews_count}
+                />
+              </div>
+
+              {/* Profit Calculator */}
+              <div className="space-y-3 min-w-0 max-w-full">
+                <SectionHeader title="Profit Calculator" description="Estimate your margins, break-even ROAS, and potential profit with live calculations" />
+                <ProfitCalculator
+                  sellPrice={product.sell_price}
+                  buyPrice={product.buy_price}
+                  shippingCost={researchData?.fulfillment?.shipping_cost || researchData?.profit_calculator?.shipping_cost || 0}
+                  otherFees={researchData?.profit_calculator?.other_fees || 0}
                 />
               </div>
 
