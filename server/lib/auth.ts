@@ -2,7 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { supabaseRemote } from './supabase-remote';
 
-const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('JWT_SECRET must be set in production'); })() : 'usdrop-dev-secret-key-change-in-production');
+function resolveJwtSecret(): string {
+  const secret = process.env.JWT_SECRET || process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL: JWT_SECRET or SESSION_SECRET must be set in production. Auth operations will be rejected.');
+    return '';
+  }
+  return 'usdrop-dev-secret-key-change-in-production';
+}
+
+const JWT_SECRET = resolveJwtSecret();
 
 export interface AuthUser {
   id: string;
@@ -51,10 +61,14 @@ export function invalidateUserCache(userId: string): void {
 }
 
 export function generateToken(userId: string): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT secret not configured. Cannot generate tokens.');
+  }
   return jwt.sign({ sub: userId }, JWT_SECRET, { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): { sub: string } | null {
+  if (!JWT_SECRET) return null;
   try {
     return jwt.verify(token, JWT_SECRET) as { sub: string };
   } catch {
