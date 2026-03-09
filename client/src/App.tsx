@@ -328,7 +328,7 @@ function Router() {
       <Route path="/intelligence-hub" component={() => <UserGuard><AppLayout><IntelligenceHub /></AppLayout></UserGuard>} />
       <Route path="/selling-channels" component={() => <UserGuard><AppLayout><SellingChannels /></AppLayout></UserGuard>} />
       <Route path="/fulfillment" component={() => <UserGuard><AppLayout><Fulfillment /></AppLayout></UserGuard>} />
-      <Route path="/shopify-stores" component={() => <UserGuard><AppLayout><ShopifyStores /></AppLayout></UserGuard>} />
+      <Route path="/shopify-stores">{() => { window.location.replace('/framework/my-store'); return null; }}</Route>
       <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
       <Route path="/who-is-this-for" component={() => <UserGuard><AppLayout><WhoIsThisFor /></AppLayout></UserGuard>} />
       <Route path="/help-center" component={() => <UserGuard><AppLayout><HelpCenter /></AppLayout></UserGuard>} />

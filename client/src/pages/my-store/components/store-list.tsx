@@ -119,9 +119,9 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                 <div className="bg-primary/10 flex h-12 w-12 flex-none items-center justify-center rounded-xl">
                   <Store className="h-6 w-6 text-primary" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg truncate">{store.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground truncate">{store.url}</p>
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <CardTitle className="text-lg truncate" data-testid={`text-store-name-${store.id}`}>{store.name}</CardTitle>
+                  <p className="text-xs text-muted-foreground truncate max-w-full" title={store.url} data-testid={`text-store-url-${store.id}`}>{store.url}</p>
                 </div>
               </div>
             </CardHeader>
@@ -172,16 +172,15 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                 )}
               </div>
 
-              <div className="mt-auto pt-4 border-t space-y-2">
+              <div className="mt-auto pt-4 border-t flex flex-col gap-2">
                 <Link href={`/framework/my-store/${store.id}`}>
                   <Button
-                    variant="default"
                     size="sm"
-                    className="w-full"
+                    className="w-full bg-blue-500 hover:bg-blue-600"
                     data-testid={`button-view-${store.id}`}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    View Products & Orders
+                    View Store
                   </Button>
                 </Link>
                 <div className="flex gap-2">
@@ -201,7 +200,7 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                         </>
                       ) : (
                         <>
-                          <RefreshCw className="h-4 w-4 mr-2" />
+                          <RefreshCw className="h-4 w-4 mr-1" />
                           Sync
                         </>
                       )}
@@ -213,8 +212,8 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                     onClick={() => handleDisconnect(store.id)}
                     className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Disconnect
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Remove
                   </Button>
                 </div>
               </div>

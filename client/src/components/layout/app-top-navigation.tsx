@@ -185,7 +185,7 @@ export function AppTopNavigation() {
               </GradientButton>
 
               <Link
-                href="/shopify-stores"
+                href="/framework/my-store"
                 data-testid="button-shopify-pill"
                 className="hidden md:inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full bg-[#1a1a2e] hover:bg-[#2a2a3e] text-white text-[13px] font-semibold transition-all shrink-0"
               >
