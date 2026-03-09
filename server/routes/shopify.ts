@@ -439,10 +439,30 @@ export function registerShopifyRoutes(app: Express) {
 
       const shopDomain = store.shop_domain;
 
-      const [shopifyProducts, shopifyOrders] = await Promise.all([
-        fetchShopifyProducts(store.access_token, shopDomain),
-        fetchShopifyOrders(store.access_token, shopDomain),
-      ]);
+      let shopifyProducts: any[] = [];
+      let shopifyOrders: any[] = [];
+      let productsFetchError: string | null = null;
+      let ordersFetchError: string | null = null;
+
+      try {
+        shopifyProducts = await fetchShopifyProducts(store.access_token, shopDomain);
+      } catch (err: any) {
+        productsFetchError = err.message || 'Failed to fetch products';
+        console.error('Shopify products fetch error:', productsFetchError);
+      }
+
+      try {
+        shopifyOrders = await fetchShopifyOrders(store.access_token, shopDomain);
+      } catch (err: any) {
+        ordersFetchError = err.message || 'Failed to fetch orders';
+        console.error('Shopify orders fetch error:', ordersFetchError);
+      }
+
+      if (productsFetchError && ordersFetchError) {
+        return res.status(500).json({
+          error: `Sync failed: ${productsFetchError}; ${ordersFetchError}. Try disconnecting and reconnecting the store to grant updated permissions.`,
+        });
+      }
 
       let productsUpserted = 0;
       for (const product of shopifyProducts) {
@@ -510,11 +530,18 @@ export function registerShopifyRoutes(app: Express) {
         })
         .eq('id', storeId);
 
+      const warnings: string[] = [];
+      if (productsFetchError) warnings.push(`Products: ${productsFetchError}`);
+      if (ordersFetchError) warnings.push(`Orders: ${ordersFetchError}`);
+
       return res.json({
         success: true,
-        message: 'Store synced successfully',
+        message: warnings.length > 0
+          ? `Partial sync completed. ${warnings.join('; ')}. Try reconnecting the store for full access.`
+          : 'Store synced successfully',
         products_synced: productsUpserted,
         orders_synced: ordersUpserted,
+        warnings,
       });
     } catch (error: any) {
       return res.status(500).json({ error: error.message || 'Sync failed' });

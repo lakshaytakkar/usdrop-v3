@@ -4,7 +4,7 @@ import { useParams } from "wouter"
 import { Link } from "wouter"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, RefreshCw, Package, ShoppingCart, Store } from "lucide-react"
+import { ArrowLeft, RefreshCw, Package, ShoppingCart } from "lucide-react"
 import { BlueSpinner, ButtonSpinner } from "@/components/ui/blue-spinner"
 import { useToast } from "@/hooks/use-toast"
 import { ShopifyStore } from "../data/stores"
@@ -53,7 +53,11 @@ export default function StoreDetailPage() {
         throw new Error(data.error || 'Failed to sync store')
       }
       const result = await response.json()
-      showSuccess(`Synced ${result.products_synced} products and ${result.orders_synced} orders`)
+      if (result.warnings && result.warnings.length > 0) {
+        showSuccess(`Synced ${result.products_synced} products, ${result.orders_synced} orders. Some data could not sync — try reconnecting the store for full access.`)
+      } else {
+        showSuccess(`Synced ${result.products_synced} products and ${result.orders_synced} orders`)
+      }
       setRefreshKey(k => k + 1)
       fetchStore()
     } catch (err) {
@@ -102,8 +106,8 @@ export default function StoreDetailPage() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="bg-primary/10 flex h-14 w-14 flex-none items-center justify-center rounded-xl">
-            <Store className="h-7 w-7 text-primary" />
+          <div className="bg-[#f0faf0] flex h-14 w-14 flex-none items-center justify-center rounded-xl">
+            <img src="/images/logos/shopify.svg" alt="Shopify" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <h1 className="text-2xl font-bold" data-testid="text-store-name">{store.name}</h1>
@@ -134,7 +138,7 @@ export default function StoreDetailPage() {
       <Tabs defaultValue="overview" className="mt-2">
         <TabsList data-testid="tabs-store-detail">
           <TabsTrigger value="overview" data-testid="tab-overview">
-            <Store className="h-4 w-4 mr-2" />
+            <img src="/images/logos/shopify.svg" alt="" className="h-4 w-4 object-contain mr-2" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="products" data-testid="tab-products">
