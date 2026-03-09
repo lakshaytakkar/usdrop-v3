@@ -39,6 +39,9 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **Wouter for Routing:** Lightweight client-side routing.
 - **Environment Variables:** `VITE_` prefix for client-side, no prefix for server-side variables.
 
+**Supabase Tables (custom):**
+- `user_ad_logs`: Per-user ad campaign log data (audiences, adsets, creatives, results as JSONB). Keyed by `user_id` (unique, FK to profiles).
+
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).
 - **Vite**: Frontend build tool and dev server.

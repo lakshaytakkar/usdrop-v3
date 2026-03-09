@@ -115,6 +115,7 @@ import MyStore from "@/pages/my-store/page";
 import MyRoadmap from "@/pages/my-roadmap/page";
 import MyProfile from "@/pages/my-profile/page";
 import MyRnD from "@/pages/my-rnd/page";
+import MyAds from "@/pages/my-ads/page";
 import MyPlan from "@/pages/my-plan/page";
 import MyApps from "@/pages/my-apps/page";
 import MyLLC from "@/pages/my-llc/page";
@@ -274,6 +275,7 @@ function Router() {
       <Route path="/framework/my-learning/:id" component={() => <UserGuard><AppLayout><MentorshipDetail /></AppLayout></UserGuard>} />
       <Route path="/framework/my-sessions" component={() => <UserGuard><AppLayout><MySessionsPage /></AppLayout></UserGuard>} />
       <Route path="/framework/my-rnd" component={() => <UserGuard><AppLayout><MyRnD /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-ads" component={() => <UserGuard><AppLayout><MyAds /></AppLayout></UserGuard>} />
       <Route path="/framework/my-profile" component={() => <UserGuard><AppLayout><MyProfile /></AppLayout></UserGuard>} />
       <Route path="/framework/my-apps" component={() => <UserGuard><AppLayout><MyApps /></AppLayout></UserGuard>} />
       <Route path="/framework/my-plan" component={() => <UserGuard><AppLayout><MyPlan /></AppLayout></UserGuard>} />
@@ -339,6 +341,7 @@ function Router() {
       <Route path="/my-learning"><Redirect to="/framework/my-learning" /></Route>
       <Route path="/my-learning/:id">{(params) => <Redirect to={`/framework/my-learning/${params.id}`} />}</Route>
       <Route path="/my-rnd"><Redirect to="/framework/my-rnd" /></Route>
+      <Route path="/my-ads"><Redirect to="/framework/my-ads" /></Route>
       <Route path="/my-sessions"><Redirect to="/framework/my-sessions" /></Route>
       <Route path="/webinars"><Redirect to="/framework/my-sessions" /></Route>
       <Route path="/framework/my-llc"><Redirect to="/llc" /></Route>

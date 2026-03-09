@@ -3085,6 +3085,69 @@ export function registerPublicRoutes(app: Express) {
     }
   });
 
+  // ==================== AD LOGS ====================
+
+  app.get('/api/ad-logs', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+
+      const { data, error } = await supabaseRemote
+        .from('user_ad_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching ad logs:', error);
+        return res.status(500).json({ error: 'Failed to fetch ad logs' });
+      }
+
+      if (!data) {
+        return res.json({ audiences: [], adsets: [], creatives: [], results: [] });
+      }
+
+      return res.json({
+        audiences: data.audiences || [],
+        adsets: data.adsets || [],
+        creatives: data.creatives || [],
+        results: data.results || [],
+      });
+    } catch (error) {
+      console.error('Error in GET /api/ad-logs:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/ad-logs', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { audiences, adsets, creatives, results } = req.body;
+
+      const payload = {
+        user_id: user.id,
+        audiences: Array.isArray(audiences) ? audiences : [],
+        adsets: Array.isArray(adsets) ? adsets : [],
+        creatives: Array.isArray(creatives) ? creatives : [],
+        results: Array.isArray(results) ? results : [],
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabaseRemote
+        .from('user_ad_logs')
+        .upsert(payload, { onConflict: 'user_id' });
+
+      if (error) {
+        console.error('Error saving ad logs:', error);
+        return res.status(500).json({ error: 'Failed to save ad logs' });
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('Error in PUT /api/ad-logs:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ==================== SHOPIFY STORES ====================
 
   function mapShopifyStoreFromDB(row: any) {
