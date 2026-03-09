@@ -12,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Store, CheckCircle2, XCircle, Trash2, RefreshCw } from "lucide-react"
+import { Store, CheckCircle2, XCircle, Trash2, RefreshCw, ExternalLink } from "lucide-react"
+import { Link } from "wouter"
 import { ButtonSpinner } from "@/components/ui/blue-spinner"
 import { ShopifyStore } from "../data/stores"
 import { useToast } from "@/hooks/use-toast"
@@ -171,38 +172,51 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                 )}
               </div>
 
-              <div className="mt-auto pt-4 border-t flex gap-2">
-                {store.status === "connected" && (
+              <div className="mt-auto pt-4 border-t space-y-2">
+                <Link href={`/framework/my-store/${store.id}`}>
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
-                    onClick={() => handleSync(store.id)}
-                    disabled={syncingStoreId === store.id}
-                    className="flex-1"
-                    data-testid={`button-sync-${store.id}`}
+                    className="w-full"
+                    data-testid={`button-view-${store.id}`}
                   >
-                    {syncingStoreId === store.id ? (
-                      <>
-                        <ButtonSpinner />
-                        Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Sync
-                      </>
-                    )}
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View Products & Orders
                   </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDisconnect(store.id)}
-                  className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Disconnect
-                </Button>
+                </Link>
+                <div className="flex gap-2">
+                  {store.status === "connected" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSync(store.id)}
+                      disabled={syncingStoreId === store.id}
+                      className="flex-1"
+                      data-testid={`button-sync-${store.id}`}
+                    >
+                      {syncingStoreId === store.id ? (
+                        <>
+                          <ButtonSpinner />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Sync
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDisconnect(store.id)}
+                    className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Disconnect
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

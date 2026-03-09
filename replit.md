@@ -51,6 +51,7 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - OAuth callback: `/api/shopify-stores/oauth/callback` — exchanges code for access token, fetches store info, upserts in Supabase, redirects to `/framework/my-store`.
 - Sync endpoint: `POST /api/shopify-stores/:id/sync` — pulls products and orders from Shopify Admin API and upserts into Supabase.
 - Frontend: `client/src/pages/my-store/` — connect modal, store list with sync/disconnect, products/orders counts.
+- Store detail page: `client/src/pages/my-store/[id]/page.tsx` with tabs (Overview/Products/Orders) and sub-components in `[id]/components/`. Route: `/framework/my-store/:id`.
 - Important: The Shopify app's "Allowed redirection URL(s)" in Shopify Partner Dashboard must include the callback URL.
 
 ## External Dependencies

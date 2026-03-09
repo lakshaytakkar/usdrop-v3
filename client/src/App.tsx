@@ -112,6 +112,7 @@ import SupportPage from "@/pages/support/page";
 
 import MyProducts from "@/pages/my-products/page";
 import MyStore from "@/pages/my-store/page";
+import StoreDetail from "@/pages/my-store/[id]/page";
 import MyRoadmap from "@/pages/my-roadmap/page";
 import MyProfile from "@/pages/my-profile/page";
 import MyRnD from "@/pages/my-rnd/page";
@@ -270,6 +271,7 @@ function Router() {
       <Route path="/framework" component={() => <UserGuard><AppLayout><HomePage /></AppLayout></UserGuard>} />
       <Route path="/framework/my-products" component={() => <UserGuard><AppLayout><MyProducts /></AppLayout></UserGuard>} />
       <Route path="/framework/my-store" component={() => <UserGuard><AppLayout><MyStore /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-store/:id" component={() => <UserGuard><AppLayout><StoreDetail /></AppLayout></UserGuard>} />
       <Route path="/framework/my-roadmap" component={() => <UserGuard><AppLayout><MyRoadmap /></AppLayout></UserGuard>} />
       <Route path="/framework/my-learning" component={() => <UserGuard><AppLayout><MentorshipPage /></AppLayout></UserGuard>} />
       <Route path="/framework/my-learning/:id" component={() => <UserGuard><AppLayout><MentorshipDetail /></AppLayout></UserGuard>} />
