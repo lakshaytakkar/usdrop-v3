@@ -520,4 +520,16 @@ export function registerShopifyRoutes(app: Express) {
       return res.status(500).json({ error: error.message || 'Sync failed' });
     }
   });
+
+  app.post('/api/shopify-stores/webhooks/customer-deletion', (_req: Request, res: Response) => {
+    res.status(200).json({ received: true });
+  });
+
+  app.post('/api/shopify-stores/webhooks/customer-data-request', (_req: Request, res: Response) => {
+    res.status(200).json({ received: true });
+  });
+
+  app.post('/api/shopify-stores/webhooks/shop-deletion', (_req: Request, res: Response) => {
+    res.status(200).json({ received: true });
+  });
 }

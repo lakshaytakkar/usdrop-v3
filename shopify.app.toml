@@ -1,5 +1,6 @@
 client_id = "fef767ad801a57a040f5be84ec3bbdd4"
 name = "USDrop AI"
+embedded = false
 application_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev"
 
 [auth]
@@ -9,3 +10,10 @@ redirect_urls = [
 
 [access_scopes]
 scopes = "read_products,read_orders,read_customers"
+
+[webhooks]
+
+[webhooks.privacy_compliance]
+customer_deletion_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev/api/shopify-stores/webhooks/customer-deletion"
+customer_data_request_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev/api/shopify-stores/webhooks/customer-data-request"
+shop_deletion_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev/api/shopify-stores/webhooks/shop-deletion"
