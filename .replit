@@ -40,6 +40,11 @@ externalPort = 80
 [userenv.shared]
 NEXT_PUBLIC_APP_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13grs470.kirk.replit.dev"
 NEXT_PUBLIC_SITE_URL = "https://a60c88a1-bc44-441c-aaa3-34e2f07130ec-00-2xfwq13grs470.kirk.replit.dev"
+SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2J5YnR4bWtka3ZxcWFoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDA4NDYsImV4cCI6MjA4Njg3Njg0Nn0.SlVMeExCwAviROksqA09ctzhvRmwO7Trc6GmwP_Ata8"
+SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2J5YnR4bWtka3ZxcWFoeXV1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTMwMDg0NiwiZXhwIjoyMDg2ODc2ODQ2fQ.t321CnggXbvN5-xtg6hPpymVXBGBvTQLUIgJoXnq88Y"
+VITE_SUPABASE_URL = "https://wecbybtxmkdkvqqahyuu.supabase.co"
+VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndlY2J5YnR4bWtka3ZxcWFoeXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMDA4NDYsImV4cCI6MjA4Njg3Njg0Nn0.SlVMeExCwAviROksqA09ctzhvRmwO7Trc6GmwP_Ata8"
 
 [deployment]
 deploymentTarget = "autoscale"

@@ -37,7 +37,11 @@ export const profiles = pgTable("profiles", {
   onboarding_progress: integer("onboarding_progress").default(0),
   subscription_plan_id: uuid("subscription_plan_id").references(() => subscriptionPlans.id),
   subscription_status: text("subscription_status"),
+  subscription_started_at: timestamp("subscription_started_at", { withTimezone: true }),
+  subscription_ends_at: timestamp("subscription_ends_at", { withTimezone: true }),
   is_trial: boolean("is_trial").default(false),
+  trial_ends_at: timestamp("trial_ends_at", { withTimezone: true }),
+  credits: integer("credits").default(0),
   phone_number: text("phone_number"),
   ecommerce_experience: text("ecommerce_experience"),
   preferred_niche: text("preferred_niche"),
@@ -89,6 +93,7 @@ export const products = pgTable("products", {
   rating: numeric("rating"),
   reviews_count: integer("reviews_count").default(0),
   trend_data: jsonb("trend_data").default(sql`'[]'::jsonb`),
+  in_stock: boolean("in_stock").default(true),
   supplier_id: uuid("supplier_id").references(() => suppliers.id, { onDelete: "set null" }),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
@@ -565,3 +570,270 @@ export type CroCategory = typeof croCategories.$inferSelect;
 export const insertCroItemSchema = createInsertSchema(croItems).omit({ created_at: true, updated_at: true });
 export type InsertCroItem = z.infer<typeof insertCroItemSchema>;
 export type CroItem = typeof croItems.$inferSelect;
+
+export const supportTickets = pgTable("support_tickets", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  type: text("type").default("other"),
+  priority: text("priority").default("medium"),
+  status: text("status").default("open"),
+  assigned_to: uuid("assigned_to").references(() => profiles.id, { onDelete: "set null" }),
+  escalated_to: uuid("escalated_to").references(() => profiles.id, { onDelete: "set null" }),
+  resolution_notes: text("resolution_notes"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const ticketMessages = pgTable("ticket_messages", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  ticket_id: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+  sender_id: uuid("sender_id").references(() => profiles.id, { onDelete: "set null" }),
+  content: text("content").notNull(),
+  is_internal: boolean("is_internal").default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const batches = pgTable("batches", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  start_date: timestamp("start_date", { withTimezone: true }),
+  end_date: timestamp("end_date", { withTimezone: true }),
+  status: text("status").default("active"),
+  max_members: integer("max_members"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const batchMembers = pgTable("batch_members", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  batch_id: uuid("batch_id").notNull().references(() => batches.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  status: text("status").default("active"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const llcApplications = pgTable("llc_applications", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").references(() => profiles.id, { onDelete: "set null" }),
+  status: text("status").default("pending"),
+  company_name: text("company_name"),
+  state: text("state"),
+  notes: text("notes"),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userActivityLog = pgTable("user_activity_log", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  activity_type: text("activity_type").notNull(),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userAdminNotes = pgTable("user_admin_notes", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  admin_id: uuid("admin_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  note: text("note").notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const leadScores = pgTable("lead_scores", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().unique().references(() => profiles.id, { onDelete: "cascade" }),
+  score: integer("score").default(0),
+  engagement_level: text("engagement_level").default("cold"),
+  free_lessons_completed: integer("free_lessons_completed").default(0),
+  total_page_views: integer("total_page_views").default(0),
+  last_activity_at: timestamp("last_activity_at", { withTimezone: true }),
+  auto_stage: text("auto_stage"),
+  manual_stage_override: text("manual_stage_override"),
+  assigned_rep_id: uuid("assigned_rep_id").references(() => profiles.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const mentorshipLeads = pgTable("mentorship_leads", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").references(() => profiles.id, { onDelete: "set null" }),
+  full_name: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  country_code: text("country_code").default("+1"),
+  experience_level: text("experience_level"),
+  business_goal: text("business_goal"),
+  monthly_budget: text("monthly_budget"),
+  referral_source: text("referral_source"),
+  status: text("status").default("new"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const mentorshipSessions = pgTable("mentorship_sessions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  category: text("category"),
+  instructor_id: uuid("instructor_id").references(() => profiles.id),
+  thumbnail: text("thumbnail"),
+  video_url: text("video_url"),
+  duration_minutes: integer("duration_minutes"),
+  order_index: integer("order_index").default(0),
+  is_published: boolean("is_published").default(true),
+  tags: jsonb("tags").default(sql`'[]'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const paymentLinks = pgTable("payment_links", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  lead_user_id: uuid("lead_user_id").references(() => profiles.id, { onDelete: "set null" }),
+  created_by: uuid("created_by").references(() => profiles.id, { onDelete: "set null" }),
+  amount: numeric("amount").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  payment_url: text("payment_url"),
+  status: text("status").default("pending"),
+  expires_at: timestamp("expires_at", { withTimezone: true }),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const croChecklistState = pgTable("cro_checklist_state", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  item_id: text("item_id").notNull(),
+  checked: boolean("checked").default(false),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userModuleOverrides = pgTable("user_module_overrides", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  module_id: text("module_id").notNull(),
+  access_level: text("access_level").notNull(),
+  overridden_by: uuid("overridden_by").references(() => profiles.id, { onDelete: "set null" }),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userApps = pgTable("user_apps", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  app_name: text("app_name").notNull(),
+  app_url: text("app_url"),
+  description: text("description"),
+  category: text("category"),
+  icon: text("icon"),
+  status: text("status").default("active"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userContentAccess = pgTable("user_content_access", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  content_type: text("content_type").notNull(),
+  content_id: text("content_id").notNull(),
+  granted_by: uuid("granted_by").references(() => profiles.id, { onDelete: "set null" }),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userLessonProgress = pgTable("user_lesson_progress", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull(),
+  lesson_id: text("lesson_id").notNull(),
+  completed_at: timestamp("completed_at", { withTimezone: true }).defaultNow(),
+  source: text("source").default("free-learning"),
+});
+
+export const accessRules = pgTable("access_rules", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  plan_slug: text("plan_slug").notNull(),
+  resource_type: text("resource_type").notNull(),
+  resource_key: text("resource_key").notNull(),
+  access_level: text("access_level").notNull(),
+  teaser_limit: integer("teaser_limit"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const adVideos = pgTable("ad_videos", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  video_url: text("video_url"),
+  thumbnail: text("thumbnail"),
+  category: text("category"),
+  description: text("description"),
+  is_published: boolean("is_published").default(true),
+  order_index: integer("order_index").default(0),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const rndEntries = pgTable("rnd_entries", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").references(() => profiles.id, { onDelete: "cascade" }),
+  title: text("title"),
+  content: text("content"),
+  category: text("category"),
+  status: text("status").default("draft"),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const userRndEntries = pgTable("user_rnd_entries", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  entry_id: uuid("entry_id"),
+  title: text("title"),
+  notes: text("notes"),
+  status: text("status").default("active"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const tradelleBestsellers = pgTable("tradelle_bestsellers", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  product_name: text("product_name"),
+  product_url: text("product_url"),
+  image_url: text("image_url"),
+  category: text("category"),
+  price: numeric("price"),
+  rank: integer("rank"),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const tradelleTrends = pgTable("tradelle_trends", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  product_name: text("product_name"),
+  product_url: text("product_url"),
+  image_url: text("image_url"),
+  category: text("category"),
+  trend_score: numeric("trend_score"),
+  metadata: jsonb("metadata").default(sql`'{}'::jsonb`),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const learningProgress = pgTable("learning_progress", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  lesson_id: text("lesson_id").notNull(),
+  completed: boolean("completed").default(false),
+  completed_at: timestamp("completed_at", { withTimezone: true }),
+  source: text("source").default("free-learning"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});

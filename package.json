@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "NODE_ENV=development npx tsx server/index.ts",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
@@ -15,7 +15,8 @@
     "scraper:tradelle:index:100": "npx tsx scripts/scrapers/tradelle-index-scraper.ts --count=100",
     "scraper:tradelle:import": "npx tsx scripts/scrapers/import-tradelle-index.ts",
     "scraper:tradelle:cloud": "npx tsx scripts/scrapers/tradelle-scrapeless.ts",
-    "scraper:tradelle:cloud:200": "npx tsx scripts/scrapers/tradelle-scrapeless.ts --count=200"
+    "scraper:tradelle:cloud:200": "npx tsx scripts/scrapers/tradelle-scrapeless.ts --count=200",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@dicebear/collection": "^9.2.4",
