@@ -1,0 +1,11 @@
+client_id = "fef767ad801a57a040f5be84ec3bbdd4"
+name = "USDrop AI"
+application_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev"
+
+[auth]
+redirect_urls = [
+  "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev/api/shopify-stores/oauth/callback"
+]
+
+[access_scopes]
+scopes = "read_products,read_orders,read_customers"
