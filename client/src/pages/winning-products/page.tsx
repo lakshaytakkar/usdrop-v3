@@ -432,8 +432,7 @@ export default function WinningProductsPage() {
                     ...product,
                     isLocked: product.isLocked || (isFree && !hasCompletedFreeLearning && index >= 4)
                   }))}
-                  onProductClick={(product) => {
-                    console.log("View product:", product.id)
+                  onProductClick={(_product) => {
                   }}
                   onLockedClick={() => setIsUpsellOpen(true)}
                 />

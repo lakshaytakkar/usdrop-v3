@@ -109,7 +109,7 @@ export default function LoginPage() {
           <LoginForm />
         </Suspense>
       </div>
-      <DevQuickLoginPanel />
+      {import.meta.env.DEV && <DevQuickLoginPanel />}
     </div>
   )
 }

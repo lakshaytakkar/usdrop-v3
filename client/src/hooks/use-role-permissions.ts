@@ -49,7 +49,6 @@ export function useRolePermissions(): UseRolePermissionsReturn {
       setError(null)
       // In real implementation, this would save to the database
       await new Promise((resolve) => setTimeout(resolve, 500))
-      console.log("Permissions saved for role:", role, permissions)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save permissions"
       setError(errorMessage)

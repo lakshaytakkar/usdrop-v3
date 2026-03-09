@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { supabaseRemote } from './supabase-remote';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'usdrop-dev-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('JWT_SECRET must be set in production'); })() : 'usdrop-dev-secret-key-change-in-production');
 
 export interface AuthUser {
   id: string;

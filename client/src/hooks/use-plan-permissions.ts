@@ -131,7 +131,6 @@ export function usePlanPermissions(): UsePlanPermissionsReturn {
       setError(null)
       // In real implementation, this would save to the database
       await new Promise((resolve) => setTimeout(resolve, 500))
-      console.log("Plan permissions saved for plan:", planId, permissions)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to save permissions"
       setError(errorMessage)

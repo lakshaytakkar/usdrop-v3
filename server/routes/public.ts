@@ -200,7 +200,7 @@ export function registerPublicRoutes(app: Express) {
   });
 
   // POST /api/categories/update-images
-  app.post('/api/categories/update-images', async (_req: Request, res: Response) => {
+  app.post('/api/categories/update-images', requireAuth, async (_req: Request, res: Response) => {
     try {
       const defaultCategoryMapping: Record<string, { name: string }> = {
         "beauty": { name: "Beauty" },
@@ -2695,7 +2695,7 @@ export function registerPublicRoutes(app: Express) {
   });
 
   // PATCH /api/products/:id
-  app.patch('/api/products/:id', async (req: Request, res: Response) => {
+  app.patch('/api/products/:id', requireAuth, async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
       const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -2799,7 +2799,7 @@ export function registerPublicRoutes(app: Express) {
   });
 
   // DELETE /api/products/:id
-  app.delete('/api/products/:id', async (req: Request, res: Response) => {
+  app.delete('/api/products/:id', requireAuth, async (req: Request, res: Response) => {
     try {
       const id = req.params.id as string;
       const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

@@ -133,8 +133,6 @@ export function ChristmasHeader() {
         <Button 
           className="bg-white text-red-900 hover:bg-white/90 rounded-md px-3 py-1 md:px-4 md:py-1.5 font-bold text-xs md:text-sm transition-all shadow-lg hover:shadow-xl flex items-center gap-1 md:gap-1.5 whitespace-nowrap ml-2 md:ml-3"
           onClick={() => {
-            // Add your action here
-            console.log('Christmas Collection clicked!')
           }}
         >
           <span>SHOP NOW</span>
