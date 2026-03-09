@@ -120,6 +120,7 @@ import MyAds from "@/pages/my-ads/page";
 import MyPlan from "@/pages/my-plan/page";
 import MyApps from "@/pages/my-apps/page";
 import MyLLC from "@/pages/my-llc/page";
+import ClaimStore from "@/pages/claim-store/page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -281,6 +282,9 @@ function Router() {
       <Route path="/framework/my-profile" component={() => <UserGuard><AppLayout><MyProfile /></AppLayout></UserGuard>} />
       <Route path="/framework/my-apps" component={() => <UserGuard><AppLayout><MyApps /></AppLayout></UserGuard>} />
       <Route path="/framework/my-plan" component={() => <UserGuard><AppLayout><MyPlan /></AppLayout></UserGuard>} />
+
+      {/* Claim Store */}
+      <Route path="/claim-store" component={() => <UserGuard><AppLayout><ClaimStore /></AppLayout></UserGuard>} />
 
       {/* Products — /products/* */}
       <Route path="/products/product-hunt" component={() => <UserGuard><AppLayout><ProductHunt /></AppLayout></UserGuard>} />

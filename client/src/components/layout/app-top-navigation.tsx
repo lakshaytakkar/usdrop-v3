@@ -25,6 +25,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  Store,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
@@ -247,6 +248,12 @@ export function AppTopNavigation() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href="/claim-store" data-testid="link-claim-store">
+                        <Store className="mr-2 h-4 w-4" />
+                        Claim Your Store
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href="/help" data-testid="link-help">
                         <HelpCircle className="mr-2 h-4 w-4" />
