@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/supabase'
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { Link } from "wouter"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -119,19 +119,33 @@ function TrendingCardSkeleton() {
 export default function TrendingProductsPage() {
   const [products, setProducts] = useState<TrendingProduct[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const pageSize = 20
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState(0)
+  const pageSize = 6
   const { isFree, hasCompletedFreeLearning } = useOnboarding()
+  const observerRef = useRef<HTMLDivElement>(null)
+  const loadingRef = useRef(false)
+  const currentPageRef = useRef(1)
 
-  const fetchTrending = useCallback(async () => {
+  const fetchTrending = useCallback(async (pageNum: number, append: boolean) => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+
     try {
-      setIsLoading(true)
+      if (append) {
+        setIsLoadingMore(true)
+        setLoadMoreError(null)
+      } else {
+        setIsLoading(true)
+      }
       setError(null)
+
       const params = new URLSearchParams({
         is_trending: 'true',
-        page: page.toString(),
+        page: pageNum.toString(),
         pageSize: pageSize.toString(),
         sortBy: 'created_at',
         sortOrder: 'desc',
@@ -148,23 +162,66 @@ export default function TrendingProductsPage() {
         trendData: Array.isArray(p.trend_data) ? p.trend_data : [],
       }))
 
-      setProducts(mapped)
-      setTotalPages(data.totalPages || Math.ceil((data.total || 0) / pageSize) || 1)
+      const totalCount = data.total || 0
+      setTotal(totalCount)
+
+      if (append) {
+        setProducts(prev => [...prev, ...mapped])
+      } else {
+        setProducts(mapped)
+      }
+
+      currentPageRef.current = pageNum
+      const totalPages = Math.ceil(totalCount / pageSize)
+      setHasMore(pageNum < totalPages)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load trending products')
+      const msg = err instanceof Error ? err.message : 'Failed to load trending products'
+      if (append) {
+        setLoadMoreError(msg)
+      } else {
+        setError(msg)
+      }
     } finally {
       setIsLoading(false)
+      setIsLoadingMore(false)
+      loadingRef.current = false
     }
-  }, [page])
+  }, [])
 
   useEffect(() => {
-    fetchTrending()
+    fetchTrending(1, false)
   }, [fetchTrending])
 
-  if (error) {
+  const loadNextPage = useCallback(() => {
+    if (loadingRef.current || !hasMore) return
+    const nextPage = currentPageRef.current + 1
+    fetchTrending(nextPage, true)
+  }, [hasMore, fetchTrending])
+
+  useEffect(() => {
+    if (!hasMore || isLoading || isLoadingMore || loadMoreError) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingRef.current) {
+          loadNextPage()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+
+    const el = observerRef.current
+    if (el) observer.observe(el)
+
+    return () => {
+      if (el) observer.unobserve(el)
+    }
+  }, [hasMore, isLoading, isLoadingMore, loadMoreError, loadNextPage])
+
+  if (error && products.length === 0) {
     return (
       <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8">
-        <SectionError description={error} onRetry={fetchTrending} className="max-w-2xl" />
+        <SectionError description={error} onRetry={() => fetchTrending(1, false)} className="max-w-2xl" />
       </div>
     )
   }
@@ -184,6 +241,14 @@ export default function TrendingProductsPage() {
         />
       ) : (
         <>
+          {total > 0 && (
+            <div className="flex items-center justify-between mb-1">
+              <p data-testid="text-trending-count" className="text-sm text-muted-foreground">
+                Showing {products.length} of {total} trending products
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {products.map((product, index) => {
               const { isLocked } = getTeaserLockState(index, isFree, {
@@ -215,28 +280,36 @@ export default function TrendingProductsPage() {
             <FreeLearningCutoff itemCount={4} contentType="products" />
           )}
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 py-4">
+          {isLoadingMore && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <TrendingCardSkeleton key={`loading-${i}`} />
+              ))}
+            </div>
+          )}
+
+          {loadMoreError && (
+            <div className="flex flex-col items-center gap-2 py-6">
+              <p data-testid="text-load-more-error" className="text-sm text-red-500">{loadMoreError}</p>
               <Button
-                data-testid="button-trending-prev"
+                data-testid="button-retry-load-more"
                 variant="outline"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
+                size="sm"
+                onClick={loadNextPage}
               >
-                Previous
-              </Button>
-              <span data-testid="text-trending-page" className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </span>
-              <Button
-                data-testid="button-trending-next"
-                variant="outline"
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-              >
-                Next
+                Try again
               </Button>
             </div>
+          )}
+
+          {hasMore && !isLoadingMore && !loadMoreError && (
+            <div ref={observerRef} className="h-10" />
+          )}
+
+          {!hasMore && products.length > 6 && (
+            <p data-testid="text-trending-end" className="text-center text-sm text-muted-foreground py-6">
+              You've seen all {total} trending products
+            </p>
           )}
         </>
       )}
