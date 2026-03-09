@@ -646,6 +646,13 @@ function EditProductModal({
   )
 }
 
+interface ShopifyStore {
+  id: string
+  name: string
+  shop_domain: string
+  status: string
+}
+
 type SourceTab = "all" | "usdrop" | "mine"
 
 export default function MyProductsPage() {
@@ -658,6 +665,57 @@ export default function MyProductsPage() {
   const [viewItem, setViewItem] = useState<PicklistItem | null>(null)
   const [editItem, setEditItem] = useState<PicklistItem | null>(null)
   const [activeTab, setActiveTab] = useState<SourceTab>("all")
+  const [pushingProductId, setPushingProductId] = useState<string | null>(null)
+  const [storeSelectItem, setStoreSelectItem] = useState<PicklistItem | null>(null)
+  const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([])
+  const [storeSelectOpen, setStoreSelectOpen] = useState(false)
+
+  const handlePushToShopify = async (item: PicklistItem) => {
+    setPushingProductId(item.id)
+    try {
+      const res = await apiFetch("/api/shopify-stores")
+      if (!res.ok) throw new Error("Failed to fetch stores")
+      const data = await res.json()
+      const stores: ShopifyStore[] = (data.stores || []).filter((s: ShopifyStore) => s.status === "connected")
+
+      if (stores.length === 0) {
+        showError("No Shopify store connected. Go to My Store to connect one first.")
+        return
+      }
+
+      if (stores.length === 1) {
+        await pushProductToStore(item, stores[0].id)
+      } else {
+        setAvailableStores(stores)
+        setStoreSelectItem(item)
+        setStoreSelectOpen(true)
+      }
+    } catch (error: any) {
+      showError(error.message || "Failed to push product to Shopify")
+    } finally {
+      if (!storeSelectOpen) setPushingProductId(null)
+    }
+  }
+
+  const pushProductToStore = async (item: PicklistItem, storeId: string) => {
+    setPushingProductId(item.id)
+    try {
+      const res = await apiFetch(`/api/shopify-stores/${storeId}/products/push`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: item.productId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to push product")
+      showSuccess(data.message || `"${item.title}" pushed to Shopify`)
+    } catch (error: any) {
+      showError(error.message || "Failed to push product to Shopify")
+    } finally {
+      setPushingProductId(null)
+      setStoreSelectOpen(false)
+      setStoreSelectItem(null)
+    }
+  }
 
   const fetchPicklist = async () => {
     try {
@@ -916,9 +974,16 @@ export default function MyProductsPage() {
                             <Button
                               size="sm"
                               className="h-8 text-xs bg-[#95BF47] hover:bg-[#7FA737] text-white border-0"
+                              onClick={() => handlePushToShopify(item)}
+                              disabled={pushingProductId === item.id}
+                              data-testid={`button-push-shopify-${item.id}`}
                             >
-                              <img src="/shopify_glyph.svg" alt="Shopify" width={14} height={14} className="mr-1" />
-                              Shopify
+                              {pushingProductId === item.id ? (
+                                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                              ) : (
+                                <img src="/shopify_glyph.svg" alt="Shopify" width={14} height={14} className="mr-1" />
+                              )}
+                              {pushingProductId === item.id ? "Pushing..." : "Shopify"}
                             </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -956,6 +1021,39 @@ export default function MyProductsPage() {
       <AddProductModal open={addModalOpen} onOpenChange={setAddModalOpen} onProductCreated={fetchPicklist} />
       <ViewProductModal item={viewItem} open={!!viewItem} onOpenChange={(o) => { if (!o) setViewItem(null) }} onEdit={(item) => setEditItem(item)} />
       <EditProductModal item={editItem} open={!!editItem} onOpenChange={(o) => { if (!o) setEditItem(null) }} onSaved={fetchPicklist} />
+
+      <Dialog open={storeSelectOpen} onOpenChange={(o) => { if (!o) { setStoreSelectOpen(false); setStoreSelectItem(null); setPushingProductId(null) } }}>
+        <DialogContent className="sm:max-w-md" aria-describedby="store-select-desc">
+          <DialogDescription id="store-select-desc" className="sr-only">Select a Shopify store to push your product to</DialogDescription>
+          <DialogHeader>
+            <DialogTitle data-testid="text-store-select-title">Select a Store</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-3">
+            You have multiple Shopify stores connected. Choose which store to push{" "}
+            <span className="font-medium text-foreground">{storeSelectItem?.title}</span> to:
+          </p>
+          <div className="space-y-2">
+            {availableStores.map((store) => (
+              <button
+                key={store.id}
+                onClick={() => storeSelectItem && pushProductToStore(storeSelectItem, store.id)}
+                disabled={pushingProductId === storeSelectItem?.id}
+                className="w-full flex items-center gap-3 p-3 rounded-md border border-gray-200 hover-elevate text-left cursor-pointer"
+                data-testid={`button-select-store-${store.id}`}
+              >
+                <img src="/shopify_glyph.svg" alt="Shopify" width={20} height={20} className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{store.name || store.shop_domain}</p>
+                  <p className="text-xs text-muted-foreground">{store.shop_domain}</p>
+                </div>
+                {pushingProductId === storeSelectItem?.id && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

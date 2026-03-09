@@ -31,7 +31,7 @@ type StoreClaim = {
   user_id: string;
   store_name: string;
   niche: string;
-  status: "pending" | "processing" | "ready" | "claimed" | "cancelled" | "failed";
+  status: "pending" | "processing" | "ready" | "claimed" | "cancelled" | "failed" | "awaiting_connection";
   shopify_store_url: string | null;
   shopify_admin_url: string | null;
   products_count: number;
@@ -91,7 +91,7 @@ export default function ClaimStorePage() {
       );
       if (activeClaim) {
         setExistingClaim(activeClaim);
-        if (["ready", "claimed", "processing", "pending", "failed"].includes(activeClaim.status)) {
+        if (["ready", "claimed", "processing", "pending", "failed", "awaiting_connection"].includes(activeClaim.status)) {
           setStep(3);
         }
       }
@@ -107,35 +107,10 @@ export default function ClaimStorePage() {
   }, [fetchExistingClaims]);
 
   useEffect(() => {
-    if (
-      existingClaim &&
-      (existingClaim.status === "pending" || existingClaim.status === "processing")
-    ) {
-      let pollCount = 0;
-      const maxPolls = 60;
-      const id = setInterval(async () => {
-        pollCount++;
-        if (pollCount > maxPolls) {
-          clearInterval(id);
-          setPollingId(null);
-          return;
-        }
-        try {
-          const res = await apiFetch(`/api/store-claims/${existingClaim.id}`);
-          if (res.ok) {
-            const data = await res.json();
-            setExistingClaim(data);
-            if (data.status === "ready" || data.status === "claimed" || data.status === "failed") {
-              clearInterval(id);
-              setPollingId(null);
-            }
-          }
-        } catch {}
-      }, 3000);
-      setPollingId(id);
-      return () => clearInterval(id);
-    }
-  }, [existingClaim?.id, existingClaim?.status]);
+    return () => {
+      if (pollingId) clearInterval(pollingId);
+    };
+  }, [pollingId]);
 
   const handleSubmit = async () => {
     const name = storeName.trim();
@@ -169,7 +144,7 @@ export default function ClaimStorePage() {
       const claim = await res.json();
       setExistingClaim(claim);
       setStep(3);
-      showSuccess("Your store is being prepared!");
+      showSuccess("Claim saved! Sign up on Shopify to get started.");
     } catch (err: any) {
       showError(err.message);
     } finally {
@@ -209,7 +184,7 @@ export default function ClaimStorePage() {
         const err = await res.json();
         throw new Error(err.error || "Failed to retry");
       }
-      setExistingClaim({ ...existingClaim, status: "pending", notes: null });
+      setExistingClaim({ ...existingClaim, status: "awaiting_connection", notes: null });
       showSuccess("Retrying store build...");
     } catch (err: any) {
       showError(err.message);
@@ -743,16 +718,21 @@ function StatusStep({
   onClaim: () => void;
   onRetry: () => void;
 }) {
+  const isAwaitingConnection = claim.status === "awaiting_connection";
   const isReady = claim.status === "ready";
   const isClaimed = claim.status === "claimed";
   const isFailed = claim.status === "failed";
-  const isProcessing = claim.status === "pending" || claim.status === "processing";
+  const [shopifyOpened, setShopifyOpened] = useState(false);
 
-  const progressSteps = [
-    { label: "Order received", done: true },
-    { label: "Template applied", done: claim.template_applied },
-    { label: "Products added", done: claim.products_count > 0 },
-    { label: "Store ready", done: isReady || isClaimed },
+  const handleOpenShopifySignup = () => {
+    window.open("https://shopify.pxf.io/usdrop", "_blank", "noopener,noreferrer");
+    setShopifyOpened(true);
+  };
+
+  const connectionSteps = [
+    { label: "Claim submitted", done: true },
+    { label: "Sign up on Shopify", done: shopifyOpened || isClaimed || isReady },
+    { label: "Connect your store", done: isClaimed || isReady },
   ];
 
   return (
@@ -765,9 +745,9 @@ function StatusStep({
                 <X className="h-8 w-8 text-red-500" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Store build failed</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Something went wrong</h1>
             <p className="text-gray-500">
-              Something went wrong while building "{claim.store_name}". You can retry or contact support.
+              There was an issue with your claim for "{claim.store_name}". You can retry or contact support.
             </p>
           </>
         ) : isClaimed ? (
@@ -777,15 +757,15 @@ function StatusStep({
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Your store is live!</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Your store is connected!</h1>
             <p className="text-gray-500">
-              Congratulations! Your Shopify store "{claim.store_name}" is ready and claimed.
+              Your Shopify store "{claim.store_name}" is connected and ready to go.
             </p>
           </>
         ) : isReady ? (
           <>
             <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center animate-pulse">
+              <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
                 <Store className="h-8 w-8 text-blue-500" />
               </div>
             </div>
@@ -794,16 +774,28 @@ function StatusStep({
               Your Shopify store "{claim.store_name}" has been built and is waiting for you.
             </p>
           </>
+        ) : isAwaitingConnection ? (
+          <>
+            <div className="flex justify-center mb-4">
+              <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <Store className="h-8 w-8 text-blue-500" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Create your Shopify store</h1>
+            <p className="text-gray-500">
+              Sign up for Shopify to create your store "{claim.store_name}", then connect it to USDrop.
+            </p>
+          </>
         ) : (
           <>
             <div className="flex justify-center mb-4">
               <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center">
-                <BlueSpinner className="h-8 w-8" />
+                <Clock className="h-8 w-8 text-amber-500" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Building your store...</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Processing...</h1>
             <p className="text-gray-500">
-              We're setting up "{claim.store_name}" for you. This usually takes a few moments.
+              Your claim for "{claim.store_name}" is being processed.
             </p>
           </>
         )}
@@ -811,37 +803,83 @@ function StatusStep({
 
       <Card className="bg-white border border-gray-200">
         <CardContent className="p-6 space-y-6">
-          <div className="space-y-4">
-            {progressSteps.map((s, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div
-                  className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                    s.done
-                      ? "bg-green-500 text-white"
-                      : isProcessing && i === progressSteps.findIndex((x) => !x.done)
-                      ? "bg-blue-100 text-blue-500 animate-pulse"
-                      : "bg-gray-100 text-gray-400"
-                  }`}
-                >
-                  {s.done ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <span className="text-xs font-semibold">{i + 1}</span>
-                  )}
-                </div>
-                <span
-                  className={`text-sm font-medium ${
-                    s.done ? "text-gray-900" : "text-gray-400"
-                  }`}
-                >
-                  {s.label}
-                </span>
-                {s.done && (
-                  <Check className="h-4 w-4 text-green-500 ml-auto" />
+          {isAwaitingConnection && (
+            <>
+              <div className="space-y-4">
+                {connectionSteps.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div
+                      className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                        s.done
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {s.done ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <span className="text-xs font-semibold">{i + 1}</span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        s.done ? "text-gray-900" : "text-gray-400"
+                      }`}
+                    >
+                      {s.label}
+                    </span>
+                    {s.done && (
+                      <Check className="h-4 w-4 text-green-500 ml-auto" />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-gray-100 pt-4 space-y-4">
+                {!shopifyOpened ? (
+                  <>
+                    <div className="px-3 py-2 rounded-lg bg-blue-50 border border-blue-100">
+                      <p className="text-xs text-blue-700">
+                        Click below to sign up for a free Shopify trial. You'll be redirected to Shopify in a new tab.
+                      </p>
+                    </div>
+                    <Button
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white h-12 text-base"
+                      onClick={handleOpenShopifySignup}
+                      data-testid="button-signup-shopify"
+                    >
+                      Sign Up on Shopify
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-3 py-2 rounded-lg bg-green-50 border border-green-100">
+                      <p className="text-xs text-green-700">
+                        Once you've created your Shopify account, click below to connect it to USDrop.
+                      </p>
+                    </div>
+                    <Link href="/framework/my-store">
+                      <Button
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white h-12 text-base"
+                        data-testid="button-connect-store"
+                      >
+                        Connect Your New Store
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <button
+                      onClick={handleOpenShopifySignup}
+                      className="w-full text-center text-sm text-blue-500 hover:text-blue-600 transition-colors"
+                      data-testid="button-reopen-shopify"
+                    >
+                      Haven't signed up yet? Open Shopify signup again
+                    </button>
+                  </>
                 )}
               </div>
-            ))}
-          </div>
+            </>
+          )}
 
           {(isReady || isClaimed) && (
             <div className="border-t border-gray-100 pt-4 space-y-3">
@@ -903,7 +941,7 @@ function StatusStep({
                 ) : (
                   <>
                     <RefreshCw className="mr-2 h-5 w-5" />
-                    Retry Store Build
+                    Retry
                   </>
                 )}
               </Button>

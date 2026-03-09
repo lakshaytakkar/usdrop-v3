@@ -8,6 +8,7 @@ import {
   fetchShopifyStoreInfo,
   fetchShopifyProducts,
   fetchShopifyOrders,
+  createShopifyProduct,
   mapShopifyPlan,
   normalizeShopDomain,
   getOAuthRedirectUri,
@@ -151,6 +152,7 @@ export function registerShopifyRoutes(app: Express) {
           return res.redirect(`${baseUrl}/framework/my-store?error=update_failed`);
         }
 
+        await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
         return res.redirect(`${baseUrl}/framework/my-store?success=store_updated`);
       } else {
         const { error: createError } = await supabaseRemote
@@ -175,6 +177,7 @@ export function registerShopifyRoutes(app: Express) {
           return res.redirect(`${baseUrl}/framework/my-store?error=create_failed`);
         }
 
+        await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
         return res.redirect(`${baseUrl}/framework/my-store?success=store_connected`);
       }
     } catch (error: any) {
@@ -413,6 +416,78 @@ export function registerShopifyRoutes(app: Express) {
     }
   });
 
+  app.post('/api/shopify-stores/:storeId/products/push', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const user = req.user!;
+      const { storeId } = req.params;
+      const { product_id } = req.body;
+
+      if (!product_id) {
+        return res.status(400).json({ error: 'product_id is required' });
+      }
+
+      const { data: store, error: storeError } = await supabaseRemote
+        .from('shopify_stores')
+        .select('*')
+        .eq('id', storeId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (storeError || !store) {
+        return res.status(404).json({ error: 'Store not found' });
+      }
+
+      if (!store.is_active) {
+        return res.status(400).json({ error: 'Store is disconnected. Please reconnect it first.' });
+      }
+
+      if (!store.access_token) {
+        return res.status(400).json({ error: 'Store access token is missing. Please reconnect the store.' });
+      }
+
+      const { data: product, error: productError } = await supabaseRemote
+        .from('products')
+        .select('*, categories(id, name, slug)')
+        .eq('id', product_id)
+        .single();
+
+      if (productError || !product) {
+        return res.status(404).json({ error: 'Product not found in USDrop catalog' });
+      }
+
+      const shopifyProductData = {
+        title: product.title || null,
+        description: product.description || null,
+        vendor: product.brand || null,
+        product_type: product.categories?.name || product.categories?.slug || null,
+        tags: product.tags || [],
+        image_url: product.image || null,
+        price: product.sell_price ?? product.price ?? null,
+        compare_at_price: product.compare_at_price ?? null,
+      };
+
+      const createdProduct = await createShopifyProduct(
+        store.access_token,
+        store.shop_domain,
+        shopifyProductData
+      );
+
+      return res.json({
+        success: true,
+        message: `Product "${createdProduct.title}" added to Shopify as draft`,
+        shopify_product: {
+          id: createdProduct.id,
+          title: createdProduct.title,
+          status: createdProduct.status,
+          admin_url: `https://admin.shopify.com/store/${store.shop_domain.replace('.myshopify.com', '')}/products/${createdProduct.id}`,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error pushing product to Shopify:', error);
+      return res.status(500).json({ error: error.message || 'Failed to push product to Shopify' });
+    }
+  });
+
   app.post('/api/shopify-stores/:id/sync', requireAuth, async (req: Request, res: Response) => {
     try {
       const user = req.user!;
@@ -559,4 +634,37 @@ export function registerShopifyRoutes(app: Express) {
   app.post('/api/shopify-stores/webhooks/shop-deletion', (_req: Request, res: Response) => {
     res.status(200).json({ received: true });
   });
+}
+
+async function advanceAwaitingClaim(userId: string, shopDomain: string, storeName: string) {
+  try {
+    const { data: claim } = await supabaseRemote
+      .from('store_claims')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('status', 'awaiting_connection')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!claim) return;
+
+    const slug = shopDomain.replace('.myshopify.com', '');
+
+    await supabaseRemote
+      .from('store_claims')
+      .update({
+        status: 'claimed',
+        claimed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        shopify_store_url: `https://${shopDomain}`,
+        shopify_admin_url: `https://admin.shopify.com/store/${slug}`,
+        notes: `Store "${storeName}" connected successfully via Shopify OAuth.`,
+      })
+      .eq('id', claim.id);
+
+    console.log(`[store-claims] Claim ${claim.id} advanced to claimed after OAuth connect`);
+  } catch (err) {
+    console.error('[store-claims] Error advancing claim after OAuth:', err);
+  }
 }

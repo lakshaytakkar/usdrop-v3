@@ -44,7 +44,7 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - `shopify_stores`: Connected Shopify stores per user. Columns: id, user_id, shop_domain, access_token, store_name, store_email, plan, is_active, currency, last_synced_at, created_at, updated_at.
 - `shopify_store_products`: Synced products from connected Shopify stores. FK to shopify_stores. Unique on (store_id, shopify_product_id).
 - `shopify_store_orders`: Synced orders from connected Shopify stores. FK to shopify_stores. Unique on (store_id, shopify_order_id).
-- `store_claims`: Done-for-you store claims. Columns: id (UUID), user_id, store_name, niche, status (pending/processing/ready/claimed/cancelled/failed), shopify_store_url, shopify_admin_url, products_count, template_applied, notes, created_at, updated_at, claimed_at. RLS enabled.
+- `store_claims`: Done-for-you store claims. Columns: id (UUID), user_id, store_name, niche, status (pending/processing/ready/claimed/cancelled/failed/awaiting_connection), shopify_store_url, shopify_admin_url, products_count, template_applied, notes, created_at, updated_at, claimed_at. RLS enabled.
 
 **Shopify Integration:**
 - OAuth flow via `server/routes/shopify.ts` and `server/lib/shopify-oauth.ts`.
@@ -54,7 +54,8 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - Frontend: `client/src/pages/my-store/` — connect modal, store list with sync/disconnect, products/orders counts.
 - Store detail page: `client/src/pages/my-store/[id]/page.tsx` with tabs (Overview/Products/Orders) and sub-components in `[id]/components/`. Route: `/framework/my-store/:id`.
 - Important: The Shopify app's "Allowed redirection URL(s)" in Shopify Partner Dashboard must include the callback URL.
-- **Claim Your Store**: Tradelle-style multi-step wizard at `/claim-store`. Backend: `server/routes/store-claims.ts`. Frontend: `client/src/pages/claim-store/page.tsx`. Navigation via user dropdown menu. Steps: Choose Plan → Store Details → Review → Processing/Status. Claims stored in `store_claims` Supabase table. Supports retry on failure. Processing is simulated (in-memory delay) — to be replaced with real Shopify Partner API store creation in production.
+- **Claim Your Store**: Multi-step wizard at `/claim-store`. Backend: `server/routes/store-claims.ts`. Frontend: `client/src/pages/claim-store/page.tsx`. Navigation via user dropdown menu. Steps: Choose Plan → Store Details → Review → Awaiting Connection. After review, user is directed to sign up on Shopify via partner referral (`shopify.pxf.io/usdrop`), then connect their new store via the existing OAuth flow. On successful OAuth connect, `advanceAwaitingClaim` in `server/routes/shopify.ts` automatically transitions the claim from `awaiting_connection` to `claimed`.
+- **Push to Shopify**: `POST /api/shopify-stores/:storeId/products/push` — pushes a USDrop product to the user's connected Shopify store as a draft. Backend: `server/routes/shopify.ts` + `createShopifyProduct` in `server/lib/shopify-oauth.ts`. Frontend: Shopify button on My Products page with single/multi-store selection.
 
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).

@@ -65,7 +65,7 @@ export function registerStoreClaimRoutes(app: Express) {
         .from('store_claims')
         .select('id, status')
         .eq('user_id', user.id)
-        .in('status', ['pending', 'processing', 'ready'])
+        .in('status', ['pending', 'processing', 'ready', 'awaiting_connection'])
         .limit(1);
 
       if (existing && existing.length > 0) {
@@ -83,7 +83,7 @@ export function registerStoreClaimRoutes(app: Express) {
           user_id: user.id,
           store_name: storeName,
           niche: storeNiche,
-          status: 'pending',
+          status: 'awaiting_connection',
           products_count: 0,
           template_applied: false,
         })
@@ -93,10 +93,6 @@ export function registerStoreClaimRoutes(app: Express) {
       if (error) {
         return res.status(500).json({ error: error.message });
       }
-
-      processStoreClaim(data.id).catch(err => {
-        console.error(`[store-claims] Background processing failed for ${data.id}:`, err);
-      });
 
       return res.status(201).json(data);
     } catch (err: any) {
@@ -127,17 +123,13 @@ export function registerStoreClaimRoutes(app: Express) {
       await supabaseRemote
         .from('store_claims')
         .update({
-          status: 'pending',
+          status: 'awaiting_connection',
           notes: null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id);
 
-      processStoreClaim(id).catch(err => {
-        console.error(`[store-claims] Retry processing failed for ${id}:`, err);
-      });
-
-      return res.json({ success: true, message: 'Retrying store build' });
+      return res.json({ success: true, message: 'Claim reset. Please sign up on Shopify and connect your store.' });
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
@@ -223,67 +215,3 @@ export function registerStoreClaimRoutes(app: Express) {
   });
 }
 
-async function processStoreClaim(claimId: string) {
-  try {
-    await supabaseRemote
-      .from('store_claims')
-      .update({
-        status: 'processing',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', claimId);
-
-    await delay(3000);
-
-    await supabaseRemote
-      .from('store_claims')
-      .update({
-        template_applied: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', claimId);
-
-    await delay(4000);
-
-    const { data: claim } = await supabaseRemote
-      .from('store_claims')
-      .select('store_name')
-      .eq('id', claimId)
-      .single();
-
-    const slug = (claim?.store_name || 'my-store')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    await supabaseRemote
-      .from('store_claims')
-      .update({
-        status: 'ready',
-        products_count: 20,
-        shopify_store_url: `https://${slug}.myshopify.com`,
-        shopify_admin_url: `https://admin.shopify.com/store/${slug}`,
-        updated_at: new Date().toISOString(),
-        notes: 'Store built with Dawn theme and 20 curated electronics products.',
-      })
-      .eq('id', claimId);
-
-    console.log(`[store-claims] Claim ${claimId} is now ready`);
-  } catch (err) {
-    console.error(`[store-claims] Error processing claim ${claimId}:`, err);
-
-    await supabaseRemote
-      .from('store_claims')
-      .update({
-        status: 'failed',
-        notes: 'Store build failed. You can retry from the claim page.',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', claimId)
-      .catch(() => {});
-  }
-}
-
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}

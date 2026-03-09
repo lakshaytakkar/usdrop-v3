@@ -217,3 +217,86 @@ export function mapShopifyPlan(planName: string): 'basic' | 'shopify' | 'advance
   if (lower.includes('shopify') && !lower.includes('basic')) return 'shopify';
   return 'basic';
 }
+
+export async function createShopifyProduct(
+  accessToken: string,
+  shop: string,
+  productData: {
+    title?: string | null;
+    description?: string | null;
+    vendor?: string | null;
+    product_type?: string | null;
+    tags?: string[];
+    image_url?: string | null;
+    price?: number | null;
+    compare_at_price?: number | null;
+  }
+): Promise<any> {
+  const normalizedShop = normalizeShopDomain(shop);
+
+  const title = (productData.title || '').trim() || 'Untitled Product';
+
+  const shopifyProduct: any = {
+    title,
+    body_html: productData.description || '',
+    vendor: (productData.vendor || '').trim() || 'USDrop',
+    product_type: (productData.product_type || '').trim() || '',
+    status: 'draft',
+  };
+
+  if (productData.tags && productData.tags.length > 0) {
+    shopifyProduct.tags = productData.tags.filter(Boolean).join(', ');
+  }
+
+  const variant: any = {};
+  if (productData.price != null && productData.price > 0) {
+    variant.price = String(productData.price.toFixed(2));
+  }
+  if (productData.compare_at_price != null && productData.compare_at_price > 0) {
+    variant.compare_at_price = String(productData.compare_at_price.toFixed(2));
+  }
+  if (Object.keys(variant).length > 0) {
+    variant.requires_shipping = true;
+    shopifyProduct.variants = [variant];
+  }
+
+  if (productData.image_url) {
+    const imageUrl = productData.image_url.trim();
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      shopifyProduct.images = [{ src: imageUrl }];
+    }
+  }
+
+  const response = await fetch(
+    `https://${normalizedShop}/admin/api/2024-01/products.json`,
+    {
+      method: 'POST',
+      headers: {
+        'X-Shopify-Access-Token': accessToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ product: shopifyProduct }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    let errorMessage = `Shopify API error ${response.status}`;
+    try {
+      const parsed = JSON.parse(errorBody);
+      if (parsed.errors) {
+        if (typeof parsed.errors === 'string') {
+          errorMessage = parsed.errors;
+        } else {
+          errorMessage = Object.entries(parsed.errors)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+            .join('; ');
+        }
+      }
+    } catch {}
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  return data.product;
+}
