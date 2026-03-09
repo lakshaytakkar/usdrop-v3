@@ -8,45 +8,39 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 - Keep images compressed and loading fast.
 - **Never use the Sparkles icon** from lucide-react. It looks AI-generated and gimmicky.
 - **Never use gradient buttons** (e.g., `bg-gradient-to-r from-blue-500 to-indigo-500`). Always use solid `bg-blue-500 hover:bg-blue-600` for primary buttons. Gradients look artificial.
+- **Supabase is the sole database.** Do NOT use Replit Postgres. All data lives in Supabase project `wecbybtxmkdkvqqahyuu`.
 
 ## System Architecture
 The platform utilizes a modern web stack: Vite for frontend bundling, Express for the backend API, and Wouter for client-side routing. It is built with React 19, TypeScript, and Tailwind CSS 4.
 
-**Data Management:** The database is **Replit's built-in PostgreSQL** via `pg` package and Drizzle ORM. The schema is defined in `shared/schema.ts`. A Supabase-compatible query builder layer (`server/lib/supabase-compat.ts`) wraps the local pg Pool, providing a drop-in Supabase-like API (`from().select().eq()...`) so all existing route files work without code changes. The `supabaseRemote` export from `server/lib/supabase-remote.ts` re-exports this local client.
+**Data Management:** All data is exclusively stored in **Supabase** (project `wecbybtxmkdkvqqahyuu`). The `supabaseRemote` client in `server/lib/supabase-remote.ts` handles all database operations using `@supabase/supabase-js`.
 
-**Supabase (External):** Supabase project `wecbybtxmkdkvqqahyuu` is still used for:
-- **Auth Admin operations** (create/update/delete users via admin API) - routed through the compat layer
-- **Storage** (file uploads, signed URLs) - routed through the compat layer's StorageCompat class
-- **Client-side auth** (Google OAuth, OTP) via `server/lib/supabase-auth.ts`
-
-**Authentication:** Local JWT tokens are used for authentication, with profiles stored in local Postgres. bcrypt + jsonwebtoken are used for token management.
+**Authentication:** Local JWT tokens are used for authentication, with profiles stored in Supabase. bcrypt + jsonwebtoken are used for token management. Supabase Auth is used for Google OAuth and OTP via `server/lib/supabase-auth.ts`.
 
 **UI/UX:**
 - Components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion.
 - State management is handled by TanStack React Query.
-- **Design System:** Uses DM Sans font family (with General Sans as the primary font via Fontshare CDN in later iterations). The design emphasizes a clean aesthetic with a flat `#F5F5F7` background, white cards with subtle borders, and specific design tokens (`ds-*` utility classes) for typography and spacing.
+- **Design System:** Uses DM Sans font family (with General Sans as the primary font via Fontshare CDN). The design emphasizes a clean aesthetic with a flat `#F5F5F7` background, white cards with subtle borders.
 - **Navigation:** The "Framework" serves as the user's personal hub. Other pages act as browsing libraries and tools. All logged-in user routes follow a `/menu/submenu` pattern.
-- **Visuals:** Standardized loading with `BlueSpinner` and `Skeleton` components.
-- **Admin Panel:** Redesigned to match HR-Harmony-Hub reference. Uses Plus Jakarta Sans as primary font, blue primary color. Layout: horizontal two-level topbar navigation in `client/src/layouts/AdminLayout.tsx`. Shared components in `client/src/components/admin-shared/`.
+- **Admin Panel:** Redesigned to match HR-Harmony-Hub reference. Uses Plus Jakarta Sans as primary font, blue primary color. Horizontal two-level topbar navigation in `client/src/layouts/AdminLayout.tsx`. Shared components in `client/src/components/admin-shared/`.
 
 **Project Structure:**
 - `client/`: Frontend (Vite + React) containing pages, components, contexts, hooks, and client utilities.
 - `server/`: Backend (Express) containing `index.ts` and API routes (auth, admin, public, etc).
-- `server/lib/db.ts`: pg Pool connection to Replit Postgres
-- `server/lib/supabase-compat.ts`: Supabase-compatible query builder wrapping local pg Pool
-- `server/lib/supabase-remote.ts`: Re-exports localClient from supabase-compat
-- `shared/schema.ts`: Drizzle ORM schema (~60 tables)
+- `server/lib/supabase-remote.ts`: Server-side Supabase client (service role key)
+- `server/lib/supabase-auth.ts`: Supabase Auth client for OAuth/OTP
+- `server/lib/auth.ts`: JWT authentication middleware
+- `shared/schema.ts`: Drizzle ORM schema (kept for reference, not actively used for DB)
 - `script/`: Build scripts.
 
 **Key Architectural Decisions:**
-- **Replit Postgres as primary database** with Supabase-compat drop-in layer for seamless migration
+- **Supabase as SOLE Database:** All data, authentication, storage, and user profiles reside in Supabase.
 - **Client-Side JWT Authentication:** Bearer tokens via `apiFetch()`.
 - **Wouter for Routing:** Lightweight client-side routing.
 - **Environment Variables:** `VITE_` prefix for client-side, no prefix for server-side variables.
 
 ## External Dependencies
-- **Replit PostgreSQL**: Primary database via `pg` + Drizzle ORM.
-- **Supabase**: Auth admin operations and file storage only (`@supabase/supabase-js`).
+- **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).
 - **Vite**: Frontend build tool and dev server.
 - **Express**: Backend API server.
 - **Wouter**: Client-side routing.
@@ -57,4 +51,3 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **shadcn/ui**: UI component library.
 - **Framer Motion**: Animations.
 - **TanStack React Query**: Data fetching / state management.
-- **Drizzle ORM + drizzle-kit**: Database ORM and schema management.
