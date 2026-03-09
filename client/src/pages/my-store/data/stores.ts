@@ -11,6 +11,7 @@ export interface ShopifyStore {
   api_key: string // Store API key (masked in UI)
   access_token: string // Store access token (masked in UI)
   products_count: number
+  orders_count: number
   monthly_revenue: number | null
   monthly_traffic: number | null
   niche: string | null

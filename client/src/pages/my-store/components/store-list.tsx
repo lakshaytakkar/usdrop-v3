@@ -149,6 +149,18 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                     {store.connected_at ? formatRelativeTime(store.connected_at) : 'N/A'}
                   </span>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Products</span>
+                  <span className="text-sm font-medium" data-testid={`text-products-count-${store.id}`}>
+                    {store.products_count || 0}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Orders</span>
+                  <span className="text-sm font-medium" data-testid={`text-orders-count-${store.id}`}>
+                    {store.orders_count || 0}
+                  </span>
+                </div>
                 {store.last_synced_at && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Last synced</span>
@@ -167,6 +179,7 @@ export function StoreList({ stores, onStoresChange }: StoreListProps) {
                     onClick={() => handleSync(store.id)}
                     disabled={syncingStoreId === store.id}
                     className="flex-1"
+                    data-testid={`button-sync-${store.id}`}
                   >
                     {syncingStoreId === store.id ? (
                       <>

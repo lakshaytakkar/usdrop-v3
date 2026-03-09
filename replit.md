@@ -41,6 +41,17 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 
 **Supabase Tables (custom):**
 - `user_ad_logs`: Per-user ad campaign log data (audiences, adsets, creatives, results as JSONB). Keyed by `user_id` (unique, FK to profiles).
+- `shopify_stores`: Connected Shopify stores per user. Columns: id, user_id, shop_domain, access_token, store_name, store_email, plan, is_active, currency, last_synced_at, created_at, updated_at.
+- `shopify_store_products`: Synced products from connected Shopify stores. FK to shopify_stores. Unique on (store_id, shopify_product_id).
+- `shopify_store_orders`: Synced orders from connected Shopify stores. FK to shopify_stores. Unique on (store_id, shopify_order_id).
+
+**Shopify Integration:**
+- OAuth flow via `server/routes/shopify.ts` and `server/lib/shopify-oauth.ts`.
+- Client ID stored in env var `SHOPIFY_CLIENT_ID`, secret in `SHOPIFY_CLIENT_SECRET`.
+- OAuth callback: `/api/shopify-stores/oauth/callback` — exchanges code for access token, fetches store info, upserts in Supabase, redirects to `/framework/my-store`.
+- Sync endpoint: `POST /api/shopify-stores/:id/sync` — pulls products and orders from Shopify Admin API and upserts into Supabase.
+- Frontend: `client/src/pages/my-store/` — connect modal, store list with sync/disconnect, products/orders counts.
+- Important: The Shopify app's "Allowed redirection URL(s)" in Shopify Partner Dashboard must include the callback URL.
 
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).
