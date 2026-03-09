@@ -50,7 +50,7 @@ export function getOAuthRedirectUri(): string {
 export function buildShopifyOAuthUrl(shop: string, state: string): string {
   const clientId = process.env.SHOPIFY_CLIENT_ID;
   const redirectUri = getOAuthRedirectUri();
-  const scopes = process.env.SHOPIFY_SCOPES || 'read_products,read_orders,read_customers,read_inventory';
+  const scopes = process.env.SHOPIFY_SCOPES || 'read_products,write_products,read_orders,read_customers,read_inventory';
 
   if (!clientId) {
     throw new Error('SHOPIFY_CLIENT_ID environment variable is not set');
