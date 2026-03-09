@@ -12,6 +12,7 @@ redirect_urls = [
 scopes = "read_products,read_orders,read_customers"
 
 [webhooks]
+api_version = "2024-10"
 
 [webhooks.privacy_compliance]
 customer_deletion_url = "https://1316e576-0efb-436e-a49a-8a6c192e5dc4-00-1pk72si53izpg.spock.replit.dev/api/shopify-stores/webhooks/customer-deletion"
