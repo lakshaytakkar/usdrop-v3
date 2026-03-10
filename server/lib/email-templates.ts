@@ -401,6 +401,23 @@ export const DEFAULT_EMAIL_TEMPLATES = [
   },
 ]
 
+export function otpVerificationTemplate(): string {
+  const content = `
+    <h1>Verify Your Email</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Use the verification code below to complete your sign-up. This code expires in 10 minutes.</p>
+    <div style="text-align: center; margin: 32px 0;">
+      <div style="display: inline-block; background-color: #F0F7FF; border: 2px dashed #3B82F6; border-radius: 8px; padding: 20px 40px;">
+        <span style="font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #111827; font-family: 'DM Sans', monospace;">{{otp.code}}</span>
+      </div>
+    </div>
+    <p class="muted" style="text-align: center;">If you didn't request this code, you can safely ignore this email.</p>
+    <div class="divider"></div>
+    <p class="muted">For security, never share this code with anyone. USDrop AI will never ask for your verification code.</p>
+  `
+  return baseLayout(content, 'Your USDrop AI verification code')
+}
+
 export function getDefaultTemplateByName(name: string) {
   return DEFAULT_EMAIL_TEMPLATES.find(t => t.name === name)
 }

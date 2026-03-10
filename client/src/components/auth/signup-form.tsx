@@ -1,6 +1,6 @@
 
 import { apiFetch, setAccessToken } from '@/lib/supabase'
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "@/hooks/use-router"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,8 @@ import { useToast } from "@/hooks/use-toast"
 import { validateEmail } from "@/lib/utils/validation"
 import { getRedirectUrl } from "@/lib/utils/auth"
 import { Link } from "wouter"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { OTPInput } from "@/components/auth/otp-input"
 
 export function SignupForm({
   className,
@@ -28,6 +29,7 @@ export function SignupForm({
   const [searchParams] = useSearchParams()
   const { showSuccess, showError } = useToast()
 
+  const [step, setStep] = useState<"form" | "otp">("form")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
   const [password, setPassword] = useState("")
@@ -36,13 +38,25 @@ export function SignupForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [resendLoading, setResendLoading] = useState(false)
   const [errors, setErrors] = useState<{
     email?: string
     fullName?: string
     password?: string
     confirmPassword?: string
+    otp?: string
     general?: string
   }>({})
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,21 +118,17 @@ export function SignupForm({
         return
       }
 
-      if (data.token) {
+      if (data.requiresVerification) {
+        showSuccess("Verification code sent! Check your email.")
+        setStep("otp")
+        setResendCooldown(60)
+      } else if (data.token) {
         setAccessToken(data.token)
-      }
-
-      showSuccess("Account created successfully!")
-
-      const redirectedFrom = searchParams.get('redirectedFrom')
-      if (redirectedFrom) {
-        router.push(redirectedFrom)
+        showSuccess("Account created successfully!")
+        const redirectedFrom = searchParams.get('redirectedFrom')
+        router.push(redirectedFrom || "/free-learning")
         router.refresh()
-        return
       }
-
-      router.push("/free-learning")
-      router.refresh()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again."
       setErrors({ general: errorMessage })
@@ -126,6 +136,167 @@ export function SignupForm({
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrors({})
+
+    if (otp.length !== 6) {
+      setErrors({ otp: "Please enter the complete 6-digit code" })
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await apiFetch("/api/auth/signup/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: otp }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setErrors({ general: data.error || "Verification failed" })
+        showError(data.error || "Verification failed")
+        setLoading(false)
+        return
+      }
+
+      if (data.token) {
+        setAccessToken(data.token)
+      }
+
+      showSuccess("Account created successfully!")
+      const redirectedFrom = searchParams.get('redirectedFrom')
+      router.push(redirectedFrom || "/free-learning")
+      router.refresh()
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Verification failed. Please try again."
+      setErrors({ general: errorMessage })
+      showError(errorMessage)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0 || resendLoading) return
+    setResendLoading(true)
+    setErrors({})
+
+    try {
+      const response = await apiFetch("/api/auth/signup/resend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setErrors({ general: data.error || "Failed to resend code" })
+        showError(data.error || "Failed to resend code")
+        return
+      }
+
+      showSuccess("Verification code sent! Check your email.")
+      setOtp("")
+      setResendCooldown(60)
+    } catch (error) {
+      showError("Failed to resend code. Please try again.")
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  if (step === "otp") {
+    return (
+      <div className={cn("flex flex-col gap-4", className)} {...props}>
+        <Card className="overflow-hidden p-0">
+          <CardContent className="grid p-0 md:grid-cols-2">
+            <form className="p-[18px] md:p-6" onSubmit={handleVerifyOtp}>
+              <FieldGroup className="gap-5">
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <h1 className="text-xl font-bold" data-testid="text-verify-title">Verify your email</h1>
+                  <p className="text-muted-foreground text-balance text-sm">
+                    We sent a 6-digit code to <strong>{email}</strong>
+                  </p>
+                </div>
+
+                {errors.general && (
+                  <div className="rounded-md bg-destructive/15 p-2 text-xs text-destructive">
+                    {errors.general}
+                  </div>
+                )}
+
+                <Field className="gap-2">
+                  <FieldLabel className="text-sm text-center">Enter verification code</FieldLabel>
+                  <OTPInput
+                    value={otp}
+                    onChange={setOtp}
+                    disabled={loading}
+                    error={!!errors.otp}
+                  />
+                  <FieldError className="text-xs text-center">{errors.otp}</FieldError>
+                </Field>
+
+                <Field>
+                  <Button
+                    type="submit"
+                    className="w-full h-9 text-sm"
+                    disabled={loading || otp.length !== 6}
+                    data-testid="button-verify-otp"
+                  >
+                    {loading ? "Verifying..." : "Create account"}
+                  </Button>
+                </Field>
+
+                <FieldDescription className="text-center text-xs">
+                  Didn't receive the code?{" "}
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={resendLoading || resendCooldown > 0}
+                    className="underline underline-offset-2 hover:no-underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="button-resend-otp"
+                  >
+                    {resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : resendLoading
+                      ? "Sending..."
+                      : "Resend code"}
+                  </button>
+                </FieldDescription>
+
+                <FieldDescription className="text-center text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { setStep("form"); setOtp(""); setErrors({}) }}
+                    className="inline-flex items-center gap-1 underline underline-offset-2 hover:no-underline"
+                    data-testid="button-back-to-form"
+                  >
+                    <ArrowLeft className="h-3 w-3" />
+                    Back to sign up
+                  </button>
+                </FieldDescription>
+              </FieldGroup>
+            </form>
+            <div className="bg-muted relative hidden md:block">
+              <img
+                src="/images/ui/login-bg-vertical.png"
+                alt="Background"
+                className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-900/40 via-purple-900/40 to-violet-900/40 mix-blend-overlay" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -299,7 +470,7 @@ export function SignupForm({
                   disabled={loading || !email || !password || !confirmPassword}
                   data-testid="button-create-account"
                 >
-                  {loading ? "Creating account..." : "Create account"}
+                  {loading ? "Sending verification code..." : "Create account"}
                 </Button>
               </Field>
 

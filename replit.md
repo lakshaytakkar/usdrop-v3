@@ -66,8 +66,9 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - `server/routes/email.ts`: Admin-only API routes for templates, automations, and logs CRUD.
 - Admin pages: `client/src/pages/admin/email/templates/`, `automations/`, `logs/`
 - Admin nav: "Communications" category in `AdminLayout.tsx` topbar.
-- Supabase tables: `email_templates`, `email_automations`, `email_logs`
+- Supabase tables: `email_templates`, `email_automations`, `email_logs`, `email_otps`
 - Triggers integrated into: auth signup (`user_signup`), admin plan changes (`plan_upgraded`/`plan_downgraded`)
+- **Email OTP Signup Flow**: Email/password signup is now 2-step: (1) `POST /api/auth/signup` validates input, hashes password, sends 6-digit OTP via Resend from `admin@usdrop.ai`, stores OTP + hashed password in `email_otps` table. (2) `POST /api/auth/signup/verify` verifies OTP, creates profile, issues JWT, triggers `user_signup` welcome automation. Resend endpoint: `POST /api/auth/signup/resend`. OTPs expire in 10 minutes, max 5 attempts. Frontend: `signup-form.tsx` handles both steps (form → OTP input).
 
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).

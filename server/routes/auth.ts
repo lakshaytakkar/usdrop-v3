@@ -5,6 +5,8 @@ import { supabaseRemote } from '../lib/supabase-remote';
 import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
 import { triggerAutomation } from '../lib/email-automation';
+import { sendEmail } from '../lib/resend';
+import { otpVerificationTemplate } from '../lib/email-templates';
 
 const ALLOWED_REDIRECT_PATHS = ['/home', '/admin', '/framework', '/product-hunt', '/mentorship', '/categories', '/suppliers', '/competitor-stores', '/tools', '/blogs', '/shipping-calculator', '/onboarding'];
 
@@ -123,6 +125,115 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
   return newProfile;
 }
 
+function generateOtpCode(): string {
+  return crypto.randomInt(100000, 999999).toString();
+}
+
+async function createAndSendOtp(
+  email: string,
+  fullName: string,
+  purpose: 'signup' | 'login' | 'password_reset',
+  metadata: Record<string, any> = {},
+): Promise<{ success: boolean; error?: string }> {
+  const code = generateOtpCode();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  await supabaseRemote
+    .from('email_otps')
+    .update({ used: true })
+    .eq('email', email.toLowerCase())
+    .eq('purpose', purpose)
+    .eq('used', false);
+
+  const { error: insertError } = await supabaseRemote.from('email_otps').insert({
+    email: email.toLowerCase(),
+    code,
+    purpose,
+    metadata,
+    expires_at: expiresAt,
+  });
+
+  if (insertError) {
+    console.error('[otp] Failed to store OTP:', insertError);
+    return { success: false, error: 'Failed to generate verification code' };
+  }
+
+  const template = otpVerificationTemplate();
+  const variables: Record<string, string> = {
+    'user.name': fullName || 'there',
+    'user.email': email,
+    'otp.code': code,
+    'company.name': 'USDrop AI',
+    'company.email': 'support@usdrop.ai',
+    'company.website': process.env.APP_URL || 'https://usdrop.ai',
+    'unsubscribeLink': `${process.env.APP_URL || 'https://usdrop.ai'}/unsubscribe`,
+  };
+
+  let renderedHtml = template;
+  for (const [key, value] of Object.entries(variables)) {
+    renderedHtml = renderedHtml.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+  }
+
+  try {
+    await sendEmail(email.toLowerCase(), 'Your USDrop AI Verification Code', renderedHtml, {
+      recipientType: 'signup_otp',
+      tags: [{ name: 'purpose', value: purpose }],
+    });
+    return { success: true };
+  } catch (sendError: any) {
+    console.error('[otp] Failed to send OTP email:', sendError);
+    return { success: false, error: 'Failed to send verification email. Please try again.' };
+  }
+}
+
+async function verifyOtpCode(
+  email: string,
+  code: string,
+  purpose: 'signup' | 'login' | 'password_reset',
+): Promise<{ valid: boolean; error?: string; metadata?: Record<string, any> }> {
+  const { data: otpRecord, error } = await supabaseRemote
+    .from('email_otps')
+    .select('*')
+    .eq('email', email.toLowerCase())
+    .eq('purpose', purpose)
+    .eq('used', false)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !otpRecord) {
+    return { valid: false, error: 'Verification code has expired or is invalid. Please request a new one.' };
+  }
+
+  if (otpRecord.attempts >= 5) {
+    await supabaseRemote.from('email_otps').update({ used: true }).eq('id', otpRecord.id);
+    return { valid: false, error: 'Too many failed attempts. Please request a new code.' };
+  }
+
+  if (otpRecord.code !== code) {
+    await supabaseRemote
+      .from('email_otps')
+      .update({ attempts: otpRecord.attempts + 1 })
+      .eq('id', otpRecord.id);
+    return { valid: false, error: 'Invalid verification code. Please try again.' };
+  }
+
+  const { data: consumed, error: consumeError } = await supabaseRemote
+    .from('email_otps')
+    .update({ used: true })
+    .eq('id', otpRecord.id)
+    .eq('used', false)
+    .select('id')
+    .single();
+
+  if (consumeError || !consumed) {
+    return { valid: false, error: 'Verification code already used. Please request a new one.' };
+  }
+
+  return { valid: true, metadata: otpRecord.metadata };
+}
+
 function getAppBaseUrl(req: Request): string {
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
   const host = req.headers['x-forwarded-host'] || req.headers.host || '';
@@ -216,6 +327,60 @@ export function registerAuthRoutes(app: Express) {
 
       const hash = await bcrypt.hash(password, 10);
 
+      const otpResult = await createAndSendOtp(email.toLowerCase(), full_name || '', 'signup', {
+        password_hash: hash,
+        full_name: full_name || null,
+      });
+
+      if (!otpResult.success) {
+        return res.status(500).json({ error: otpResult.error || 'Failed to send verification code' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Please check your email.',
+        requiresVerification: true,
+        email: email.toLowerCase(),
+      });
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.post('/signup/verify', async (req: Request, res: Response) => {
+    try {
+      const { email, code } = req.body;
+
+      if (!email || !code) {
+        return res.status(400).json({ error: 'Email and verification code are required' });
+      }
+
+      if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+        return res.status(400).json({ error: 'Please enter a valid 6-digit code' });
+      }
+
+      const verification = await verifyOtpCode(email.toLowerCase(), code, 'signup');
+      if (!verification.valid) {
+        return res.status(400).json({ error: verification.error });
+      }
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this email already exists' });
+      }
+
+      const passwordHash = verification.metadata?.password_hash;
+      const fullName = verification.metadata?.full_name;
+
+      if (!passwordHash) {
+        return res.status(400).json({ error: 'Session expired. Please start the signup process again.' });
+      }
+
       const { data: freePlan } = await supabaseRemote
         .from('subscription_plans')
         .select('id')
@@ -228,8 +393,8 @@ export function registerAuthRoutes(app: Express) {
         .insert({
           id: newId,
           email: email.toLowerCase(),
-          password_hash: hash,
-          full_name: full_name || null,
+          password_hash: passwordHash,
+          full_name: fullName || null,
           subscription_plan_id: freePlan?.id || null,
           status: 'active',
           account_type: 'free',
@@ -238,7 +403,7 @@ export function registerAuthRoutes(app: Express) {
         .single();
 
       if (insertError || !newProfile) {
-        console.error('Signup insert error:', insertError);
+        console.error('Signup verify insert error:', insertError);
         return res.status(500).json({ error: 'Failed to create account. Please try again.' });
       }
 
@@ -246,16 +411,66 @@ export function registerAuthRoutes(app: Express) {
 
       triggerAutomation('user_signup', newProfile.id, {
         'user.email': newProfile.email,
-        'user.name': full_name || 'there',
+        'user.name': fullName || 'there',
       }).catch((err) => console.error('[signup] automation trigger error:', err));
 
       return res.json({
         message: 'Account created successfully',
         token,
-        user: { id: newProfile.id, email: newProfile.email, full_name: full_name || null },
+        user: { id: newProfile.id, email: newProfile.email, full_name: fullName || null },
       });
     } catch (error: any) {
-      console.error('Signup error:', error);
+      console.error('Signup verify error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.post('/signup/resend', async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this email already exists' });
+      }
+
+      const { data: lastOtp } = await supabaseRemote
+        .from('email_otps')
+        .select('metadata')
+        .eq('email', email.toLowerCase())
+        .eq('purpose', 'signup')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!lastOtp?.metadata?.password_hash) {
+        return res.status(400).json({ error: 'No pending signup found. Please start again.' });
+      }
+
+      const otpResult = await createAndSendOtp(email.toLowerCase(), lastOtp.metadata.full_name || '', 'signup', {
+        password_hash: lastOtp.metadata.password_hash,
+        full_name: lastOtp.metadata.full_name || null,
+      });
+
+      if (!otpResult.success) {
+        return res.status(500).json({ error: otpResult.error || 'Failed to resend verification code' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Please check your email.',
+        email: email.toLowerCase(),
+      });
+    } catch (error: any) {
+      console.error('Signup resend error:', error);
       return res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
   });
