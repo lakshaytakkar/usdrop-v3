@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { validateEmail } from "@/lib/utils/validation"
 import { getRedirectUrl } from "@/lib/utils/auth"
 import { Link } from "wouter"
-import { Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { Eye, EyeOff, ArrowLeft, Phone, Mail } from "lucide-react"
 import { OTPInput } from "@/components/auth/otp-input"
 
 export function SignupForm({
@@ -29,9 +29,11 @@ export function SignupForm({
   const [searchParams] = useSearchParams()
   const { showSuccess, showError } = useToast()
 
+  const [mode, setMode] = useState<"email" | "mobile">("mobile")
   const [step, setStep] = useState<"form" | "otp">("form")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -44,6 +46,7 @@ export function SignupForm({
   const [errors, setErrors] = useState<{
     email?: string
     fullName?: string
+    phone?: string
     password?: string
     confirmPassword?: string
     otp?: string
@@ -68,9 +71,20 @@ export function SignupForm({
       newErrors.fullName = "Full name is required"
     }
 
-    const emailValidation = validateEmail(email)
-    if (!emailValidation.valid) {
-      newErrors.email = emailValidation.error
+    if (mode === "email") {
+      const emailValidation = validateEmail(email)
+      if (!emailValidation.valid) {
+        newErrors.email = emailValidation.error
+      }
+    } else {
+      if (!phone.trim()) {
+        newErrors.phone = "Phone number is required"
+      } else {
+        const digitsOnly = phone.replace(/\D/g, '')
+        if (digitsOnly.length < 10) {
+          newErrors.phone = "Please enter a valid 10-digit phone number"
+        }
+      }
     }
 
     if (!password) {
@@ -99,35 +113,70 @@ export function SignupForm({
     setLoading(true)
 
     try {
-      const response = await apiFetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          full_name: fullName.trim(),
-        }),
-      })
+      if (mode === "email") {
+        const response = await apiFetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName.trim(),
+          }),
+        })
 
-      const data = await response.json()
+        const data = await response.json()
 
-      if (!response.ok) {
-        setErrors({ general: data.error || "Failed to create account" })
-        showError(data.error || "Failed to create account")
-        setLoading(false)
-        return
-      }
+        if (!response.ok) {
+          setErrors({ general: data.error || "Failed to create account" })
+          showError(data.error || "Failed to create account")
+          setLoading(false)
+          return
+        }
 
-      if (data.requiresVerification) {
-        showSuccess("Verification code sent! Check your email.")
-        setStep("otp")
-        setResendCooldown(60)
-      } else if (data.token) {
-        setAccessToken(data.token)
-        showSuccess("Account created successfully!")
-        const redirectedFrom = searchParams.get('redirectedFrom')
-        router.push(redirectedFrom || "/free-learning")
-        router.refresh()
+        if (data.requiresVerification) {
+          showSuccess("Verification code sent! Check your email.")
+          setStep("otp")
+          setResendCooldown(60)
+        } else if (data.token) {
+          setAccessToken(data.token)
+          showSuccess("Account created successfully!")
+          const redirectedFrom = searchParams.get('redirectedFrom')
+          router.push(redirectedFrom || "/free-learning")
+          router.refresh()
+        }
+      } else {
+        const fullPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`
+
+        const response = await apiFetch("/api/auth/signup/mobile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: fullPhone,
+            password,
+            full_name: fullName.trim(),
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          setErrors({ general: data.error || "Failed to create account" })
+          showError(data.error || "Failed to create account")
+          setLoading(false)
+          return
+        }
+
+        if (data.requiresVerification) {
+          showSuccess("Verification code sent! Check your SMS.")
+          setStep("otp")
+          setResendCooldown(60)
+        } else if (data.token) {
+          setAccessToken(data.token)
+          showSuccess("Account created successfully!")
+          const redirectedFrom = searchParams.get('redirectedFrom')
+          router.push(redirectedFrom || "/free-learning")
+          router.refresh()
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again."
@@ -150,10 +199,13 @@ export function SignupForm({
     setLoading(true)
 
     try {
-      const response = await apiFetch("/api/auth/signup/verify", {
+      const endpoint = mode === "email" ? "/api/auth/signup/verify" : "/api/auth/signup/mobile/verify"
+      const identifier = mode === "email" ? { email } : { phone: phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}` }
+
+      const response = await apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: otp }),
+        body: JSON.stringify({ ...identifier, code: otp }),
       })
 
       const data = await response.json()
@@ -188,10 +240,15 @@ export function SignupForm({
     setErrors({})
 
     try {
-      const response = await apiFetch("/api/auth/signup/resend", {
+      const endpoint = mode === "email" ? "/api/auth/signup/resend" : "/api/auth/signup/mobile/resend"
+      const body = mode === "email"
+        ? { email }
+        : { phone: phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}` }
+
+      const response = await apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify(body),
       })
 
       const data = await response.json()
@@ -202,7 +259,7 @@ export function SignupForm({
         return
       }
 
-      showSuccess("Verification code sent! Check your email.")
+      showSuccess(mode === "email" ? "Verification code sent! Check your email." : "Verification code sent! Check your SMS.")
       setOtp("")
       setResendCooldown(60)
     } catch (error) {
@@ -212,6 +269,9 @@ export function SignupForm({
     }
   }
 
+  const otpTarget = mode === "email" ? email : (phone.startsWith('+') ? phone : `+91${phone.replace(/\D/g, '')}`)
+  const otpChannel = mode === "email" ? "email" : "SMS"
+
   if (step === "otp") {
     return (
       <div className={cn("flex flex-col gap-4", className)} {...props}>
@@ -220,9 +280,9 @@ export function SignupForm({
             <form className="p-[18px] md:p-6" onSubmit={handleVerifyOtp}>
               <FieldGroup className="gap-5">
                 <div className="flex flex-col items-center gap-1.5 text-center">
-                  <h1 className="text-xl font-bold" data-testid="text-verify-title">Verify your email</h1>
+                  <h1 className="text-xl font-bold" data-testid="text-verify-title">Verify your {mode === "email" ? "email" : "phone"}</h1>
                   <p className="text-muted-foreground text-balance text-sm">
-                    We sent a 6-digit code to <strong>{email}</strong>
+                    We sent a 6-digit code to <strong>{otpTarget}</strong> via {otpChannel}
                   </p>
                 </div>
 
@@ -359,8 +419,39 @@ export function SignupForm({
               </Field>
 
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card -my-1.5">
-                Or continue with email
+                Or continue with
               </FieldSeparator>
+
+              <div className="flex rounded-lg border p-0.5 bg-muted/40">
+                <button
+                  type="button"
+                  onClick={() => { setMode("mobile"); setErrors({}) }}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-all cursor-pointer",
+                    mode === "mobile"
+                      ? "bg-white shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid="tab-mobile-signup"
+                >
+                  <Phone className="h-3 w-3" />
+                  Mobile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode("email"); setErrors({}) }}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-all cursor-pointer",
+                    mode === "email"
+                      ? "bg-white shadow-sm text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid="tab-email-signup"
+                >
+                  <Mail className="h-3 w-3" />
+                  Email
+                </button>
+              </div>
 
               <Field className="gap-2">
                 <FieldLabel htmlFor="fullName" className="text-sm">Full Name</FieldLabel>
@@ -381,25 +472,54 @@ export function SignupForm({
                 <FieldError className="text-xs">{errors.fullName}</FieldError>
               </Field>
 
-              <Field className="gap-2">
-                <FieldLabel htmlFor="email" className="text-sm">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    setErrors((prev) => ({ ...prev, email: undefined }))
-                  }}
-                  required
-                  disabled={loading}
-                  aria-invalid={errors.email ? "true" : "false"}
-                  className="h-9 text-sm"
-                  data-testid="input-email"
-                />
-                <FieldError className="text-xs">{errors.email}</FieldError>
-              </Field>
+              {mode === "mobile" ? (
+                <Field className="gap-2">
+                  <FieldLabel htmlFor="phone" className="text-sm">Phone Number</FieldLabel>
+                  <div className="flex gap-2">
+                    <div className="flex items-center justify-center rounded-md border bg-muted/50 px-3 text-sm text-muted-foreground min-w-[60px] h-9 select-none">
+                      +91
+                    </div>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="9876543210"
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d]/g, '').slice(0, 10)
+                        setPhone(val)
+                        setErrors((prev) => ({ ...prev, phone: undefined }))
+                      }}
+                      disabled={loading}
+                      aria-invalid={errors.phone ? "true" : "false"}
+                      className="h-9 text-sm flex-1"
+                      maxLength={10}
+                      inputMode="numeric"
+                      data-testid="input-phone"
+                    />
+                  </div>
+                  <FieldError className="text-xs">{errors.phone}</FieldError>
+                </Field>
+              ) : (
+                <Field className="gap-2">
+                  <FieldLabel htmlFor="email" className="text-sm">Email</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      setErrors((prev) => ({ ...prev, email: undefined }))
+                    }}
+                    required
+                    disabled={loading}
+                    aria-invalid={errors.email ? "true" : "false"}
+                    className="h-9 text-sm"
+                    data-testid="input-email"
+                  />
+                  <FieldError className="text-xs">{errors.email}</FieldError>
+                </Field>
+              )}
 
               <Field className="gap-2">
                 <FieldLabel htmlFor="password" className="text-sm">Password</FieldLabel>
@@ -467,7 +587,7 @@ export function SignupForm({
                 <Button
                   type="submit"
                   className="w-full h-9 text-sm"
-                  disabled={loading || !email || !password || !confirmPassword}
+                  disabled={loading || (mode === "email" ? (!email || !password || !confirmPassword) : (!phone || !password || !confirmPassword))}
                   data-testid="button-create-account"
                 >
                   {loading ? "Sending verification code..." : "Create account"}

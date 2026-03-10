@@ -7,8 +7,9 @@ import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../li
 import { triggerAutomation } from '../lib/email-automation';
 import { sendEmail } from '../lib/resend';
 import { otpVerificationTemplate } from '../lib/email-templates';
+import { sendSms } from '../lib/twilio';
 
-const ALLOWED_REDIRECT_PATHS = ['/home', '/admin', '/framework', '/product-hunt', '/mentorship', '/categories', '/suppliers', '/competitor-stores', '/tools', '/blogs', '/shipping-calculator', '/onboarding'];
+const ALLOWED_REDIRECT_PATHS = ['/home', '/admin', '/framework', '/product-hunt', '/mentorship', '/categories', '/suppliers', '/competitor-stores', '/tools', '/blogs', '/shipping-calculator', '/onboarding', '/free-learning'];
 
 function sanitizeRedirectPath(path: string): string {
   if (!path || typeof path !== 'string') return '/home';
@@ -183,6 +184,45 @@ async function createAndSendOtp(
   } catch (sendError: any) {
     console.error('[otp] Failed to send OTP email:', sendError);
     return { success: false, error: 'Failed to send verification email. Please try again.' };
+  }
+}
+
+async function createAndSendSmsOtp(
+  phone: string,
+  fullName: string,
+  purpose: 'signup' | 'login' | 'password_reset',
+  metadata: Record<string, any> = {},
+): Promise<{ success: boolean; error?: string }> {
+  const code = generateOtpCode();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  await supabaseRemote
+    .from('email_otps')
+    .update({ used: true })
+    .eq('email', phone)
+    .eq('purpose', purpose)
+    .eq('used', false);
+
+  const { error: insertError } = await supabaseRemote.from('email_otps').insert({
+    email: phone,
+    code,
+    purpose,
+    metadata,
+    expires_at: expiresAt,
+  });
+
+  if (insertError) {
+    console.error('[sms-otp] Failed to store OTP:', insertError);
+    return { success: false, error: 'Failed to generate verification code' };
+  }
+
+  try {
+    await sendSms(phone, `Your USDrop AI verification code is: ${code}. Valid for 10 minutes. Do not share this code.`);
+    console.log(`[sms-otp] Sent OTP to ${phone}`);
+    return { success: true };
+  } catch (sendError: any) {
+    console.error('[sms-otp] Failed to send SMS:', sendError.message);
+    return { success: false, error: 'Failed to send SMS. Please try again.' };
   }
 }
 
@@ -471,6 +511,192 @@ export function registerAuthRoutes(app: Express) {
       });
     } catch (error: any) {
       console.error('Signup resend error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.post('/signup/mobile', async (req: Request, res: Response) => {
+    try {
+      const { phone, password, full_name } = req.body;
+
+      if (!phone) {
+        return res.status(400).json({ error: 'Phone number is required' });
+      }
+
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+      const phoneValidation = validatePhoneNumber(normalizedPhone);
+      if (!phoneValidation.valid) {
+        return res.status(400).json({ error: phoneValidation.error });
+      }
+
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.valid) {
+        return res.status(400).json({ error: passwordValidation.errors[0] });
+      }
+
+      if (!full_name || !full_name.trim()) {
+        return res.status(400).json({ error: 'Full name is required' });
+      }
+
+      const { data: existingByPhone } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .single();
+
+      if (existingByPhone) {
+        return res.status(409).json({ error: 'An account with this phone number already exists' });
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+
+      const otpResult = await createAndSendSmsOtp(normalizedPhone, full_name || '', 'signup', {
+        password_hash: hash,
+        full_name: full_name || null,
+        phone: normalizedPhone,
+      });
+
+      if (!otpResult.success) {
+        return res.status(500).json({ error: otpResult.error || 'Failed to send verification code' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Check your SMS.',
+        requiresVerification: true,
+        phone: normalizedPhone,
+      });
+    } catch (error: any) {
+      console.error('Mobile signup error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.post('/signup/mobile/verify', async (req: Request, res: Response) => {
+    try {
+      const { phone, code } = req.body;
+
+      if (!phone || !code) {
+        return res.status(400).json({ error: 'Phone number and verification code are required' });
+      }
+
+      if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+        return res.status(400).json({ error: 'Please enter a valid 6-digit code' });
+      }
+
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+      const verification = await verifyOtpCode(normalizedPhone, code, 'signup');
+      if (!verification.valid) {
+        return res.status(400).json({ error: verification.error });
+      }
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .single();
+
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this phone number already exists' });
+      }
+
+      const passwordHash = verification.metadata?.password_hash;
+      const fullName = verification.metadata?.full_name;
+
+      if (!passwordHash) {
+        return res.status(400).json({ error: 'Session expired. Please start the signup process again.' });
+      }
+
+      const freePlanId = await getFreePlanId();
+      const newId = crypto.randomUUID();
+      const { data: newProfile, error: insertError } = await supabaseRemote
+        .from('profiles')
+        .insert({
+          id: newId,
+          email: `${normalizedPhone.replace(/\+/g, '')}@phone.usdrop.ai`,
+          phone_number: normalizedPhone,
+          password_hash: passwordHash,
+          full_name: fullName || null,
+          subscription_plan_id: freePlanId || null,
+          status: 'active',
+          account_type: 'free',
+        })
+        .select('id, email, phone_number')
+        .single();
+
+      if (insertError || !newProfile) {
+        console.error('Mobile signup verify insert error:', insertError);
+        return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+      }
+
+      const token = generateToken(newProfile.id);
+
+      triggerAutomation('user_signup', newProfile.id, {
+        'user.email': newProfile.email,
+        'user.name': fullName || 'there',
+      }).catch((err) => console.error('[mobile-signup] automation trigger error:', err));
+
+      return res.json({
+        message: 'Account created successfully',
+        token,
+        user: { id: newProfile.id, email: newProfile.email, phone_number: newProfile.phone_number, full_name: fullName || null },
+      });
+    } catch (error: any) {
+      console.error('Mobile signup verify error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.post('/signup/mobile/resend', async (req: Request, res: Response) => {
+    try {
+      const { phone } = req.body;
+
+      if (!phone) {
+        return res.status(400).json({ error: 'Phone number is required' });
+      }
+
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .single();
+
+      if (existing) {
+        return res.status(409).json({ error: 'An account with this phone number already exists' });
+      }
+
+      const { data: lastOtp } = await supabaseRemote
+        .from('email_otps')
+        .select('metadata')
+        .eq('email', normalizedPhone)
+        .eq('purpose', 'signup')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!lastOtp?.metadata?.password_hash) {
+        return res.status(400).json({ error: 'No pending signup found. Please start again.' });
+      }
+
+      const otpResult = await createAndSendSmsOtp(normalizedPhone, lastOtp.metadata.full_name || '', 'signup', {
+        password_hash: lastOtp.metadata.password_hash,
+        full_name: lastOtp.metadata.full_name || null,
+        phone: normalizedPhone,
+      });
+
+      if (!otpResult.success) {
+        return res.status(500).json({ error: otpResult.error || 'Failed to resend verification code' });
+      }
+
+      return res.json({
+        message: 'Verification code sent! Check your SMS.',
+        phone: normalizedPhone,
+      });
+    } catch (error: any) {
+      console.error('Mobile signup resend error:', error);
       return res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
   });

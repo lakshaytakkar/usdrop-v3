@@ -101,8 +101,8 @@ export function LoginForm({
           isInternal: userData.user?.internal_role != null,
           internalRole: userData.user?.internal_role || null,
           isExternal: userData.user?.internal_role == null,
-          plan: userData.user?.plan || 'free',
-          planName: userData.user?.plan_name || 'Free',
+          plan: userData.plan || userData.user?.plan || 'free',
+          planName: userData.planName || userData.user?.plan_name || 'Free',
           status: userData.user?.status || 'active',
           onboardingCompleted: userData.user?.onboarding_completed || false,
           subscriptionStatus: null,
@@ -110,7 +110,7 @@ export function LoginForm({
         const redirectUrl = getUserRedirectPath(metadata)
         router.push(redirectUrl)
       } else {
-        router.push('/framework')
+        router.push('/free-learning')
       }
       router.refresh()
     } catch (error) {

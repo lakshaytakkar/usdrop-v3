@@ -70,6 +70,16 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - Triggers integrated into: auth signup (`user_signup`), admin plan changes (`plan_upgraded`/`plan_downgraded`)
 - **Send Email Drawer**: Admin user detail page (`client/src/pages/admin/users/[id]/`) includes a slide-out Sheet drawer (`send-email-drawer.tsx`) to send templated or custom emails to users via Resend. Features: template picker with category grouping, auto-fill user profile variables (name, email, plan), HTML preview via sandboxed iframe, custom HTML composition. Triggered via "Email" quick action button in user header.
 - **Email OTP Signup Flow**: Email/password signup is now 2-step: (1) `POST /api/auth/signup` validates input, hashes password, sends 6-digit OTP via Resend from `admin@usdrop.ai`, stores OTP + hashed password in `email_otps` table. (2) `POST /api/auth/signup/verify` verifies OTP, creates profile, issues JWT, triggers `user_signup` welcome automation. Resend endpoint: `POST /api/auth/signup/resend`. OTPs expire in 10 minutes, max 5 attempts. Frontend: `signup-form.tsx` handles both steps (form → OTP input).
+- **Mobile OTP Signup Flow**: Phone number signup with +91 default prefix. Routes: `POST /api/auth/signup/mobile` (send OTP via Twilio SMS), `POST /api/auth/signup/mobile/verify` (verify + create account), `POST /api/auth/signup/mobile/resend`. OTP stored in `email_otps` table (email column stores phone number). Profile created with `phone_number` and placeholder email (`{digits}@phone.usdrop.ai`). Frontend: `signup-form.tsx` has Mobile/Email toggle, Mobile is default tab. Phone input restricted to 10 digits with fixed +91 prefix.
+
+**SMS System (Twilio Integration):**
+- `server/lib/twilio.ts`: Twilio client via Replit connector pattern. Exports `getTwilioClient()`, `getTwilioFromPhoneNumber()`, `sendSms(to, body)`. Connected via Replit integration (account SID + API key auth). From number: `+15015222136`. Note: Currently trial account — can only send to verified numbers.
+
+**User Routing:**
+- Free users default to `/free-learning` after login/signup (via `getUserRedirectPath` in `client/src/lib/utils/user-redirects.ts`)
+- Pro users default to `/home`
+- Internal/admin users default to `/admin`
+- Login fallback for unknown plan: `/free-learning`
 
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).
@@ -83,3 +93,4 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **shadcn/ui**: UI component library.
 - **Framer Motion**: Animations.
 - **TanStack React Query**: Data fetching / state management.
+- **Twilio**: SMS messaging via Replit connector integration (`twilio` npm package).

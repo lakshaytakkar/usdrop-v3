@@ -9,6 +9,11 @@ export function getUserRedirectPath(metadata: UserMetadata | null): string {
     return '/admin'
   }
 
+  const planLower = (metadata.plan || 'free').toLowerCase()
+  if (planLower === 'free') {
+    return '/free-learning'
+  }
+
   return '/home'
 }
 
@@ -20,6 +25,9 @@ export function getInternalUserRedirectPath(): string {
   return '/admin'
 }
 
-export function getExternalUserRedirectPath(_plan: string): string {
+export function getExternalUserRedirectPath(plan: string): string {
+  if ((plan || 'free').toLowerCase() === 'free') {
+    return '/free-learning'
+  }
   return '/home'
 }
