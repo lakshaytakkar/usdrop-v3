@@ -141,12 +141,14 @@ function CourseAccordion({
   courseIndex,
   defaultOpen,
   locked,
+  isFree,
   onLockedClick,
 }: {
   course: APICourse
   courseIndex: number
   defaultOpen?: boolean
   locked: boolean
+  isFree: boolean
   onLockedClick: () => void
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen ?? false)
@@ -195,16 +197,22 @@ function CourseAccordion({
 
       {isOpen && (
         <div className="space-y-3 pt-4 pl-5">
-          {modules.map((mod, idx) => (
-            <ModuleLessonCard
-              key={mod.id}
-              module={mod}
-              index={idx}
-              courseId={course.id}
-              locked={locked}
-              onLockedClick={onLockedClick}
-            />
-          ))}
+          {modules.map((mod, idx) => {
+            const lessonLocked = locked || (!locked && isFree && getTeaserLockState(idx, isFree, {
+              freeVisibleCount: 2,
+              strategy: "first-n-items"
+            }).isLocked)
+            return (
+              <ModuleLessonCard
+                key={mod.id}
+                module={mod}
+                index={idx}
+                courseId={course.id}
+                locked={lessonLocked}
+                onLockedClick={onLockedClick}
+              />
+            )
+          })}
           {modules.length === 0 && (
             <p className="text-sm text-gray-400 py-4 pl-2">No lessons available yet.</p>
           )}
@@ -322,6 +330,7 @@ export default function AcademyPage() {
                     courseIndex={index}
                     defaultOpen={index === 0}
                     locked={isLocked}
+                    isFree={isFree}
                     onLockedClick={() => setIsUpsellOpen(true)}
                   />
                 )
