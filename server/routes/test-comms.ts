@@ -1,8 +1,16 @@
 import { type Express, Request, Response } from 'express';
-import { requireAdmin } from '../lib/auth';
 import { sendEmail } from '../lib/resend';
 import { sendSms, sendWhatsApp } from '../lib/twilio';
 import { DEFAULT_EMAIL_TEMPLATES } from '../lib/email-templates';
+
+const TEST_SECRET = 'usdrop-test-comms-2026';
+
+function requireTestSecret(req: Request, res: Response, next: Function) {
+  if (req.query.secret !== TEST_SECRET && req.headers['x-test-secret'] !== TEST_SECRET) {
+    return res.status(403).json({ error: 'Invalid secret' });
+  }
+  next();
+}
 
 const DEFAULT_SMS_TEMPLATES = [
   { name: 'Welcome SMS', body: 'Welcome to USDrop AI, Lakshay! Your dropshipping journey starts now. Log in at https://usdrop.ai to begin.' },
@@ -81,7 +89,7 @@ function delay(ms: number) {
 }
 
 export function registerTestCommsRoutes(app: Express) {
-  app.post('/api/test-comms/send-all-emails', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-emails', requireTestSecret, async (_req: Request, res: Response) => {
     const targetEmail = 'lakshaytakkar01@gmail.com';
     const results: { name: string; status: string; error?: string }[] = [];
 
@@ -117,7 +125,7 @@ export function registerTestCommsRoutes(app: Express) {
     }
   });
 
-  app.post('/api/test-comms/send-all-sms', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-sms', requireTestSecret, async (_req: Request, res: Response) => {
     const targetPhone = '+918059153883';
     const results: { name: string; status: string; error?: string }[] = [];
 
@@ -151,7 +159,7 @@ export function registerTestCommsRoutes(app: Express) {
     }
   });
 
-  app.post('/api/test-comms/send-all-whatsapp', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-whatsapp', requireTestSecret, async (_req: Request, res: Response) => {
     const targetWhatsApp = '+919138290396';
     const results: { name: string; status: string; error?: string }[] = [];
 

@@ -150,7 +150,7 @@ export function planUpgradeTemplate(): string {
     </div>
     <p>Thank you for investing in your dropshipping success. We're here to help you make the most of your upgraded plan.</p>
   `
-  return baseLayout(content, 'Your USDrop AI plan has been upgraded!')
+  return baseLayout(content, 'Your USDrop AI plan has been upgraded!', 'plan-upgrade.png')
 }
 
 export function planDowngradeTemplate(): string {
@@ -188,7 +188,7 @@ export function onboardingDay1Template(): string {
     </div>
     <p>Need help? Our support team is available to assist you every step of the way.</p>
   `
-  return baseLayout(content, 'Your first steps with USDrop AI')
+  return baseLayout(content, 'Your first steps with USDrop AI', 'onboarding-day1.png')
 }
 
 export function onboardingDay3Template(): string {
@@ -207,7 +207,7 @@ export function onboardingDay3Template(): string {
     </div>
     <p>Pro tip: Look for products with high demand and low competition for the best results.</p>
   `
-  return baseLayout(content, 'Time to find your first winning product!')
+  return baseLayout(content, 'Time to find your first winning product!', 'onboarding-day3.png')
 }
 
 export function onboardingDay7Template(): string {
@@ -227,7 +227,7 @@ export function onboardingDay7Template(): string {
     </div>
     <p>Remember, consistency is key. Keep learning, keep testing, and the results will follow.</p>
   `
-  return baseLayout(content, 'Week 1 complete — time to scale!')
+  return baseLayout(content, 'Week 1 complete — time to scale!', 'onboarding-day7.png')
 }
 
 export function reEngagementTemplate(): string {
@@ -246,7 +246,7 @@ export function reEngagementTemplate(): string {
     </div>
     <p class="muted">You still have {{user.credits}} credits in your account. Don't let them go to waste!</p>
   `
-  return baseLayout(content, 'We miss you! See what\'s new at USDrop AI')
+  return baseLayout(content, 'We miss you! See what\'s new at USDrop AI', 're-engagement.png')
 }
 
 export function orderConfirmationTemplate(): string {
@@ -634,7 +634,7 @@ export function courseStartedTemplate(): string {
     </div>
     <p>Consistency is everything. Even 15 minutes a day adds up quickly.</p>
   `;
-  return baseLayout(content, 'You started a new course on USDrop AI!');
+  return baseLayout(content, 'You started a new course on USDrop AI!', 'course-started.png');
 }
 
 export function moduleCompletedTemplate(): string {
@@ -652,7 +652,7 @@ export function moduleCompletedTemplate(): string {
     </div>
     <p>You're building the knowledge that will power your business. Keep going!</p>
   `;
-  return baseLayout(content, 'You completed a module — keep going!');
+  return baseLayout(content, 'You completed a module — keep going!', 'module-completed.png');
 }
 
 export function allLessonsCompleteTemplate(): string {
@@ -671,7 +671,7 @@ export function allLessonsCompleteTemplate(): string {
     </div>
     <p>Our mentorship program has helped hundreds of students launch and scale profitable stores. You could be next.</p>
   `;
-  return baseLayout(content, 'All lessons complete — unlock mentorship!');
+  return baseLayout(content, 'All lessons complete — unlock mentorship!', 'all-lessons-complete.png');
 }
 
 export function mentorshipBatchAssignedTemplate(): string {
@@ -691,7 +691,7 @@ export function mentorshipBatchAssignedTemplate(): string {
     </div>
     <p>Stay engaged and complete each week's tasks for the best results.</p>
   `;
-  return baseLayout(content, 'You have been assigned to a mentorship batch!');
+  return baseLayout(content, 'You have been assigned to a mentorship batch!', 'mentorship-assigned.png');
 }
 
 export function mentorshipWeekUpdateTemplate(): string {
