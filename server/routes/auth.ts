@@ -1,5 +1,6 @@
 import { Router, type Express, type Request, type Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { supabaseRemote } from '../lib/supabase-remote';
 import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
@@ -78,7 +79,7 @@ async function getFreePlanId(): Promise<string | null> {
   return data?.id || null;
 }
 
-async function findOrCreateProfile(email: string, fullName?: string | null, avatarUrl?: string | null) {
+async function findOrCreateProfile(email: string, fullName?: string | null, avatarUrl?: string | null, authUserId?: string) {
   const { data: existing } = await supabaseRemote
     .from('profiles')
     .select('id, email, status, full_name')
@@ -91,9 +92,11 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
 
   const freePlanId = await getFreePlanId();
 
+  const newId = authUserId || crypto.randomUUID();
   const { data: newProfile, error: insertError } = await supabaseRemote
     .from('profiles')
     .insert({
+      id: newId,
       email: email.toLowerCase(),
       full_name: fullName || null,
       avatar_url: avatarUrl || null,
@@ -212,9 +215,11 @@ export function registerAuthRoutes(app: Express) {
         .eq('slug', 'free')
         .single();
 
+      const newId = crypto.randomUUID();
       const { data: newProfile, error: insertError } = await supabaseRemote
         .from('profiles')
         .insert({
+          id: newId,
           email: email.toLowerCase(),
           password_hash: hash,
           full_name: full_name || null,
@@ -466,7 +471,7 @@ export function registerAuthRoutes(app: Express) {
       const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || null;
       const avatarUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
 
-      const profile = await findOrCreateProfile(supabaseUser.email!, fullName, avatarUrl);
+      const profile = await findOrCreateProfile(supabaseUser.email!, fullName, avatarUrl, supabaseUser.id);
       if (!profile) {
         return res.redirect(`/login?error=${encodeURIComponent('Failed to create account. Please try again.')}`);
       }
@@ -672,7 +677,7 @@ export function registerAuthRoutes(app: Express) {
       const fullName = supabaseUser.user_metadata?.full_name || null;
       const avatarUrl = supabaseUser.user_metadata?.avatar_url || null;
 
-      const profile = await findOrCreateProfile(supabaseUser.email, fullName, avatarUrl);
+      const profile = await findOrCreateProfile(supabaseUser.email, fullName, avatarUrl, supabaseUser.id);
       if (!profile) {
         return res.status(500).json({ error: 'Failed to create account. Please try again.' });
       }

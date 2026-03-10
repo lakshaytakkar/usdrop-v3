@@ -15,7 +15,7 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 
 **Data Management:** All data is exclusively stored in **Supabase** (project `wecbybtxmkdkvqqahyuu`). The `supabaseRemote` client in `server/lib/supabase-remote.ts` handles all database operations using `@supabase/supabase-js`.
 
-**Authentication:** Local JWT tokens are used for authentication, with profiles stored in Supabase. bcrypt + jsonwebtoken are used for token management. Supabase Auth is used for Google OAuth and OTP via `server/lib/supabase-auth.ts`.
+**Authentication:** Local JWT tokens are used for authentication, with profiles stored in Supabase. bcrypt + jsonwebtoken are used for token management. Supabase Auth is used for Google OAuth and OTP via `server/lib/supabase-auth.ts`. The `profiles` table `id` column has no server-side default — all inserts must explicitly provide a UUID. For email/password signup, `crypto.randomUUID()` is used. For Google OAuth and OTP flows, the Supabase Auth user ID (`supabaseUser.id`) is used to maintain linkage with `auth.users`.
 
 **UI/UX:**
 - Components are built using Radix UI primitives and shadcn/ui, with animations powered by Framer Motion.
