@@ -81,7 +81,7 @@ function delay(ms: number) {
 }
 
 export function registerTestCommsRoutes(app: Express) {
-  app.post('/api/admin/test-comms/send-all-emails', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-emails', requireAdmin, async (_req: Request, res: Response) => {
     const targetEmail = 'lakshaytakkar01@gmail.com';
     const results: { name: string; status: string; error?: string }[] = [];
 
@@ -117,7 +117,7 @@ export function registerTestCommsRoutes(app: Express) {
     }
   });
 
-  app.post('/api/admin/test-comms/send-all-sms', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-sms', requireAdmin, async (_req: Request, res: Response) => {
     const targetPhone = '+918059153883';
     const results: { name: string; status: string; error?: string }[] = [];
 
@@ -151,7 +151,7 @@ export function registerTestCommsRoutes(app: Express) {
     }
   });
 
-  app.post('/api/admin/test-comms/send-all-whatsapp', requireAdmin, async (_req: Request, res: Response) => {
+  app.post('/api/test-comms/send-all-whatsapp', requireAdmin, async (_req: Request, res: Response) => {
     const targetWhatsApp = '+919138290396';
     const results: { name: string; status: string; error?: string }[] = [];
 

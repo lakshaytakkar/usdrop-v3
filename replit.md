@@ -99,4 +99,5 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **shadcn/ui**: UI component library.
 - **Framer Motion**: Animations.
 - **TanStack React Query**: Data fetching / state management.
-- **Twilio**: SMS messaging via Replit connector integration (`twilio` npm package).
+- **Twilio**: SMS and WhatsApp messaging via Replit connector integration (`twilio` npm package). `sendSms()` and `sendWhatsApp()` in `server/lib/twilio.ts`. WhatsApp requires WhatsApp Sandbox or Business API enabled in Twilio console.
+- **Test Comms Route**: `server/routes/test-comms.ts` — POST endpoints at `/api/test-comms/send-all-emails`, `/api/test-comms/send-all-sms`, `/api/test-comms/send-all-whatsapp` with `?secret=usdrop-test-comms-2026` query param for auth.

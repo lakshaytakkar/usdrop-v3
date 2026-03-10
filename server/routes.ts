@@ -25,6 +25,7 @@ import { registerStoreClaimRoutes } from "./routes/store-claims";
 import { registerShopifyAppRoutes } from "./routes/shopify-app";
 import { registerEmailRoutes } from "./routes/email";
 import { registerSmsRoutes } from "./routes/sms";
+import { registerTestCommsRoutes } from "./routes/test-comms";
 
 export async function registerRoutes(server: Server, app: Express) {
   registerAuthRoutes(app);
@@ -51,4 +52,5 @@ export async function registerRoutes(server: Server, app: Express) {
   registerAdminCROContentRoutes(app);
   registerEmailRoutes(app);
   registerSmsRoutes(app);
+  registerTestCommsRoutes(app);
 }
