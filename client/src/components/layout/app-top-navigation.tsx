@@ -161,7 +161,12 @@ export function AppTopNavigation() {
                     )}
                   >
                     {group.label}
-                    {group.isNew && (
+                    {group.comingSoon && (
+                      <span className="px-1.5 py-[2px] rounded text-[8px] font-bold uppercase leading-none tracking-wide bg-blue-100 text-blue-600 border border-blue-200">
+                        Soon
+                      </span>
+                    )}
+                    {group.isNew && !group.comingSoon && (
                       <span className="px-2 py-[3px] rounded text-[9px] font-bold uppercase leading-none tracking-wide bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
                         New
                       </span>
@@ -249,9 +254,12 @@ export function AppTopNavigation() {
                     </div>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link href="/claim-store" data-testid="link-claim-store">
+                      <Link href="/claim-store" data-testid="link-claim-store" className="flex items-center">
                         <Store className="mr-2 h-4 w-4" />
                         Claim Your Store
+                        <span className="ml-auto px-1.5 py-[1px] rounded text-[8px] font-bold uppercase leading-none tracking-wide bg-blue-100 text-blue-600 border border-blue-200">
+                          Soon
+                        </span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">
@@ -295,13 +303,18 @@ export function AppTopNavigation() {
                         href={item.url}
                         onClick={() => setMobileMenuOpen(false)}
                         className={cn(
-                          "block px-3 py-2 rounded-md ds-label transition-colors",
+                          "flex items-center gap-2 px-3 py-2 rounded-md ds-label transition-colors",
                           isItemActive
                             ? "bg-blue-50 ds-text-primary font-semibold"
                             : "ds-text-body hover:bg-gray-50"
                         )}
                       >
                         {item.title}
+                        {group.comingSoon && (
+                          <span className="px-1.5 py-[1px] rounded text-[8px] font-bold uppercase leading-none tracking-wide bg-blue-100 text-blue-600 border border-blue-200">
+                            Soon
+                          </span>
+                        )}
                       </Link>
                     )
                   })}

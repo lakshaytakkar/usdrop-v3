@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toast";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { AuthLoadingGate } from "@/components/auth/auth-loading-gate";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
+import { ComingSoonOverlay } from "@/components/ui/coming-soon-overlay";
 
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { DevLayout } from "@/layouts/DevLayout";
@@ -296,7 +297,7 @@ function Router() {
       <Route path="/framework/my-plan" component={() => <UserGuard><AppLayout><MyPlan /></AppLayout></UserGuard>} />
 
       {/* Claim Store */}
-      <Route path="/claim-store" component={() => <UserGuard><AppLayout><ClaimStore /></AppLayout></UserGuard>} />
+      <Route path="/claim-store" component={() => <UserGuard><AppLayout><div className="relative"><ComingSoonOverlay /><ClaimStore /></div></AppLayout></UserGuard>} />
 
       {/* Products — /products/* */}
       <Route path="/products/product-hunt" component={() => <UserGuard><AppLayout><ProductHunt /></AppLayout></UserGuard>} />
@@ -308,8 +309,8 @@ function Router() {
       <Route path="/products/competitor-stores" component={() => <UserGuard><AppLayout><CompetitorStoresPage /></AppLayout></UserGuard>} />
 
       {/* Ads — /ads/* */}
-      <Route path="/ads/meta-ads" component={() => <UserGuard><AppLayout><MetaAds /></AppLayout></UserGuard>} />
-      <Route path="/ads/videos" component={() => <UserGuard><AppLayout><VideosPage /></AppLayout></UserGuard>} />
+      <Route path="/ads/meta-ads" component={() => <UserGuard><AppLayout><div className="relative"><ComingSoonOverlay /><MetaAds /></div></AppLayout></UserGuard>} />
+      <Route path="/ads/videos" component={() => <UserGuard><AppLayout><div className="relative"><ComingSoonOverlay /><VideosPage /></div></AppLayout></UserGuard>} />
 
       {/* Private Supplier */}
       <Route path="/private-supplier" component={() => <UserGuard><AppLayout><SuppliersPage /></AppLayout></UserGuard>} />

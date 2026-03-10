@@ -57,6 +57,7 @@
           items: NavItem[]
           isDropdown?: boolean
           isNew?: boolean
+          comingSoon?: boolean
         }
 
         export const externalNavGroups: NavGroup[] = [
@@ -107,15 +108,6 @@
             ],
           },
           {
-            label: "Videos & Ads",
-            icon: BarChart3,
-            iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
-            items: [
-              { title: "Videos", icon: Video, url: "/ads/videos", isPro: true },
-              { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true, iconSrc: "/images/meta-logo.svg" },
-            ],
-          },
-          {
             label: "Marketplaces",
             icon: Store,
             iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
@@ -162,6 +154,16 @@
             iconSrc: "/3d-ecom-icons-blue/Open_Board.png",
             items: [
               { title: "Resources", icon: FolderOpen, url: "/resources", isPro: false },
+            ],
+          },
+          {
+            label: "Videos & Ads",
+            icon: BarChart3,
+            iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
+            comingSoon: true,
+            items: [
+              { title: "Videos", icon: Video, url: "/ads/videos", isPro: true },
+              { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true, iconSrc: "/images/meta-logo.svg" },
             ],
           },
         ]
