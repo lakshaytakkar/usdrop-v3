@@ -42,6 +42,9 @@ import AdminCROContent from "@/pages/admin/content/cro-checklist/page";
 import AdminVideos from "@/pages/admin/videos/page";
 import AdminImportantLinks from "@/pages/admin/important-links/page";
 import AdminPlans from "@/pages/admin/plans/page";
+import AdminEmailTemplates from "@/pages/admin/email/templates/page";
+import AdminEmailAutomations from "@/pages/admin/email/automations/page";
+import AdminEmailLogs from "@/pages/admin/email/logs/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -256,6 +259,9 @@ function Router() {
       <Route path="/admin/videos" component={() => <AdminGuard><AdminLayout><AdminVideos /></AdminLayout></AdminGuard>} />
       <Route path="/admin/important-links" component={() => <AdminGuard><AdminLayout><AdminImportantLinks /></AdminLayout></AdminGuard>} />
       <Route path="/admin/plans" component={() => <AdminGuard><AdminLayout><AdminPlans /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/email/templates" component={() => <AdminGuard><AdminLayout><AdminEmailTemplates /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/email/automations" component={() => <AdminGuard><AdminLayout><AdminEmailAutomations /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/email/logs" component={() => <AdminGuard><AdminLayout><AdminEmailLogs /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />

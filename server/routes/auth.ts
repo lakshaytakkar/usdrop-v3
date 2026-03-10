@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { supabaseRemote } from '../lib/supabase-remote';
 import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
+import { triggerAutomation } from '../lib/email-automation';
 
 const ALLOWED_REDIRECT_PATHS = ['/home', '/admin', '/framework', '/product-hunt', '/mentorship', '/categories', '/suppliers', '/competitor-stores', '/tools', '/blogs', '/shipping-calculator', '/onboarding'];
 
@@ -113,6 +114,12 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
   }
 
   console.log(`New user created via signup: ${email} (free plan, id: ${newProfile.id})`);
+
+  triggerAutomation('user_signup', newProfile.id, {
+    'user.email': email,
+    'user.name': fullName || 'there',
+  }).catch((err) => console.error('[oauth-signup] automation trigger error:', err));
+
   return newProfile;
 }
 
@@ -236,6 +243,11 @@ export function registerAuthRoutes(app: Express) {
       }
 
       const token = generateToken(newProfile.id);
+
+      triggerAutomation('user_signup', newProfile.id, {
+        'user.email': newProfile.email,
+        'user.name': full_name || 'there',
+      }).catch((err) => console.error('[signup] automation trigger error:', err));
 
       return res.json({
         message: 'Account created successfully',

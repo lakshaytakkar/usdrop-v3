@@ -69,6 +69,15 @@ const navCategories: NavCategory[] = [
     ],
   },
   {
+    title: "Communications",
+    defaultUrl: "/admin/email/templates",
+    items: [
+      { title: "Email Templates", url: "/admin/email/templates" },
+      { title: "Automations", url: "/admin/email/automations" },
+      { title: "Email Logs", url: "/admin/email/logs" },
+    ],
+  },
+  {
     title: "Settings",
     defaultUrl: "/admin/access-control",
     items: [

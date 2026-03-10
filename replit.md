@@ -59,6 +59,16 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - **Push to Shopify**: `POST /api/shopify-stores/:storeId/products/push` — pushes a USDrop product to the user's connected Shopify store as a draft. Backend: `server/routes/shopify.ts` + `createShopifyProduct` in `server/lib/shopify-oauth.ts`. Frontend: Shopify button on My Products page with single/multi-store selection.
 - **Shopify Embedded App**: Standalone HTML app served at `GET /shopify-app?shop=xxx.myshopify.com` for embedding inside Shopify Admin. Routes: `server/routes/shopify-app.ts`. Frontend: `server/shopify-app/index.html` (vanilla JS + Tailwind CDN, no React). Auth: HMAC verification + shop domain lookup in `shopify_stores`. Contains 3 tools: Profit Calculator (per-product revenue/profit/margin from orders), Price Editor (inline edit + bulk push to Shopify via `updateShopifyProductPrice`), SEO Scorer (product title/description/image/tags analysis with scores). API endpoints: `GET /shopify-app/api/products`, `GET /shopify-app/api/orders`, `PUT /shopify-app/api/products/:productId/price`.
 
+**Email System (Resend Integration):**
+- `server/lib/resend.ts`: Resend email client via Replit connector pattern (getUncachableResendClient). Includes `sendEmail()` wrapper that sends and logs to Supabase.
+- `server/lib/email-templates.ts`: On-brand HTML email templates (responsive, DM Sans, blue accent, mobile-optimized). Default templates: Welcome, Password Reset, Plan Upgrade, Plan Downgrade, Onboarding Day 1/3/7, Re-engagement, Order Confirmation, Shipping Notification.
+- `server/lib/email-automation.ts`: Automation engine — `triggerAutomation(event, userId, metadata)` fires on user events (signup, plan change). Seeds default automations on startup.
+- `server/routes/email.ts`: Admin-only API routes for templates, automations, and logs CRUD.
+- Admin pages: `client/src/pages/admin/email/templates/`, `automations/`, `logs/`
+- Admin nav: "Communications" category in `AdminLayout.tsx` topbar.
+- Supabase tables: `email_templates`, `email_automations`, `email_logs`
+- Triggers integrated into: auth signup (`user_signup`), admin plan changes (`plan_upgraded`/`plan_downgraded`)
+
 ## External Dependencies
 - **Supabase**: Database, authentication, and storage (`@supabase/supabase-js`).
 - **Vite**: Frontend build tool and dev server.

@@ -2,6 +2,7 @@ import { type Express, Router, Request, Response } from 'express';
 import { requireAdmin } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
 import multer from 'multer';
+import { triggerAutomation } from '../lib/email-automation';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -4550,6 +4551,15 @@ export function registerAdminRoutes(app: Express) {
 
       if (error || !result) {
         return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (subscription_plan_id !== undefined) {
+        const newPlanSlug = (result as any).subscription_plans?.slug || 'free';
+        const newPlanName = (result as any).subscription_plans?.name || 'Free';
+        const triggerEvent = newPlanSlug === 'free' ? 'plan_downgraded' : 'plan_upgraded';
+        triggerAutomation(triggerEvent as any, id, {
+          'user.plan': newPlanName,
+        }).catch((err) => console.error('[admin] plan change automation trigger error:', err));
       }
 
       return res.json({

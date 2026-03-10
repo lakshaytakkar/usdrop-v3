@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { setupEmailTables } from "./lib/email-tables-setup";
+import { seedDefaultAutomations } from "./lib/email-automation";
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,6 +66,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  setupEmailTables()
+    .then(() => seedDefaultAutomations())
+    .catch((err) =>
+      console.error('[startup] Email tables/seed setup failed:', err),
+    );
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
