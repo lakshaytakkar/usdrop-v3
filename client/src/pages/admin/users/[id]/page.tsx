@@ -65,9 +65,11 @@ import {
   Bookmark,
   Circle,
   Loader2,
+  Mail,
 } from "lucide-react";
 import { journeyStages as fallbackJourneyStages } from "@/data/journey-stages";
 import type { JourneyStage } from "@/data/journey-stages";
+import { SendEmailDrawer } from "./send-email-drawer";
 
 interface UserProfile {
   id: string;
@@ -327,6 +329,7 @@ export default function AdminUserDetail() {
 
   const [newNote, setNewNote] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [emailDrawerOpen, setEmailDrawerOpen] = useState(false);
   const [editForm, setEditForm] = useState({ full_name: "", phone_number: "", account_type: "" });
   const [businessForm, setBusinessForm] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -630,6 +633,10 @@ export default function AdminUserDetail() {
             <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
             Ticket
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setEmailDrawerOpen(true)} data-testid="button-send-email">
+            <Mail className="mr-1.5 h-3.5 w-3.5" />
+            Email
+          </Button>
           <Button size="sm" variant="outline" onClick={() => router.push(`/admin/pipeline?paymentLink=true&userId=${user.id}`)} data-testid="button-send-payment">
             <CreditCard className="mr-1.5 h-3.5 w-3.5" />
             Payment
@@ -707,6 +714,19 @@ export default function AdminUserDetail() {
           <NotesTab notes={notes} paymentLinks={paymentLinks} tickets={tickets} newNote={newNote} setNewNote={setNewNote} onAddNote={handleAddNote} isSubmitting={isSubmitting} router={router} />
         </TabsContent>
       </Tabs>
+
+      <SendEmailDrawer
+        open={emailDrawerOpen}
+        onOpenChange={setEmailDrawerOpen}
+        user={{
+          id: user.id,
+          full_name: user.full_name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          account_type: user.account_type,
+          plan: user.plan,
+        }}
+      />
     </PageShell>
   );
 }

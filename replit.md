@@ -68,6 +68,7 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - Admin nav: "Communications" category in `AdminLayout.tsx` topbar.
 - Supabase tables: `email_templates`, `email_automations`, `email_logs`, `email_otps`
 - Triggers integrated into: auth signup (`user_signup`), admin plan changes (`plan_upgraded`/`plan_downgraded`)
+- **Send Email Drawer**: Admin user detail page (`client/src/pages/admin/users/[id]/`) includes a slide-out Sheet drawer (`send-email-drawer.tsx`) to send templated or custom emails to users via Resend. Features: template picker with category grouping, auto-fill user profile variables (name, email, plan), HTML preview via sandboxed iframe, custom HTML composition. Triggered via "Email" quick action button in user header.
 - **Email OTP Signup Flow**: Email/password signup is now 2-step: (1) `POST /api/auth/signup` validates input, hashes password, sends 6-digit OTP via Resend from `admin@usdrop.ai`, stores OTP + hashed password in `email_otps` table. (2) `POST /api/auth/signup/verify` verifies OTP, creates profile, issues JWT, triggers `user_signup` welcome automation. Resend endpoint: `POST /api/auth/signup/resend`. OTPs expire in 10 minutes, max 5 attempts. Frontend: `signup-form.tsx` handles both steps (form → OTP input).
 
 ## External Dependencies

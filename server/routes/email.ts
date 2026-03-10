@@ -504,6 +504,7 @@ export function registerEmailRoutes(app: Express) {
       }
 
       const result = await sendEmail(to, emailSubject, emailHtml, {
+        templateId: template_id || undefined,
         tags: [
           { name: 'type', value: 'manual' },
           ...(template_id ? [{ name: 'template_id', value: template_id }] : []),
