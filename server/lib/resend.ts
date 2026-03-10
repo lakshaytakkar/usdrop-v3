@@ -64,7 +64,7 @@ export async function sendEmail(
   const { client, fromEmail } = await getUncachableResendClient();
 
   const result = await client.emails.send({
-    from: 'Alex from USDrop AI <admin@usdrop.ai>',
+    from: 'Sam from USDrop AI <admin@usdrop.ai>',
     to,
     subject,
     html,
