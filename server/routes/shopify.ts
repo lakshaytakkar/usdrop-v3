@@ -1,6 +1,8 @@
 import { Express, Request, Response } from 'express';
 import { requireAuth } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 import {
   generateOAuthState,
   buildShopifyOAuthUrl,
@@ -153,6 +155,12 @@ export function registerShopifyRoutes(app: Express) {
           return res.redirect(`${baseUrl}/framework/my-store?error=update_failed`);
         }
 
+        const storeMeta = { 'store.name': storeInfo.name, 'store.domain': normalizedDomain, store_name: storeInfo.name, store_domain: normalizedDomain };
+        triggerAutomation('store_connected', userId, storeMeta)
+          .catch((err) => console.error('[shopify] store_connected automation trigger error:', err));
+        triggerSmsAutomation('store_connected', userId, storeMeta)
+          .catch((err) => console.error('[shopify] store_connected sms automation trigger error:', err));
+
         await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
         return res.redirect(`${baseUrl}/framework/my-store?success=store_updated`);
       } else {
@@ -177,6 +185,12 @@ export function registerShopifyRoutes(app: Express) {
           }
           return res.redirect(`${baseUrl}/framework/my-store?error=create_failed`);
         }
+
+        const storeMeta2 = { 'store.name': storeInfo.name, 'store.domain': normalizedDomain, store_name: storeInfo.name, store_domain: normalizedDomain };
+        triggerAutomation('store_connected', userId, storeMeta2)
+          .catch((err) => console.error('[shopify] store_connected automation trigger error:', err));
+        triggerSmsAutomation('store_connected', userId, storeMeta2)
+          .catch((err) => console.error('[shopify] store_connected sms automation trigger error:', err));
 
         await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
         return res.redirect(`${baseUrl}/framework/my-store?success=store_connected`);

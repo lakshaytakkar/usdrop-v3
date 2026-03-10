@@ -1,6 +1,8 @@
 import { type Express, Request, Response } from 'express';
 import { supabaseRemote } from '../lib/supabase-remote';
 import { requireAuth, optionalAuth } from '../lib/auth';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -928,6 +930,14 @@ export function registerPublicRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to enroll in course', details: enrollmentError.message });
       }
 
+      triggerAutomation('course_started', user.id, {
+        'course.id': courseId,
+      }).catch((err) => console.error('[course-enroll] automation trigger error:', err));
+
+      triggerSmsAutomation('course_started', user.id, {
+        'course.id': courseId,
+      }).catch((err) => console.error('[course-enroll] sms automation trigger error:', err));
+
       return res.status(201).json({
         enrollment: {
           id: enrollment.id,
@@ -1139,6 +1149,16 @@ export function registerPublicRoutes(app: Express) {
         console.error('Error creating completion:', completionError);
         return res.status(500).json({ error: 'Failed to mark chapter complete', details: completionError.message });
       }
+
+      triggerAutomation('lesson_completed', user.id, {
+        'course.id': courseId,
+        'chapter.id': chapterId,
+      }).catch((err) => console.error('[chapter-complete] automation trigger error:', err));
+
+      triggerSmsAutomation('lesson_completed', user.id, {
+        'course.id': courseId,
+        'chapter.id': chapterId,
+      }).catch((err) => console.error('[chapter-complete] sms automation trigger error:', err));
 
       return res.status(201).json({
         completion: {
@@ -4051,6 +4071,12 @@ async function updateUserProgressPercentage(userId: string) {
 
       if (!profile?.onboarding_completed_at) {
         updateData.onboarding_completed_at = new Date().toISOString();
+
+        triggerAutomation('onboarding_completed', userId, {}).catch((err) =>
+          console.error('[onboarding] automation trigger error:', err));
+
+        triggerSmsAutomation('onboarding_completed', userId, {}).catch((err) =>
+          console.error('[onboarding] sms automation trigger error:', err));
       }
     }
 

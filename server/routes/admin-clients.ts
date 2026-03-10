@@ -1,6 +1,8 @@
 import { type Express, Router, Request, Response } from 'express';
 import { requireAdmin } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 
 export function registerAdminClientRoutes(app: Express) {
   const router = Router();
@@ -396,7 +398,8 @@ export function registerAdminClientRoutes(app: Express) {
         })
         .select(`
           *,
-          user:profiles!batch_members_user_id_fkey(id, full_name, email, avatar_url, account_type)
+          user:profiles!batch_members_user_id_fkey(id, full_name, email, avatar_url, account_type),
+          batch:batches!batch_members_batch_id_fkey(id, name)
         `)
         .single();
 
@@ -404,6 +407,13 @@ export function registerAdminClientRoutes(app: Express) {
         console.error('Error adding batch member:', error);
         return res.status(500).json({ error: 'Failed to add member' });
       }
+
+      const batchName = (data as any)?.batch?.name || '';
+      const batchMeta = { 'batch.id': id, 'batch.name': batchName, batch_name: batchName, batch_id: id };
+      triggerAutomation('mentorship_assigned', user_id, batchMeta)
+        .catch((err) => console.error('[batch-assign] automation trigger error:', err));
+      triggerSmsAutomation('mentorship_assigned', user_id, batchMeta)
+        .catch((err) => console.error('[batch-assign] sms automation trigger error:', err));
 
       return res.status(201).json({ member: data });
     } catch (error) {
@@ -474,6 +484,14 @@ export function registerAdminClientRoutes(app: Express) {
       }
 
       let updated = 0;
+      const memberUserIds: string[] = [];
+
+      const { data: memberDetails } = await supabaseRemote
+        .from('batch_members')
+        .select('id, user_id, current_week')
+        .eq('batch_id', id)
+        .eq('status', 'active');
+
       for (const member of members) {
         const { error: updateError } = await supabaseRemote
           .from('batch_members')
@@ -483,7 +501,21 @@ export function registerAdminClientRoutes(app: Express) {
           })
           .eq('id', member.id);
 
-        if (!updateError) updated++;
+        if (!updateError) {
+          updated++;
+          const detail = (memberDetails || []).find((m: any) => m.id === member.id);
+          if (detail?.user_id) {
+            memberUserIds.push(detail.user_id);
+          }
+        }
+      }
+
+      for (const userId of memberUserIds) {
+        const weekMeta = { 'batch.id': id, batch_id: id, week_number: String(updated?.current_week || '') };
+        triggerAutomation('mentorship_week_advanced', userId, weekMeta)
+          .catch((err) => console.error('[batch-advance] automation trigger error:', err));
+        triggerSmsAutomation('mentorship_week_advanced', userId, weekMeta)
+          .catch((err) => console.error('[batch-advance] sms automation trigger error:', err));
       }
 
       return res.json({ success: true, updated });

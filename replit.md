@@ -61,19 +61,25 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 
 **Email System (Resend Integration):**
 - `server/lib/resend.ts`: Resend email client via Replit connector pattern (getUncachableResendClient). Includes `sendEmail()` wrapper that sends and logs to Supabase.
-- `server/lib/email-templates.ts`: On-brand HTML email templates (responsive, DM Sans, blue accent, mobile-optimized). Default templates: Welcome, Password Reset, Plan Upgrade, Plan Downgrade, Onboarding Day 1/3/7, Re-engagement, Order Confirmation, Shipping Notification.
-- `server/lib/email-automation.ts`: Automation engine — `triggerAutomation(event, userId, metadata)` fires on user events (signup, plan change). Seeds default automations on startup.
+- `server/lib/email-templates.ts`: 34+ on-brand HTML email templates (responsive, DM Sans, blue accent, mobile-optimized) covering full user journey: Signup, Onboarding, Free Learning, Mentorship, Store Setup, LLC Formation, Re-engagement, Retention, Marketing.
+- `server/lib/email-automation.ts`: Automation engine — `triggerAutomation(event, userId, metadata)` fires on user events. Seeds default automations on startup. Supports 24 trigger types including `onboarding_completed`, `course_started`, `course_completed`, `lesson_completed`, `mentorship_assigned`, `mentorship_week_advanced`, `store_connected`, `store_claimed`, `products_uploaded`, `llc_status_changed`, `user_inactive`, `milestone_reached`.
 - `server/routes/email.ts`: Admin-only API routes for templates, automations, and logs CRUD.
 - Admin pages: `client/src/pages/admin/email/templates/`, `automations/`, `logs/`
 - Admin nav: "Communications" category in `AdminLayout.tsx` topbar.
 - Supabase tables: `email_templates`, `email_automations`, `email_logs`, `email_otps`
-- Triggers integrated into: auth signup (`user_signup`), admin plan changes (`plan_upgraded`/`plan_downgraded`)
+- Triggers integrated into: auth signup, plan changes, store connection, store claims, LLC status, mentorship, course/lesson progress, onboarding
 - **Send Email Drawer**: Admin user detail page (`client/src/pages/admin/users/[id]/`) includes a slide-out Sheet drawer (`send-email-drawer.tsx`) to send templated or custom emails to users via Resend. Features: template picker with category grouping, auto-fill user profile variables (name, email, plan), HTML preview via sandboxed iframe, custom HTML composition. Triggered via "Email" quick action button in user header.
 - **Email OTP Signup Flow**: Email/password signup is now 2-step: (1) `POST /api/auth/signup` validates input, hashes password, sends 6-digit OTP via Resend from `admin@usdrop.ai`, stores OTP + hashed password in `email_otps` table. (2) `POST /api/auth/signup/verify` verifies OTP, creates profile, issues JWT, triggers `user_signup` welcome automation. Resend endpoint: `POST /api/auth/signup/resend`. OTPs expire in 10 minutes, max 5 attempts. Frontend: `signup-form.tsx` handles both steps (form → OTP input).
 - **Mobile OTP Signup Flow**: Phone number signup with +91 default prefix. Routes: `POST /api/auth/signup/mobile` (send OTP via Twilio SMS), `POST /api/auth/signup/mobile/verify` (verify + create account), `POST /api/auth/signup/mobile/resend`. OTP stored in `email_otps` table (email column stores phone number). Profile created with `phone_number` and placeholder email (`{digits}@phone.usdrop.ai`). Frontend: `signup-form.tsx` has Mobile/Email toggle, Mobile is default tab. Phone input restricted to 10 digits with fixed +91 prefix.
 
 **SMS System (Twilio Integration):**
-- `server/lib/twilio.ts`: Twilio client via Replit connector pattern. Exports `getTwilioClient()`, `getTwilioFromPhoneNumber()`, `sendSms(to, body)`. Connected via Replit integration (account SID + API key auth). From number: `+15015222136`. Note: Currently trial account — can only send to verified numbers.
+- `server/lib/twilio.ts`: Twilio client via Replit connector pattern. Exports `getTwilioClient()`, `getTwilioFromPhoneNumber()`, `sendSms(to, body)`. Connected via Replit integration (account SID + API key auth). From number: `+15015222136`. Paid account active.
+- `server/lib/sms-automation.ts`: SMS automation engine — `triggerSmsAutomation(event, userId, metadata)` fires on user events (same triggers as email). Seeds 31 default SMS templates and automations on startup via `seedSmsTemplatesAndAutomations()`.
+- `server/routes/sms.ts`: Admin-only API routes for SMS templates, automations, and logs CRUD (mirrors email.ts structure).
+- Admin pages: `client/src/pages/admin/sms/templates/`, `automations/`, `logs/`
+- Supabase tables: `sms_templates`, `sms_automations`, `sms_logs`
+- SMS templates cover full user journey: Signup, Onboarding, Free Learning, Plan Upgrade, Mentorship, Store Setup, LLC Formation, Re-engagement, Retention (31 templates total).
+- Triggers integrated alongside email automations in: auth signup, plan changes, store connection, store claims, LLC status changes, mentorship assignment, course/lesson progress, onboarding completion.
 
 **User Routing:**
 - Free users default to `/free-learning` after login/signup (via `getUserRedirectPath` in `client/src/lib/utils/user-redirects.ts`)

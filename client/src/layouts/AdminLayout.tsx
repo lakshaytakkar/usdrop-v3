@@ -73,8 +73,11 @@ const navCategories: NavCategory[] = [
     defaultUrl: "/admin/email/templates",
     items: [
       { title: "Email Templates", url: "/admin/email/templates" },
-      { title: "Automations", url: "/admin/email/automations" },
+      { title: "Email Automations", url: "/admin/email/automations" },
       { title: "Email Logs", url: "/admin/email/logs" },
+      { title: "SMS Templates", url: "/admin/sms/templates" },
+      { title: "SMS Automations", url: "/admin/sms/automations" },
+      { title: "SMS Logs", url: "/admin/sms/logs" },
     ],
   },
   {

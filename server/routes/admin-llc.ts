@@ -1,6 +1,8 @@
 import { type Express, Router, Request, Response } from 'express';
 import { requireAdmin } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 
 export function registerAdminLLCRoutes(app: Express) {
   const router = Router();
@@ -192,6 +194,19 @@ export function registerAdminLLCRoutes(app: Express) {
         return res.status(500).json({ error: 'Failed to update LLC application' });
       }
 
+      if (appStatus !== undefined && data.user_id) {
+        const llcMeta = {
+          'llc.status': appStatus,
+          'llc.name': data.llc_name || '',
+          llc_status: appStatus,
+          llc_name: data.llc_name || '',
+        };
+        triggerAutomation('llc_status_changed', data.user_id, llcMeta)
+          .catch((err) => console.error('[admin-llc] automation trigger error:', err));
+        triggerSmsAutomation('llc_status_changed', data.user_id, llcMeta)
+          .catch((err) => console.error('[admin-llc] sms automation trigger error:', err));
+      }
+
       return res.json({ application: data });
     } catch (error) {
       console.error('Unexpected error updating LLC application:', error);
@@ -251,6 +266,19 @@ export function registerAdminLLCRoutes(app: Express) {
 
       if (error || !data) {
         return res.status(500).json({ error: 'Failed to advance LLC application' });
+      }
+
+      if (data.user_id) {
+        const llcMeta = {
+          'llc.status': nextStage,
+          'llc.name': data.llc_name || '',
+          llc_status: nextStage,
+          llc_name: data.llc_name || '',
+        };
+        triggerAutomation('llc_status_changed', data.user_id, llcMeta)
+          .catch((err) => console.error('[admin-llc-advance] automation trigger error:', err));
+        triggerSmsAutomation('llc_status_changed', data.user_id, llcMeta)
+          .catch((err) => console.error('[admin-llc-advance] sms automation trigger error:', err));
       }
 
       return res.json({ application: data });

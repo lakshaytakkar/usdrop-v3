@@ -4,6 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { setupEmailTables } from "./lib/email-tables-setup";
 import { seedDefaultAutomations } from "./lib/email-automation";
+import { seedSmsTemplatesAndAutomations } from "./lib/sms-automation";
 
 const app = express();
 const httpServer = createServer(app);
@@ -70,6 +71,11 @@ app.use((req, res, next) => {
     .then(() => seedDefaultAutomations())
     .catch((err) =>
       console.error('[startup] Email tables/seed setup failed:', err),
+    );
+
+  seedSmsTemplatesAndAutomations()
+    .catch((err) =>
+      console.error('[startup] SMS templates/automations seed failed:', err),
     );
 
   await registerRoutes(httpServer, app);

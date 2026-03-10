@@ -45,6 +45,9 @@ import AdminPlans from "@/pages/admin/plans/page";
 import AdminEmailTemplates from "@/pages/admin/email/templates/page";
 import AdminEmailAutomations from "@/pages/admin/email/automations/page";
 import AdminEmailLogs from "@/pages/admin/email/logs/page";
+import AdminSmsTemplates from "@/pages/admin/sms/templates/page";
+import AdminSmsAutomations from "@/pages/admin/sms/automations/page";
+import AdminSmsLogs from "@/pages/admin/sms/logs/page";
 import PublicPaymentPage from "@/pages/payment/[id]/page";
 
 import DevDashboard from "@/pages/dev/page";
@@ -262,6 +265,9 @@ function Router() {
       <Route path="/admin/email/templates" component={() => <AdminGuard><AdminLayout><AdminEmailTemplates /></AdminLayout></AdminGuard>} />
       <Route path="/admin/email/automations" component={() => <AdminGuard><AdminLayout><AdminEmailAutomations /></AdminLayout></AdminGuard>} />
       <Route path="/admin/email/logs" component={() => <AdminGuard><AdminLayout><AdminEmailLogs /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/sms/templates" component={() => <AdminGuard><AdminLayout><AdminSmsTemplates /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/sms/automations" component={() => <AdminGuard><AdminLayout><AdminSmsAutomations /></AdminLayout></AdminGuard>} />
+      <Route path="/admin/sms/logs" component={() => <AdminGuard><AdminLayout><AdminSmsLogs /></AdminLayout></AdminGuard>} />
 
       {/* Public payment page */}
       <Route path="/payment/:id" component={PublicPaymentPage} />

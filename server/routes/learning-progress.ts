@@ -1,6 +1,8 @@
 import { Router, type Express, type Request, type Response } from 'express';
 import { requireAuth, requireAdmin } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 
 let tableEnsured = false;
 
@@ -84,6 +86,14 @@ export function registerLearningProgressRoutes(app: Express) {
         console.error('Error inserting lesson progress:', error);
         return res.status(500).json({ error: 'Failed to save progress' });
       }
+
+      triggerAutomation('lesson_completed', user.id, {
+        'lesson.id': lesson_id,
+      }).catch((err) => console.error('[learning-progress] automation trigger error:', err));
+
+      triggerSmsAutomation('lesson_completed', user.id, {
+        'lesson.id': lesson_id,
+      }).catch((err) => console.error('[learning-progress] sms automation trigger error:', err));
 
       return res.json({ success: true });
     } catch (error) {

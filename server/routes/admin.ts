@@ -3,6 +3,7 @@ import { requireAdmin } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
 import multer from 'multer';
 import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -4557,9 +4558,15 @@ export function registerAdminRoutes(app: Express) {
         const newPlanSlug = (result as any).subscription_plans?.slug || 'free';
         const newPlanName = (result as any).subscription_plans?.name || 'Free';
         const triggerEvent = newPlanSlug === 'free' ? 'plan_downgraded' : 'plan_upgraded';
-        triggerAutomation(triggerEvent as any, id, {
+        const planMeta = {
           'user.plan': newPlanName,
-        }).catch((err) => console.error('[admin] plan change automation trigger error:', err));
+          plan_slug: newPlanSlug,
+          plan_name: newPlanName,
+        };
+        triggerAutomation(triggerEvent as any, id, planMeta)
+          .catch((err) => console.error('[admin] plan change automation trigger error:', err));
+        triggerSmsAutomation(triggerEvent as any, id, planMeta)
+          .catch((err) => console.error('[admin] plan change sms automation trigger error:', err));
       }
 
       return res.json({

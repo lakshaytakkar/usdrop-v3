@@ -399,7 +399,649 @@ export const DEFAULT_EMAIL_TEMPLATES = [
     htmlContent: shippingNotificationTemplate(),
     variables: ['{{user.name}}', '{{order.id}}', '{{order.items}}', '{{order.shippingAddress}}', '{{order.trackingNumber}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
   },
+  {
+    name: 'Course Started',
+    subject: 'Great Start on {{course.name}}!',
+    type: 'marketing' as const,
+    category: 'learning' as const,
+    description: 'Sent when user starts a new course to encourage continued learning',
+    htmlContent: courseStartedTemplate(),
+    variables: ['{{user.name}}', '{{course.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Module Completed',
+    subject: 'Module Complete — Keep Going, {{user.name}}!',
+    type: 'marketing' as const,
+    category: 'learning' as const,
+    description: 'Sent when user completes a course module to celebrate progress',
+    htmlContent: moduleCompletedTemplate(),
+    variables: ['{{user.name}}', '{{module.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'All Lessons Complete',
+    subject: 'You Completed All Lessons — What\'s Next?',
+    type: 'marketing' as const,
+    category: 'learning' as const,
+    description: 'Sent when user completes all free lessons with mentorship CTA',
+    htmlContent: allLessonsCompleteTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Mentorship Batch Assigned',
+    subject: 'Welcome to Your Mentorship Batch!',
+    type: 'utility' as const,
+    category: 'mentorship' as const,
+    description: 'Sent when user is assigned to a mentorship batch',
+    htmlContent: mentorshipBatchAssignedTemplate(),
+    variables: ['{{user.name}}', '{{batch.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Mentorship Week Update',
+    subject: 'Week {{week.number}} — Your Mentorship Update',
+    type: 'utility' as const,
+    category: 'mentorship' as const,
+    description: 'Weekly progress update during mentorship program',
+    htmlContent: mentorshipWeekUpdateTemplate(),
+    variables: ['{{user.name}}', '{{week.number}}', '{{week.description}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Mentorship Session Reminder',
+    subject: 'Mentorship Session Reminder — {{session.date}}',
+    type: 'utility' as const,
+    category: 'mentorship' as const,
+    description: 'Reminder before a mentorship session',
+    htmlContent: mentorshipSessionReminderTemplate(),
+    variables: ['{{user.name}}', '{{session.date}}', '{{session.time}}', '{{session.topic}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Store Connected',
+    subject: 'Shopify Store Connected Successfully!',
+    type: 'utility' as const,
+    category: 'store' as const,
+    description: 'Sent when user connects their Shopify store',
+    htmlContent: storeConnectedTemplate(),
+    variables: ['{{user.name}}', '{{store.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Store Claimed',
+    subject: 'Your Store Has Been Claimed!',
+    type: 'utility' as const,
+    category: 'store' as const,
+    description: 'Sent when user claims their store on the platform',
+    htmlContent: storeClaimedTemplate(),
+    variables: ['{{user.name}}', '{{store.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Products Milestone',
+    subject: 'Products Uploaded — Your Store Is Taking Shape!',
+    type: 'utility' as const,
+    category: 'store' as const,
+    description: 'Sent when user uploads products to their store',
+    htmlContent: productsMilestoneTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'LLC Application Received',
+    subject: 'LLC Application Received — We\'re On It!',
+    type: 'utility' as const,
+    category: 'llc' as const,
+    description: 'Sent when LLC formation application is received',
+    htmlContent: llcApplicationReceivedTemplate(),
+    variables: ['{{user.name}}', '{{llc.timeline}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'LLC Status Update',
+    subject: 'LLC Update: {{llc.status}}',
+    type: 'utility' as const,
+    category: 'llc' as const,
+    description: 'Sent at each LLC formation stage update',
+    htmlContent: llcStatusUpdateTemplate(),
+    variables: ['{{user.name}}', '{{llc.status}}', '{{llc.statusDescription}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'LLC Complete',
+    subject: 'LLC Formation Complete — Congratulations!',
+    type: 'utility' as const,
+    category: 'llc' as const,
+    description: 'Sent when LLC formation is fully complete',
+    htmlContent: llcCompleteTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Re-engagement — 7 Day',
+    subject: 'We Noticed You\'ve Been Away, {{user.name}}',
+    type: 'marketing' as const,
+    category: 're-engagement' as const,
+    description: 'Sent to users inactive for 7 days',
+    htmlContent: reEngagement7DayTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Re-engagement — 14 Day',
+    subject: 'Don\'t Let Your Progress Stall, {{user.name}}',
+    type: 'marketing' as const,
+    category: 're-engagement' as const,
+    description: 'Sent to users inactive for 14 days',
+    htmlContent: reEngagement14DayTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Re-engagement — 30 Day',
+    subject: 'We Miss You, {{user.name}} — Come Back!',
+    type: 'marketing' as const,
+    category: 're-engagement' as const,
+    description: 'Sent to users inactive for 30 days with strong re-engagement pitch',
+    htmlContent: reEngagement30DayTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'First Month Milestone',
+    subject: 'One Month with USDrop AI — Congratulations!',
+    type: 'marketing' as const,
+    category: 'retention' as const,
+    description: 'Celebrate user completing their first month on the platform',
+    htmlContent: firstMonthMilestoneTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'First Sale Celebration',
+    subject: 'You Made Your First Sale!',
+    type: 'marketing' as const,
+    category: 'retention' as const,
+    description: 'Celebrate when user makes their first sale',
+    htmlContent: firstSaleCelebrationTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: '90-Day Milestone',
+    subject: '90 Days Strong, {{user.name}}!',
+    type: 'marketing' as const,
+    category: 'retention' as const,
+    description: 'Celebrate user reaching 90 days on the platform',
+    htmlContent: ninetyDayMilestoneTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Renewal Reminder',
+    subject: 'Your Subscription Renewal Is Coming Up',
+    type: 'utility' as const,
+    category: 'retention' as const,
+    description: 'Remind user their subscription is up for renewal',
+    htmlContent: renewalReminderTemplate(),
+    variables: ['{{user.name}}', '{{user.plan}}', '{{renewal.date}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Feature Announcement',
+    subject: 'New Feature: {{feature.name}} — Now Available!',
+    type: 'marketing' as const,
+    category: 'marketing' as const,
+    description: 'Announce new platform features to users',
+    htmlContent: featureAnnouncementTemplate(),
+    variables: ['{{user.name}}', '{{feature.name}}', '{{feature.description}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'New Course Available',
+    subject: 'New Course: {{course.name}} — Start Learning!',
+    type: 'marketing' as const,
+    category: 'marketing' as const,
+    description: 'Notify users when a new course is published',
+    htmlContent: newCourseAvailableTemplate(),
+    variables: ['{{user.name}}', '{{course.name}}', '{{course.description}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Referral Invite',
+    subject: 'Share USDrop AI — Earn Rewards!',
+    type: 'marketing' as const,
+    category: 'marketing' as const,
+    description: 'Invite users to refer friends to the platform',
+    htmlContent: referralInviteTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
+  {
+    name: 'Onboarding Completed',
+    subject: 'Onboarding Complete — Let\'s Go!',
+    type: 'utility' as const,
+    category: 'onboarding' as const,
+    description: 'Sent when user completes onboarding with next steps',
+    htmlContent: onboardingCompletedTemplate(),
+    variables: ['{{user.name}}', '{{company.name}}', '{{company.email}}', '{{company.website}}', '{{unsubscribeLink}}'],
+  },
 ]
+
+export function courseStartedTemplate(): string {
+  const content = `
+    <h1>Great Start, {{user.name}}!</h1>
+    <p>You've just started the course <strong>{{course.name}}</strong>. That's a great first step toward building your dropshipping business.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Tips for Success:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Set aside dedicated learning time each day</p>
+      <p style="margin-bottom: 4px;">&#x2022; Take notes on key strategies and action items</p>
+      <p style="margin-bottom: 0;">&#x2022; Complete each module before moving to the next</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/free-learning" class="btn" style="color: #FFFFFF;">Continue Learning</a>
+    </div>
+    <p>Consistency is everything. Even 15 minutes a day adds up quickly.</p>
+  `;
+  return baseLayout(content, 'You started a new course on USDrop AI!');
+}
+
+export function moduleCompletedTemplate(): string {
+  const content = `
+    <h1>Module Complete!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Congratulations on completing <strong>{{module.name}}</strong>! You're making real progress.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Your Progress:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Module completed: {{module.name}}</p>
+      <p style="margin-bottom: 0;">&#x2022; Keep the momentum going with the next lesson</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/free-learning" class="btn" style="color: #FFFFFF;">Next Lesson</a>
+    </div>
+    <p>You're building the knowledge that will power your business. Keep going!</p>
+  `;
+  return baseLayout(content, 'You completed a module — keep going!');
+}
+
+export function allLessonsCompleteTemplate(): string {
+  const content = `
+    <h1>You Did It, {{user.name}}!</h1>
+    <p>You've completed all the free learning modules. That's a huge achievement and shows real commitment to your dropshipping success.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Ready for the Next Level?</p>
+      <p style="margin-bottom: 4px;">&#x2022; Get 1-on-1 mentorship from industry experts</p>
+      <p style="margin-bottom: 4px;">&#x2022; Receive a personalized business roadmap</p>
+      <p style="margin-bottom: 4px;">&#x2022; Access exclusive tools and resources</p>
+      <p style="margin-bottom: 0;">&#x2022; Join a cohort of driven entrepreneurs</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/mentorship" class="btn" style="color: #FFFFFF;">Explore Mentorship</a>
+    </div>
+    <p>Our mentorship program has helped hundreds of students launch and scale profitable stores. You could be next.</p>
+  `;
+  return baseLayout(content, 'All lessons complete — unlock mentorship!');
+}
+
+export function mentorshipBatchAssignedTemplate(): string {
+  const content = `
+    <h1>Welcome to Your Mentorship Batch!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You've been assigned to <strong>{{batch.name}}</strong>. Your mentorship journey is about to begin!</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">What to Expect:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Your POC (Point of Contact) will reach out shortly</p>
+      <p style="margin-bottom: 4px;">&#x2022; Weekly sessions with actionable tasks</p>
+      <p style="margin-bottom: 4px;">&#x2022; Direct access to your mentor for questions</p>
+      <p style="margin-bottom: 0;">&#x2022; Step-by-step guidance through store setup and launch</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-roadmap" class="btn" style="color: #FFFFFF;">View Your Roadmap</a>
+    </div>
+    <p>Stay engaged and complete each week's tasks for the best results.</p>
+  `;
+  return baseLayout(content, 'You have been assigned to a mentorship batch!');
+}
+
+export function mentorshipWeekUpdateTemplate(): string {
+  const content = `
+    <h1>Week {{week.number}} Update</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You've advanced to <strong>Week {{week.number}}</strong> of your mentorship. Here's what's ahead:</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">This Week's Focus:</p>
+      <p style="margin-bottom: 0;">{{week.description}}</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-roadmap" class="btn" style="color: #FFFFFF;">View This Week's Tasks</a>
+    </div>
+    <p>Consistency is key. Complete your tasks and reach out to your POC if you need help.</p>
+  `;
+  return baseLayout(content, 'Your mentorship week update');
+}
+
+export function mentorshipSessionReminderTemplate(): string {
+  const content = `
+    <h1>Session Reminder</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You have a mentorship session coming up:</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Session Details:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Date: {{session.date}}</p>
+      <p style="margin-bottom: 4px;">&#x2022; Time: {{session.time}}</p>
+      <p style="margin-bottom: 0;">&#x2022; Topic: {{session.topic}}</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-sessions" class="btn" style="color: #FFFFFF;">View Session Details</a>
+    </div>
+    <p>Come prepared with questions and make the most of your time with your mentor.</p>
+  `;
+  return baseLayout(content, 'Your mentorship session is coming up');
+}
+
+export function storeConnectedTemplate(): string {
+  const content = `
+    <h1>Shopify Store Connected!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Your Shopify store <strong>{{store.name}}</strong> has been successfully connected to USDrop AI.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Next Steps:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Import winning products to your store</p>
+      <p style="margin-bottom: 4px;">&#x2022; Set up your store branding and theme</p>
+      <p style="margin-bottom: 4px;">&#x2022; Configure payment and shipping settings</p>
+      <p style="margin-bottom: 0;">&#x2022; Use our CRO checklist to optimize conversions</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-store" class="btn" style="color: #FFFFFF;">Manage Your Store</a>
+    </div>
+    <p>A well-set-up store is the foundation of a profitable business.</p>
+  `;
+  return baseLayout(content, 'Your Shopify store is connected!');
+}
+
+export function storeClaimedTemplate(): string {
+  const content = `
+    <h1>Your Store Has Been Claimed!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Congratulations! Your store <strong>{{store.name}}</strong> has been claimed and is ready for business.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Get Started:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Add your first products from our winning products library</p>
+      <p style="margin-bottom: 4px;">&#x2022; Customize your store's look and feel</p>
+      <p style="margin-bottom: 0;">&#x2022; Set up your payment gateway</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-store" class="btn" style="color: #FFFFFF;">Go to Your Store</a>
+    </div>
+    <p>You're one step closer to your first sale!</p>
+  `;
+  return baseLayout(content, 'Your store has been claimed!');
+}
+
+export function productsMilestoneTemplate(): string {
+  const content = `
+    <h1>Products Uploaded!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You've uploaded products to your store. Your business is taking shape!</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Optimize for Sales:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Use our AI Description Generator for compelling product copy</p>
+      <p style="margin-bottom: 4px;">&#x2022; Check competitor pricing to stay competitive</p>
+      <p style="margin-bottom: 4px;">&#x2022; Add high-quality images using AI Image Studio</p>
+      <p style="margin-bottom: 0;">&#x2022; Run our CRO checklist on your product pages</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-products" class="btn" style="color: #FFFFFF;">View Your Products</a>
+    </div>
+    <p>Well-optimized product listings convert significantly better. Take time to polish each one.</p>
+  `;
+  return baseLayout(content, 'Your products are live!');
+}
+
+export function llcApplicationReceivedTemplate(): string {
+  const content = `
+    <h1>LLC Application Received</h1>
+    <p>Hi {{user.name}},</p>
+    <p>We've received your LLC formation application. Our team is on it!</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">What Happens Next:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Our team reviews your application details</p>
+      <p style="margin-bottom: 4px;">&#x2022; We file the necessary paperwork with the state</p>
+      <p style="margin-bottom: 4px;">&#x2022; You'll receive updates at each stage</p>
+      <p style="margin-bottom: 0;">&#x2022; Expected timeline: {{llc.timeline}}</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-llc" class="btn" style="color: #FFFFFF;">Track Your LLC</a>
+    </div>
+    <p>Forming an LLC is an important step in legitimizing and protecting your business.</p>
+  `;
+  return baseLayout(content, 'Your LLC application has been received');
+}
+
+export function llcStatusUpdateTemplate(): string {
+  const content = `
+    <h1>LLC Status Update</h1>
+    <p>Hi {{user.name}},</p>
+    <p>There's an update on your LLC formation:</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Current Status: {{llc.status}}</p>
+      <p style="margin-bottom: 0;">{{llc.statusDescription}}</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-llc" class="btn" style="color: #FFFFFF;">View Full Details</a>
+    </div>
+    <p>We'll keep you updated as your LLC progresses through each stage. If you have questions, reach out to our support team.</p>
+  `;
+  return baseLayout(content, 'Your LLC formation status has been updated');
+}
+
+export function llcCompleteTemplate(): string {
+  const content = `
+    <h1>LLC Formation Complete!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Congratulations! Your LLC formation is fully complete. You're now operating as a legitimate US business entity.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Completed Steps:</p>
+      <p style="margin-bottom: 4px;">&#x2022; LLC Filed with the State</p>
+      <p style="margin-bottom: 4px;">&#x2022; EIN Received from the IRS</p>
+      <p style="margin-bottom: 4px;">&#x2022; BOI Report Filed</p>
+      <p style="margin-bottom: 4px;">&#x2022; Business Bank Account Opened</p>
+      <p style="margin-bottom: 0;">&#x2022; Stripe Payment Processing Connected</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-llc" class="btn" style="color: #FFFFFF;">View Your LLC Details</a>
+    </div>
+    <p>With your business foundation in place, you're ready to scale with confidence.</p>
+  `;
+  return baseLayout(content, 'Your LLC is fully formed!');
+}
+
+export function reEngagement7DayTemplate(): string {
+  const content = `
+    <h1>We Noticed You've Been Away, {{user.name}}</h1>
+    <p>It's been a week since your last visit to USDrop AI. Your dropshipping journey is waiting for you!</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Quick Wins to Get Back on Track:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Check out this week's new winning products</p>
+      <p style="margin-bottom: 4px;">&#x2022; Continue your learning modules where you left off</p>
+      <p style="margin-bottom: 0;">&#x2022; Browse competitor stores for fresh inspiration</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Jump Back In</a>
+    </div>
+    <p>Even 10 minutes today can move your business forward.</p>
+  `;
+  return baseLayout(content, 'It has been a week — come back to USDrop AI');
+}
+
+export function reEngagement14DayTemplate(): string {
+  const content = `
+    <h1>Don't Let Your Progress Stall, {{user.name}}</h1>
+    <p>Two weeks have passed since your last visit. The dropshipping market moves fast, and we don't want you to fall behind.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">What's New Since You've Been Gone:</p>
+      <p style="margin-bottom: 4px;">&#x2022; New trending products added to our library</p>
+      <p style="margin-bottom: 4px;">&#x2022; Updated AI tools for faster research</p>
+      <p style="margin-bottom: 0;">&#x2022; Fresh course content from industry experts</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">See What's New</a>
+    </div>
+    <p>Your account is ready and waiting. Pick up right where you left off.</p>
+  `;
+  return baseLayout(content, 'Two weeks away — see what you have missed');
+}
+
+export function reEngagement30DayTemplate(): string {
+  const content = `
+    <h1>We Miss You, {{user.name}}</h1>
+    <p>It's been a month since you last logged in. We understand that life gets busy, but your dropshipping goals are still achievable.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Here's Why Now Is a Great Time to Return:</p>
+      <p style="margin-bottom: 4px;">&#x2022; The platform has been updated with powerful new features</p>
+      <p style="margin-bottom: 4px;">&#x2022; New winning products are trending right now</p>
+      <p style="margin-bottom: 4px;">&#x2022; Our support team is standing by to help you restart</p>
+      <p style="margin-bottom: 0;">&#x2022; Your account and all your saved data are intact</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Restart Your Journey</a>
+    </div>
+    <p>Many successful dropshippers took breaks along the way. What matters is getting back in the game.</p>
+  `;
+  return baseLayout(content, 'It has been a month — your journey awaits');
+}
+
+export function firstMonthMilestoneTemplate(): string {
+  const content = `
+    <h1>One Month with USDrop AI!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You've been on the platform for one month! Thank you for choosing USDrop AI as your dropshipping partner.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Your First Month Recap:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Keep building on the foundation you've created</p>
+      <p style="margin-bottom: 4px;">&#x2022; Explore tools you haven't tried yet</p>
+      <p style="margin-bottom: 0;">&#x2022; Consider upgrading your plan for advanced features</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Keep Going</a>
+    </div>
+    <p>The first month is always the hardest. You've proven your commitment — now it's time to accelerate.</p>
+  `;
+  return baseLayout(content, 'Congratulations on your first month!');
+}
+
+export function firstSaleCelebrationTemplate(): string {
+  const content = `
+    <h1>You Made Your First Sale!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>This is a huge milestone! You've made your first sale on your dropshipping store. You're officially a business owner generating revenue.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">What's Next:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Analyze what worked and double down on it</p>
+      <p style="margin-bottom: 4px;">&#x2022; Scale your winning ads with higher budgets</p>
+      <p style="margin-bottom: 4px;">&#x2022; Add more products to diversify revenue</p>
+      <p style="margin-bottom: 0;">&#x2022; Use our profit calculator to optimize margins</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Scale Your Success</a>
+    </div>
+    <p>Your first sale proves the model works. Now it's time to scale!</p>
+  `;
+  return baseLayout(content, 'You made your first sale!');
+}
+
+export function ninetyDayMilestoneTemplate(): string {
+  const content = `
+    <h1>90 Days Strong, {{user.name}}!</h1>
+    <p>Three months on USDrop AI — that's impressive dedication. You've put in the work, and it shows.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Level Up for the Next 90 Days:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Review and optimize your best-performing products</p>
+      <p style="margin-bottom: 4px;">&#x2022; Explore advanced advertising strategies</p>
+      <p style="margin-bottom: 4px;">&#x2022; Consider forming an LLC to protect your business</p>
+      <p style="margin-bottom: 0;">&#x2022; Connect with fellow entrepreneurs in our community</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Keep Building</a>
+    </div>
+    <p>90 days is just the beginning. The best is yet to come.</p>
+  `;
+  return baseLayout(content, '90 days on USDrop AI — keep going!');
+}
+
+export function renewalReminderTemplate(): string {
+  const content = `
+    <h1>Your Subscription Is Up for Renewal</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Your <strong>{{user.plan}}</strong> subscription will renew on <strong>{{renewal.date}}</strong>.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Your Plan Includes:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Full access to winning products and research tools</p>
+      <p style="margin-bottom: 4px;">&#x2022; AI-powered ad creation and optimization</p>
+      <p style="margin-bottom: 4px;">&#x2022; Expert courses and live webinars</p>
+      <p style="margin-bottom: 0;">&#x2022; Priority support from our team</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/my-plan" class="btn" style="color: #FFFFFF;">Manage Subscription</a>
+    </div>
+    <p class="muted">If you have any questions about your renewal, please contact us at {{company.email}}.</p>
+  `;
+  return baseLayout(content, 'Your subscription renewal is coming up');
+}
+
+export function featureAnnouncementTemplate(): string {
+  const content = `
+    <h1>New Feature Alert!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>We're excited to announce a new feature on USDrop AI: <strong>{{feature.name}}</strong></p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">What's New:</p>
+      <p style="margin-bottom: 0;">{{feature.description}}</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Try It Now</a>
+    </div>
+    <p>We're constantly improving the platform based on your feedback. Keep the suggestions coming!</p>
+  `;
+  return baseLayout(content, 'A new feature is available on USDrop AI');
+}
+
+export function newCourseAvailableTemplate(): string {
+  const content = `
+    <h1>New Course Available!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>A new course has just been published: <strong>{{course.name}}</strong></p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Course Details:</p>
+      <p style="margin-bottom: 4px;">&#x2022; {{course.description}}</p>
+      <p style="margin-bottom: 0;">&#x2022; Start learning at your own pace</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/free-learning" class="btn" style="color: #FFFFFF;">Start Course</a>
+    </div>
+    <p>Continuous learning is the key to staying ahead in dropshipping.</p>
+  `;
+  return baseLayout(content, 'A new course is available for you');
+}
+
+export function referralInviteTemplate(): string {
+  const content = `
+    <h1>Share USDrop AI, Earn Rewards!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>Love using USDrop AI? Invite your friends and earn rewards when they sign up!</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">How It Works:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Share your unique referral link with friends</p>
+      <p style="margin-bottom: 4px;">&#x2022; They get a special welcome bonus when they join</p>
+      <p style="margin-bottom: 0;">&#x2022; You earn rewards for each successful referral</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Get Your Referral Link</a>
+    </div>
+    <p>The more people you help start their dropshipping journey, the more you earn.</p>
+  `;
+  return baseLayout(content, 'Invite friends and earn rewards');
+}
+
+export function onboardingCompletedTemplate(): string {
+  const content = `
+    <h1>Onboarding Complete!</h1>
+    <p>Hi {{user.name}},</p>
+    <p>You've completed your onboarding. Your profile is set up and you're ready to make the most of USDrop AI.</p>
+    <div class="info-box">
+      <p style="font-weight: 600; color: #111827; margin-bottom: 8px;">Recommended Next Steps:</p>
+      <p style="margin-bottom: 4px;">&#x2022; Browse winning products to find your niche</p>
+      <p style="margin-bottom: 4px;">&#x2022; Start the free learning modules</p>
+      <p style="margin-bottom: 4px;">&#x2022; Research competitor stores for inspiration</p>
+      <p style="margin-bottom: 0;">&#x2022; Explore our AI-powered tools</p>
+    </div>
+    <div class="btn-wrapper">
+      <a href="{{company.website}}/home" class="btn" style="color: #FFFFFF;">Go to Dashboard</a>
+    </div>
+    <p>Your dropshipping journey is officially underway. Let's make it a success!</p>
+  `;
+  return baseLayout(content, 'Your onboarding is complete!');
+}
 
 export function otpVerificationTemplate(): string {
   const content = `

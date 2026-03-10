@@ -5,6 +5,7 @@ import { supabaseRemote } from '../lib/supabase-remote';
 import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
 import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
 import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 import { sendEmail } from '../lib/resend';
 import { otpVerificationTemplate } from '../lib/email-templates';
 import { sendSms } from '../lib/twilio';
@@ -122,6 +123,11 @@ async function findOrCreateProfile(email: string, fullName?: string | null, avat
     'user.email': email,
     'user.name': fullName || 'there',
   }).catch((err) => console.error('[oauth-signup] automation trigger error:', err));
+
+  triggerSmsAutomation('user_signup', newProfile.id, {
+    'user.email': email,
+    'user.name': fullName || 'there',
+  }).catch((err) => console.error('[oauth-signup] sms automation trigger error:', err));
 
   return newProfile;
 }
@@ -454,6 +460,11 @@ export function registerAuthRoutes(app: Express) {
         'user.name': fullName || 'there',
       }).catch((err) => console.error('[signup] automation trigger error:', err));
 
+      triggerSmsAutomation('user_signup', newProfile.id, {
+        'user.email': newProfile.email,
+        'user.name': fullName || 'there',
+      }).catch((err) => console.error('[signup] sms automation trigger error:', err));
+
       return res.json({
         message: 'Account created successfully',
         token,
@@ -636,6 +647,11 @@ export function registerAuthRoutes(app: Express) {
         'user.email': newProfile.email,
         'user.name': fullName || 'there',
       }).catch((err) => console.error('[mobile-signup] automation trigger error:', err));
+
+      triggerSmsAutomation('user_signup', newProfile.id, {
+        'user.email': newProfile.email,
+        'user.name': fullName || 'there',
+      }).catch((err) => console.error('[mobile-signup] sms automation trigger error:', err));
 
       return res.json({
         message: 'Account created successfully',

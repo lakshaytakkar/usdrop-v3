@@ -1,6 +1,8 @@
 import { Express, Request, Response } from 'express';
 import { requireAuth } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import { triggerAutomation } from '../lib/email-automation';
+import { triggerSmsAutomation } from '../lib/sms-automation';
 
 export function registerStoreClaimRoutes(app: Express) {
 
@@ -169,6 +171,12 @@ export function registerStoreClaimRoutes(app: Express) {
       if (error) {
         return res.status(500).json({ error: error.message });
       }
+
+      const claimMeta = { 'store.name': claim.store_name || '', store_name: claim.store_name || '' };
+      triggerAutomation('store_claimed', user.id, claimMeta)
+        .catch((err) => console.error('[store-claim] automation trigger error:', err));
+      triggerSmsAutomation('store_claimed', user.id, claimMeta)
+        .catch((err) => console.error('[store-claim] sms automation trigger error:', err));
 
       return res.json(data);
     } catch (err: any) {
