@@ -1,4 +1,14 @@
-function baseLayout(content: string, previewText: string = ''): string {
+const EMAIL_BANNER_BASE_URL = process.env.EMAIL_BANNER_BASE_URL || 'https://usdrop-v3.replit.app';
+
+function bannerHtml(bannerImage?: string): string {
+  if (!bannerImage) return '';
+  const url = `${EMAIL_BANNER_BASE_URL}/email-banners/${bannerImage}`;
+  return `<div style="margin: 0; padding: 0; line-height: 0;">
+    <img src="${url}" alt="" width="600" style="width: 100%; max-width: 600px; height: auto; display: block; border: 0;" />
+  </div>`;
+}
+
+function baseLayout(content: string, previewText: string = '', bannerImage?: string): string {
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -67,6 +77,7 @@ function baseLayout(content: string, previewText: string = ''): string {
       <div class="email-header">
         <span class="logo-text">USDrop <span class="logo-accent">AI</span></span>
       </div>
+      ${bannerHtml(bannerImage)}
       <div class="email-body">
         ${content}
       </div>
@@ -104,7 +115,7 @@ export function welcomeEmailTemplate(): string {
     </div>
     <p class="muted">You signed up on {{user.signupDate}} with {{user.email}}. If you didn't create this account, please contact our support team.</p>
   `
-  return baseLayout(content, 'Welcome to USDrop AI — your dropshipping journey starts now!')
+  return baseLayout(content, 'Welcome to USDrop AI — your dropshipping journey starts now!', 'welcome.png')
 }
 
 export function passwordResetTemplate(): string {
