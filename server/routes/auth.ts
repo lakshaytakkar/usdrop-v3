@@ -411,12 +411,55 @@ export function registerAuthRoutes(app: Express) {
     }
   });
 
+  router.post('/google/exchange', async (req: Request, res: Response) => {
+    try {
+      const { access_token } = req.body;
+      if (!access_token) {
+        return res.status(400).json({ error: 'Access token is required' });
+      }
+
+      const { data: userData, error: userError } = await supabaseAuth.auth.getUser(access_token);
+      if (userError || !userData?.user?.email) {
+        console.error('Google token exchange error:', userError?.message || 'No user email');
+        return res.status(401).json({ error: 'Invalid or expired token. Please try again.' });
+      }
+
+      const supabaseUser = userData.user;
+      const fullName = supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || null;
+      const avatarUrl = supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
+
+      const profile = await findOrCreateProfile(supabaseUser.email!, fullName, avatarUrl, supabaseUser.id);
+      if (!profile) {
+        return res.status(500).json({ error: 'Failed to create account. Please try again.' });
+      }
+
+      if (profile.status === 'suspended') {
+        return res.status(403).json({ error: 'Your account has been suspended. Please contact support.' });
+      }
+
+      const updates: Record<string, any> = {};
+      if (avatarUrl) updates.avatar_url = avatarUrl;
+      if (fullName && !profile.full_name) updates.full_name = fullName;
+      if (Object.keys(updates).length > 0) {
+        await supabaseRemote
+          .from('profiles')
+          .update(updates)
+          .eq('id', profile.id);
+      }
+
+      const localToken = generateToken(profile.id);
+      return res.json({ token: localToken, user: { id: profile.id, email: profile.email } });
+    } catch (error) {
+      console.error('Google token exchange error:', error);
+      return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
   router.get('/google', async (req: Request, res: Response) => {
     try {
-      const redirectTo = sanitizeRedirectPath(req.query.redirectTo as string || '/home');
-      const isSignup = req.query.signup === 'true';
+      const redirectTo = sanitizeRedirectPath(req.query.redirectTo as string || '/framework');
       const baseUrl = getAppBaseUrl(req);
-      const callbackUrl = `${baseUrl}/api/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}&signup=${isSignup ? 'true' : 'false'}`;
+      const callbackUrl = `${baseUrl}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`;
 
       const { data, error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'google',
