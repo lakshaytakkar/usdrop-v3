@@ -63,3 +63,16 @@ export async function sendSms(to: string, body: string) {
 
   return message;
 }
+
+export async function sendWhatsApp(to: string, body: string) {
+  const client = await getTwilioClient();
+  const from = await getTwilioFromPhoneNumber();
+
+  const message = await client.messages.create({
+    body,
+    from: `whatsapp:${from}`,
+    to: to.startsWith('whatsapp:') ? to : `whatsapp:${to}`,
+  });
+
+  return message;
+}
