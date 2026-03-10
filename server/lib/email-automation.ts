@@ -141,6 +141,9 @@ async function executeAutomation(
     const renderedSubject = replaceVariables(subject, variables);
 
     await sendEmail(profile.email, renderedSubject, renderedHtml, {
+      templateId: automation.template_id || undefined,
+      automationId: automation.id,
+      recipientId: userId,
       tags: [
         { name: 'automation_id', value: automation.id },
         { name: 'trigger', value: automation.trigger },

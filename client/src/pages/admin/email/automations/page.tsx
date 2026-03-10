@@ -226,7 +226,7 @@ export default function AdminEmailAutomationsPage() {
         name: formData.name,
         description: formData.description || null,
         trigger: formData.trigger,
-        template_id: formData.template_id || null,
+        template_id: formData.template_id === "none" ? null : (formData.template_id || null),
         delay: parseInt(formData.delay, 10) || 0,
         delay_unit: formData.delay_unit,
         target_audience: formData.target_audience,
@@ -431,7 +431,7 @@ export default function AdminEmailAutomationsPage() {
         onRowClick={openEditDialog}
         filters={
           triggerFilterOptions.length > 0
-            ? [{ label: "Trigger", key: "trigger_label", options: triggerFilterOptions }]
+            ? [{ label: "Trigger", key: "trigger", options: triggerFilterOptions }]
             : []
         }
         emptyTitle="No automations found"

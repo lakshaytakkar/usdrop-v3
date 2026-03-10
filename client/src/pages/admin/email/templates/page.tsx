@@ -541,11 +541,13 @@ export default function AdminEmailTemplatesPage() {
                 data-testid="container-preview"
               >
                 {formData.html_content ? (
-                  <div
-                    className="p-3"
-                    dangerouslySetInnerHTML={{
-                      __html: renderTemplate(formData.html_content, sampleVariables),
-                    }}
+                  <iframe
+                    srcDoc={renderTemplate(formData.html_content, sampleVariables)}
+                    sandbox=""
+                    className="w-full border-0"
+                    style={{ minHeight: "300px", height: "100%" }}
+                    title="Email preview"
+                    data-testid="iframe-form-preview"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
@@ -620,11 +622,13 @@ export default function AdminEmailTemplatesPage() {
             data-testid="container-preview-dialog"
           >
             {previewTemplate?.html_content ? (
-              <div
-                className="p-4"
-                dangerouslySetInnerHTML={{
-                  __html: renderTemplate(previewTemplate.html_content, sampleVariables),
-                }}
+              <iframe
+                srcDoc={renderTemplate(previewTemplate.html_content, sampleVariables)}
+                sandbox=""
+                className="w-full border-0"
+                style={{ minHeight: "400px", height: "100%" }}
+                title="Email preview"
+                data-testid="iframe-preview-dialog"
               />
             ) : (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">

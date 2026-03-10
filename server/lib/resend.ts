@@ -49,6 +49,10 @@ interface SendEmailOptions {
   cc?: string[];
   bcc?: string[];
   tags?: { name: string; value: string }[];
+  templateId?: string;
+  automationId?: string;
+  recipientId?: string;
+  recipientType?: string;
 }
 
 export async function sendEmail(
@@ -78,7 +82,10 @@ export async function sendEmail(
   try {
     await supabaseRemote.from('email_logs').insert({
       recipient_email: to,
-      recipient_type: 'external_user',
+      recipient_type: options?.recipientType || 'external_user',
+      recipient_id: options?.recipientId || null,
+      template_id: options?.templateId || null,
+      automation_id: options?.automationId || null,
       subject,
       status,
       sent_at: status === 'sent' ? new Date().toISOString() : null,
