@@ -5,8 +5,15 @@ import { useState, useEffect, useCallback, Suspense } from "react"
 import { useSearchParams } from "@/hooks/use-router"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, ArrowRight } from "lucide-react"
+import { Plus, ArrowRight, Wrench } from "lucide-react"
 import { Link } from "wouter"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 import { ConnectStoreModal } from "./components/connect-store-modal"
 import { StoreList } from "./components/store-list"
@@ -20,6 +27,7 @@ function ShopifyStoresContent() {
   const [searchParams] = useSearchParams()
   const [stores, setStores] = useState<ShopifyStore[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDisabledModalOpen, setIsDisabledModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -120,7 +128,7 @@ function ShopifyStoresContent() {
                 <p className="ds-body mb-8 max-w-md">
                   Connect your Shopify stores to start tracking and analyzing your performance.
                 </p>
-                <Button onClick={() => setIsModalOpen(true)} size="lg" data-testid="button-connect-store">
+                <Button onClick={() => setIsDisabledModalOpen(true)} size="lg" data-testid="button-connect-store">
                   <Plus className="h-4 w-4 mr-2" />
                   Connect Store
                 </Button>
@@ -143,6 +151,25 @@ function ShopifyStoresContent() {
             onClose={() => setIsModalOpen(false)}
             onStoreAdded={handleStoreAdded}
           />
+
+          <Dialog open={isDisabledModalOpen} onOpenChange={setIsDisabledModalOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mx-auto mb-3">
+                  <Wrench className="h-6 w-6 text-amber-600" />
+                </div>
+                <DialogTitle className="text-center">Temporarily Disabled</DialogTitle>
+                <DialogDescription className="text-center">
+                  The Shopify Connect feature is temporarily disabled while we stabilize and improve the experience. We'll have it back up shortly. Thank you for your patience!
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-center mt-2">
+                <Button onClick={() => setIsDisabledModalOpen(false)} data-testid="button-close-disabled-modal">
+                  Got It
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <div
             className="rounded-2xl overflow-hidden relative mt-2"
