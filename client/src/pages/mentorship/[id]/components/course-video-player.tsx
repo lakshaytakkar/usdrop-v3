@@ -1,25 +1,13 @@
 
 
 import { apiFetch } from '@/lib/supabase'
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect } from "react"
 import { CourseModule } from "@/types/courses"
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Maximize, Minimize } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 
-const PLACEHOLDER_YOUTUBE_VIDEOS = [
-  "dQw4w9WgXcQ",
-  "jNQXAC9IVRw",
-  "ZXsQAXx_ao0",
-  "9bZkp7q19f0",
-  "kJQP7kiw5Fk",
-  "JGwWNGJdvx8",
-  "RgKAFK5djSk",
-  "OPf0YbXqDm0",
-  "fRh_vgS2dFE",
-  "CevxZvSJLk8",
-]
 
 interface CourseVideoPlayerProps {
   module: CourseModule
@@ -45,16 +33,6 @@ export function CourseVideoPlayer({
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const [isYouTubeEmbed, setIsYouTubeEmbed] = useState(false)
 
-  const placeholderVideoId = useMemo(() => {
-    let hash = 0
-    const str = moduleId || module.id
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash |= 0
-    }
-    return PLACEHOLDER_YOUTUBE_VIDEOS[Math.abs(hash) % PLACEHOLDER_YOUTUBE_VIDEOS.length]
-  }, [moduleId, module.id])
 
   useEffect(() => {
     const loadVideoUrl = async () => {
@@ -216,9 +194,9 @@ export function CourseVideoPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const getYouTubeEmbedUrl = (url: string | null): string => {
+  const getYouTubeEmbedUrl = (url: string | null): string | null => {
     if (!url) {
-      return `https://www.youtube-nocookie.com/embed/${placeholderVideoId}?rel=0`
+      return null
     }
 
     let videoId = ''
@@ -235,17 +213,30 @@ export function CourseVideoPlayer({
         }
       }
     } catch {
-      videoId = placeholderVideoId
+      return null
     }
 
-    return `https://www.youtube-nocookie.com/embed/${videoId || placeholderVideoId}?rel=0`
+    if (!videoId) return null
+    return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`
   }
 
+  const comingSoonPlaceholder = (
+    <div className="w-full aspect-video bg-neutral-900 rounded-lg overflow-hidden flex flex-col items-center justify-center text-white gap-3">
+      <Play className="h-12 w-12 text-neutral-500" />
+      <p className="text-lg font-medium text-neutral-400">Video Coming Soon</p>
+      <p className="text-sm text-neutral-500">{module.title}</p>
+    </div>
+  )
+
   if (isYouTubeEmbed) {
+    const embedUrl = getYouTubeEmbedUrl(videoUrl)
+    if (!embedUrl) {
+      return comingSoonPlaceholder
+    }
     return (
       <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
         <iframe
-          src={getYouTubeEmbedUrl(videoUrl)}
+          src={embedUrl}
           className="w-full h-full"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
@@ -256,17 +247,7 @@ export function CourseVideoPlayer({
   }
 
   if (!videoUrl) {
-    return (
-      <div className="w-full aspect-video bg-black rounded-lg overflow-hidden">
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${placeholderVideoId}?rel=0`}
-          className="w-full h-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title={module.title}
-        />
-      </div>
-    )
+    return comingSoonPlaceholder
   }
 
   return (
