@@ -4379,6 +4379,126 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  router.post('/users', async (req: Request, res: Response) => {
+    try {
+      const rawName = (req.body.full_name || '').trim();
+      const rawEmail = (req.body.email || '').trim().toLowerCase();
+      const password = req.body.password || '';
+      const rawAccountType = (req.body.account_type || 'free').trim();
+      const rawPhone = (req.body.phone_number || '').trim();
+      const rawUsername = (req.body.username || '').trim();
+
+      if (!rawName || !rawEmail || !password) {
+        return res.status(400).json({ error: 'Name, email, and password are required' });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(rawEmail)) {
+        return res.status(400).json({ error: 'Please enter a valid email address' });
+      }
+
+      if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      }
+      if (password.length > 128) {
+        return res.status(400).json({ error: 'Password must be less than 128 characters' });
+      }
+      if (!/[a-z]/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one lowercase letter' });
+      }
+      if (!/[A-Z]/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one uppercase letter' });
+      }
+      if (!/\d/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one number' });
+      }
+
+      const validAccountTypes = ['free', 'pro'];
+      const accountType = validAccountTypes.includes(rawAccountType) ? rawAccountType : 'free';
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('email', rawEmail)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        return res.status(409).json({ error: 'A user with this email already exists' });
+      }
+
+      const bcrypt = await import('bcryptjs');
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      let subscriptionPlanId: string | null = null;
+      const planSlug = accountType === 'pro' ? 'pro' : 'free';
+      const { data: planResult } = await supabaseRemote
+        .from('subscription_plans')
+        .select('id')
+        .eq('slug', planSlug)
+        .limit(1);
+
+      if (planResult && planResult.length > 0) {
+        subscriptionPlanId = planResult[0].id;
+      }
+
+      const crypto = await import('crypto');
+      const newId = crypto.randomUUID();
+      const now = new Date().toISOString();
+
+      const { error: insertError } = await supabaseRemote
+        .from('profiles')
+        .insert({
+          id: newId,
+          email: rawEmail,
+          password_hash: passwordHash,
+          full_name: rawName,
+          account_type: accountType,
+          subscription_plan_id: subscriptionPlanId,
+          status: 'active',
+          phone_number: rawPhone || null,
+          username: rawUsername || null,
+          created_at: now,
+          updated_at: now,
+        });
+
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
+
+      const { data: rows } = await supabaseRemote
+        .from('profiles')
+        .select('*, subscription_plans(id, name, slug, price_monthly)')
+        .eq('id', newId);
+
+      if (!rows || rows.length === 0) {
+        return res.status(500).json({ error: 'User created but failed to fetch details' });
+      }
+
+      const u = rows[0];
+      return res.status(201).json({
+        id: u.id,
+        full_name: u.full_name || '',
+        email: u.email,
+        username: u.username || null,
+        avatar_url: u.avatar_url || null,
+        account_type: u.account_type || 'free',
+        internal_role: u.internal_role || null,
+        status: u.status || 'active',
+        phone_number: u.phone_number || null,
+        onboarding_completed: u.onboarding_completed || false,
+        subscription_plan_id: u.subscription_plan_id || null,
+        plan_name: u.subscription_plans?.name || null,
+        plan_slug: u.subscription_plans?.slug || null,
+        created_at: u.created_at,
+        updated_at: u.updated_at,
+      });
+    } catch (error) {
+      console.error('Error in POST /api/admin/users:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   router.get('/users/:id', async (req: Request, res: Response) => {
     try {
       const { id } = req.params;

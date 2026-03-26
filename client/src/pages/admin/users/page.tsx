@@ -2,7 +2,8 @@ import { apiFetch } from "@/lib/supabase";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "@/hooks/use-router";
 import { Button } from "@/components/ui/button";
-import { Download, Users, UserCheck, Shield, UserX } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Download, Users, UserCheck, Shield, UserX, Plus, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -87,6 +88,11 @@ export default function AdminUsersPage() {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", account_type: "free", phone_number: "" });
+  const [isCreating, setIsCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -149,6 +155,39 @@ export default function AdminUsersPage() {
     },
     [handleUpdateUser]
   );
+
+  const handleCreateUser = useCallback(async () => {
+    if (!createForm.full_name || !createForm.email || !createForm.password) {
+      showError("Name, email, and password are required");
+      return;
+    }
+    if (createForm.password.length < 8) {
+      showError("Password must be at least 8 characters");
+      return;
+    }
+    if (!/[a-z]/.test(createForm.password) || !/[A-Z]/.test(createForm.password) || !/\d/.test(createForm.password)) {
+      showError("Password must contain uppercase, lowercase, and a number");
+      return;
+    }
+    try {
+      setIsCreating(true);
+      const res = await apiFetch("/api/admin/users", {
+        method: "POST",
+        body: JSON.stringify(createForm),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create user");
+      showSuccess(`User "${data.full_name}" created successfully as ${data.account_type}`);
+      setCreateUserOpen(false);
+      setCreateForm({ full_name: "", email: "", password: "", account_type: "free", phone_number: "" });
+      setShowPassword(false);
+      fetchUsers();
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setIsCreating(false);
+    }
+  }, [createForm, fetchUsers, showSuccess, showError]);
 
   const handleExportCSV = useCallback(() => {
     const headers = ["Name", "Email", "Account Type", "Role", "Plan", "Status", "Created"];
@@ -273,10 +312,16 @@ export default function AdminUsersPage() {
         title="Users"
         subtitle="All platform users — clients, team members, and leads"
         actions={
-          <Button size="sm" variant="outline" onClick={handleExportCSV} data-testid="button-export-csv">
-            <Download className="mr-1.5 h-3.5 w-3.5" />
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={handleExportCSV} data-testid="button-export-csv">
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              Export CSV
+            </Button>
+            <Button size="sm" onClick={() => setCreateUserOpen(true)} data-testid="button-create-user">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Create User
+            </Button>
+          </div>
         }
       />
 
@@ -389,6 +434,107 @@ export default function AdminUsersPage() {
               data-testid="button-save-plan"
             >
               Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createUserOpen} onOpenChange={(open) => {
+        setCreateUserOpen(open);
+        if (!open) {
+          setCreateForm({ full_name: "", email: "", password: "", account_type: "free", phone_number: "" });
+          setShowPassword(false);
+        }
+      }}>
+        <DialogContent className="max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Create New User</DialogTitle>
+            <DialogDescription>Add a new platform user with email and password login.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="create-name">Full Name *</Label>
+              <Input
+                id="create-name"
+                placeholder="John Doe"
+                value={createForm.full_name}
+                onChange={(e) => setCreateForm((f) => ({ ...f, full_name: e.target.value }))}
+                className="mt-1.5"
+                data-testid="input-create-name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="create-email">Email *</Label>
+              <Input
+                id="create-email"
+                type="email"
+                placeholder="user@example.com"
+                value={createForm.email}
+                onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
+                className="mt-1.5"
+                data-testid="input-create-email"
+              />
+            </div>
+            <div>
+              <Label htmlFor="create-password">Password *</Label>
+              <div className="relative mt-1.5">
+                <Input
+                  id="create-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min 8 chars, upper+lower+number"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
+                  data-testid="input-create-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((s) => !s)}
+                  tabIndex={-1}
+                  data-testid="button-toggle-password"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="create-phone">Phone Number</Label>
+              <Input
+                id="create-phone"
+                type="tel"
+                placeholder="+91XXXXXXXXXX"
+                value={createForm.phone_number}
+                onChange={(e) => setCreateForm((f) => ({ ...f, phone_number: e.target.value }))}
+                className="mt-1.5"
+                data-testid="input-create-phone"
+              />
+            </div>
+            <div>
+              <Label>Account Type</Label>
+              <Select value={createForm.account_type} onValueChange={(v) => setCreateForm((f) => ({ ...f, account_type: v }))}>
+                <SelectTrigger className="mt-1.5" data-testid="select-create-account-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button size="sm" variant="outline" onClick={() => setCreateUserOpen(false)} data-testid="button-cancel-create">
+              Cancel
+            </Button>
+            <Button size="sm" disabled={isCreating} onClick={handleCreateUser} data-testid="button-submit-create">
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create User"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

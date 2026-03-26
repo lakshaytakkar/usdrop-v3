@@ -22,7 +22,7 @@ The platform utilizes a modern web stack: Vite for frontend bundling, Express fo
 - State management is handled by TanStack React Query.
 - **Design System:** Uses DM Sans font family (with General Sans as the primary font via Fontshare CDN). The design emphasizes a clean aesthetic with a flat `#F5F5F7` background, white cards with subtle borders.
 - **Navigation:** The "Framework" serves as the user's personal hub. Other pages act as browsing libraries and tools. All logged-in user routes follow a `/menu/submenu` pattern.
-- **Admin Panel:** Redesigned to match HR-Harmony-Hub reference. Uses Plus Jakarta Sans as primary font, blue primary color. Horizontal two-level topbar navigation in `client/src/layouts/AdminLayout.tsx`. Shared components in `client/src/components/admin-shared/`.
+- **Admin Panel:** Redesigned to match HR-Harmony-Hub reference. Uses Plus Jakarta Sans as primary font, blue primary color. Horizontal two-level topbar navigation in `client/src/layouts/AdminLayout.tsx`. Shared components in `client/src/components/admin-shared/`. Admin users page (`client/src/pages/admin/users/page.tsx`) includes Create User dialog with name/email/password/phone/account-type fields. Backend: `POST /api/admin/users` creates users with bcrypt hashing (same as signup flow), proper password validation (8+ chars, upper/lower/number), email validation, and account type enforcement (free/pro).
 
 **Project Structure:**
 - `client/`: Frontend (Vite + React) containing pages, components, contexts, hooks, and client utilities.
