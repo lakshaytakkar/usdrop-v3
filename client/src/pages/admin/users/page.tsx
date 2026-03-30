@@ -296,7 +296,7 @@ export default function AdminUsersPage() {
         emptyTitle="No users found"
         emptyDescription="No users match your search criteria."
         filters={[
-          { label: "Type", key: "account_type", options: ["free", "pro"] },
+          { label: "Type", key: "plan_slug", options: ["free", "pro"] },
           { label: "Status", key: "status", options: ["active", "suspended", "inactive"] },
         ]}
         pageSize={20}

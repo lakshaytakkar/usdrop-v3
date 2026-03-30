@@ -4362,12 +4362,12 @@ export function registerAdminRoutes(app: Express) {
         countQuery,
         dataQuery,
         proPlanId
-          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', proPlanId).is('internal_role', null)
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', proPlanId)
           : Promise.resolve({ count: 0 }),
         freePlanId
-          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', freePlanId).is('internal_role', null)
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', freePlanId)
           : Promise.resolve({ count: 0 }),
-        supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'suspended').is('internal_role', null),
+        supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'suspended'),
       ] as const;
 
       const [{ count: totalCount }, { data, error }, { count: proCount }, { count: freeCount }, { count: suspendedCount }] = await Promise.all(statsPromises);
