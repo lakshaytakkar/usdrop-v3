@@ -118,7 +118,7 @@ function isItemActive(location: string, itemUrl: string): boolean {
 }
 
 function AdminTopNavigation() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { signOut } = useAuth();
   const { fullName, internalRole } = useUserMetadata();
   const initials = (fullName || "A").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
@@ -205,8 +205,8 @@ function AdminTopNavigation() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-sm" data-testid="menu-item-profile">My Profile</DropdownMenuItem>
-              <DropdownMenuItem className="text-sm" data-testid="menu-item-settings">Account Settings</DropdownMenuItem>
+              <DropdownMenuItem className="text-sm cursor-pointer" onClick={() => navigate("/admin/profile")} data-testid="menu-item-profile">My Profile</DropdownMenuItem>
+              <DropdownMenuItem className="text-sm cursor-pointer" onClick={() => navigate("/admin/settings")} data-testid="menu-item-settings">Account Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-sm" onClick={() => signOut()} data-testid="menu-item-logout">Log Out</DropdownMenuItem>
             </DropdownMenuContent>
