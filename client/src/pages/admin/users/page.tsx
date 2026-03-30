@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiFetch("/api/admin/users?pageSize=200");
+      const response = await apiFetch("/api/admin/users?pageSize=2000");
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       setUsers(data.users || []);
