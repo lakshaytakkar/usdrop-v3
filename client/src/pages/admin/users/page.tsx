@@ -188,7 +188,7 @@ export default function AdminUsersPage() {
             <AvatarFallback className="text-xs">{getInitials(u.full_name || u.email)}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium" data-testid={`text-user-name-${u.id}`}>{u.full_name || "Unnamed"}</p>
+            <p className="text-sm font-medium" data-testid={`text-user-name-${u.id}`}>{u.full_name || u.email?.split("@")[0] || "Unnamed"}</p>
             <p className="text-xs text-muted-foreground" data-testid={`text-user-email-${u.id}`}>{u.email}</p>
           </div>
         </div>
