@@ -10,6 +10,13 @@ USDrop is an all-in-one dropshipping platform powered by advanced AI. It provide
 - **Never use gradient buttons** (e.g., `bg-gradient-to-r from-blue-500 to-indigo-500`). Always use solid `bg-blue-500 hover:bg-blue-600` for primary buttons. Gradients look artificial.
 - **Supabase is the sole database.** Do NOT use Replit Postgres. All data lives in Supabase project `wecbybtxmkdkvqqahyuu`.
 
+## Replit Environment
+- **Workflow:** `npm run dev` on port 5000 (webview output). Configured and running.
+- **Replit Postgres:** Provisioned but NOT used — Supabase is the sole database as per user preference.
+- **Security:** `client/src/lib/utils/shopify-oauth.ts` had `VITE_SHOPIFY_CLIENT_SECRET` removed during Replit migration (dead code, never imported anywhere — token exchange is server-side only).
+- **Missing pages created:** `client/src/pages/admin/email/logs/page.tsx` and `client/src/pages/admin/sms/logs/page.tsx` were missing and created during migration.
+- **Environment Variables set:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SESSION_SECRET`, `SHOPIFY_CLIENT_ID`.
+
 ## System Architecture
 The platform utilizes a modern web stack: Vite for frontend bundling, Express for the backend API, and Wouter for client-side routing. It is built with React 19, TypeScript, and Tailwind CSS 4.
 
