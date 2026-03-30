@@ -4313,6 +4313,14 @@ export function registerAdminRoutes(app: Express) {
       const page = parseInt((req.query.page as string) || '1');
       const pageSize = parseInt((req.query.pageSize as string) || '50');
 
+      // Fetch plan IDs for stats
+      const { data: planRows } = await supabaseRemote
+        .from('subscription_plans')
+        .select('id, slug')
+        .in('slug', ['free', 'pro']);
+      const freePlanId = planRows?.find((p: any) => p.slug === 'free')?.id || null;
+      const proPlanId = planRows?.find((p: any) => p.slug === 'pro')?.id || null;
+
       let countQuery = supabaseRemote.from('profiles').select('id', { count: 'exact', head: true });
       let dataQuery = supabaseRemote.from('profiles').select('*, subscription_plans(id, name, slug, price_monthly)');
 
@@ -4323,6 +4331,14 @@ export function registerAdminRoutes(app: Express) {
       if (accountType) {
         countQuery = countQuery.eq('account_type', accountType);
         dataQuery = dataQuery.eq('account_type', accountType);
+      }
+      if (plan) {
+        // Filter by plan slug — match subscription_plan_id to the plan with that slug
+        const matchPlanId = planRows?.find((p: any) => p.slug === plan)?.id;
+        if (matchPlanId) {
+          countQuery = countQuery.eq('subscription_plan_id', matchPlanId);
+          dataQuery = dataQuery.eq('subscription_plan_id', matchPlanId);
+        }
       }
       if (status) {
         countQuery = countQuery.eq('status', status);
@@ -4341,7 +4357,20 @@ export function registerAdminRoutes(app: Express) {
       const offset = (page - 1) * pageSize;
       dataQuery = dataQuery.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
-      const [{ count: totalCount }, { data, error }] = await Promise.all([countQuery, dataQuery]);
+      // Aggregate stats using subscription_plan_id (source of truth for plan)
+      const statsPromises = [
+        countQuery,
+        dataQuery,
+        proPlanId
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', proPlanId).is('internal_role', null)
+          : Promise.resolve({ count: 0 }),
+        freePlanId
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', freePlanId).is('internal_role', null)
+          : Promise.resolve({ count: 0 }),
+        supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'suspended').is('internal_role', null),
+      ] as const;
+
+      const [{ count: totalCount }, { data, error }, { count: proCount }, { count: freeCount }, { count: suspendedCount }] = await Promise.all(statsPromises);
 
       if (error) {
         console.error('Error fetching users:', error);
@@ -4372,6 +4401,11 @@ export function registerAdminRoutes(app: Express) {
         page,
         pageSize,
         totalPages: Math.ceil((totalCount || 0) / pageSize),
+        stats: {
+          pro: proCount || 0,
+          free: freeCount || 0,
+          suspended: suspendedCount || 0,
+        },
       });
     } catch (error) {
       console.error('Error in GET /api/admin/users:', error);

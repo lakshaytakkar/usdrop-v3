@@ -78,6 +78,7 @@ export default function AdminUsersPage() {
   const { showSuccess, showError } = useToast();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState({ pro: 0, free: 0, suspended: 0 });
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<PlanOption[]>([]);
 
@@ -95,6 +96,7 @@ export default function AdminUsersPage() {
       const data = await response.json();
       setUsers(data.users || []);
       setTotal(data.total || 0);
+      if (data.stats) setStats(data.stats);
     } catch (err) {
       showError(err instanceof Error ? err.message : "Failed to load users");
     } finally {
@@ -172,10 +174,7 @@ export default function AdminUsersPage() {
     showSuccess("CSV exported successfully");
   }, [users, showSuccess]);
 
-  const freeCount = users.filter((u) => u.account_type === "free" && !u.internal_role).length;
-  const proCount = users.filter((u) => u.account_type === "pro" && !u.internal_role).length;
-  const internalCount = users.filter((u) => u.internal_role).length;
-  const suspendedCount = users.filter((u) => u.status === "suspended").length;
+  const suspendedCount = stats.suspended;
 
   const columns: Column<UserRow>[] = [
     {
@@ -199,7 +198,7 @@ export default function AdminUsersPage() {
       key: "account_type",
       header: "Type",
       sortable: true,
-      render: (u) => <StatusBadge status={u.account_type === "pro" ? "Pro" : "Free"} />,
+      render: (u) => <StatusBadge status={u.plan_slug === "pro" ? "Pro" : "Free"} />,
     },
     {
       key: "internal_role",
@@ -282,8 +281,8 @@ export default function AdminUsersPage() {
 
       <StatGrid>
         <StatCard label="Total Users" value={total} icon={Users} iconBg="rgba(59,130,246,0.1)" iconColor="#3b82f6" />
-        <StatCard label="Free Users" value={freeCount} icon={UserCheck} iconBg="rgba(34,197,94,0.1)" iconColor="#22c55e" />
-        <StatCard label="Pro Users" value={proCount} icon={Shield} iconBg="rgba(168,85,247,0.1)" iconColor="#a855f7" />
+        <StatCard label="Free Users" value={stats.free} icon={UserCheck} iconBg="rgba(34,197,94,0.1)" iconColor="#22c55e" />
+        <StatCard label="Pro Users" value={stats.pro} icon={Shield} iconBg="rgba(168,85,247,0.1)" iconColor="#a855f7" />
         <StatCard label="Suspended" value={suspendedCount} icon={UserX} iconBg="rgba(239,68,68,0.1)" iconColor="#ef4444" />
       </StatGrid>
 
