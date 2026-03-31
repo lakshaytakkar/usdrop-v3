@@ -1,7 +1,7 @@
 import { useLocation, Link } from "wouter";
-import { Search, Bell } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminGlobalSearch } from "@/components/admin-search";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -169,15 +169,7 @@ function AdminTopNavigation() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="relative hidden md:block">
-            <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="h-8 w-56 pl-8 text-sm bg-muted/30"
-              data-testid="input-global-search"
-            />
-          </div>
+          <AdminGlobalSearch />
 
           <Button size="icon" variant="ghost" className="relative" data-testid="button-notifications">
             <Bell className="size-4" />

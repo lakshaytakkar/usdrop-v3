@@ -4300,6 +4300,63 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // GLOBAL SEARCH
+  // =============================================
+
+  router.get('/search', async (req: Request, res: Response) => {
+    try {
+      const q = (req.query.q as string || '').trim();
+      if (!q || q.length < 2) return res.json({ users: [], products: [], tickets: [] });
+
+      const pattern = `%${q}%`;
+
+      const [usersResult, productsResult, ticketsResult] = await Promise.all([
+        supabaseRemote
+          .from('profiles')
+          .select('id, full_name, email, account_type, subscription_plan_id, subscription_plans(slug)')
+          .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
+          .is('internal_role', null)
+          .limit(5),
+        supabaseRemote
+          .from('products')
+          .select('id, name, category_id, status')
+          .ilike('name', pattern)
+          .limit(5),
+        supabaseRemote
+          .from('support_tickets')
+          .select('id, subject, status, user_id, profiles!support_tickets_user_id_fkey(full_name, email)')
+          .ilike('subject', pattern)
+          .limit(5),
+      ]);
+
+      const users = (usersResult.data || []).map((u: any) => ({
+        id: u.id,
+        full_name: u.full_name || u.email?.split('@')[0] || 'Unnamed',
+        email: u.email,
+        plan_slug: u.subscription_plans?.slug || 'free',
+      }));
+
+      const products = (productsResult.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+      }));
+
+      const tickets = (ticketsResult.data || []).map((t: any) => ({
+        id: t.id,
+        subject: t.subject,
+        status: t.status,
+        user_name: t.profiles?.full_name || t.profiles?.email?.split('@')[0] || 'Unknown',
+      }));
+
+      return res.json({ users, products, tickets });
+    } catch (error) {
+      console.error('Error in GET /api/admin/search:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // UNIFIED USERS ENDPOINTS (for new admin panel)
   // =============================================
 
