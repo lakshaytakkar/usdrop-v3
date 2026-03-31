@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/auth-context";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
 import { motion } from "motion/react";
@@ -268,7 +268,7 @@ function isItemActive(location: string, itemUrl: string): boolean {
 function AdminTopNavigation() {
   const [location, navigate] = useLocation();
   const { signOut } = useAuth();
-  const { fullName, internalRole } = useUserMetadata();
+  const { fullName, internalRole, avatarUrl } = useUserMetadata();
   const initials = (fullName || "A").split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase();
   const activeCategory = getActiveCategory(location);
   const showSubNav = activeCategory && activeCategory.items.length > 1;
@@ -327,6 +327,7 @@ function AdminTopNavigation() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-user-menu">
                 <Avatar className="size-8">
+                  <AvatarImage src={avatarUrl || undefined} />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -334,6 +335,7 @@ function AdminTopNavigation() {
             <DropdownMenuContent align="end" className="w-56">
               <div className="flex items-center gap-3 px-2 py-2.5">
                 <Avatar className="size-10">
+                  <AvatarImage src={avatarUrl || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
