@@ -670,7 +670,7 @@ export default function MyProductsPage() {
   const [storeSelectItem, setStoreSelectItem] = useState<PicklistItem | null>(null)
   const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([])
   const [storeSelectOpen, setStoreSelectOpen] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set())
 
   const handlePushToShopify = async (item: PicklistItem) => {
     setPushingProductId(item.id)
@@ -923,12 +923,17 @@ export default function MyProductsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
-                      const isSelected = selectedProductId === item.id
+                      const isSelected = selectedProductIds.has(item.id)
                       return (
                       <TableRow
                         key={item.id}
                         className={`cursor-pointer transition-colors ${isSelected ? "bg-emerald-50 hover:bg-emerald-50" : "hover:bg-muted/50"}`}
-                        onClick={() => setSelectedProductId(isSelected ? null : item.id)}
+                        onClick={() => setSelectedProductIds(prev => {
+                          const next = new Set(prev)
+                          if (next.has(item.id)) next.delete(item.id)
+                          else next.add(item.id)
+                          return next
+                        })}
                         data-testid={`row-product-${item.id}`}
                       >
                         <TableCell>
