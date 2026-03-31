@@ -148,6 +148,80 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // NOTIFICATIONS
+  // =============================================
+  router.get('/notifications', async (req: Request, res: Response) => {
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [signupsResult, ticketsResult, llcResult] = await Promise.all([
+        supabaseRemote
+          .from('profiles')
+          .select('id, full_name, email, created_at, account_type')
+          .is('internal_role', null)
+          .gte('created_at', sevenDaysAgo)
+          .order('created_at', { ascending: false })
+          .limit(8),
+        supabaseRemote
+          .from('support_tickets')
+          .select('id, subject, created_at, status, user_id')
+          .in('status', ['open', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabaseRemote
+          .from('llc_applications')
+          .select('id, created_at, status, user_id, profiles!inner(full_name, email)')
+          .in('status', ['submitted', 'pending', 'in_review'])
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      const notifications: any[] = [];
+
+      for (const u of signupsResult.data || []) {
+        notifications.push({
+          id: `signup-${u.id}`,
+          type: 'signup',
+          title: 'New user signed up',
+          description: u.full_name || u.email,
+          timestamp: u.created_at,
+          link: `/admin/users/${u.id}`,
+        });
+      }
+
+      for (const t of ticketsResult.data || []) {
+        notifications.push({
+          id: `ticket-${t.id}`,
+          type: 'ticket',
+          title: 'Open support ticket',
+          description: t.subject || 'No subject',
+          timestamp: t.created_at,
+          link: `/admin/tickets`,
+        });
+      }
+
+      for (const l of llcResult.data || []) {
+        const profile = (l as any).profiles;
+        notifications.push({
+          id: `llc-${l.id}`,
+          type: 'llc',
+          title: 'Pending LLC application',
+          description: profile?.full_name || profile?.email || 'Unknown user',
+          timestamp: l.created_at,
+          link: `/admin/llc`,
+        });
+      }
+
+      notifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      return res.json({ notifications: notifications.slice(0, 20) });
+    } catch (error) {
+      console.error('Error in GET /api/admin/notifications:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // CATEGORIES
   // =============================================
   router.get('/categories', async (req: Request, res: Response) => {
