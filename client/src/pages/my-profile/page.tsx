@@ -139,7 +139,8 @@ export default function MyProfilePage() {
   }
 
   const displayAvatar = previewUrl || avatarUrl
-  const displayName = details.full_name || fullName || "User"
+  const emailPrefix = details.email ? details.email.split("@")[0] : ""
+  const displayName = details.full_name || fullName || emailPrefix || "User"
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-profile">
