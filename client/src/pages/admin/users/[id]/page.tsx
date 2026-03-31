@@ -34,6 +34,7 @@ import {
   CreditCard,
   Edit,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
   Save,
@@ -837,9 +838,16 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
 // ================================================================
 // PRODUCTS TAB
 // ================================================================
+const PRODUCTS_PAGE_SIZE = 10;
+
 function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; userId: string; onRefresh: () => void }) {
   const { showSuccess, showError } = useToast();
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(items.length / PRODUCTS_PAGE_SIZE);
+  const start = (page - 1) * PRODUCTS_PAGE_SIZE;
+  const pageItems = items.slice(start, start + PRODUCTS_PAGE_SIZE);
 
   const handleRemove = async (picklistId: string) => {
     try {
@@ -879,7 +887,7 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
             </tr>
           </thead>
           <tbody className="divide-y">
-            {items.map((item) => {
+            {pageItems.map((item) => {
               const p = item.products;
               return (
                 <tr key={item.id} data-testid={`row-product-${item.id}`}>
@@ -921,6 +929,59 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-3 py-3 border-t">
+          <p className="text-xs text-muted-foreground">
+            Showing {start + 1}–{Math.min(start + PRODUCTS_PAGE_SIZE, items.length)} of {items.length} products
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              data-testid="button-products-prev"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                ) : (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={page === p ? "default" : "outline"}
+                    className="h-7 w-7 p-0 text-xs"
+                    onClick={() => setPage(p as number)}
+                    data-testid={`button-products-page-${p}`}
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              data-testid="button-products-next"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </SectionCard>
   );
 }
