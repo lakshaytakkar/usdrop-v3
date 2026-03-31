@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
 import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
-import { ChevronRight, Flame, Lock } from "lucide-react"
+import { ChevronRight, Lock } from "lucide-react"
 import { Product } from "@/types/products"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
 import { useOnboarding } from "@/contexts/onboarding-context"
@@ -18,6 +18,12 @@ interface TrendingProduct {
   title: string
   image: string
   trendData: number[]
+}
+
+function proxyImage(url: string | null | undefined): string {
+  if (!url) return "/demo-products/product-1.png";
+  if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:")) return url;
+  return `/api/proxy/image?url=${encodeURIComponent(url)}`;
 }
 
 function TrendingProductCard({ product }: { product: TrendingProduct }) {
@@ -39,13 +45,13 @@ function TrendingProductCard({ product }: { product: TrendingProduct }) {
         <div className="flex min-h-[180px]">
           <div className="w-[45%] bg-white flex items-center justify-center p-3 overflow-hidden">
             {imageError ? (
-              <div data-testid={`img-trending-fallback-${product.id}`} className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <Flame className="h-10 w-10" />
+              <div data-testid={`img-trending-fallback-${product.id}`} className="w-full h-full flex items-center justify-center p-3">
+                <img src="/demo-products/product-1.png" alt="Product" className="max-w-full max-h-[160px] object-contain opacity-60" />
               </div>
             ) : (
               <img
                 data-testid={`img-trending-${product.id}`}
-                src={product.image || "/demo-products/product-1.png"}
+                src={proxyImage(product.image)}
                 alt={product.title}
                 className="max-w-full max-h-[160px] object-contain"
                 loading="lazy"

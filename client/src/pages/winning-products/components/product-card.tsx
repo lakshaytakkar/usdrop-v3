@@ -74,9 +74,8 @@ export function WinningProductCard({ product, onLockedClick }: ProductCardProps)
           </div>
         ) : (
           <img
-            src={product.image || "/demo-products/Screenshot 2024-07-24 185228.png"}
+            src={product.image ? `/api/proxy/image?url=${encodeURIComponent(product.image)}` : "/demo-products/Screenshot 2024-07-24 185228.png"}
             alt={product.title}
-           
             className={`object-cover transition-all duration-300 ${product.isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}
           />

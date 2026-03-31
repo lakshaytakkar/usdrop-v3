@@ -13,6 +13,12 @@ interface ProductImageGalleryProps {
   videos?: string[]
 }
 
+function proxyImage(url: string | null | undefined): string {
+  if (!url) return "/demo-products/Screenshot 2024-07-24 185228.png"
+  if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:")) return url
+  return `/api/proxy/image?url=${encodeURIComponent(url)}`
+}
+
 export function ProductImageGallery({ images, videos = [] }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
@@ -22,7 +28,8 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const mainImageRef = useRef<HTMLDivElement>(null)
 
-  const displayImages = images.length > 0 ? images : ['/demo-products/Screenshot 2024-07-24 185228.png']
+  const rawImages = images.length > 0 ? images : ['/demo-products/Screenshot 2024-07-24 185228.png']
+  const displayImages = rawImages.map(proxyImage)
   const displayVideos = videos || []
 
   const gridItems = [

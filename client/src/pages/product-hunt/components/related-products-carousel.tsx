@@ -36,15 +36,12 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
   // Limit to 10 products max
   relatedProducts = relatedProducts.slice(0, 10)
   
-  // Get image URL for a product
+  // Get image URL for a product (proxy external URLs to avoid 404-with-body placeholders)
   const getProductImage = (product: Product): string => {
-    if (product.image) {
-      return product.image
-    }
-    if (product.additional_images && product.additional_images.length > 0) {
-      return product.additional_images[0]
-    }
-    return "/demo-products/Screenshot 2024-07-24 185228.png"
+    const raw = product.image || (product.additional_images?.[0]) || null
+    if (!raw) return "/demo-products/Screenshot 2024-07-24 185228.png"
+    if (raw.startsWith("/") || raw.startsWith("blob:") || raw.startsWith("data:")) return raw
+    return `/api/proxy/image?url=${encodeURIComponent(raw)}`
   }
   
   const handleImageError = (productId: string | number) => {

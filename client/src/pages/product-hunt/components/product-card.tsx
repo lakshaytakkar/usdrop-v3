@@ -132,7 +132,7 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
           </div>
         ) : (
           <img
-            src={product.image || "/demo-products/product-1.png"}
+            src={product.image ? `/api/proxy/image?url=${encodeURIComponent(product.image)}` : "/demo-products/product-1.png"}
             alt={product.title}
             decoding="async"
             className={`w-full h-full object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}

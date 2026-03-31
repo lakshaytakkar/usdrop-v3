@@ -108,7 +108,7 @@ export function WinningProductsTable({
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
                         <img
-                          src={product.image}
+                          src={product.image ? `/api/proxy/image?url=${encodeURIComponent(product.image)}` : "/demo-products/product-1.png"}
                           alt={product.title}
                          
                           className={cn(

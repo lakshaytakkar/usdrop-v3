@@ -2565,6 +2565,29 @@ export function registerPublicRoutes(app: Express) {
 
   // ==================== PRODUCTS ====================
 
+  // GET /api/proxy/image?url=<encoded> - Proxy external images so HTTP-level 404s trigger onError in the browser
+  app.get('/api/proxy/image', async (req: Request, res: Response) => {
+    const url = req.query.url as string;
+    if (!url) return res.status(400).end();
+    try {
+      const decoded = decodeURIComponent(url);
+      // Only allow http/https
+      if (!/^https?:\/\//i.test(decoded)) return res.status(400).end();
+      const upstream = await fetch(decoded, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; USDrop/1.0)' },
+      });
+      if (!upstream.ok) return res.status(404).end();
+      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+      if (!contentType.startsWith('image/')) return res.status(404).end();
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      return res.send(buf);
+    } catch {
+      return res.status(502).end();
+    }
+  });
+
   // GET /api/products
   app.get('/api/products', async (req: Request, res: Response) => {
     try {
