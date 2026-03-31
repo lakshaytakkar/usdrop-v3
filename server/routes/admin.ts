@@ -4306,34 +4306,53 @@ export function registerAdminRoutes(app: Express) {
   router.get('/search', async (req: Request, res: Response) => {
     try {
       const q = (req.query.q as string || '').trim();
-      if (!q || q.length < 2) return res.json({ users: [], products: [], tickets: [] });
+      if (!q || q.length < 2) return res.json({ users: [], products: [], tickets: [], totalUsers: 0 });
 
       const pattern = `%${q}%`;
+      const lowerQ = q.toLowerCase();
+
+      // Detect plan-based queries
+      const isPlanQuery = ['pro', 'free'].includes(lowerQ);
+
+      // Build user search query — search by name, email, username, phone
+      let userQuery = supabaseRemote
+        .from('profiles')
+        .select('id, full_name, email, account_type, username, phone_number, internal_role, subscription_plan_id, subscription_plans(slug, name)', { count: 'exact' });
+
+      if (isPlanQuery) {
+        // For plan-based queries, get all users with that plan slug
+        const { data: planData } = await supabaseRemote.from('subscription_plans').select('id').eq('slug', lowerQ).single();
+        if (planData) {
+          userQuery = (userQuery as any).eq('subscription_plan_id', planData.id);
+        } else {
+          userQuery = (userQuery as any).eq('account_type', lowerQ);
+        }
+      } else {
+        userQuery = (userQuery as any).or(`full_name.ilike.${pattern},email.ilike.${pattern},username.ilike.${pattern},phone_number.ilike.${pattern}`);
+      }
 
       const [usersResult, productsResult, ticketsResult] = await Promise.all([
-        supabaseRemote
-          .from('profiles')
-          .select('id, full_name, email, account_type, subscription_plan_id, subscription_plans(slug)')
-          .or(`full_name.ilike.${pattern},email.ilike.${pattern}`)
-          .is('internal_role', null)
-          .limit(5),
+        (userQuery as any).order('created_at', { ascending: false }).limit(8),
         supabaseRemote
           .from('products')
-          .select('id, name, category_id, status')
+          .select('id, name, status')
           .ilike('name', pattern)
-          .limit(5),
+          .limit(6),
         supabaseRemote
           .from('support_tickets')
           .select('id, subject, status, user_id, profiles!support_tickets_user_id_fkey(full_name, email)')
-          .ilike('subject', pattern)
-          .limit(5),
+          .or(`subject.ilike.${pattern}`)
+          .limit(4),
       ]);
 
       const users = (usersResult.data || []).map((u: any) => ({
         id: u.id,
         full_name: u.full_name || u.email?.split('@')[0] || 'Unnamed',
         email: u.email,
-        plan_slug: u.subscription_plans?.slug || 'free',
+        plan_slug: (u.subscription_plans as any)?.slug || 'free',
+        plan_name: (u.subscription_plans as any)?.name || 'Free',
+        internal_role: u.internal_role || null,
+        phone_number: u.phone_number || null,
       }));
 
       const products = (productsResult.data || []).map((p: any) => ({
@@ -4346,10 +4365,16 @@ export function registerAdminRoutes(app: Express) {
         id: t.id,
         subject: t.subject,
         status: t.status,
-        user_name: t.profiles?.full_name || t.profiles?.email?.split('@')[0] || 'Unknown',
+        user_name: (t.profiles as any)?.full_name || (t.profiles as any)?.email?.split('@')[0] || 'Unknown',
       }));
 
-      return res.json({ users, products, tickets });
+      return res.json({
+        users,
+        products,
+        tickets,
+        totalUsers: usersResult.count || users.length,
+        isPlanQuery,
+      });
     } catch (error) {
       console.error('Error in GET /api/admin/search:', error);
       return res.status(500).json({ error: 'Internal server error' });

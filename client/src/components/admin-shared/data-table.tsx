@@ -47,6 +47,7 @@ interface DataTableProps<T extends { id: string }> {
   emptyDescription?: string;
   headerActions?: React.ReactNode;
   isLoading?: boolean;
+  initialSearch?: string;
 }
 
 export function DataTable<T extends { id: string }>({
@@ -62,8 +63,9 @@ export function DataTable<T extends { id: string }>({
   emptyDescription = "There are no records to display.",
   headerActions,
   isLoading,
+  initialSearch = "",
 }: DataTableProps<T>) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<string | null>(null);

@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/supabase";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "@/hooks/use-router";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Download, Users, UserCheck, Shield, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -75,7 +76,12 @@ function getRoleLabel(user: UserRow): string {
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const [location] = useLocation();
   const { showSuccess, showError } = useToast();
+  const initialSearch = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("search") || "";
+  }, [location]);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState({ pro: 0, free: 0, suspended: 0 });
@@ -300,6 +306,7 @@ export default function AdminUsersPage() {
           { label: "Status", key: "status", options: ["active", "suspended", "inactive"] },
         ]}
         pageSize={20}
+        initialSearch={initialSearch}
       />
 
       <Dialog open={editRoleDialog.open} onOpenChange={(open) => setEditRoleDialog({ open, user: open ? editRoleDialog.user : null })}>
