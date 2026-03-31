@@ -5,6 +5,8 @@ import { triggerAutomation } from '../lib/email-automation';
 import { triggerSmsAutomation } from '../lib/sms-automation';
 import * as fs from 'fs';
 import * as path from 'path';
+import multer from 'multer';
+const avatarUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 export function registerPublicRoutes(app: Express) {
 
@@ -3813,36 +3815,32 @@ export function registerPublicRoutes(app: Express) {
   });
 
   // POST /api/user/avatar — upload profile photo for regular users
-  app.post('/api/user/avatar', requireAuth, async (req: Request, res: Response) => {
-    const multer = require('multer');
-    const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
-    upload.single('file')(req, res, async (err: any) => {
-      if (err) return res.status(400).json({ error: 'File upload error' });
-      const file = (req as any).file;
-      if (!file) return res.status(400).json({ error: 'No file provided' });
-      const user = req.user!;
-      try {
-        await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
-        const { data: currentProfile } = await supabaseRemote.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
-        if (currentProfile?.avatar_url) {
-          try {
-            const url = new URL(currentProfile.avatar_url);
-            const pathParts = url.pathname.split('/object/public/avatars/');
-            if (pathParts[1]) await supabaseRemote.storage.from('avatars').remove([pathParts[1]]);
-          } catch {}
-        }
-        const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
-        const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
-        const { error: uploadError } = await supabaseRemote.storage.from('avatars').upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
-        if (uploadError) return res.status(500).json({ error: 'Failed to upload image' });
-        const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
-        const avatarUrl = urlData?.publicUrl || null;
-        await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', user.id);
-        return res.json({ avatarUrl });
-      } catch {
-        return res.status(500).json({ error: 'Internal server error' });
+  app.post('/api/user/avatar', requireAuth, avatarUpload.single('file'), async (req: Request, res: Response) => {
+    const file = (req as any).file;
+    if (!file) return res.status(400).json({ error: 'No file provided' });
+    const user = req.user!;
+    try {
+      await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
+      // Delete old avatar if present
+      const { data: currentProfile } = await supabaseRemote.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+      if (currentProfile?.avatar_url) {
+        try {
+          const url = new URL(currentProfile.avatar_url);
+          const pathParts = url.pathname.split('/object/public/avatars/');
+          if (pathParts[1]) await supabaseRemote.storage.from('avatars').remove([pathParts[1]]);
+        } catch {}
       }
-    });
+      const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
+      const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabaseRemote.storage.from('avatars').upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+      if (uploadError) return res.status(500).json({ error: 'Failed to upload image' });
+      const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = urlData?.publicUrl || null;
+      await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', user.id);
+      return res.json({ avatarUrl });
+    } catch {
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   });
 
   // ==================== INTELLIGENCE ARTICLES ====================
