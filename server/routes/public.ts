@@ -1,6 +1,6 @@
 import { type Express, Request, Response } from 'express';
 import { supabaseRemote } from '../lib/supabase-remote';
-import { requireAuth, optionalAuth } from '../lib/auth';
+import { requireAuth, optionalAuth, invalidateAllUserCaches } from '../lib/auth';
 import { triggerAutomation } from '../lib/email-automation';
 import { triggerSmsAutomation } from '../lib/sms-automation';
 import * as fs from 'fs';
@@ -3845,6 +3845,8 @@ export function registerPublicRoutes(app: Express) {
         return res.status(500).json({ error: profileError.message });
       }
 
+      invalidateAllUserCaches(user.id);
+
       return res.json({
         full_name: full_name ?? '',
         email: user.email,
@@ -3891,6 +3893,7 @@ export function registerPublicRoutes(app: Express) {
       const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
       const avatarUrl = urlData?.publicUrl || null;
       await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', user.id);
+      invalidateAllUserCaches(user.id);
       return res.json({ avatarUrl });
     } catch {
       return res.status(500).json({ error: 'Internal server error' });
