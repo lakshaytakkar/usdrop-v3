@@ -19,11 +19,15 @@ function proxyImage(url: string | null | undefined): string {
   return `/api/proxy/image?url=${encodeURIComponent(url)}`
 }
 
+const FALLBACK = "/demo-products/product-1.png"
+
 export function ProductImageGallery({ images, videos = [] }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(true)
+  const [mainError, setMainError] = useState(false)
+  const [thumbErrors, setThumbErrors] = useState<Record<number, boolean>>({})
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const mainImageRef = useRef<HTMLDivElement>(null)
@@ -48,6 +52,15 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
     setIsLoading(false)
   }
 
+  const handleMainError = () => {
+    setMainError(true)
+    setIsLoading(false)
+  }
+
+  const handleThumbError = (index: number) => {
+    setThumbErrors(prev => ({ ...prev, [index]: true }))
+  }
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!mainImageRef.current) return
     const rect = mainImageRef.current.getBoundingClientRect()
@@ -59,6 +72,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
   const handleThumbnailClick = (index: number) => {
     setSelectedIndex(index)
     setIsLoading(true)
+    setMainError(false)
   }
 
   const openLightbox = (index: number) => {
@@ -97,11 +111,16 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                 onLoadedData={handleImageLoad}
                 playsInline
               />
+            ) : mainError ? (
+              <img
+                src={FALLBACK}
+                alt="Product"
+                className="w-full h-full object-contain opacity-50 p-8"
+              />
             ) : (
               <img
                 src={gridItems[selectedIndex] || gridItems[0]}
                 alt={`Product view ${selectedIndex + 1}`}
-               
                 className={cn(
                   "object-cover transition-all duration-300",
                   isZoomed ? "scale-150" : "scale-100",
@@ -111,7 +130,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                   transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
                 }}
                 onLoad={handleImageLoad}
-               
+                onError={handleMainError}
               />
             )}
             {!isVideo(selectedIndex) && (
@@ -153,11 +172,10 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                   />
                 ) : (
                   <img
-                    src={item}
+                    src={thumbErrors[index] ? FALLBACK : item}
                     alt={`Product thumbnail ${index + 1}`}
-                   
-                    className="object-cover"
-                   
+                    className="object-cover w-full h-full"
+                    onError={() => handleThumbError(index)}
                   />
                 )}
                 {isVideoItem && (
@@ -192,11 +210,12 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
               />
             ) : (
               <img
-                src={gridItems[lightboxIndex] || gridItems[0]}
+                src={gridItems[lightboxIndex] || gridItems[0] || FALLBACK}
                 alt={`Product view ${lightboxIndex + 1}`}
                 width={1200}
                 height={1200}
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK }}
               />
             )}
           </div>
