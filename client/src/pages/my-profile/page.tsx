@@ -127,6 +127,7 @@ export default function MyProfilePage() {
         body: JSON.stringify(details),
       })
       if (!res.ok) throw new Error("Failed to save")
+      await refreshMetadata()
       showSuccess("Profile updated successfully!")
     } catch {
       showError("Failed to save profile. Please try again.")

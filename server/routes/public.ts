@@ -3775,13 +3775,16 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data } = await supabaseRemote
-        .from('user_details')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const [detailsResult, profileResult] = await Promise.all([
+        supabaseRemote.from('user_details').select('*').eq('user_id', user.id).maybeSingle(),
+        supabaseRemote.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
+      ]);
 
-      return res.json({ ...(data || {}), email: user.email });
+      return res.json({
+        ...(detailsResult.data || {}),
+        full_name: profileResult.data?.full_name || '',
+        email: user.email,
+      });
     } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
     }
@@ -3793,23 +3796,36 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const body = req.body;
 
-      const { email, id, created_at, updated_at, ...details } = body;
+      // full_name lives in profiles, not user_details
+      const { email, id, created_at, updated_at, full_name, ...details } = body;
 
-      const { data, error } = await supabaseRemote
-        .from('user_details')
-        .upsert(
-          { ...details, user_id: user.id, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id' }
-        )
-        .select()
-        .single();
+      // Save full_name to profiles and rest to user_details in parallel
+      const [profileUpdate, detailsUpsert] = await Promise.all([
+        full_name !== undefined
+          ? supabaseRemote.from('profiles').update({ full_name, updated_at: new Date().toISOString() }).eq('id', user.id)
+          : Promise.resolve({ error: null }),
+        supabaseRemote
+          .from('user_details')
+          .upsert(
+            { ...details, user_id: user.id, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+          )
+          .select()
+          .single(),
+      ]);
 
-      if (error) {
-        return res.status(500).json({ error: error.message });
+      if (profileUpdate.error) {
+        console.error('Error updating profile full_name:', profileUpdate.error);
+        return res.status(500).json({ error: profileUpdate.error.message });
+      }
+      if (detailsUpsert.error) {
+        console.error('Error upserting user_details:', detailsUpsert.error);
+        return res.status(500).json({ error: detailsUpsert.error.message });
       }
 
-      return res.json({ ...data, email: user.email });
+      return res.json({ ...detailsUpsert.data, full_name, email: user.email });
     } catch (error) {
+      console.error('Error in PUT /api/user-details:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
