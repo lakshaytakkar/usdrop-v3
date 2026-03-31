@@ -947,7 +947,6 @@ export default function MyProductsPage() {
   const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([]);
   const [storeSelectOpen, setStoreSelectOpen] = useState(false);
   const [shopifyDisabledOpen, setShopifyDisabledOpen] = useState(false);
-  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
   const handlePushToShopify = async (_item: PicklistItem) => {
     setShopifyDisabledOpen(true);
@@ -1258,19 +1257,10 @@ export default function MyProductsPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredItems.map((item) => {
-                      const isSelected = selectedProductIds.has(item.id);
                       return (
                         <TableRow
                           key={item.id}
-                          className={`cursor-pointer transition-colors ${isSelected ? "bg-emerald-50 hover:bg-emerald-50" : "hover:bg-muted/50"}`}
-                          onClick={() =>
-                            setSelectedProductIds((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(item.id)) next.delete(item.id);
-                              else next.add(item.id);
-                              return next;
-                            })
-                          }
+                          className="hover:bg-muted/50 transition-colors"
                           data-testid={`row-product-${item.id}`}
                         >
                           <TableCell>
