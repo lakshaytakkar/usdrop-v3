@@ -947,6 +947,7 @@ export default function MyProductsPage() {
   const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([]);
   const [storeSelectOpen, setStoreSelectOpen] = useState(false);
   const [shopifyDisabledOpen, setShopifyDisabledOpen] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
 
   const handlePushToShopify = async (_item: PicklistItem) => {
     setShopifyDisabledOpen(true);
