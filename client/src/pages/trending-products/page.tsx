@@ -6,12 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
-import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
-import { ChevronRight, Lock } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { Product } from "@/types/products"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 interface TrendingProduct {
   id: string
@@ -125,7 +122,6 @@ export default function TrendingProductsPage() {
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
   const pageSize = 6
-  const { isFree, hasCompletedFreeLearning } = useOnboarding()
   const observerRef = useRef<HTMLDivElement>(null)
   const loadingRef = useRef(false)
   const currentPageRef = useRef(1)
@@ -250,35 +246,10 @@ export default function TrendingProductsPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {products.map((product, index) => {
-              const { isLocked } = getTeaserLockState(index, isFree, {
-                freeVisibleCount: 4,
-                strategy: "first-n-items"
-              }, hasCompletedFreeLearning)
-
-              if (isLocked) {
-                return (
-                  <div key={product.id} className="relative select-none" data-testid={`teaser-card-locked-${index}`}>
-                    <div className="blur-[3px] opacity-50 pointer-events-none saturate-50">
-                      <TrendingProductCard product={product} />
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm border border-gray-200">
-                        <Lock className="size-3" />
-                        Locked
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-
-              return <TrendingProductCard key={product.id} product={product} />
-            })}
+            {products.map((product) => (
+              <TrendingProductCard key={product.id} product={product} />
+            ))}
           </div>
-
-          {isFree && !hasCompletedFreeLearning && products.length > 4 && (
-            <FreeLearningCutoff itemCount={4} contentType="products" />
-          )}
 
           {isLoadingMore && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-1">
