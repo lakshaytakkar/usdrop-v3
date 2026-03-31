@@ -2388,9 +2388,13 @@ export function registerPublicRoutes(app: Express) {
         return res.status(404).json({ error: 'Product not found' });
       }
 
+      const { source } = req.body;
+      const validSources = ['product-hunt', 'winning-products', 'manual', 'url-import'];
+      const insertSource = validSources.includes(source) ? source : 'other';
+
       const { data: result, error: insertError } = await supabaseRemote
         .from('user_picklist')
-        .insert({ user_id: user.id, product_id: productId })
+        .insert({ user_id: user.id, product_id: productId, source: insertSource })
         .select()
         .single();
 
