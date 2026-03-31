@@ -8,16 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageShell, PageHeader } from "@/components/admin-shared";
-import { Save, User, Camera, Loader2 } from "lucide-react";
+import { Save, User, Camera } from "lucide-react";
 
 export default function AdminProfilePage() {
   const { id, email, fullName, avatarUrl, internalRole } = useUserMetadata();
   const { refreshMetadata } = useUnifiedUser();
   const { showSuccess, showError } = useToast();
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null | undefined>(undefined);
-  const [form, setForm] = useState({ full_name: "", phone_number: "", username: "" });
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [form, setForm] = useState({ full_name: "", phone_number: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -28,18 +28,48 @@ export default function AdminProfilePage() {
         setForm({
           full_name: data.full_name || "",
           phone_number: data.phone_number || "",
-          username: data.username || "",
         });
       })
       .catch(() => {});
   }, [id]);
 
-  const displayAvatarUrl = localAvatarUrl !== undefined ? localAvatarUrl : avatarUrl;
+  const displayAvatarUrl = previewUrl || avatarUrl || undefined;
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      showError("Image must be smaller than 5MB");
+      return;
+    }
+
+    setPendingFile(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSave = async () => {
     if (!id) return;
     try {
       setSaving(true);
+
+      if (pendingFile) {
+        const formData = new FormData();
+        formData.append("file", pendingFile);
+        const photoRes = await apiFetch("/api/admin/profile/avatar", {
+          method: "POST",
+          body: formData,
+        });
+        if (!photoRes.ok) {
+          const err = await photoRes.json().catch(() => ({}));
+          throw new Error(err.error || "Photo upload failed");
+        }
+        setPendingFile(null);
+      }
+
       const res = await apiFetch(`/api/admin/users/${id}`, {
         method: "PATCH",
         body: JSON.stringify({
@@ -47,53 +77,15 @@ export default function AdminProfilePage() {
           phone_number: form.phone_number || null,
         }),
       });
-      if (!res.ok) throw new Error("Failed to save");
-      showSuccess("Profile updated successfully");
-    } catch {
-      showError("Failed to update profile");
+      if (!res.ok) throw new Error("Failed to save profile");
+
+      showSuccess("Profile saved successfully");
+      await refreshMetadata();
+      setPreviewUrl(null);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      showError("Image must be smaller than 5MB");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setLocalAvatarUrl(previewUrl);
-
-    try {
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await apiFetch("/api/admin/profile/avatar", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Upload failed");
-      }
-
-      const data = await res.json();
-      setLocalAvatarUrl(data.avatarUrl);
-      showSuccess("Profile photo updated");
-      await refreshMetadata();
-    } catch (err) {
-      showError(err instanceof Error ? err.message : "Failed to upload photo");
-      setLocalAvatarUrl(avatarUrl ?? null);
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -114,31 +106,32 @@ export default function AdminProfilePage() {
           <div className="flex items-center gap-4">
             <div className="relative group">
               <Avatar className="size-16">
-                <AvatarImage src={displayAvatarUrl || undefined} />
+                <AvatarImage src={displayAvatarUrl} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xl">{initials}</AvatarFallback>
               </Avatar>
 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 data-testid="button-change-avatar"
                 title="Change profile photo"
               >
-                {uploading ? (
-                  <Loader2 className="h-5 w-5 text-white animate-spin" />
-                ) : (
-                  <Camera className="h-5 w-5 text-white" />
-                )}
+                <Camera className="h-5 w-5 text-white" />
               </button>
+
+              {pendingFile && (
+                <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] text-white font-bold ring-2 ring-background">
+                  1
+                </span>
+              )}
 
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 className="hidden"
-                onChange={handleAvatarChange}
+                onChange={handleFileSelect}
                 data-testid="input-avatar-file"
               />
             </div>
@@ -150,11 +143,10 @@ export default function AdminProfilePage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="mt-1 text-xs text-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                className="mt-1 text-xs text-blue-500 hover:text-blue-600 transition-colors"
                 data-testid="button-change-photo-text"
               >
-                {uploading ? "Uploading..." : "Change photo"}
+                {pendingFile ? "Photo selected — click Save Changes" : "Change photo"}
               </button>
             </div>
           </div>
