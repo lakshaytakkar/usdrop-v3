@@ -168,6 +168,23 @@ export function registerAdminRoutes(app: Express) {
 
       await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
 
+      // Delete old avatar from storage if it exists
+      const { data: currentProfile } = await supabaseRemote
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', adminUser.id)
+        .single();
+
+      if (currentProfile?.avatar_url) {
+        try {
+          const url = new URL(currentProfile.avatar_url);
+          const pathParts = url.pathname.split('/object/public/avatars/');
+          if (pathParts.length === 2) {
+            await supabaseRemote.storage.from('avatars').remove([pathParts[1]]);
+          }
+        } catch { /* ignore deletion errors */ }
+      }
+
       const { error: uploadError } = await supabaseRemote.storage
         .from('avatars')
         .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });

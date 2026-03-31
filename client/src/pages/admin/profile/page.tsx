@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/supabase";
 import { useState, useEffect, useRef } from "react";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
+import { useUnifiedUser } from "@/contexts/unified-user-context";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Save, User, Camera, Loader2 } from "lucide-react";
 
 export default function AdminProfilePage() {
   const { id, email, fullName, avatarUrl, internalRole } = useUserMetadata();
+  const { refreshMetadata } = useUnifiedUser();
   const { showSuccess, showError } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -85,6 +87,7 @@ export default function AdminProfilePage() {
       const data = await res.json();
       setLocalAvatarUrl(data.avatarUrl);
       showSuccess("Profile photo updated");
+      await refreshMetadata();
     } catch (err) {
       showError(err instanceof Error ? err.message : "Failed to upload photo");
       setLocalAvatarUrl(avatarUrl ?? null);
