@@ -47,6 +47,7 @@ import {
   Calendar,
   Tag,
   X,
+  CheckCircle2,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -669,6 +670,7 @@ export default function MyProductsPage() {
   const [storeSelectItem, setStoreSelectItem] = useState<PicklistItem | null>(null)
   const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([])
   const [storeSelectOpen, setStoreSelectOpen] = useState(false)
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
 
   const handlePushToShopify = async (item: PicklistItem) => {
     setPushingProductId(item.id)
@@ -920,8 +922,15 @@ export default function MyProductsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredItems.map((item) => (
-                      <TableRow key={item.id} className="hover:bg-muted/50">
+                    {filteredItems.map((item) => {
+                      const isSelected = selectedProductId === item.id
+                      return (
+                      <TableRow
+                        key={item.id}
+                        className={`cursor-pointer transition-colors ${isSelected ? "bg-emerald-50 hover:bg-emerald-50" : "hover:bg-muted/50"}`}
+                        onClick={() => setSelectedProductId(isSelected ? null : item.id)}
+                        data-testid={`row-product-${item.id}`}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50">
@@ -931,6 +940,11 @@ export default function MyProductsPage() {
                                 className="w-full h-full object-cover"
                                 onError={(e) => { (e.target as HTMLImageElement).src = '/demo-products/Screenshot 2024-07-24 185228.png' }}
                               />
+                              {isSelected && (
+                                <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                                  <CheckCircle2 className="h-6 w-6 text-emerald-600 drop-shadow-sm" fill="white" />
+                                </div>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate max-w-[220px]" data-testid={`text-product-title-${item.id}`}>{item.title}</p>
@@ -1009,7 +1023,8 @@ export default function MyProductsPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )
+                    })}
                   </TableBody>
                 </Table>
               </Card>
