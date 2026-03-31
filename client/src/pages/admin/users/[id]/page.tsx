@@ -838,7 +838,7 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
 // ================================================================
 // PRODUCTS TAB
 // ================================================================
-const PRODUCTS_PAGE_SIZE = 10;
+const PRODUCTS_PAGE_SIZE = 20;
 
 function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; userId: string; onRefresh: () => void }) {
   const { showSuccess, showError } = useToast();
