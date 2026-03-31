@@ -203,13 +203,14 @@ interface PlanOption {
 interface PicklistItem {
   id: string;
   product_id: string;
-  source: string;
-  added_at: string;
+  source: string | null;
+  notes: string | null;
+  created_at: string;
   products: {
     id: string;
     title: string;
-    image_url: string | null;
-    category: string | null;
+    image: string | null;
+    category_id: string | null;
     buy_price: number | null;
     sell_price: number | null;
     in_stock: boolean;
@@ -600,7 +601,7 @@ export default function AdminUserDetail() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold truncate" data-testid="text-user-name">{user.full_name || "Unnamed User"}</h1>
+              <h1 className="text-2xl font-bold truncate" data-testid="text-user-name">{user.full_name || user.email?.split("@")[0] || "Unknown User"}</h1>
               <Badge variant={user.account_type === "pro" ? "default" : "secondary"} data-testid="badge-account-type">
                 {user.plan?.name || (user.account_type === "pro" ? "Pro" : "Free")}
               </Badge>
@@ -884,24 +885,24 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
                 <tr key={item.id} data-testid={`row-product-${item.id}`}>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      {p?.image_url ? (
-                        <img src={p.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                      {p?.image ? (
+                        <img src={p.image} alt="" className="h-8 w-8 rounded object-cover" />
                       ) : (
                         <div className="h-8 w-8 rounded bg-muted flex items-center justify-center"><Package className="h-3.5 w-3.5 text-muted-foreground" /></div>
                       )}
                       <span className="font-medium truncate max-w-[200px]">{p?.title || "Unknown"}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{p?.category || "—"}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">—</td>
                   <td className="px-3 py-2.5 text-right">{p?.buy_price ? `$${p.buy_price}` : "—"}</td>
                   <td className="px-3 py-2.5 text-right">{p?.sell_price ? `$${p.sell_price}` : "—"}</td>
                   <td className="px-3 py-2.5 text-center">
                     <StatusBadge status={p?.in_stock ? "In Stock" : "Out"} />
                   </td>
                   <td className="px-3 py-2.5">
-                    <Badge variant="secondary" className="text-xs">{item.source || "—"}</Badge>
+                    <Badge variant="secondary" className="text-xs">{item.source || "platform"}</Badge>
                   </td>
-                  <td className="px-3 py-2.5 text-sm text-muted-foreground">{formatDate(item.added_at)}</td>
+                  <td className="px-3 py-2.5 text-sm text-muted-foreground">{formatDate(item.created_at)}</td>
                   <td className="px-3 py-2.5 text-right">
                     <Button
                       size="sm"

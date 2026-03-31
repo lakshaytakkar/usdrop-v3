@@ -4965,9 +4965,9 @@ export function registerAdminRoutes(app: Express) {
       const { id } = req.params;
       const { data, error } = await supabaseRemote
         .from('user_picklist')
-        .select('id, product_id, source, added_at, products(id, title, image_url, category, buy_price, sell_price, in_stock)')
+        .select('id, product_id, source, notes, created_at, products(id, title, image, buy_price, sell_price, in_stock, category_id, subcategory_id)')
         .eq('user_id', id)
-        .order('added_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [] });
