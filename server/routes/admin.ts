@@ -148,6 +148,48 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // PROFILE AVATAR UPLOAD
+  // =============================================
+  router.post('/profile/avatar', upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const adminUser = (req as any).user;
+      if (!adminUser?.id) return res.status(401).json({ error: 'Unauthorized' });
+
+      const file = (req as any).file;
+      if (!file) return res.status(400).json({ error: 'No file provided' });
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ error: 'Only JPEG, PNG, WebP, or GIF images are allowed' });
+      }
+
+      const ext = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+      const filePath = `avatars/${adminUser.id}/avatar_${Date.now()}.${ext}`;
+
+      await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
+
+      const { error: uploadError } = await supabaseRemote.storage
+        .from('avatars')
+        .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+
+      if (uploadError) {
+        console.error('[admin] avatar upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image' });
+      }
+
+      const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = urlData?.publicUrl || null;
+
+      await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', adminUser.id);
+
+      return res.json({ avatarUrl });
+    } catch (error) {
+      console.error('Error in POST /api/admin/profile/avatar:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // NOTIFICATIONS
   // =============================================
   router.get('/notifications', async (req: Request, res: Response) => {

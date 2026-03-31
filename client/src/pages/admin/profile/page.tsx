@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/supabase";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUserMetadata } from "@/hooks/use-user-metadata";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageShell, PageHeader } from "@/components/admin-shared";
-import { Save, User } from "lucide-react";
+import { Save, User, Camera, Loader2 } from "lucide-react";
 
 export default function AdminProfilePage() {
   const { id, email, fullName, avatarUrl, internalRole } = useUserMetadata();
   const { showSuccess, showError } = useToast();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null | undefined>(undefined);
   const [form, setForm] = useState({ full_name: "", phone_number: "", username: "" });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -28,6 +31,8 @@ export default function AdminProfilePage() {
       })
       .catch(() => {});
   }, [id]);
+
+  const displayAvatarUrl = localAvatarUrl !== undefined ? localAvatarUrl : avatarUrl;
 
   const handleSave = async () => {
     if (!id) return;
@@ -49,6 +54,46 @@ export default function AdminProfilePage() {
     }
   };
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showError("Image must be smaller than 5MB");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setLocalAvatarUrl(previewUrl);
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await apiFetch("/api/admin/profile/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Upload failed");
+      }
+
+      const data = await res.json();
+      setLocalAvatarUrl(data.avatarUrl);
+      showSuccess("Profile photo updated");
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Failed to upload photo");
+      setLocalAvatarUrl(avatarUrl ?? null);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const initials = (fullName || email || "A")
     .split(" ")
     .map((n: string) => n[0])
@@ -64,14 +109,50 @@ export default function AdminProfilePage() {
       <div className="max-w-2xl space-y-6">
         <div className="rounded-xl border bg-card p-6 space-y-6">
           <div className="flex items-center gap-4">
-            <Avatar className="size-16">
-              <AvatarImage src={avatarUrl || undefined} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xl">{initials}</AvatarFallback>
-            </Avatar>
+            <div className="relative group">
+              <Avatar className="size-16">
+                <AvatarImage src={displayAvatarUrl || undefined} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">{initials}</AvatarFallback>
+              </Avatar>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                data-testid="button-change-avatar"
+                title="Change profile photo"
+              >
+                {uploading ? (
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                ) : (
+                  <Camera className="h-5 w-5 text-white" />
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handleAvatarChange}
+                data-testid="input-avatar-file"
+              />
+            </div>
+
             <div>
               <p className="font-semibold text-base">{fullName || form.full_name || email?.split("@")[0] || "Admin"}</p>
               <p className="text-sm text-muted-foreground">{email}</p>
               <p className="text-xs text-muted-foreground capitalize mt-0.5">{internalRole?.replace(/_/g, " ") || "Admin"}</p>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="mt-1 text-xs text-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                data-testid="button-change-photo-text"
+              >
+                {uploading ? "Uploading..." : "Change photo"}
+              </button>
             </div>
           </div>
 
