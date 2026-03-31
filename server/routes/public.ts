@@ -3775,30 +3775,28 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const [detailsResult, profileResult] = await Promise.all([
-        supabaseRemote.from('user_details').select('*').eq('user_id', user.id).maybeSingle(),
-        supabaseRemote.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
-      ]);
-
-      const d = detailsResult.data as any;
-      const sl = d?.social_links || {};
+      const { data: profile } = await supabaseRemote
+        .from('profiles')
+        .select('full_name, phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
 
       return res.json({
-        full_name: profileResult.data?.full_name || '',
+        full_name: profile?.full_name || '',
         email: user.email,
-        contact_number: d?.phone || '',
-        website_name: d?.website || '',
-        batch_id: sl.batch_id || '',
-        enrolled_number: sl.enrolled_number || '',
-        llc_name: sl.llc_name || '',
-        ein_name: sl.ein_name || '',
-        facebook_page: sl.facebook_page || '',
-        instagram_account: sl.instagram_account || '',
-        learning_videos_link: sl.learning_videos_link || '',
-        useful_links: sl.useful_links || '',
-        tools_url: sl.tools_url || '',
-        tools_username: sl.tools_username || '',
-        tools_password: sl.tools_password || '',
+        contact_number: profile?.phone_number || '',
+        website_name: '',
+        batch_id: '',
+        enrolled_number: '',
+        llc_name: '',
+        ein_name: '',
+        facebook_page: '',
+        instagram_account: '',
+        learning_videos_link: '',
+        useful_links: '',
+        tools_url: '',
+        tools_username: '',
+        tools_password: '',
       });
     } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
@@ -3811,12 +3809,12 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const body = req.body;
 
-      // full_name lives in profiles, not user_details
-      const { email, id, created_at, updated_at, full_name, ...rest } = body;
-
-      // Map form field names → actual user_details column names
-      // Extra fields go into social_links JSONB so nothing is lost
       const {
+        email,
+        id,
+        created_at,
+        updated_at,
+        full_name,
         contact_number,
         website_name,
         batch_id,
@@ -3830,72 +3828,39 @@ export function registerPublicRoutes(app: Express) {
         tools_url,
         tools_username,
         tools_password,
-        ...otherDetails
-      } = rest;
+      } = body;
 
-      const social_links: Record<string, string> = {};
-      if (batch_id !== undefined)             social_links.batch_id = batch_id;
-      if (enrolled_number !== undefined)       social_links.enrolled_number = enrolled_number;
-      if (llc_name !== undefined)              social_links.llc_name = llc_name;
-      if (ein_name !== undefined)              social_links.ein_name = ein_name;
-      if (facebook_page !== undefined)         social_links.facebook_page = facebook_page;
-      if (instagram_account !== undefined)     social_links.instagram_account = instagram_account;
-      if (learning_videos_link !== undefined)  social_links.learning_videos_link = learning_videos_link;
-      if (useful_links !== undefined)          social_links.useful_links = useful_links;
-      if (tools_url !== undefined)             social_links.tools_url = tools_url;
-      if (tools_username !== undefined)        social_links.tools_username = tools_username;
-      if (tools_password !== undefined)        social_links.tools_password = tools_password;
+      // Build the profiles update — only columns confirmed to exist in Supabase profiles table
+      const profilesUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
+      if (full_name !== undefined) profilesUpdate.full_name = full_name;
+      if (contact_number !== undefined) profilesUpdate.phone_number = contact_number;
 
-      const upsertPayload: Record<string, any> = {
-        ...otherDetails,
-        user_id: user.id,
-        updated_at: new Date().toISOString(),
-      };
-      if (contact_number !== undefined) upsertPayload.phone = contact_number;
-      if (website_name !== undefined)   upsertPayload.website = website_name;
-      if (Object.keys(social_links).length > 0) upsertPayload.social_links = social_links;
+      const { error: profileError } = await supabaseRemote
+        .from('profiles')
+        .update(profilesUpdate)
+        .eq('id', user.id);
 
-      // Save full_name to profiles and rest to user_details in parallel
-      const [profileUpdate, detailsUpsert] = await Promise.all([
-        full_name !== undefined
-          ? supabaseRemote.from('profiles').update({ full_name, updated_at: new Date().toISOString() }).eq('id', user.id)
-          : Promise.resolve({ error: null }),
-        supabaseRemote
-          .from('user_details')
-          .upsert(upsertPayload, { onConflict: 'user_id' })
-          .select()
-          .single(),
-      ]);
-
-      if (profileUpdate.error) {
-        console.error('Error updating profile full_name:', profileUpdate.error);
-        return res.status(500).json({ error: profileUpdate.error.message });
-      }
-      if (detailsUpsert.error) {
-        console.error('Error upserting user_details:', detailsUpsert.error);
-        return res.status(500).json({ error: detailsUpsert.error.message });
+      if (profileError) {
+        console.error('Error updating profiles:', profileError);
+        return res.status(500).json({ error: profileError.message });
       }
 
-      // Return data in the same shape the form expects
-      const saved = detailsUpsert.data as any;
-      const sl = saved?.social_links || {};
       return res.json({
-        ...saved,
-        full_name,
+        full_name: full_name ?? '',
         email: user.email,
-        contact_number: saved?.phone || '',
-        website_name: saved?.website || '',
-        batch_id: sl.batch_id || '',
-        enrolled_number: sl.enrolled_number || '',
-        llc_name: sl.llc_name || '',
-        ein_name: sl.ein_name || '',
-        facebook_page: sl.facebook_page || '',
-        instagram_account: sl.instagram_account || '',
-        learning_videos_link: sl.learning_videos_link || '',
-        useful_links: sl.useful_links || '',
-        tools_url: sl.tools_url || '',
-        tools_username: sl.tools_username || '',
-        tools_password: sl.tools_password || '',
+        contact_number: contact_number ?? '',
+        website_name: website_name ?? '',
+        batch_id: batch_id ?? '',
+        enrolled_number: enrolled_number ?? '',
+        llc_name: llc_name ?? '',
+        ein_name: ein_name ?? '',
+        facebook_page: facebook_page ?? '',
+        instagram_account: instagram_account ?? '',
+        learning_videos_link: learning_videos_link ?? '',
+        useful_links: useful_links ?? '',
+        tools_url: tools_url ?? '',
+        tools_username: tools_username ?? '',
+        tools_password: tools_password ?? '',
       });
     } catch (error) {
       console.error('Error in PUT /api/user-details:', error);
