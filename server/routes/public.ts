@@ -3780,10 +3780,25 @@ export function registerPublicRoutes(app: Express) {
         supabaseRemote.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
       ]);
 
+      const d = detailsResult.data as any;
+      const sl = d?.social_links || {};
+
       return res.json({
-        ...(detailsResult.data || {}),
         full_name: profileResult.data?.full_name || '',
         email: user.email,
+        contact_number: d?.phone || '',
+        website_name: d?.website || '',
+        batch_id: sl.batch_id || '',
+        enrolled_number: sl.enrolled_number || '',
+        llc_name: sl.llc_name || '',
+        ein_name: sl.ein_name || '',
+        facebook_page: sl.facebook_page || '',
+        instagram_account: sl.instagram_account || '',
+        learning_videos_link: sl.learning_videos_link || '',
+        useful_links: sl.useful_links || '',
+        tools_url: sl.tools_url || '',
+        tools_username: sl.tools_username || '',
+        tools_password: sl.tools_password || '',
       });
     } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
@@ -3797,7 +3812,48 @@ export function registerPublicRoutes(app: Express) {
       const body = req.body;
 
       // full_name lives in profiles, not user_details
-      const { email, id, created_at, updated_at, full_name, ...details } = body;
+      const { email, id, created_at, updated_at, full_name, ...rest } = body;
+
+      // Map form field names → actual user_details column names
+      // Extra fields go into social_links JSONB so nothing is lost
+      const {
+        contact_number,
+        website_name,
+        batch_id,
+        enrolled_number,
+        llc_name,
+        ein_name,
+        facebook_page,
+        instagram_account,
+        learning_videos_link,
+        useful_links,
+        tools_url,
+        tools_username,
+        tools_password,
+        ...otherDetails
+      } = rest;
+
+      const social_links: Record<string, string> = {};
+      if (batch_id !== undefined)             social_links.batch_id = batch_id;
+      if (enrolled_number !== undefined)       social_links.enrolled_number = enrolled_number;
+      if (llc_name !== undefined)              social_links.llc_name = llc_name;
+      if (ein_name !== undefined)              social_links.ein_name = ein_name;
+      if (facebook_page !== undefined)         social_links.facebook_page = facebook_page;
+      if (instagram_account !== undefined)     social_links.instagram_account = instagram_account;
+      if (learning_videos_link !== undefined)  social_links.learning_videos_link = learning_videos_link;
+      if (useful_links !== undefined)          social_links.useful_links = useful_links;
+      if (tools_url !== undefined)             social_links.tools_url = tools_url;
+      if (tools_username !== undefined)        social_links.tools_username = tools_username;
+      if (tools_password !== undefined)        social_links.tools_password = tools_password;
+
+      const upsertPayload: Record<string, any> = {
+        ...otherDetails,
+        user_id: user.id,
+        updated_at: new Date().toISOString(),
+      };
+      if (contact_number !== undefined) upsertPayload.phone = contact_number;
+      if (website_name !== undefined)   upsertPayload.website = website_name;
+      if (Object.keys(social_links).length > 0) upsertPayload.social_links = social_links;
 
       // Save full_name to profiles and rest to user_details in parallel
       const [profileUpdate, detailsUpsert] = await Promise.all([
@@ -3806,10 +3862,7 @@ export function registerPublicRoutes(app: Express) {
           : Promise.resolve({ error: null }),
         supabaseRemote
           .from('user_details')
-          .upsert(
-            { ...details, user_id: user.id, updated_at: new Date().toISOString() },
-            { onConflict: 'user_id' }
-          )
+          .upsert(upsertPayload, { onConflict: 'user_id' })
           .select()
           .single(),
       ]);
@@ -3823,7 +3876,27 @@ export function registerPublicRoutes(app: Express) {
         return res.status(500).json({ error: detailsUpsert.error.message });
       }
 
-      return res.json({ ...detailsUpsert.data, full_name, email: user.email });
+      // Return data in the same shape the form expects
+      const saved = detailsUpsert.data as any;
+      const sl = saved?.social_links || {};
+      return res.json({
+        ...saved,
+        full_name,
+        email: user.email,
+        contact_number: saved?.phone || '',
+        website_name: saved?.website || '',
+        batch_id: sl.batch_id || '',
+        enrolled_number: sl.enrolled_number || '',
+        llc_name: sl.llc_name || '',
+        ein_name: sl.ein_name || '',
+        facebook_page: sl.facebook_page || '',
+        instagram_account: sl.instagram_account || '',
+        learning_videos_link: sl.learning_videos_link || '',
+        useful_links: sl.useful_links || '',
+        tools_url: sl.tools_url || '',
+        tools_username: sl.tools_username || '',
+        tools_password: sl.tools_password || '',
+      });
     } catch (error) {
       console.error('Error in PUT /api/user-details:', error);
       return res.status(500).json({ error: 'Internal server error' });

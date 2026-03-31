@@ -12,6 +12,7 @@ import { Eye, EyeOff, Save, ChevronDown, ChevronUp, Camera } from "lucide-react"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { Link } from "wouter"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
+import { useUnifiedUser } from "@/contexts/unified-user-context"
 
 interface UserDetails {
   email: string
@@ -55,7 +56,8 @@ function getInitials(name: string) {
 
 export default function MyProfilePage() {
   const { showSuccess, showError } = useToast()
-  const { avatarUrl, fullName, refreshMetadata } = useUserMetadata()
+  const { avatarUrl, fullName } = useUserMetadata()
+  const { refreshMetadata } = useUnifiedUser()
   const [details, setDetails] = useState<UserDetails>(defaultDetails)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
