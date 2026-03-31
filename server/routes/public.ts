@@ -1,10 +1,12 @@
 import { type Express, Request, Response } from 'express';
 import { supabaseRemote } from '../lib/supabase-remote';
-import { requireAuth, optionalAuth } from '../lib/auth';
+import { requireAuth, optionalAuth, invalidateAllUserCaches } from '../lib/auth';
 import { triggerAutomation } from '../lib/email-automation';
 import { triggerSmsAutomation } from '../lib/sms-automation';
 import * as fs from 'fs';
 import * as path from 'path';
+import multer from 'multer';
+const avatarUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 export function registerPublicRoutes(app: Express) {
 
@@ -2565,6 +2567,29 @@ export function registerPublicRoutes(app: Express) {
 
   // ==================== PRODUCTS ====================
 
+  // GET /api/proxy/image?url=<encoded> - Proxy external images so HTTP-level 404s trigger onError in the browser
+  app.get('/api/proxy/image', async (req: Request, res: Response) => {
+    const url = req.query.url as string;
+    if (!url) return res.status(400).end();
+    try {
+      const decoded = decodeURIComponent(url);
+      // Only allow http/https
+      if (!/^https?:\/\//i.test(decoded)) return res.status(400).end();
+      const upstream = await fetch(decoded, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; USDrop/1.0)' },
+      });
+      if (!upstream.ok) return res.status(404).end();
+      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+      if (!contentType.startsWith('image/')) return res.status(404).end();
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      return res.send(buf);
+    } catch {
+      return res.status(502).end();
+    }
+  });
+
   // GET /api/products
   app.get('/api/products', async (req: Request, res: Response) => {
     try {
@@ -3750,13 +3775,29 @@ export function registerPublicRoutes(app: Express) {
     try {
       const user = req.user!;
 
-      const { data } = await supabaseRemote
-        .from('user_details')
-        .select('*')
-        .eq('user_id', user.id)
+      const { data: profile } = await supabaseRemote
+        .from('profiles')
+        .select('full_name, phone_number')
+        .eq('id', user.id)
         .maybeSingle();
 
-      return res.json({ ...(data || {}), email: user.email });
+      return res.json({
+        full_name: profile?.full_name || '',
+        email: user.email,
+        contact_number: profile?.phone_number || '',
+        website_name: '',
+        batch_id: '',
+        enrolled_number: '',
+        llc_name: '',
+        ein_name: '',
+        facebook_page: '',
+        instagram_account: '',
+        learning_videos_link: '',
+        useful_links: '',
+        tools_url: '',
+        tools_username: '',
+        tools_password: '',
+      });
     } catch (error) {
       return res.status(500).json({ error: 'Internal server error' });
     }
@@ -3768,23 +3809,93 @@ export function registerPublicRoutes(app: Express) {
       const user = req.user!;
       const body = req.body;
 
-      const { email, id, created_at, updated_at, ...details } = body;
+      const {
+        email,
+        id,
+        created_at,
+        updated_at,
+        full_name,
+        contact_number,
+        website_name,
+        batch_id,
+        enrolled_number,
+        llc_name,
+        ein_name,
+        facebook_page,
+        instagram_account,
+        learning_videos_link,
+        useful_links,
+        tools_url,
+        tools_username,
+        tools_password,
+      } = body;
 
-      const { data, error } = await supabaseRemote
-        .from('user_details')
-        .upsert(
-          { ...details, user_id: user.id, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id' }
-        )
-        .select()
-        .single();
+      // Build the profiles update — only columns confirmed to exist in Supabase profiles table
+      const profilesUpdate: Record<string, any> = { updated_at: new Date().toISOString() };
+      if (full_name !== undefined) profilesUpdate.full_name = full_name;
+      if (contact_number !== undefined) profilesUpdate.phone_number = contact_number;
 
-      if (error) {
-        return res.status(500).json({ error: error.message });
+      const { error: profileError } = await supabaseRemote
+        .from('profiles')
+        .update(profilesUpdate)
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Error updating profiles:', profileError);
+        return res.status(500).json({ error: profileError.message });
       }
 
-      return res.json({ ...data, email: user.email });
+      invalidateAllUserCaches(user.id);
+
+      return res.json({
+        full_name: full_name ?? '',
+        email: user.email,
+        contact_number: contact_number ?? '',
+        website_name: website_name ?? '',
+        batch_id: batch_id ?? '',
+        enrolled_number: enrolled_number ?? '',
+        llc_name: llc_name ?? '',
+        ein_name: ein_name ?? '',
+        facebook_page: facebook_page ?? '',
+        instagram_account: instagram_account ?? '',
+        learning_videos_link: learning_videos_link ?? '',
+        useful_links: useful_links ?? '',
+        tools_url: tools_url ?? '',
+        tools_username: tools_username ?? '',
+        tools_password: tools_password ?? '',
+      });
     } catch (error) {
+      console.error('Error in PUT /api/user-details:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST /api/user/avatar — upload profile photo for regular users
+  app.post('/api/user/avatar', requireAuth, avatarUpload.single('file'), async (req: Request, res: Response) => {
+    const file = (req as any).file;
+    if (!file) return res.status(400).json({ error: 'No file provided' });
+    const user = req.user!;
+    try {
+      await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
+      // Delete old avatar if present
+      const { data: currentProfile } = await supabaseRemote.from('profiles').select('avatar_url').eq('id', user.id).maybeSingle();
+      if (currentProfile?.avatar_url) {
+        try {
+          const url = new URL(currentProfile.avatar_url);
+          const pathParts = url.pathname.split('/object/public/avatars/');
+          if (pathParts[1]) await supabaseRemote.storage.from('avatars').remove([pathParts[1]]);
+        } catch {}
+      }
+      const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
+      const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabaseRemote.storage.from('avatars').upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+      if (uploadError) return res.status(500).json({ error: 'Failed to upload image' });
+      const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = urlData?.publicUrl || null;
+      await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', user.id);
+      invalidateAllUserCaches(user.id);
+      return res.json({ avatarUrl });
+    } catch {
       return res.status(500).json({ error: 'Internal server error' });
     }
   });

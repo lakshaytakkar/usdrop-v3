@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -34,6 +35,7 @@ import {
   CreditCard,
   Edit,
   ChevronRight,
+  ChevronLeft,
   ChevronDown,
   ChevronUp,
   Save,
@@ -203,13 +205,14 @@ interface PlanOption {
 interface PicklistItem {
   id: string;
   product_id: string;
-  source: string;
-  added_at: string;
+  source: string | null;
+  notes: string | null;
+  created_at: string;
   products: {
     id: string;
     title: string;
-    image_url: string | null;
-    category: string | null;
+    image: string | null;
+    category_id: string | null;
     buy_price: number | null;
     sell_price: number | null;
     in_stock: boolean;
@@ -600,7 +603,7 @@ export default function AdminUserDetail() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-2xl font-bold truncate" data-testid="text-user-name">{user.full_name || "Unnamed User"}</h1>
+              <h1 className="text-2xl font-bold truncate" data-testid="text-user-name">{user.full_name || user.email?.split("@")[0] || "Unknown User"}</h1>
               <Badge variant={user.account_type === "pro" ? "default" : "secondary"} data-testid="badge-account-type">
                 {user.plan?.name || (user.account_type === "pro" ? "Pro" : "Free")}
               </Badge>
@@ -641,7 +644,7 @@ export default function AdminUserDetail() {
             <CreditCard className="mr-1.5 h-3.5 w-3.5" />
             Payment
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setIsEditingProfile(!isEditingProfile)} data-testid="button-edit-profile">
+          <Button size="sm" variant="outline" onClick={() => setIsEditingProfile(true)} data-testid="button-edit-profile">
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>
@@ -714,6 +717,53 @@ export default function AdminUserDetail() {
           <NotesTab notes={notes} paymentLinks={paymentLinks} tickets={tickets} newNote={newNote} setNewNote={setNewNote} onAddNote={handleAddNote} isSubmitting={isSubmitting} router={router} />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditingProfile} onOpenChange={(open) => { if (!open) setIsEditingProfile(false); }}>
+        <DialogContent className="sm:max-w-[440px]" data-testid="dialog-edit-profile">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                placeholder="Enter full name"
+                data-testid="input-edit-name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Input
+                id="edit-phone"
+                value={editForm.phone_number}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, phone_number: e.target.value }))}
+                placeholder="Enter phone number"
+                data-testid="input-edit-phone"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-account-type">Account Type</Label>
+              <Select value={editForm.account_type} onValueChange={(val) => setEditForm((prev) => ({ ...prev, account_type: val }))}>
+                <SelectTrigger id="edit-account-type" data-testid="select-edit-type"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingProfile(false)} data-testid="button-cancel-edit">Cancel</Button>
+            <Button onClick={handleSaveProfile} disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600" data-testid="button-save-profile">
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <SendEmailDrawer
         open={emailDrawerOpen}
@@ -836,9 +886,16 @@ function SummaryTab({ user, picklist, freeLearning, tickets, activities, openTic
 // ================================================================
 // PRODUCTS TAB
 // ================================================================
+const PRODUCTS_PAGE_SIZE = 20;
+
 function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; userId: string; onRefresh: () => void }) {
   const { showSuccess, showError } = useToast();
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.ceil(items.length / PRODUCTS_PAGE_SIZE);
+  const start = (page - 1) * PRODUCTS_PAGE_SIZE;
+  const pageItems = items.slice(start, start + PRODUCTS_PAGE_SIZE);
 
   const handleRemove = async (picklistId: string) => {
     try {
@@ -878,30 +935,30 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
             </tr>
           </thead>
           <tbody className="divide-y">
-            {items.map((item) => {
+            {pageItems.map((item) => {
               const p = item.products;
               return (
                 <tr key={item.id} data-testid={`row-product-${item.id}`}>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      {p?.image_url ? (
-                        <img src={p.image_url} alt="" className="h-8 w-8 rounded object-cover" />
+                      {p?.image ? (
+                        <img src={p.image} alt="" className="h-8 w-8 rounded object-cover" />
                       ) : (
                         <div className="h-8 w-8 rounded bg-muted flex items-center justify-center"><Package className="h-3.5 w-3.5 text-muted-foreground" /></div>
                       )}
                       <span className="font-medium truncate max-w-[200px]">{p?.title || "Unknown"}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{p?.category || "—"}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">—</td>
                   <td className="px-3 py-2.5 text-right">{p?.buy_price ? `$${p.buy_price}` : "—"}</td>
                   <td className="px-3 py-2.5 text-right">{p?.sell_price ? `$${p.sell_price}` : "—"}</td>
                   <td className="px-3 py-2.5 text-center">
                     <StatusBadge status={p?.in_stock ? "In Stock" : "Out"} />
                   </td>
                   <td className="px-3 py-2.5">
-                    <Badge variant="secondary" className="text-xs">{item.source || "—"}</Badge>
+                    <Badge variant="secondary" className="text-xs">{item.source || "platform"}</Badge>
                   </td>
-                  <td className="px-3 py-2.5 text-sm text-muted-foreground">{formatDate(item.added_at)}</td>
+                  <td className="px-3 py-2.5 text-sm text-muted-foreground">{formatDate(item.created_at)}</td>
                   <td className="px-3 py-2.5 text-right">
                     <Button
                       size="sm"
@@ -920,6 +977,59 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-3 py-3 border-t">
+          <p className="text-xs text-muted-foreground">
+            Showing {start + 1}–{Math.min(start + PRODUCTS_PAGE_SIZE, items.length)} of {items.length} products
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              data-testid="button-products-prev"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === "..." ? (
+                  <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                ) : (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={page === p ? "default" : "outline"}
+                    className="h-7 w-7 p-0 text-xs"
+                    onClick={() => setPage(p as number)}
+                    data-testid={`button-products-page-${p}`}
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              data-testid="button-products-next"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </SectionCard>
   );
 }

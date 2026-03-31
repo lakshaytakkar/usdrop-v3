@@ -148,6 +148,139 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // PROFILE AVATAR UPLOAD
+  // =============================================
+  router.post('/profile/avatar', upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      const adminUser = (req as any).user;
+      if (!adminUser?.id) return res.status(401).json({ error: 'Unauthorized' });
+
+      const file = (req as any).file;
+      if (!file) return res.status(400).json({ error: 'No file provided' });
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ error: 'Only JPEG, PNG, WebP, or GIF images are allowed' });
+      }
+
+      const ext = file.originalname.split('.').pop()?.toLowerCase() || 'jpg';
+      const filePath = `avatars/${adminUser.id}/avatar_${Date.now()}.${ext}`;
+
+      await supabaseRemote.storage.createBucket('avatars', { public: true }).catch(() => {});
+
+      // Delete old avatar from storage if it exists
+      const { data: currentProfile } = await supabaseRemote
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', adminUser.id)
+        .single();
+
+      if (currentProfile?.avatar_url) {
+        try {
+          const url = new URL(currentProfile.avatar_url);
+          const pathParts = url.pathname.split('/object/public/avatars/');
+          if (pathParts.length === 2) {
+            await supabaseRemote.storage.from('avatars').remove([pathParts[1]]);
+          }
+        } catch { /* ignore deletion errors */ }
+      }
+
+      const { error: uploadError } = await supabaseRemote.storage
+        .from('avatars')
+        .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+
+      if (uploadError) {
+        console.error('[admin] avatar upload error:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image' });
+      }
+
+      const { data: urlData } = supabaseRemote.storage.from('avatars').getPublicUrl(filePath);
+      const avatarUrl = urlData?.publicUrl || null;
+
+      await supabaseRemote.from('profiles').update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() }).eq('id', adminUser.id);
+
+      return res.json({ avatarUrl });
+    } catch (error) {
+      console.error('Error in POST /api/admin/profile/avatar:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
+  // NOTIFICATIONS
+  // =============================================
+  router.get('/notifications', async (req: Request, res: Response) => {
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [signupsResult, ticketsResult, llcResult] = await Promise.all([
+        supabaseRemote
+          .from('profiles')
+          .select('id, full_name, email, created_at, account_type')
+          .is('internal_role', null)
+          .gte('created_at', sevenDaysAgo)
+          .order('created_at', { ascending: false })
+          .limit(8),
+        supabaseRemote
+          .from('support_tickets')
+          .select('id, subject, created_at, status, user_id')
+          .in('status', ['open', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabaseRemote
+          .from('llc_applications')
+          .select('id, created_at, status, user_id, profiles!inner(full_name, email)')
+          .in('status', ['submitted', 'pending', 'in_review'])
+          .order('created_at', { ascending: false })
+          .limit(5),
+      ]);
+
+      const notifications: any[] = [];
+
+      for (const u of signupsResult.data || []) {
+        notifications.push({
+          id: `signup-${u.id}`,
+          type: 'signup',
+          title: 'New user signed up',
+          description: u.full_name || u.email,
+          timestamp: u.created_at,
+          link: `/admin/users/${u.id}`,
+        });
+      }
+
+      for (const t of ticketsResult.data || []) {
+        notifications.push({
+          id: `ticket-${t.id}`,
+          type: 'ticket',
+          title: 'Open support ticket',
+          description: t.subject || 'No subject',
+          timestamp: t.created_at,
+          link: `/admin/tickets`,
+        });
+      }
+
+      for (const l of llcResult.data || []) {
+        const profile = (l as any).profiles;
+        notifications.push({
+          id: `llc-${l.id}`,
+          type: 'llc',
+          title: 'Pending LLC application',
+          description: profile?.full_name || profile?.email || 'Unknown user',
+          timestamp: l.created_at,
+          link: `/admin/llc`,
+        });
+      }
+
+      notifications.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      return res.json({ notifications: notifications.slice(0, 20) });
+    } catch (error) {
+      console.error('Error in GET /api/admin/notifications:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // CATEGORIES
   // =============================================
   router.get('/categories', async (req: Request, res: Response) => {
@@ -4300,6 +4433,88 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // =============================================
+  // GLOBAL SEARCH
+  // =============================================
+
+  router.get('/search', async (req: Request, res: Response) => {
+    try {
+      const q = (req.query.q as string || '').trim();
+      if (!q || q.length < 2) return res.json({ users: [], products: [], tickets: [], totalUsers: 0 });
+
+      const pattern = `%${q}%`;
+      const lowerQ = q.toLowerCase();
+
+      // Detect plan-based queries
+      const isPlanQuery = ['pro', 'free'].includes(lowerQ);
+
+      // Build user search query — search by name, email, username, phone
+      let userQuery = supabaseRemote
+        .from('profiles')
+        .select('id, full_name, email, account_type, username, phone_number, internal_role, subscription_plan_id, subscription_plans(slug, name)', { count: 'exact' });
+
+      if (isPlanQuery) {
+        // For plan-based queries, get all users with that plan slug
+        const { data: planData } = await supabaseRemote.from('subscription_plans').select('id').eq('slug', lowerQ).single();
+        if (planData) {
+          userQuery = (userQuery as any).eq('subscription_plan_id', planData.id);
+        } else {
+          userQuery = (userQuery as any).eq('account_type', lowerQ);
+        }
+      } else {
+        userQuery = (userQuery as any).or(`full_name.ilike.${pattern},email.ilike.${pattern},username.ilike.${pattern},phone_number.ilike.${pattern}`);
+      }
+
+      const [usersResult, productsResult, ticketsResult] = await Promise.all([
+        (userQuery as any).order('created_at', { ascending: false }).limit(8),
+        supabaseRemote
+          .from('products')
+          .select('id, name, status')
+          .ilike('name', pattern)
+          .limit(6),
+        supabaseRemote
+          .from('support_tickets')
+          .select('id, subject, status, user_id, profiles!support_tickets_user_id_fkey(full_name, email)')
+          .or(`subject.ilike.${pattern}`)
+          .limit(4),
+      ]);
+
+      const users = (usersResult.data || []).map((u: any) => ({
+        id: u.id,
+        full_name: u.full_name || u.email?.split('@')[0] || 'Unnamed',
+        email: u.email,
+        plan_slug: (u.subscription_plans as any)?.slug || 'free',
+        plan_name: (u.subscription_plans as any)?.name || 'Free',
+        internal_role: u.internal_role || null,
+        phone_number: u.phone_number || null,
+      }));
+
+      const products = (productsResult.data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+      }));
+
+      const tickets = (ticketsResult.data || []).map((t: any) => ({
+        id: t.id,
+        subject: t.subject,
+        status: t.status,
+        user_name: (t.profiles as any)?.full_name || (t.profiles as any)?.email?.split('@')[0] || 'Unknown',
+      }));
+
+      return res.json({
+        users,
+        products,
+        tickets,
+        totalUsers: usersResult.count || users.length,
+        isPlanQuery,
+      });
+    } catch (error) {
+      console.error('Error in GET /api/admin/search:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =============================================
   // UNIFIED USERS ENDPOINTS (for new admin panel)
   // =============================================
 
@@ -4313,6 +4528,14 @@ export function registerAdminRoutes(app: Express) {
       const page = parseInt((req.query.page as string) || '1');
       const pageSize = parseInt((req.query.pageSize as string) || '50');
 
+      // Fetch plan IDs for stats
+      const { data: planRows } = await supabaseRemote
+        .from('subscription_plans')
+        .select('id, slug')
+        .in('slug', ['free', 'pro']);
+      const freePlanId = planRows?.find((p: any) => p.slug === 'free')?.id || null;
+      const proPlanId = planRows?.find((p: any) => p.slug === 'pro')?.id || null;
+
       let countQuery = supabaseRemote.from('profiles').select('id', { count: 'exact', head: true });
       let dataQuery = supabaseRemote.from('profiles').select('*, subscription_plans(id, name, slug, price_monthly)');
 
@@ -4323,6 +4546,14 @@ export function registerAdminRoutes(app: Express) {
       if (accountType) {
         countQuery = countQuery.eq('account_type', accountType);
         dataQuery = dataQuery.eq('account_type', accountType);
+      }
+      if (plan) {
+        // Filter by plan slug — match subscription_plan_id to the plan with that slug
+        const matchPlanId = planRows?.find((p: any) => p.slug === plan)?.id;
+        if (matchPlanId) {
+          countQuery = countQuery.eq('subscription_plan_id', matchPlanId);
+          dataQuery = dataQuery.eq('subscription_plan_id', matchPlanId);
+        }
       }
       if (status) {
         countQuery = countQuery.eq('status', status);
@@ -4341,7 +4572,20 @@ export function registerAdminRoutes(app: Express) {
       const offset = (page - 1) * pageSize;
       dataQuery = dataQuery.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
 
-      const [{ count: totalCount }, { data, error }] = await Promise.all([countQuery, dataQuery]);
+      // Aggregate stats using subscription_plan_id (source of truth for plan)
+      const statsPromises = [
+        countQuery,
+        dataQuery,
+        proPlanId
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', proPlanId)
+          : Promise.resolve({ count: 0 }),
+        freePlanId
+          ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', freePlanId)
+          : Promise.resolve({ count: 0 }),
+        supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'suspended'),
+      ] as const;
+
+      const [{ count: totalCount }, { data, error }, { count: proCount }, { count: freeCount }, { count: suspendedCount }] = await Promise.all(statsPromises);
 
       if (error) {
         console.error('Error fetching users:', error);
@@ -4372,6 +4616,11 @@ export function registerAdminRoutes(app: Express) {
         page,
         pageSize,
         totalPages: Math.ceil((totalCount || 0) / pageSize),
+        stats: {
+          pro: proCount || 0,
+          free: freeCount || 0,
+          suspended: suspendedCount || 0,
+        },
       });
     } catch (error) {
       console.error('Error in GET /api/admin/users:', error);
@@ -4969,9 +5218,9 @@ export function registerAdminRoutes(app: Express) {
       const { id } = req.params;
       const { data, error } = await supabaseRemote
         .from('user_picklist')
-        .select('id, product_id, source, added_at, products(id, title, image_url, category, buy_price, sell_price, in_stock)')
+        .select('id, product_id, source, notes, created_at, products(id, title, image, buy_price, sell_price, in_stock, category_id, subcategory_id)')
         .eq('user_id', id)
-        .order('added_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         if (error.code === 'PGRST205' || error.code === '42P01') return res.json({ items: [] });

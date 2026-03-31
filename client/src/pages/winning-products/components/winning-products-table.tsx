@@ -108,7 +108,7 @@ export function WinningProductsTable({
                     <div className="flex items-center gap-3">
                       <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted shrink-0">
                         <img
-                          src={product.image}
+                          src={(() => { const u = product.image; if (!u) return "/demo-products/product-1.png"; const t = ['images.unsplash.com','supabase.co','cloudinary.com','amazonaws.com']; return t.some(d=>u.includes(d)) ? u : `/api/proxy/image?url=${encodeURIComponent(u)}`; })()}
                           alt={product.title}
                          
                           className={cn(

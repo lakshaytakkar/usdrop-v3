@@ -417,30 +417,30 @@ export default function ProductDetailPage() {
 
                   {/* Source Links */}
                   <div className="grid grid-cols-3 gap-2 min-w-0 max-w-full">
-                    <Link href={aliExpressUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                    <a href={aliExpressUrl} target="_blank" rel="noopener noreferrer" className="w-full">
                       <Button variant="outline" size="sm" className="w-full text-xs h-9">
                         <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
                           <img src="/images/logos/aliexpress.svg" alt="AliExpress" className="object-contain" />
                         </div>
                         <span className="truncate">AliExpress</span>
                       </Button>
-                    </Link>
-                    <Link href={amazonUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                    </a>
+                    <a href={amazonUrl} target="_blank" rel="noopener noreferrer" className="w-full">
                       <Button variant="outline" size="sm" className="w-full text-xs h-9">
                         <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
                           <img src="/images/logos/amazon.svg" alt="Amazon" className="object-contain" />
                         </div>
                         <span className="truncate">Amazon</span>
                       </Button>
-                    </Link>
-                    <Link href={facebookAdsUrl} target="_blank" rel="noopener noreferrer" className="w-full">
+                    </a>
+                    <a href={facebookAdsUrl} target="_blank" rel="noopener noreferrer" className="w-full">
                       <Button variant="outline" size="sm" className="w-full text-xs h-9">
                         <div className="relative w-4 h-4 mr-1.5 flex-shrink-0">
                           <img src="/images/logos/meta.svg" alt="Facebook Ads" className="object-contain" />
                         </div>
                         <span className="truncate">FB Ads</span>
                       </Button>
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>

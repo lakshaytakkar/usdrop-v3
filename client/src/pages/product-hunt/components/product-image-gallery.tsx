@@ -13,25 +13,44 @@ interface ProductImageGalleryProps {
   videos?: string[]
 }
 
+const TRUSTED = ['images.unsplash.com', 'supabase.co', 'cloudinary.com', 'imgix.net', 'shopify.com', 'amazonaws.com'];
+function proxyImage(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:")) return url
+  if (TRUSTED.some(d => url.includes(d))) return url
+  return `/api/proxy/image?url=${encodeURIComponent(url)}`
+}
+
+const FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f5f9'/%3E%3Crect x='60' y='60' width='80' height='80' rx='8' fill='none' stroke='%23cbd5e1' stroke-width='4'/%3E%3Ccircle cx='82' cy='84' r='8' fill='%23cbd5e1'/%3E%3Cpath d='M60 130 L85 108 L100 123 L120 100 L140 130Z' fill='%23cbd5e1'/%3E%3C/svg%3E"
+
+const PlaceholderBox = ({ className = "" }: { className?: string }) => (
+  <div className={`w-full h-full flex items-center justify-center bg-gray-100 ${className}`}>
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+      <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+      <circle cx="9" cy="9" r="2"/>
+      <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+    </svg>
+  </div>
+)
+
 export function ProductImageGallery({ images, videos = [] }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 })
   const [isLoading, setIsLoading] = useState(true)
+  const [mainError, setMainError] = useState(false)
+  const [thumbErrors, setThumbErrors] = useState<Record<number, boolean>>({})
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const mainImageRef = useRef<HTMLDivElement>(null)
 
-  const displayImages = images.length > 0 ? images : ['/demo-products/Screenshot 2024-07-24 185228.png']
+  const displayImages = images.map(proxyImage).filter(Boolean) as string[]
   const displayVideos = videos || []
+  const hasImages = displayImages.length > 0
 
-  const gridItems = [
-    displayImages[0],
-    displayImages[1] || displayImages[0],
-    displayImages[2] || displayImages[0],
-    displayImages[3] || displayImages[0],
-    displayImages[4] || displayImages[0],
-  ].slice(0, 5)
+  const gridItems = hasImages
+    ? [0, 1, 2, 3, 4].map(i => displayImages[i] ?? null)
+    : [null, null, null, null, null]
 
   const isVideo = (index: number) => {
     return index < displayVideos.length && displayVideos[index]
@@ -39,6 +58,15 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
 
   const handleImageLoad = () => {
     setIsLoading(false)
+  }
+
+  const handleMainError = () => {
+    setMainError(true)
+    setIsLoading(false)
+  }
+
+  const handleThumbError = (index: number) => {
+    setThumbErrors(prev => ({ ...prev, [index]: true }))
   }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -52,6 +80,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
   const handleThumbnailClick = (index: number) => {
     setSelectedIndex(index)
     setIsLoading(true)
+    setMainError(false)
   }
 
   const openLightbox = (index: number) => {
@@ -74,7 +103,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
             className="relative w-full bg-muted overflow-hidden min-w-0 max-w-full"
             style={{ aspectRatio: '16 / 9' }}
           >
-            {isLoading && (
+            {isLoading && gridItems[selectedIndex] && (
               <div className="absolute inset-0">
                 <Skeleton className="w-full h-full animate-pulse" />
               </div>
@@ -90,11 +119,12 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                 onLoadedData={handleImageLoad}
                 playsInline
               />
+            ) : !gridItems[selectedIndex] || mainError ? (
+              <PlaceholderBox />
             ) : (
               <img
-                src={gridItems[selectedIndex] || gridItems[0]}
+                src={gridItems[selectedIndex]!}
                 alt={`Product view ${selectedIndex + 1}`}
-               
                 className={cn(
                   "object-cover transition-all duration-300",
                   isZoomed ? "scale-150" : "scale-100",
@@ -104,7 +134,7 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                   transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
                 }}
                 onLoad={handleImageLoad}
-               
+                onError={handleMainError}
               />
             )}
             {!isVideo(selectedIndex) && (
@@ -144,13 +174,14 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                     muted
                     playsInline
                   />
+                ) : !item || thumbErrors[index] ? (
+                  <PlaceholderBox />
                 ) : (
                   <img
                     src={item}
                     alt={`Product thumbnail ${index + 1}`}
-                   
-                    className="object-cover"
-                   
+                    className="object-cover w-full h-full"
+                    onError={() => handleThumbError(index)}
                   />
                 )}
                 {isVideoItem && (
@@ -183,14 +214,17 @@ export function ProductImageGallery({ images, videos = [] }: ProductImageGallery
                 controls
                 autoPlay
               />
-            ) : (
+            ) : gridItems[lightboxIndex] ? (
               <img
-                src={gridItems[lightboxIndex] || gridItems[0]}
+                src={gridItems[lightboxIndex]!}
                 alt={`Product view ${lightboxIndex + 1}`}
                 width={1200}
                 height={1200}
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = FALLBACK }}
               />
+            ) : (
+              <PlaceholderBox className="w-64 h-64 rounded-xl" />
             )}
           </div>
         </DialogContent>

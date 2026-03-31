@@ -1,16 +1,18 @@
 
-
 import { apiFetch } from '@/lib/supabase'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Save, ChevronDown, ChevronUp } from "lucide-react"
+import { Eye, EyeOff, Save, ChevronDown, ChevronUp, Camera } from "lucide-react"
 import { FrameworkBanner } from "@/components/framework-banner"
 import { Link } from "wouter"
+import { useUserMetadata } from "@/hooks/use-user-metadata"
+import { useUnifiedUser } from "@/contexts/unified-user-context"
 
 interface UserDetails {
   email: string
@@ -48,13 +50,22 @@ const defaultDetails: UserDetails = {
   tools_password: "",
 }
 
+function getInitials(name: string) {
+  return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+}
+
 export default function MyProfilePage() {
   const { showSuccess, showError } = useToast()
+  const { avatarUrl, fullName } = useUserMetadata()
+  const { refreshMetadata } = useUnifiedUser()
   const [details, setDetails] = useState<UserDetails>(defaultDetails)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     apiFetch("/api/user-details")
@@ -85,6 +96,14 @@ export default function MyProfilePage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPendingFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
+
   const handleChange = (field: keyof UserDetails, value: string) => {
     setDetails((prev) => ({ ...prev, [field]: value }))
   }
@@ -92,12 +111,25 @@ export default function MyProfilePage() {
   const handleSave = async () => {
     setSaving(true)
     try {
+      // Upload photo if pending
+      if (pendingFile) {
+        const formData = new FormData()
+        formData.append("file", pendingFile)
+        const photoRes = await apiFetch("/api/user/avatar", { method: "POST", body: formData })
+        if (!photoRes.ok) throw new Error("Failed to upload photo")
+        setPendingFile(null)
+        if (previewUrl) URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
+        await refreshMetadata()
+      }
+      // Save text fields
       const res = await apiFetch("/api/user-details", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(details),
       })
       if (!res.ok) throw new Error("Failed to save")
+      await refreshMetadata()
       showSuccess("Profile updated successfully!")
     } catch {
       showError("Failed to save profile. Please try again.")
@@ -105,6 +137,10 @@ export default function MyProfilePage() {
       setSaving(false)
     }
   }
+
+  const displayAvatar = previewUrl || avatarUrl
+  const emailPrefix = details.email ? details.email.split("@")[0] : ""
+  const displayName = details.full_name || fullName || emailPrefix || "User"
 
   return (
     <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-profile">
@@ -129,20 +165,51 @@ export default function MyProfilePage() {
                 ))}
               </div>
             </Card>
-            <Card className="p-6">
-              <Skeleton className="h-6 w-40 mb-6" />
-              <div className="grid md:grid-cols-2 gap-6">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-11 w-full rounded-lg" />
-                  </div>
-                ))}
-              </div>
-            </Card>
           </div>
         ) : (
           <div className="space-y-4">
+
+            {/* Photo + name card */}
+            <Card className="p-5">
+              <div className="flex items-center gap-5">
+                <div className="relative group">
+                  <Avatar className="h-20 w-20 ring-2 ring-border">
+                    <AvatarImage src={displayAvatar || undefined} alt={displayName} />
+                    <AvatarFallback className="text-xl font-semibold bg-primary/10 text-primary">
+                      {getInitials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    data-testid="button-change-photo"
+                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    <Camera className="h-6 w-6 text-white" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    data-testid="input-photo-upload"
+                    onChange={handlePhotoSelect}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="font-semibold text-base text-foreground">{displayName}</p>
+                  <p className="text-sm text-muted-foreground">{details.email}</p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium text-left mt-0.5"
+                    data-testid="button-change-photo-text"
+                  >
+                    {pendingFile ? "✓ Photo selected — click Save Profile" : "Change photo"}
+                  </button>
+                </div>
+              </div>
+            </Card>
 
             <div className="grid md:grid-cols-2 gap-4">
               <Card className="p-5">
@@ -242,32 +309,16 @@ export default function MyProfilePage() {
 
             {showMore && (
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-200">
-
                 <Card className="p-6 md:p-8">
                   <h3 className="ds-section-title ds-text-heading mb-6">Social Media</h3>
                   <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="facebook_page" className="text-sm font-medium ds-text-body">Facebook Page</Label>
-                      <Input
-                        id="facebook_page"
-                        data-testid="input-facebook-page"
-                        type="url"
-                        value={details.facebook_page}
-                        onChange={(e) => handleChange("facebook_page", e.target.value)}
-                        placeholder="https://facebook.com/yourpage"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="facebook_page" data-testid="input-facebook-page" type="url" value={details.facebook_page} onChange={(e) => handleChange("facebook_page", e.target.value)} placeholder="https://facebook.com/yourpage" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="instagram_account" className="text-sm font-medium ds-text-body">Instagram</Label>
-                      <Input
-                        id="instagram_account"
-                        data-testid="input-instagram-account"
-                        value={details.instagram_account}
-                        onChange={(e) => handleChange("instagram_account", e.target.value)}
-                        placeholder="@youraccount"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="instagram_account" data-testid="input-instagram-account" value={details.instagram_account} onChange={(e) => handleChange("instagram_account", e.target.value)} placeholder="@youraccount" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                   </div>
                 </Card>
@@ -277,94 +328,36 @@ export default function MyProfilePage() {
                   <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="batch_id" className="text-sm font-medium ds-text-body">Batch ID</Label>
-                      <Input
-                        id="batch_id"
-                        data-testid="input-batch-id"
-                        value={details.batch_id}
-                        onChange={(e) => handleChange("batch_id", e.target.value)}
-                        placeholder="Enter your batch ID"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="batch_id" data-testid="input-batch-id" value={details.batch_id} onChange={(e) => handleChange("batch_id", e.target.value)} placeholder="Enter your batch ID" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="enrolled_number" className="text-sm font-medium ds-text-body">Enrolled Number</Label>
-                      <Input
-                        id="enrolled_number"
-                        data-testid="input-enrolled-number"
-                        value={details.enrolled_number}
-                        onChange={(e) => handleChange("enrolled_number", e.target.value)}
-                        placeholder="Enter your enrolled number"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="enrolled_number" data-testid="input-enrolled-number" value={details.enrolled_number} onChange={(e) => handleChange("enrolled_number", e.target.value)} placeholder="Enter your enrolled number" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="learning_videos_link" className="text-sm font-medium ds-text-body">Learning Videos Link</Label>
-                      <Input
-                        id="learning_videos_link"
-                        data-testid="input-learning-videos-link"
-                        type="url"
-                        value={details.learning_videos_link}
-                        onChange={(e) => handleChange("learning_videos_link", e.target.value)}
-                        placeholder="https://example.com/videos"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="learning_videos_link" data-testid="input-learning-videos-link" type="url" value={details.learning_videos_link} onChange={(e) => handleChange("learning_videos_link", e.target.value)} placeholder="https://example.com/videos" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="tools_url" className="text-sm font-medium ds-text-body">Tools URL</Label>
-                      <Input
-                        id="tools_url"
-                        data-testid="input-tools-url"
-                        type="url"
-                        value={details.tools_url}
-                        onChange={(e) => handleChange("tools_url", e.target.value)}
-                        placeholder="https://example.com/tools"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="tools_url" data-testid="input-tools-url" type="url" value={details.tools_url} onChange={(e) => handleChange("tools_url", e.target.value)} placeholder="https://example.com/tools" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="tools_username" className="text-sm font-medium ds-text-body">Tools Username</Label>
-                      <Input
-                        id="tools_username"
-                        data-testid="input-tools-username"
-                        value={details.tools_username}
-                        onChange={(e) => handleChange("tools_username", e.target.value)}
-                        placeholder="Enter your tools username"
-                        className="h-11 bg-white border-gray-200 text-[15px]"
-                      />
+                      <Input id="tools_username" data-testid="input-tools-username" value={details.tools_username} onChange={(e) => handleChange("tools_username", e.target.value)} placeholder="Enter your tools username" className="h-11 bg-white border-gray-200 text-[15px]" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="tools_password" className="text-sm font-medium ds-text-body">Tools Password</Label>
                       <div className="relative">
-                        <Input
-                          id="tools_password"
-                          data-testid="input-tools-password"
-                          type={showPassword ? "text" : "password"}
-                          value={details.tools_password}
-                          onChange={(e) => handleChange("tools_password", e.target.value)}
-                          placeholder="Enter your tools password"
-                          className="h-11 bg-white border-gray-200 text-[15px] pr-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          data-testid="button-toggle-password"
-                        >
+                        <Input id="tools_password" data-testid="input-tools-password" type={showPassword ? "text" : "password"} value={details.tools_password} onChange={(e) => handleChange("tools_password", e.target.value)} placeholder="Enter your tools password" className="h-11 bg-white border-gray-200 text-[15px] pr-11" />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" data-testid="button-toggle-password">
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="useful_links" className="text-sm font-medium ds-text-body">Useful Links</Label>
-                      <textarea
-                        id="useful_links"
-                        data-testid="input-useful-links"
-                        value={details.useful_links}
-                        onChange={(e) => handleChange("useful_links", e.target.value)}
-                        placeholder="Add useful links, one per line"
-                        rows={3}
-                        className="flex w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-[15px] shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                      />
+                      <textarea id="useful_links" data-testid="input-useful-links" value={details.useful_links} onChange={(e) => handleChange("useful_links", e.target.value)} placeholder="Add useful links, one per line" rows={3} className="flex w-full rounded-md border border-gray-200 bg-white px-3 py-2.5 text-[15px] shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none disabled:cursor-not-allowed disabled:opacity-50" />
                     </div>
                   </div>
                 </Card>

@@ -26,6 +26,7 @@ import {
   X,
   ChevronDown,
   Store,
+  UserCircle,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
@@ -44,7 +45,7 @@ export function AppTopNavigation() {
   const [userData, setUserData] = useState<UserData | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { signOut, user } = useAuth()
-  const { isInternal, internalRole, isPro, isFree, fullName, avatarUrl, loading: isMetadataLoading } = useUserMetadata()
+  const { isInternal, internalRole, isPro, isFree, fullName, avatarUrl, email: metaEmail, loading: isMetadataLoading } = useUserMetadata()
 
   const activeGroup = findActiveGroup(pathname || "")
 
@@ -52,16 +53,24 @@ export function AppTopNavigation() {
     setMounted(true)
   }, [])
 
+  const getDisplayName = (name: string | null | undefined, email: string | null | undefined) => {
+    if (name) return name
+    if (email) return email.split("@")[0]
+    return "User"
+  }
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await apiFetch("/api/auth/user")
         if (response.ok) {
           const data = await response.json()
+          const name = data.user?.full_name || fullName
+          const email = data.user?.email || metaEmail || user?.email || ""
           setUserData({
-            name: data.name || fullName || "User",
-            email: data.email || "",
-            avatar_url: data.avatar_url || avatarUrl,
+            name: getDisplayName(name, email),
+            email,
+            avatar_url: data.user?.avatar_url || avatarUrl,
           })
         }
       } catch (error) {
@@ -71,14 +80,15 @@ export function AppTopNavigation() {
 
     if (mounted && !fullName) {
       fetchUserData()
-    } else if (fullName) {
+    } else if (fullName || metaEmail || user?.email) {
+      const email = metaEmail || user?.email || ""
       setUserData({
-        name: fullName || "User",
-        email: "",
+        name: getDisplayName(fullName, email),
+        email,
         avatar_url: avatarUrl ?? undefined,
       })
     }
-  }, [mounted, fullName, avatarUrl])
+  }, [mounted, fullName, avatarUrl, metaEmail, user?.email])
 
   const getInitials = (name: string) => {
     if (!name) return "U"
@@ -253,6 +263,12 @@ export function AppTopNavigation() {
                       </div>
                     </div>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href="/framework/my-profile" data-testid="link-my-profile" className="flex items-center">
+                        <UserCircle className="mr-2 h-4 w-4" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href="/claim-store" data-testid="link-claim-store" className="flex items-center">
                         <Store className="mr-2 h-4 w-4" />

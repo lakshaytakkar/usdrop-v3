@@ -6,12 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SectionError } from "@/components/ui/section-error"
 import { EmptyState } from "@/components/ui/empty-state"
-import { FreeLearningCutoff } from "@/components/ui/free-learning-cutoff"
-import { ChevronRight, Flame, Lock } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { Product } from "@/types/products"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
-import { useOnboarding } from "@/contexts/onboarding-context"
-import { getTeaserLockState } from "@/hooks/use-teaser-lock"
 
 interface TrendingProduct {
   id: string
@@ -38,19 +35,19 @@ function TrendingProductCard({ product }: { product: TrendingProduct }) {
       <div className="flex flex-col">
         <div className="flex min-h-[180px]">
           <div className="w-[45%] bg-white flex items-center justify-center p-3 overflow-hidden">
-            {imageError ? (
-              <div data-testid={`img-trending-fallback-${product.id}`} className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <Flame className="h-10 w-10" />
-              </div>
-            ) : (
+            {product.image && !imageError ? (
               <img
                 data-testid={`img-trending-${product.id}`}
-                src={product.image || "/demo-products/product-1.png"}
+                src={product.image}
                 alt={product.title}
                 className="max-w-full max-h-[160px] object-contain"
                 loading="lazy"
                 onError={() => setImageError(true)}
               />
+            ) : (
+              <div data-testid={`img-trending-fallback-${product.id}`} className="w-full h-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground/25"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+              </div>
             )}
           </div>
 
@@ -125,7 +122,6 @@ export default function TrendingProductsPage() {
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
   const pageSize = 6
-  const { isFree, hasCompletedFreeLearning } = useOnboarding()
   const observerRef = useRef<HTMLDivElement>(null)
   const loadingRef = useRef(false)
   const currentPageRef = useRef(1)
@@ -250,35 +246,10 @@ export default function TrendingProductsPage() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {products.map((product, index) => {
-              const { isLocked } = getTeaserLockState(index, isFree, {
-                freeVisibleCount: 4,
-                strategy: "first-n-items"
-              }, hasCompletedFreeLearning)
-
-              if (isLocked) {
-                return (
-                  <div key={product.id} className="relative select-none" data-testid={`teaser-card-locked-${index}`}>
-                    <div className="blur-[3px] opacity-50 pointer-events-none saturate-50">
-                      <TrendingProductCard product={product} />
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-500 shadow-sm border border-gray-200">
-                        <Lock className="size-3" />
-                        Locked
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-
-              return <TrendingProductCard key={product.id} product={product} />
-            })}
+            {products.map((product) => (
+              <TrendingProductCard key={product.id} product={product} />
+            ))}
           </div>
-
-          {isFree && !hasCompletedFreeLearning && products.length > 4 && (
-            <FreeLearningCutoff itemCount={4} contentType="products" />
-          )}
 
           {isLoadingMore && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-1">

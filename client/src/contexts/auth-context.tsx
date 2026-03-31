@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
         return
       }
-      const res = await apiFetch("/api/auth/user")
+      const res = await apiFetch(`/api/auth/user?_=${Date.now()}`)
       if (res.ok) {
         const data = await res.json()
         setUser(data.user || null)

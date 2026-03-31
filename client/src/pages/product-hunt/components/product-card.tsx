@@ -132,7 +132,13 @@ export function ProductCard({ product, isLocked = false, onLockedClick, isSaved:
           </div>
         ) : (
           <img
-            src={product.image || "/demo-products/product-1.png"}
+            src={(() => {
+              const u = product.image;
+              if (!u) return "/demo-products/product-1.png";
+              const trusted = ['images.unsplash.com','supabase.co','cloudinary.com','amazonaws.com'];
+              if (trusted.some(d => u.includes(d))) return u;
+              return `/api/proxy/image?url=${encodeURIComponent(u)}`;
+            })()}
             alt={product.title}
             decoding="async"
             className={`w-full h-full object-cover transition-all duration-300 ${isLocked ? "blur-md" : ""}`}
