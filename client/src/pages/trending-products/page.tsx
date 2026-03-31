@@ -20,9 +20,11 @@ interface TrendingProduct {
   trendData: number[]
 }
 
+const TRUSTED_DOMAINS = ['images.unsplash.com', 'supabase.co', 'cloudinary.com', 'imgix.net', 'shopify.com', 'amazonaws.com'];
 function proxyImage(url: string | null | undefined): string {
   if (!url) return "/demo-products/product-1.png";
   if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:")) return url;
+  if (TRUSTED_DOMAINS.some(d => url.includes(d))) return url;
   return `/api/proxy/image?url=${encodeURIComponent(url)}`;
 }
 

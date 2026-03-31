@@ -36,11 +36,12 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
   // Limit to 10 products max
   relatedProducts = relatedProducts.slice(0, 10)
   
-  // Get image URL for a product (proxy external URLs to avoid 404-with-body placeholders)
+  const TRUSTED = ['images.unsplash.com', 'supabase.co', 'cloudinary.com', 'imgix.net', 'shopify.com', 'amazonaws.com'];
   const getProductImage = (product: Product): string => {
     const raw = product.image || (product.additional_images?.[0]) || null
     if (!raw) return "/demo-products/Screenshot 2024-07-24 185228.png"
     if (raw.startsWith("/") || raw.startsWith("blob:") || raw.startsWith("data:")) return raw
+    if (TRUSTED.some(d => raw.includes(d))) return raw
     return `/api/proxy/image?url=${encodeURIComponent(raw)}`
   }
   
