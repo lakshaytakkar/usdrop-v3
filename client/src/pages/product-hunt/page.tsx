@@ -292,8 +292,7 @@ export default function ProductHuntPage() {
           source_type: 'scraped',
           page: page.toString(),
           pageSize: PRODUCTS_PER_PAGE.toString(),
-          sortBy: 'created_at',
-          sortOrder: 'desc',
+          shuffle: 'daily',
         })
         
         if (selectedCategory !== "all") {

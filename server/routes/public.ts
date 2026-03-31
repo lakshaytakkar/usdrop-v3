@@ -2594,6 +2594,35 @@ export function registerPublicRoutes(app: Express) {
     }
   });
 
+  const dailyShuffleCache: { date: string; orders: Map<string, string[]> } = { date: '', orders: new Map() };
+
+  function getDailyShuffledIds(productIds: string[], cacheKey: string): string[] {
+    const today = new Date().toISOString().slice(0, 10);
+    if (dailyShuffleCache.date !== today) {
+      dailyShuffleCache.date = today;
+      dailyShuffleCache.orders = new Map();
+    }
+    const cached = dailyShuffleCache.orders.get(cacheKey);
+    if (cached && cached.length === productIds.length) return cached;
+
+    const seed = today + cacheKey;
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+    }
+    function seededRandom() {
+      hash = (hash * 1664525 + 1013904223) | 0;
+      return ((hash >>> 0) / 4294967296);
+    }
+    const shuffled = [...productIds];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    dailyShuffleCache.orders.set(cacheKey, shuffled);
+    return shuffled;
+  }
+
   // GET /api/products
   app.get('/api/products', async (req: Request, res: Response) => {
     try {
@@ -2607,7 +2636,110 @@ export function registerPublicRoutes(app: Express) {
       const pageSize = parseInt(req.query.pageSize as string || '20');
       const sortBy = (req.query.sortBy as string) || 'created_at';
       const sortOrder = (req.query.sortOrder as string) || 'desc';
+      const shuffle = req.query.shuffle as string | undefined;
       const offset = (page - 1) * pageSize;
+
+      if (shuffle === 'daily' && !search) {
+        const cacheKey = `${sourceType || 'all'}_${categoryId || 'all'}_${isWinning || ''}_${isLocked || ''}_${isTrending || ''}`;
+
+        const needsInnerMeta = isWinning !== undefined || isLocked !== undefined || isTrending !== undefined;
+        const idSelectParts = ['id'];
+        if (needsInnerMeta) idSelectParts.push('product_metadata!inner(id)');
+        if (sourceType) idSelectParts.push('product_source!inner(id)');
+
+        let idQuery = supabaseRemote
+          .from('products')
+          .select(idSelectParts.join(', '));
+
+        if (sourceType) idQuery = idQuery.eq('product_source.source_type', sourceType);
+        if (isWinning !== undefined) idQuery = idQuery.eq('product_metadata.is_winning', isWinning === 'true');
+        if (isLocked !== undefined) idQuery = idQuery.eq('product_metadata.is_locked', isLocked === 'true');
+        if (isTrending !== undefined) idQuery = idQuery.eq('product_metadata.is_trending', isTrending === 'true');
+        if (categoryId) idQuery = idQuery.eq('category_id', categoryId);
+
+        const { data: idData, error: idError } = await idQuery;
+        if (idError) {
+          console.error('Error fetching product IDs for shuffle:', idError);
+          return res.status(500).json({ error: 'Failed to fetch products' });
+        }
+
+        const allIds = (idData || []).map((r: any) => r.id as string);
+        const shuffledIds = getDailyShuffledIds(allIds, cacheKey);
+        const total = shuffledIds.length;
+        const pageIds = shuffledIds.slice(offset, offset + pageSize);
+
+        if (pageIds.length === 0) {
+          return res.json({ products: [], total, page, pageSize, totalPages: Math.ceil(total / pageSize) });
+        }
+
+        const selectParts = ['*', 'categories(*)', 'suppliers(*)', 'product_metadata(*)', 'product_source(*)'];
+        const { data, error } = await supabaseRemote
+          .from('products')
+          .select(selectParts.join(', '))
+          .in('id', pageIds);
+
+        if (error) {
+          console.error('Error fetching shuffled products:', error);
+          return res.status(500).json({ error: 'Failed to fetch products' });
+        }
+
+        const rowMap = new Map((data || []).map((r: any) => [r.id, r]));
+        const orderedData = pageIds.map(id => rowMap.get(id)).filter(Boolean);
+
+        const products = orderedData.map((row: any) => {
+          const cat = row.categories;
+          const sup = row.suppliers;
+          const meta = Array.isArray(row.product_metadata) ? row.product_metadata[0] : row.product_metadata;
+          const src = Array.isArray(row.product_source) ? row.product_source[0] : row.product_source;
+          return {
+            id: row.id, title: row.title, image: row.image, description: row.description,
+            category_id: row.category_id,
+            category: cat ? {
+              id: cat.id, name: cat.name, slug: cat.slug, description: cat.description,
+              image: cat.image, thumbnail: cat.thumbnail || null, parent_category_id: cat.parent_category_id,
+              trending: cat.trending, product_count: cat.product_count, avg_profit_margin: cat.avg_profit_margin,
+              growth_percentage: cat.growth_percentage, created_at: cat.created_at, updated_at: cat.updated_at,
+            } : undefined,
+            buy_price: parseFloat(row.buy_price), sell_price: parseFloat(row.sell_price),
+            profit_per_order: parseFloat(row.profit_per_order),
+            additional_images: Array.isArray(row.additional_images) ? row.additional_images : [],
+            specifications: row.specifications || null,
+            rating: row.rating ? parseFloat(row.rating) : null,
+            reviews_count: row.reviews_count || 0,
+            trend_data: Array.isArray(row.trend_data) ? row.trend_data : [],
+            supplier_id: row.supplier_id,
+            supplier: sup ? {
+              id: sup.id, name: sup.name, company_name: sup.name || null, logo: null,
+              website: sup.website, country: sup.country, rating: sup.rating, verified: sup.verified,
+              shipping_time: sup.shipping_time, min_order_quantity: sup.min_order_quantity,
+              contact_email: sup.contact_email, created_at: sup.created_at, updated_at: sup.updated_at,
+            } : undefined,
+            created_at: row.created_at, updated_at: row.updated_at,
+            metadata: meta ? {
+              id: meta.id, product_id: meta.product_id, is_winning: meta.is_winning || false,
+              is_locked: meta.is_locked || false, is_trending: meta.is_trending || false,
+              unlock_price: meta.unlock_price ? parseFloat(meta.unlock_price) : null,
+              profit_margin: meta.profit_margin ? parseFloat(meta.profit_margin) : null,
+              pot_revenue: meta.pot_revenue ? parseFloat(meta.pot_revenue) : null,
+              revenue_growth_rate: meta.revenue_growth_rate ? parseFloat(meta.revenue_growth_rate) : null,
+              items_sold: meta.items_sold,
+              avg_unit_price: meta.avg_unit_price ? parseFloat(meta.avg_unit_price) : null,
+              revenue_trend: Array.isArray(meta.revenue_trend) ? meta.revenue_trend : [],
+              found_date: meta.found_date, detailed_analysis: meta.detailed_analysis,
+              filters: Array.isArray(meta.filters) ? meta.filters : [],
+              created_at: meta.created_at, updated_at: meta.updated_at,
+            } : undefined,
+            source: src ? {
+              id: src.id, product_id: src.product_id, source_type: src.source_type,
+              source_id: src.source_id, standardized_at: src.standardized_at,
+              standardized_by: src.standardized_by, created_at: src.created_at, updated_at: src.updated_at,
+            } : undefined,
+          };
+        });
+
+        const totalPages = Math.ceil(total / pageSize);
+        return res.json({ products, total, page, pageSize, totalPages });
+      }
 
       const needsInnerMeta = isWinning !== undefined || isLocked !== undefined || isTrending !== undefined;
       const selectParts = ['*', 'categories(*)', 'suppliers(*)'];
