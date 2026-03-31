@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -643,7 +644,7 @@ export default function AdminUserDetail() {
             <CreditCard className="mr-1.5 h-3.5 w-3.5" />
             Payment
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setIsEditingProfile(!isEditingProfile)} data-testid="button-edit-profile">
+          <Button size="sm" variant="outline" onClick={() => setIsEditingProfile(true)} data-testid="button-edit-profile">
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>
@@ -716,6 +717,53 @@ export default function AdminUserDetail() {
           <NotesTab notes={notes} paymentLinks={paymentLinks} tickets={tickets} newNote={newNote} setNewNote={setNewNote} onAddNote={handleAddNote} isSubmitting={isSubmitting} router={router} />
         </TabsContent>
       </Tabs>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditingProfile} onOpenChange={(open) => { if (!open) setIsEditingProfile(false); }}>
+        <DialogContent className="sm:max-w-[440px]" data-testid="dialog-edit-profile">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-name">Full Name</Label>
+              <Input
+                id="edit-name"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, full_name: e.target.value }))}
+                placeholder="Enter full name"
+                data-testid="input-edit-name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Input
+                id="edit-phone"
+                value={editForm.phone_number}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, phone_number: e.target.value }))}
+                placeholder="Enter phone number"
+                data-testid="input-edit-phone"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-account-type">Account Type</Label>
+              <Select value={editForm.account_type} onValueChange={(val) => setEditForm((prev) => ({ ...prev, account_type: val }))}>
+                <SelectTrigger id="edit-account-type" data-testid="select-edit-type"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free</SelectItem>
+                  <SelectItem value="pro">Pro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingProfile(false)} data-testid="button-cancel-edit">Cancel</Button>
+            <Button onClick={handleSaveProfile} disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600" data-testid="button-save-profile">
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <SendEmailDrawer
         open={emailDrawerOpen}
