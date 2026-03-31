@@ -74,7 +74,7 @@ export function WinningProductCard({ product, onLockedClick }: ProductCardProps)
           </div>
         ) : (
           <img
-            src={product.image ? `/api/proxy/image?url=${encodeURIComponent(product.image)}` : "/demo-products/Screenshot 2024-07-24 185228.png"}
+            src={product.image ? `/api/proxy/image?url=${encodeURIComponent(product.image)}` : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Crect x='90' y='90' width='120' height='120' rx='12' fill='none' stroke='%23cbd5e1' stroke-width='6'/%3E%3Ccircle cx='123' cy='126' r='12' fill='%23cbd5e1'/%3E%3Cpath d='M90 195 L127 162 L150 185 L180 150 L210 195Z' fill='%23cbd5e1'/%3E%3C/svg%3E"}
             alt={product.title}
             className={`object-cover transition-all duration-300 ${product.isLocked ? "blur-md" : ""}`}
             onError={() => setImageError(true)}

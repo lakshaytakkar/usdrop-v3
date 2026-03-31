@@ -19,7 +19,7 @@ function proxyImage(url: string | null | undefined): string {
   return `/api/proxy/image?url=${encodeURIComponent(url)}`
 }
 
-const FALLBACK = "/demo-products/product-1.png"
+const FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23f1f5f9'/%3E%3Crect x='60' y='60' width='80' height='80' rx='8' fill='none' stroke='%23cbd5e1' stroke-width='4'/%3E%3Ccircle cx='82' cy='84' r='8' fill='%23cbd5e1'/%3E%3Cpath d='M60 130 L85 108 L100 123 L120 100 L140 130Z' fill='%23cbd5e1'/%3E%3C/svg%3E"
 
 export function ProductImageGallery({ images, videos = [] }: ProductImageGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
