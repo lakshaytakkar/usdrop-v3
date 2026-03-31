@@ -88,7 +88,6 @@ export default function AdminProfilePage() {
       setLocalAvatarUrl(data.avatarUrl);
       showSuccess("Profile photo updated");
       await refreshMetadata();
-      window.location.reload();
     } catch (err) {
       showError(err instanceof Error ? err.message : "Failed to upload photo");
       setLocalAvatarUrl(avatarUrl ?? null);
