@@ -1275,14 +1275,6 @@ export default function MyProductsPage() {
                                       "/demo-products/Screenshot 2024-07-24 185228.png";
                                   }}
                                 />
-                                {isSelected && (
-                                  <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                                    <CheckCircle2
-                                      className="h-6 w-6 text-emerald-600 drop-shadow-sm"
-                                      fill="white"
-                                    />
-                                  </div>
-                                )}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p
