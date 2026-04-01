@@ -48,6 +48,7 @@ import {
   Tag,
   X,
   Wrench,
+  Star,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -73,6 +74,7 @@ interface PicklistItem {
   category: string;
   categoryId: string | null;
   addedDate: string;
+  starred: boolean;
   source:
     | "winning-products"
     | "product-hunt"
@@ -928,7 +930,7 @@ interface ShopifyStore {
   status: string;
 }
 
-type SourceTab = "all" | "usdrop" | "mine";
+type SourceTab = "all" | "starred" | "usdrop" | "mine";
 
 export default function MyProductsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -1064,7 +1066,9 @@ export default function MyProductsPage() {
 
   const filteredItems = useMemo(() => {
     let filtered = items;
-    if (activeTab === "usdrop") {
+    if (activeTab === "starred") {
+      filtered = filtered.filter((item) => item.starred);
+    } else if (activeTab === "usdrop") {
       filtered = filtered.filter((item) => usdropSources.includes(item.source));
     } else if (activeTab === "mine") {
       filtered = filtered.filter(
@@ -1085,6 +1089,7 @@ export default function MyProductsPage() {
   const tabCounts = useMemo(
     () => ({
       all: items.length,
+      starred: items.filter((item) => item.starred).length,
       usdrop: items.filter((item) => usdropSources.includes(item.source))
         .length,
       mine: items.filter(
@@ -1116,6 +1121,7 @@ export default function MyProductsPage() {
           <div className="flex items-center gap-1 mb-4 border-b border-gray-200">
             {[
               { key: "all" as SourceTab, label: "All Products" },
+              { key: "starred" as SourceTab, label: "Starred" },
               { key: "usdrop" as SourceTab, label: "Saved from USDrop" },
               { key: "mine" as SourceTab, label: "Added by Me" },
             ].map((tab) => (
@@ -1208,20 +1214,24 @@ export default function MyProductsPage() {
                 <h3 className="text-lg font-semibold mb-2">
                   {searchQuery
                     ? "No products match your search"
-                    : activeTab === "usdrop"
-                      ? "No products saved from USDrop"
-                      : activeTab === "mine"
-                        ? "No products added by you"
-                        : "No products saved"}
+                    : activeTab === "starred"
+                      ? "No starred products"
+                      : activeTab === "usdrop"
+                        ? "No products saved from USDrop"
+                        : activeTab === "mine"
+                          ? "No products added by you"
+                          : "No products saved"}
                 </h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery
                     ? "Try a different search term."
-                    : activeTab === "usdrop"
-                      ? "Browse Product Hunt or Winning Products to save items here."
-                      : activeTab === "mine"
-                        ? "Use the Add Product button to create your own products."
-                        : "Start by adding products to your list."}
+                    : activeTab === "starred"
+                      ? "Products starred by the admin will appear here."
+                      : activeTab === "usdrop"
+                        ? "Browse Product Hunt or Winning Products to save items here."
+                        : activeTab === "mine"
+                          ? "Use the Add Product button to create your own products."
+                          : "Start by adding products to your list."}
                 </p>
                 {!searchQuery && (
                   <div className="flex items-center justify-center gap-3">
@@ -1246,7 +1256,10 @@ export default function MyProductsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[320px]">Product</TableHead>
+                      <TableHead className="w-[50px] text-center">
+                        <Star className="h-4 w-4 mx-auto text-muted-foreground" />
+                      </TableHead>
+                      <TableHead className="w-[300px]">Product</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Buy Price</TableHead>
                       <TableHead>Sell Price</TableHead>
@@ -1260,9 +1273,15 @@ export default function MyProductsPage() {
                       return (
                         <TableRow
                           key={item.id}
-                          className="hover:bg-muted/50 transition-colors"
+                          className={`transition-colors ${item.starred ? "bg-amber-50/40 hover:bg-amber-50/60" : "hover:bg-muted/50"}`}
                           data-testid={`row-product-${item.id}`}
                         >
+                          <TableCell className="text-center">
+                            <Star
+                              className={`h-5 w-5 mx-auto ${item.starred ? "fill-amber-400 text-amber-400" : "text-gray-200"}`}
+                              data-testid={`star-indicator-${item.id}`}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <div className="relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50">

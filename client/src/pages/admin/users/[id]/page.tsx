@@ -68,6 +68,7 @@ import {
   Circle,
   Loader2,
   Mail,
+  Star,
 } from "lucide-react";
 import { journeyStages as fallbackJourneyStages } from "@/data/journey-stages";
 import type { JourneyStage } from "@/data/journey-stages";
@@ -208,6 +209,7 @@ interface PicklistItem {
   source: string | null;
   notes: string | null;
   created_at: string;
+  starred: boolean;
   products: {
     id: string;
     title: string;
@@ -891,11 +893,28 @@ const PRODUCTS_PAGE_SIZE = 20;
 function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; userId: string; onRefresh: () => void }) {
   const { showSuccess, showError } = useToast();
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
+  const [togglingStarId, setTogglingStarId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
+  const starredCount = items.filter(i => i.starred).length;
   const totalPages = Math.ceil(items.length / PRODUCTS_PAGE_SIZE);
   const start = (page - 1) * PRODUCTS_PAGE_SIZE;
   const pageItems = items.slice(start, start + PRODUCTS_PAGE_SIZE);
+
+  const handleToggleStar = async (picklistId: string, currentlyStarred: boolean) => {
+    try {
+      setTogglingStarId(picklistId);
+      const res = await apiFetch(`/api/admin/users/${userId}/picklist/${picklistId}/star`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ starred: !currentlyStarred }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      showSuccess(!currentlyStarred ? "Product starred" : "Star removed");
+      onRefresh();
+    } catch { showError("Failed to update star"); }
+    finally { setTogglingStarId(null); }
+  };
 
   const handleRemove = async (picklistId: string) => {
     try {
@@ -919,11 +938,14 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
   }
 
   return (
-    <SectionCard title={`Saved Products (${items.length})`}>
+    <SectionCard title={`Saved Products (${items.length})${starredCount > 0 ? ` · ${starredCount} starred` : ""}`}>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
+              <th className="px-2 py-3 text-center text-sm font-medium text-muted-foreground w-[50px]">
+                <Star className="h-4 w-4 mx-auto text-muted-foreground" />
+              </th>
               <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Product</th>
               <th className="px-3 py-3 text-left text-sm font-medium text-muted-foreground">Category</th>
               <th className="px-3 py-3 text-right text-sm font-medium text-muted-foreground">Buy</th>
@@ -938,7 +960,19 @@ function ProductsTab({ items, userId, onRefresh }: { items: PicklistItem[]; user
             {pageItems.map((item) => {
               const p = item.products;
               return (
-                <tr key={item.id} data-testid={`row-product-${item.id}`}>
+                <tr key={item.id} className={item.starred ? "bg-amber-50/50" : ""} data-testid={`row-product-${item.id}`}>
+                  <td className="px-2 py-2.5 text-center">
+                    <button
+                      onClick={() => handleToggleStar(item.id, item.starred)}
+                      disabled={togglingStarId === item.id}
+                      className="p-1 rounded-md hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+                      data-testid={`button-star-${item.id}`}
+                    >
+                      <Star
+                        className={`h-5 w-5 transition-colors ${item.starred ? "fill-amber-400 text-amber-400" : "text-gray-300 hover:text-amber-300"}`}
+                      />
+                    </button>
+                  </td>
                   <td className="px-3 py-2.5">
                     <div className="flex items-center gap-2">
                       {p?.image ? (

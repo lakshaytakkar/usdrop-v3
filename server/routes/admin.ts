@@ -5227,9 +5227,72 @@ export function registerAdminRoutes(app: Express) {
         console.error('Error fetching user picklist:', error);
         return res.status(500).json({ error: 'Failed to fetch picklist' });
       }
-      return res.json({ items: data || [] });
+      const items = (data || []).map((item: any) => {
+        let starred = false;
+        try { const meta = typeof item.notes === 'string' ? JSON.parse(item.notes) : item.notes; starred = !!meta?.starred; } catch {}
+        return { ...item, starred };
+      });
+      items.sort((a: any, b: any) => {
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        return 0;
+      });
+      return res.json({ items });
     } catch (error) {
       console.error('Error in GET /api/admin/users/:id/picklist:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  router.patch('/users/:userId/picklist/:picklistId/star', async (req: Request, res: Response) => {
+    try {
+      const { userId, picklistId } = req.params;
+      const { starred } = req.body;
+
+      if (typeof starred !== 'boolean') {
+        return res.status(400).json({ error: 'starred must be a boolean' });
+      }
+
+      const { data: existing, error: fetchErr } = await supabaseRemote
+        .from('user_picklist')
+        .select('notes')
+        .eq('id', picklistId)
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchErr || !existing) {
+        return res.status(404).json({ error: 'Picklist item not found for this user' });
+      }
+
+      let meta: any = {};
+      try {
+        const parsed = typeof existing.notes === 'string' ? JSON.parse(existing.notes) : existing.notes;
+        if (parsed && typeof parsed === 'object') {
+          meta = parsed;
+        } else if (typeof existing.notes === 'string' && existing.notes.trim()) {
+          meta = { noteText: existing.notes };
+        }
+      } catch {
+        if (typeof existing.notes === 'string' && existing.notes.trim()) {
+          meta = { noteText: existing.notes };
+        }
+      }
+      meta.starred = starred;
+
+      const { error: updateErr } = await supabaseRemote
+        .from('user_picklist')
+        .update({ notes: JSON.stringify(meta) })
+        .eq('id', picklistId)
+        .eq('user_id', userId);
+
+      if (updateErr) {
+        console.error('Error updating star:', updateErr);
+        return res.status(500).json({ error: 'Failed to update star status' });
+      }
+
+      return res.json({ success: true, starred });
+    } catch (error) {
+      console.error('Error in PATCH star:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });

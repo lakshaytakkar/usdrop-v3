@@ -2344,6 +2344,8 @@ export function registerPublicRoutes(app: Express) {
       const transformedItems = (picklistItems || []).map((item: any) => {
         const p = item.products;
         const cat = p?.categories;
+        let starred = false;
+        try { const meta = typeof item.notes === 'string' ? JSON.parse(item.notes) : item.notes; starred = !!meta?.starred; } catch {}
         return {
           id: item.id,
           productId: item.product_id,
@@ -2358,10 +2360,17 @@ export function registerPublicRoutes(app: Express) {
           categoryId: p?.category_id || null,
           addedDate: item.created_at,
           source: item.source || 'other',
+          starred,
         };
       });
 
-      return res.json({ items: transformedItems });
+      const sorted = transformedItems.sort((a: any, b: any) => {
+        if (a.starred && !b.starred) return -1;
+        if (!a.starred && b.starred) return 1;
+        return 0;
+      });
+
+      return res.json({ items: sorted });
     } catch (error) {
       console.error('Error in GET /api/picklist:', error);
       return res.status(500).json({ error: 'Internal server error' });
