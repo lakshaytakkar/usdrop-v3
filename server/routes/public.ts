@@ -2639,8 +2639,8 @@ export function registerPublicRoutes(app: Express) {
       const shuffle = req.query.shuffle as string | undefined;
       const offset = (page - 1) * pageSize;
 
-      if (shuffle === 'daily' && !search) {
-        const cacheKey = `${sourceType || 'all'}_${categoryId || 'all'}_${isWinning || ''}_${isLocked || ''}_${isTrending || ''}`;
+      if ((shuffle === 'daily' || shuffle === 'daily-trending') && !search) {
+        const cacheKey = `${shuffle}_${sourceType || 'all'}_${categoryId || 'all'}_${isWinning || ''}_${isLocked || ''}_${isTrending || ''}`;
 
         const needsInnerMeta = isWinning !== undefined || isLocked !== undefined || isTrending !== undefined;
         const idSelectParts = ['id'];

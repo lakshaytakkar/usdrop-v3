@@ -17,15 +17,36 @@ interface TrendingProduct {
   trendData: number[]
 }
 
+function generateTrendData(productId: string): number[] {
+  const today = new Date().toISOString().slice(0, 10)
+  const seed = productId + today
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0
+  }
+  function seededRandom() {
+    hash = (hash * 1664525 + 1013904223) | 0
+    return ((hash >>> 0) / 4294967296)
+  }
+  const points: number[] = []
+  let value = 30 + Math.floor(seededRandom() * 40)
+  for (let i = 0; i < 12; i++) {
+    const direction = seededRandom() > 0.35 ? 1 : -1
+    value = Math.max(10, Math.min(95, value + direction * Math.floor(seededRandom() * 20)))
+    points.push(value)
+  }
+  return points
+}
+
 function TrendingProductCard({ product }: { product: TrendingProduct }) {
   const [imageError, setImageError] = useState(false)
 
   const chartData = useMemo(() => {
     const data = Array.isArray(product.trendData) && product.trendData.length > 0
       ? product.trendData
-      : Array.from({ length: 12 }, (_, i) => Math.floor(20 + Math.random() * 80))
+      : generateTrendData(product.id)
     return data.map((v, i) => ({ i, v }))
-  }, [product.trendData])
+  }, [product.trendData, product.id])
 
   return (
     <Card
@@ -140,11 +161,10 @@ export default function TrendingProductsPage() {
       setError(null)
 
       const params = new URLSearchParams({
-        is_trending: 'true',
+        source_type: 'scraped',
         page: pageNum.toString(),
         pageSize: pageSize.toString(),
-        sortBy: 'created_at',
-        sortOrder: 'desc',
+        shuffle: 'daily-trending',
       })
 
       const response = await apiFetch(`/api/products?${params.toString()}`)
@@ -154,7 +174,7 @@ export default function TrendingProductsPage() {
       const mapped: TrendingProduct[] = (data.products || []).map((p: Product) => ({
         id: p.id,
         title: p.title,
-        image: p.image,
+        image: p.image || '',
         trendData: Array.isArray(p.trend_data) ? p.trend_data : [],
       }))
 
