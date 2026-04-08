@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "bxgiGX5u5YluUU0Jstowk"
+uri = "file://USDrop-x-LegalNations-Partnership-Brief.md"
+type = "text"
+title = "USDrop × LegalNations Partnership Brief"
