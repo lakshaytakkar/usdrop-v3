@@ -289,6 +289,7 @@ LegalNations should display these on the USDrop partner pages:
 | **Elite Price** | ₹99,000 → ₹69,000 |
 | **Currency** | INR (₹) |
 | **Target Audience** | Indian e-commerce entrepreneurs |
+| **Supabase Project ID** | `wecbybtxmkdkvqqahyuu` |
 | **Contact** | admin@usdrop.ai |
 
 ---
