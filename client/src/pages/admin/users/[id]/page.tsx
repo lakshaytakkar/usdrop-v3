@@ -69,6 +69,7 @@ import {
   Loader2,
   Mail,
   Star,
+  KeyRound,
 } from "lucide-react";
 import { journeyStages as fallbackJourneyStages } from "@/data/journey-stages";
 import type { JourneyStage } from "@/data/journey-stages";
@@ -335,6 +336,11 @@ export default function AdminUserDetail() {
   const [newNote, setNewNote] = useState("");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [emailDrawerOpen, setEmailDrawerOpen] = useState(false);
+  const [resetPwOpen, setResetPwOpen] = useState(false);
+  const [resetPw, setResetPw] = useState("");
+  const [resetPwConfirm, setResetPwConfirm] = useState("");
+  const [resetPwShow, setResetPwShow] = useState(false);
+  const [resetPwSubmitting, setResetPwSubmitting] = useState(false);
   const [editForm, setEditForm] = useState({ full_name: "", phone_number: "", account_type: "" });
   const [businessForm, setBusinessForm] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -650,6 +656,10 @@ export default function AdminUserDetail() {
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>
+          <Button size="sm" variant="outline" onClick={() => { setResetPw(""); setResetPwConfirm(""); setResetPwShow(false); setResetPwOpen(true); }} data-testid="button-reset-password">
+            <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+            Reset Password
+          </Button>
           <div className="flex items-center gap-2 ml-auto">
             <Select value={selectedPlan} onValueChange={(val) => setSelectedPlan(val)}>
               <SelectTrigger className="w-auto min-w-[140px] h-9 text-sm" data-testid="select-change-plan">
@@ -762,6 +772,93 @@ export default function AdminUserDetail() {
             <Button variant="outline" onClick={() => setIsEditingProfile(false)} data-testid="button-cancel-edit">Cancel</Button>
             <Button onClick={handleSaveProfile} disabled={isSubmitting} className="bg-blue-500 hover:bg-blue-600" data-testid="button-save-profile">
               {isSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetPwOpen} onOpenChange={(open) => { if (!resetPwSubmitting) setResetPwOpen(open); }}>
+        <DialogContent className="sm:max-w-[440px]" data-testid="dialog-reset-password">
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Set a new password for <span className="font-medium text-foreground">{user.email}</span>. The user will be able to sign in with this password immediately.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-pw">New Password</Label>
+              <Input
+                id="reset-pw"
+                type={resetPwShow ? "text" : "password"}
+                value={resetPw}
+                onChange={(e) => setResetPw(e.target.value)}
+                placeholder="Min 8 chars, 1 upper, 1 lower, 1 number"
+                autoComplete="new-password"
+                data-testid="input-reset-password"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="reset-pw-confirm">Confirm Password</Label>
+              <Input
+                id="reset-pw-confirm"
+                type={resetPwShow ? "text" : "password"}
+                value={resetPwConfirm}
+                onChange={(e) => setResetPwConfirm(e.target.value)}
+                placeholder="Re-enter the password"
+                autoComplete="new-password"
+                data-testid="input-reset-password-confirm"
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={resetPwShow}
+                onChange={(e) => setResetPwShow(e.target.checked)}
+                data-testid="checkbox-show-password"
+              />
+              Show password
+            </label>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetPwOpen(false)} disabled={resetPwSubmitting} data-testid="button-cancel-reset-password">Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (resetPw !== resetPwConfirm) {
+                  toast({ title: "Passwords do not match", variant: "destructive" });
+                  return;
+                }
+                if (resetPw.length < 8 || !/[a-z]/.test(resetPw) || !/[A-Z]/.test(resetPw) || !/\d/.test(resetPw)) {
+                  toast({ title: "Weak password", description: "Min 8 characters with 1 uppercase, 1 lowercase, and 1 number.", variant: "destructive" });
+                  return;
+                }
+                setResetPwSubmitting(true);
+                try {
+                  const res = await apiFetch(`/api/admin/users/${user.id}/reset-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ password: resetPw }),
+                  });
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || "Failed to reset password");
+                  }
+                  toast({ title: "Password reset", description: `Password updated for ${user.email}.` });
+                  setResetPwOpen(false);
+                  setResetPw("");
+                  setResetPwConfirm("");
+                } catch (e: any) {
+                  toast({ title: "Reset failed", description: e?.message || "Something went wrong", variant: "destructive" });
+                } finally {
+                  setResetPwSubmitting(false);
+                }
+              }}
+              disabled={resetPwSubmitting || !resetPw || !resetPwConfirm}
+              className="bg-blue-500 hover:bg-blue-600"
+              data-testid="button-confirm-reset-password"
+            >
+              {resetPwSubmitting ? "Resetting..." : "Reset Password"}
             </Button>
           </DialogFooter>
         </DialogContent>

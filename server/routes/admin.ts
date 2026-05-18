@@ -4892,6 +4892,60 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  router.post('/users/:id/reset-password', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { password } = req.body as { password?: string };
+
+      if (!password || typeof password !== 'string') {
+        return res.status(400).json({ error: 'Password is required' });
+      }
+      if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters' });
+      }
+      if (password.length > 128) {
+        return res.status(400).json({ error: 'Password must be less than 128 characters' });
+      }
+      if (!/[a-z]/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one lowercase letter' });
+      }
+      if (!/[A-Z]/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one uppercase letter' });
+      }
+      if (!/\d/.test(password)) {
+        return res.status(400).json({ error: 'Password must contain at least one number' });
+      }
+
+      const { data: existing, error: fetchError } = await supabaseRemote
+        .from('profiles')
+        .select('id, email')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError || !existing) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const bcrypt = await import('bcryptjs');
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const { error: updateError } = await supabaseRemote
+        .from('profiles')
+        .update({ password_hash: passwordHash, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (updateError) {
+        console.error('[admin reset-password] update error:', updateError);
+        return res.status(500).json({ error: 'Failed to reset password' });
+      }
+
+      return res.json({ success: true });
+    } catch (error) {
+      console.error('[admin reset-password] unexpected error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   router.patch('/users/:id', async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
