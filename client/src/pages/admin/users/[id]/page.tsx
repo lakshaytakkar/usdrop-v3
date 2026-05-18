@@ -826,11 +826,11 @@ export default function AdminUserDetail() {
             <Button
               onClick={async () => {
                 if (resetPw !== resetPwConfirm) {
-                  toast({ title: "Passwords do not match", variant: "destructive" });
+                  showError("Passwords do not match");
                   return;
                 }
                 if (resetPw.length < 8 || !/[a-z]/.test(resetPw) || !/[A-Z]/.test(resetPw) || !/\d/.test(resetPw)) {
-                  toast({ title: "Weak password", description: "Min 8 characters with 1 uppercase, 1 lowercase, and 1 number.", variant: "destructive" });
+                  showError("Min 8 characters with 1 uppercase, 1 lowercase, and 1 number.");
                   return;
                 }
                 setResetPwSubmitting(true);
@@ -844,12 +844,12 @@ export default function AdminUserDetail() {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || "Failed to reset password");
                   }
-                  toast({ title: "Password reset", description: `Password updated for ${user.email}.` });
+                  showSuccess(`Password updated for ${user.email}.`);
                   setResetPwOpen(false);
                   setResetPw("");
                   setResetPwConfirm("");
                 } catch (e: any) {
-                  toast({ title: "Reset failed", description: e?.message || "Something went wrong", variant: "destructive" });
+                  showError(e?.message || "Failed to reset password");
                 } finally {
                   setResetPwSubmitting(false);
                 }
