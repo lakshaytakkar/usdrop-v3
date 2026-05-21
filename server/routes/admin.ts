@@ -1,5 +1,5 @@
 import { type Express, Router, Request, Response } from 'express';
-import { requireAdmin } from '../lib/auth';
+import { requireAdmin, invalidateAllUserCaches } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
 import multer from 'multer';
 import { triggerAutomation } from '../lib/email-automation';
@@ -4955,16 +4955,75 @@ export function registerAdminRoutes(app: Express) {
 
       if (full_name !== undefined) updateData.full_name = full_name;
       if (internal_role !== undefined) updateData.internal_role = internal_role || null;
-      if (account_type !== undefined) updateData.account_type = account_type;
       if (status !== undefined) updateData.status = status;
       if (phone_number !== undefined) updateData.phone_number = phone_number || null;
-      if (subscription_plan_id !== undefined) updateData.subscription_plan_id = subscription_plan_id || null;
+
+      // Keep account_type and subscription_plan_id in sync. If subscription_plan_id is
+      // explicitly provided, derive account_type from the plan's slug (it wins). If only
+      // account_type is provided, look up the matching plan id by slug. Validate strictly.
+      let planChangeRequested = false;
+      if (subscription_plan_id !== undefined) {
+        planChangeRequested = true;
+        if (subscription_plan_id) {
+          const { data: planRow, error: planLookupErr } = await supabaseRemote
+            .from('subscription_plans')
+            .select('id, slug')
+            .eq('id', subscription_plan_id)
+            .maybeSingle();
+          if (planLookupErr) {
+            console.error('[admin] subscription_plan_id lookup failed:', planLookupErr);
+            return res.status(500).json({ error: 'Failed to resolve plan' });
+          }
+          if (!planRow) {
+            return res.status(400).json({ error: 'Invalid subscription_plan_id' });
+          }
+          updateData.subscription_plan_id = planRow.id;
+          updateData.account_type = planRow.slug === 'pro' ? 'pro' : 'free';
+        } else {
+          updateData.subscription_plan_id = null;
+          updateData.account_type = 'free';
+        }
+      } else if (account_type !== undefined) {
+        if (account_type !== 'free' && account_type !== 'pro') {
+          return res.status(400).json({ error: 'Invalid account_type. Must be "free" or "pro".' });
+        }
+        const { data: planRow, error: planLookupErr } = await supabaseRemote
+          .from('subscription_plans')
+          .select('id')
+          .eq('slug', account_type)
+          .maybeSingle();
+        if (planLookupErr) {
+          console.error('[admin] plan-by-slug lookup failed:', planLookupErr);
+          return res.status(500).json({ error: 'Failed to resolve plan' });
+        }
+        if (!planRow) {
+          return res.status(500).json({ error: `No subscription_plans row for slug "${account_type}"` });
+        }
+        updateData.account_type = account_type;
+        updateData.subscription_plan_id = planRow.id;
+        planChangeRequested = true;
+      }
 
       if (Object.keys(updateData).length === 0) {
         return res.status(400).json({ error: 'No fields to update' });
       }
 
       updateData.updated_at = new Date().toISOString();
+
+      // Capture previous plan slug to only emit automations on actual transitions.
+      let previousPlanSlug: string | null = null;
+      if (planChangeRequested) {
+        const { data: prevRow } = await supabaseRemote
+          .from('profiles')
+          .select('account_type, subscription_plans(slug)')
+          .eq('id', id)
+          .maybeSingle();
+        if (prevRow) {
+          previousPlanSlug = ((prevRow as any).subscription_plans?.slug as string | undefined)
+            || (prevRow.account_type as string | undefined)
+            || 'free';
+        }
+      }
 
       const { data: result, error } = await supabaseRemote
         .from('profiles')
@@ -4977,19 +5036,23 @@ export function registerAdminRoutes(app: Express) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      if (subscription_plan_id !== undefined) {
-        const newPlanSlug = (result as any).subscription_plans?.slug || 'free';
-        const newPlanName = (result as any).subscription_plans?.name || 'Free';
-        const triggerEvent = newPlanSlug === 'free' ? 'plan_downgraded' : 'plan_upgraded';
-        const planMeta = {
-          'user.plan': newPlanName,
-          plan_slug: newPlanSlug,
-          plan_name: newPlanName,
-        };
-        triggerAutomation(triggerEvent as any, id, planMeta)
-          .catch((err) => console.error('[admin] plan change automation trigger error:', err));
-        triggerSmsAutomation(triggerEvent as any, id, planMeta)
-          .catch((err) => console.error('[admin] plan change sms automation trigger error:', err));
+      invalidateAllUserCaches(id);
+
+      if (planChangeRequested) {
+        const newPlanSlug = (result as any).subscription_plans?.slug || result.account_type || 'free';
+        const newPlanName = (result as any).subscription_plans?.name || (newPlanSlug === 'pro' ? 'Pro' : 'Free');
+        if (previousPlanSlug !== newPlanSlug) {
+          const triggerEvent = newPlanSlug === 'free' ? 'plan_downgraded' : 'plan_upgraded';
+          const planMeta = {
+            'user.plan': newPlanName,
+            plan_slug: newPlanSlug,
+            plan_name: newPlanName,
+          };
+          triggerAutomation(triggerEvent as any, id, planMeta)
+            .catch((err) => console.error('[admin] plan change automation trigger error:', err));
+          triggerSmsAutomation(triggerEvent as any, id, planMeta)
+            .catch((err) => console.error('[admin] plan change sms automation trigger error:', err));
+        }
       }
 
       return res.json({
