@@ -246,6 +246,13 @@ export default function AdminUsersPage() {
       render: (u) => <StatusBadge status={u.plan_slug === "pro" ? "Pro" : "Free"} />,
     },
     {
+      key: "phone_number",
+      header: "Phone",
+      render: (u) => (
+        <span className="text-sm text-muted-foreground" data-testid={`text-phone-${u.id}`}>{u.phone_number || "—"}</span>
+      ),
+    },
+    {
       key: "internal_role",
       header: "Role",
       render: (u) => (
@@ -342,7 +349,7 @@ export default function AdminUsersPage() {
         columns={columns}
         rowActions={rowActions}
         onRowClick={(u) => router.push(`/admin/users/${u.id}`)}
-        searchPlaceholder="Search by name or email..."
+        searchPlaceholder="Search by name, email or phone..."
         isLoading={loading}
         emptyTitle="No users found"
         emptyDescription="No users match your search criteria."

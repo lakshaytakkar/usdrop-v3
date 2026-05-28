@@ -108,7 +108,7 @@ export async function getUserWithPlan(userId: string) {
 
   const { data, error } = await supabaseRemote
     .from('profiles')
-    .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id, onboarding_progress, subscription_status, subscription_plans(slug, name, price_monthly)')
+    .select('id, email, full_name, username, avatar_url, account_type, internal_role, status, onboarding_completed, subscription_plan_id, onboarding_progress, subscription_status, phone_number, subscription_plans(slug, name, price_monthly)')
     .eq('id', userId)
     .single();
 

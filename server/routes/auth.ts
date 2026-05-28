@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { supabaseRemote } from '../lib/supabase-remote';
 import { supabaseAuth, getSupabaseAuthUrl, getSupabaseAnonKey } from '../lib/supabase-auth';
-import { requireAuth, optionalAuth, getUserWithPlan, generateToken } from '../lib/auth';
+import { requireAuth, optionalAuth, getUserWithPlan, generateToken, invalidateAllUserCaches } from '../lib/auth';
 import { triggerAutomation } from '../lib/email-automation';
 import { triggerSmsAutomation } from '../lib/sms-automation';
 import { sendEmail } from '../lib/resend';
@@ -750,6 +750,7 @@ export function registerAuthRoutes(app: Express) {
           internal_role: profile.internal_role,
           status: profile.status || 'active',
           onboarding_completed: profile.onboarding_completed,
+          phone_number: (profile as any).phone_number || null,
         },
         plan,
         planName,
@@ -1044,6 +1045,54 @@ export function registerAuthRoutes(app: Express) {
     } catch (error) {
       console.error('Magic link signup error:', error);
       return res.status(500).json({ error: 'Internal server error. Please try again later.' });
+    }
+  });
+
+  router.patch('/phone', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { phone_number } = req.body;
+      const user = req.user!;
+
+      if (!phone_number || typeof phone_number !== 'string') {
+        return res.status(400).json({ error: 'Phone number is required' });
+      }
+
+      const phoneValidation = validatePhoneNumber(phone_number);
+      if (!phoneValidation.valid) {
+        return res.status(400).json({ error: phoneValidation.error });
+      }
+
+      const digitsOnly = phone_number.replace(/\D/g, '');
+      if (digitsOnly.length < 10) {
+        return res.status(400).json({ error: 'Mobile number must be at least 10 digits' });
+      }
+      const normalizedPhone = `+${digitsOnly}`;
+
+      const { data: existing } = await supabaseRemote
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .neq('id', user.id)
+        .maybeSingle();
+      if (existing) {
+        return res.status(409).json({ error: 'This phone number is already in use by another account' });
+      }
+
+      const { error } = await supabaseRemote
+        .from('profiles')
+        .update({ phone_number: normalizedPhone, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Phone update error:', error);
+        return res.status(500).json({ error: 'Failed to update phone number' });
+      }
+
+      invalidateAllUserCaches(user.id);
+      return res.json({ message: 'Phone number saved', phone_number: normalizedPhone });
+    } catch (error) {
+      console.error('Phone update error:', error);
+      return res.status(500).json({ error: 'Internal server error' });
     }
   });
 

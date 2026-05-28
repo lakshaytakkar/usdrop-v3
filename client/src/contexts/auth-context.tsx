@@ -10,6 +10,7 @@ type UserProfile = {
   internal_role: string | null
   status: string
   onboarding_completed: boolean
+  phone_number: string | null
 }
 
 type AuthResponseData = {

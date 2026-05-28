@@ -8,6 +8,7 @@ import { ContactTeamButton } from "@/components/ui/contact-team-button";
 import { FreeLearningBanner } from "@/components/layout/free-learning-banner";
 import { MobileDesktopBanner } from "@/components/layout/mobile-desktop-banner";
 import { PwaInstallPrompt } from "@/components/layout/pwa-install-prompt";
+import { RequirePhoneModal } from "@/components/auth/require-phone-modal";
 import { trackActivity } from "@/lib/activity-tracker";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +36,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <ContactTeamButton />
       <MobileDesktopBanner />
       <PwaInstallPrompt />
+      <RequirePhoneModal />
     </div>
   );
 }
