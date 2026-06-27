@@ -4537,45 +4537,71 @@ export function registerAdminRoutes(app: Express) {
       const proPlanId = planRows?.find((p: any) => p.slug === 'pro')?.id || null;
 
       let countQuery = supabaseRemote.from('profiles').select('id', { count: 'exact', head: true });
-      let dataQuery = supabaseRemote.from('profiles').select('*, subscription_plans(id, name, slug, price_monthly)');
 
       if (search) {
         countQuery = countQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
-        dataQuery = dataQuery.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
       }
       if (accountType) {
         countQuery = countQuery.eq('account_type', accountType);
-        dataQuery = dataQuery.eq('account_type', accountType);
       }
       if (plan) {
         // Filter by plan slug — match subscription_plan_id to the plan with that slug
         const matchPlanId = planRows?.find((p: any) => p.slug === plan)?.id;
         if (matchPlanId) {
           countQuery = countQuery.eq('subscription_plan_id', matchPlanId);
-          dataQuery = dataQuery.eq('subscription_plan_id', matchPlanId);
         }
       }
       if (status) {
         countQuery = countQuery.eq('status', status);
-        dataQuery = dataQuery.eq('status', status);
       }
       if (role) {
         if (role === 'external') {
           countQuery = countQuery.is('internal_role', null);
-          dataQuery = dataQuery.is('internal_role', null);
         } else {
           countQuery = countQuery.eq('internal_role', role);
-          dataQuery = dataQuery.eq('internal_role', role);
         }
       }
 
       const offset = (page - 1) * pageSize;
-      dataQuery = dataQuery.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1);
+
+      // Supabase/PostgREST caps each request at 1000 rows. When a larger page is
+      // requested (the admin UI fetches all users client-side), page through in
+      // 1000-row chunks so users beyond the newest 1000 are still returned.
+      const SUPABASE_MAX_ROWS = 1000;
+      const fetchUsersPaged = async () => {
+        const collected: any[] = [];
+        let chunkStart = offset;
+        const finalEnd = offset + pageSize - 1;
+        while (chunkStart <= finalEnd) {
+          const chunkEnd = Math.min(chunkStart + SUPABASE_MAX_ROWS - 1, finalEnd);
+          let q = supabaseRemote.from('profiles').select('*, subscription_plans(id, name, slug, price_monthly)');
+          if (search) {
+            q = q.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,username.ilike.%${search}%`);
+          }
+          if (accountType) q = q.eq('account_type', accountType);
+          if (plan) {
+            const matchPlanId = planRows?.find((p: any) => p.slug === plan)?.id;
+            if (matchPlanId) q = q.eq('subscription_plan_id', matchPlanId);
+          }
+          if (status) q = q.eq('status', status);
+          if (role) {
+            if (role === 'external') q = q.is('internal_role', null);
+            else q = q.eq('internal_role', role);
+          }
+          q = q.order('created_at', { ascending: false }).order('id', { ascending: true }).range(chunkStart, chunkEnd);
+          const { data: chunk, error: chunkError } = await q;
+          if (chunkError) return { data: null, error: chunkError };
+          collected.push(...(chunk || []));
+          if (!chunk || chunk.length < chunkEnd - chunkStart + 1) break;
+          chunkStart = chunkEnd + 1;
+        }
+        return { data: collected, error: null };
+      };
 
       // Aggregate stats using subscription_plan_id (source of truth for plan)
       const statsPromises = [
         countQuery,
-        dataQuery,
+        fetchUsersPaged(),
         proPlanId
           ? supabaseRemote.from('profiles').select('id', { count: 'exact', head: true }).eq('subscription_plan_id', proPlanId)
           : Promise.resolve({ count: 0 }),
