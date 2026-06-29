@@ -43,6 +43,25 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  // Vercel serverless function: a self-contained CJS bundle so there are no
+  // extensionless relative imports for Node's ESM resolver to choke on.
+  // `api/package.json` ({"type":"commonjs"}) makes Node treat this `.js` as CJS
+  // despite the root `"type":"module"`.
+  console.log("building Vercel function (api/index.js)...");
+  await esbuild({
+    entryPoints: ["server/vercel-entry.ts"],
+    platform: "node",
+    bundle: true,
+    format: "cjs",
+    outfile: "api/index.js",
+    define: {
+      "process.env.NODE_ENV": '"production"',
+    },
+    minify: true,
+    external: externals,
+    logLevel: "info",
+  });
 }
 
 buildAll().catch((err) => {
