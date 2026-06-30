@@ -4,6 +4,15 @@ import { supabaseRemote } from './supabase-remote';
 let connectionSettings: any;
 
 async function getCredentials() {
+  // Prefer explicit env vars (Vercel / any non-Replit host). Replit fed these via
+  // a connector integration; off-Replit we use RESEND_API_KEY directly.
+  if (process.env.RESEND_API_KEY) {
+    return {
+      apiKey: process.env.RESEND_API_KEY,
+      fromEmail: process.env.RESEND_FROM_EMAIL || 'hello@usdrop.ai',
+    };
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY

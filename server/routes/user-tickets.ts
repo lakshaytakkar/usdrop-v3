@@ -37,7 +37,7 @@ export function registerUserTicketRoutes(app: Express) {
         return res.status(400).json({ error: 'Title is required' });
       }
 
-      const validTypes = ['technical', 'billing', 'account', 'content', 'other'];
+      const validTypes = ['bug', 'feature_request', 'technical', 'billing', 'account', 'content', 'other'];
       const ticketType = validTypes.includes(type) ? type : 'other';
 
       const { data: ticket, error: ticketError } = await supabaseRemote
