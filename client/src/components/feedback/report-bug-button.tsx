@@ -35,7 +35,7 @@ export function ReportBugButton() {
       <button
         onClick={() => setOpen(true)}
         title="Report a bug or request a feature"
-        style={{ position: "fixed", left: 20, bottom: 20, zIndex: 60, display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 999, border: "1px solid #e5e7eb", background: "#fff", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#111" }}
+        style={{ position: "fixed", right: 20, bottom: 72, zIndex: 50, display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 999, border: "1px solid #e5e7eb", background: "#fff", boxShadow: "0 4px 16px rgba(0,0,0,0.12)", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#111" }}
       >
         <Bug size={16} /> Feedback
       </button>

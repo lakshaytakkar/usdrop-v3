@@ -4,10 +4,10 @@ import { cn } from "@/lib/utils"
 
 const teamMembers = [
   {
-    name: "Arjun Mehta",
-    role: "Account Manager",
-    avatar: "/team/contact-avatar.png",
-    whatsapp: "+919876543210",
+    name: "Neetu Gupta",
+    role: "Your Success Manager",
+    avatar: "/images/landing/avatar-emily.png",
+    whatsapp: "+919306538559",
   },
 ]
 
@@ -97,8 +97,8 @@ export function ContactTeamButton() {
         data-testid="button-contact-team"
       >
         <img
-          src="/team/contact-avatar.png"
-          alt="Contact"
+          src="/images/landing/avatar-emily.png"
+          alt="Neetu Gupta"
           className="w-6 h-6 rounded-full object-cover border border-white/30"
         />
         <span>Contact Team</span>
