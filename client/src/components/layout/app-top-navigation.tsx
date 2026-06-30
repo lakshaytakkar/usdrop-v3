@@ -27,6 +27,8 @@ import {
   ChevronDown,
   Store,
   UserCircle,
+  Video,
+  BarChart3,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useUserMetadata } from "@/hooks/use-user-metadata"
@@ -278,6 +280,20 @@ export function AppTopNavigation() {
                         </span>
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href="/ads/videos" data-testid="link-videos">
+                        <Video className="mr-2 h-4 w-4" />
+                        Videos
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild className="cursor-pointer">
+                      <Link href="/ads/meta-ads" data-testid="link-meta-ads">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Meta Ads
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer">
                       <Link href="/help" data-testid="link-help">
                         <HelpCircle className="mr-2 h-4 w-4" />

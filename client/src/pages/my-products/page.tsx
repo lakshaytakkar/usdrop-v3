@@ -47,7 +47,6 @@ import {
   Calendar,
   Tag,
   X,
-  Wrench,
   Star,
 } from "lucide-react";
 import {
@@ -948,11 +947,8 @@ export default function MyProductsPage() {
   );
   const [availableStores, setAvailableStores] = useState<ShopifyStore[]>([]);
   const [storeSelectOpen, setStoreSelectOpen] = useState(false);
-  const [shopifyDisabledOpen, setShopifyDisabledOpen] = useState(false);
-
-  const handlePushToShopify = async (_item: PicklistItem) => {
-    setShopifyDisabledOpen(true);
-    return;
+  const handlePushToShopify = async (item: PicklistItem) => {
+    return handlePushToShopifyOriginal(item);
   };
 
   const handlePushToShopifyOriginal = async (item: PicklistItem) => {
@@ -1502,32 +1498,6 @@ export default function MyProductsPage() {
                 )}
               </button>
             ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={shopifyDisabledOpen} onOpenChange={setShopifyDisabledOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 mx-auto mb-3">
-              <Wrench className="h-6 w-6 text-amber-600" />
-            </div>
-            <DialogTitle className="text-center">
-              Temporarily Disabled
-            </DialogTitle>
-            <DialogDescription className="text-center">
-              The Import to Shopify feature is temporarily disabled while we
-              stabilize and improve the experience. We'll have it back up
-              shortly. Thank you for your patience!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mt-2">
-            <Button
-              onClick={() => setShopifyDisabledOpen(false)}
-              data-testid="button-close-shopify-disabled"
-            >
-              Got It
-            </Button>
           </div>
         </DialogContent>
       </Dialog>

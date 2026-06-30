@@ -95,7 +95,6 @@ import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
 import TrendingProducts from "@/pages/trending-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
-import ShopifyStores from "@/pages/shopify-stores/page";
 import ShopifyMarketingPage from "@/pages/shopify/page";
 import WhatIsDropshipping from "@/pages/what-is-dropshipping/page";
 

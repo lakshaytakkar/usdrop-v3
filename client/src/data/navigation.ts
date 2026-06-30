@@ -93,18 +93,11 @@
             iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
             items: [
               { title: "Product Hunt", icon: TrendingUp, url: "/products/product-hunt", isPro: true },
+              { title: "Trending", icon: Flame, url: "/products/trending", isPro: true },
               { title: "Winning Products", icon: Trophy, url: "/products/winning-products", isPro: true },
               { title: "Categories", icon: Grid3x3, url: "/products/categories", isPro: true },
               { title: "Seasonal Collections", icon: Calendar, url: "/products/seasonal-collections", isPro: true },
               { title: "Competitor Stores", icon: Store, url: "/products/competitor-stores", isPro: true },
-            ],
-          },
-          {
-            label: "Trending",
-            icon: Flame,
-            iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
-            items: [
-              { title: "Trending", icon: Flame, url: "/products/trending", isPro: true },
             ],
           },
           {
@@ -131,14 +124,6 @@
             items: [
               { title: "Model Studio", icon: User, url: "/ai-studio/model-studio", isPro: true, isAiStudio: true },
               { title: "Whitelabelling", icon: Badge, url: "/ai-studio/whitelabelling", isPro: true, isAiStudio: true },
-            ],
-          },
-          {
-            label: "Tools",
-            icon: Wrench,
-            iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
-            isNew: true,
-            items: [
               { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },
               { title: "Email Templates", icon: Mail, url: "/tools/email-templates", isPro: true },
               { title: "Policy Generator", icon: Shield, url: "/tools/policy-generator", isPro: true },
@@ -156,16 +141,12 @@
               { title: "Resources", icon: FolderOpen, url: "/resources", isPro: false },
             ],
           },
-          {
-            label: "Videos & Ads",
-            icon: BarChart3,
-            iconSrc: "/3d-ecom-icons-blue/Megaphone_Ads.png",
-            comingSoon: true,
-            items: [
-              { title: "Videos", icon: Video, url: "/ads/videos", isPro: true },
-              { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true, iconSrc: "/images/meta-logo.svg" },
-            ],
-          },
+        ]
+
+        /* Moved out of the top bar into the user menu (was overflowing at 100%). */
+        export const userMenuExtraItems: NavItem[] = [
+          { title: "Videos", icon: Video, url: "/ads/videos", isPro: true },
+          { title: "Meta Ads", icon: BarChart3, url: "/ads/meta-ads", isPro: true, iconSrc: "/images/meta-logo.svg" },
         ]
 
         export function findActiveGroup(pathname: string): NavGroup | null {
