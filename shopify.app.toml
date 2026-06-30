@@ -9,7 +9,7 @@ redirect_urls = [
 ]
 
 [access_scopes]
-scopes = "read_products,write_products,read_orders,read_customers,read_inventory"
+scopes = "read_products,write_products,read_orders,write_orders,read_customers,write_customers,read_inventory,write_inventory,read_locations,read_fulfillments,write_fulfillments,read_draft_orders,write_draft_orders"
 
 [webhooks]
 api_version = "2024-10"

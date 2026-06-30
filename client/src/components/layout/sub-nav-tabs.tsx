@@ -108,11 +108,11 @@ function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
       href={item.url}
       data-testid={`link-subnav-${item.title.toLowerCase().replace(/\s+/g, '-')}`}
       className={cn(
-        "flex items-center gap-2 px-4 py-2.5 text-[14px] font-medium whitespace-nowrap transition-all rounded-lg border",
+        "flex items-center gap-2 px-4 py-2 text-[14px] whitespace-nowrap transition-all rounded-full",
         isActive
-          ? "bg-white text-black border-black/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-          : "bg-transparent text-[#666] border-transparent hover:bg-white/60 hover:text-black hover:border-black/[0.04]",
-        isLocked && "opacity-50"
+          ? "bg-white text-indigo-700 font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+          : "bg-transparent text-white/75 font-medium hover:text-white hover:bg-white/15",
+        isLocked && "opacity-60"
       )}
     >
       {item.iconSrc && (
@@ -219,11 +219,11 @@ export function SubNavTabs() {
       <div className="w-full px-12 md:px-20 lg:px-32 pt-2.5 pb-1.5">
         <div className="space-y-2.5">
 
-        {hasTabs && <div className="flex items-center gap-1.5">
+        {hasTabs && <div className="flex items-center gap-1 rounded-xl bg-indigo-600 px-2 py-1.5 shadow-[0_2px_8px_rgba(79,70,229,0.25)]">
           {canScrollLeft && (
             <button
               onClick={() => scrollBy("left")}
-              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border border-black/[0.08] bg-white hover:bg-gray-50 text-gray-500 hover:text-black transition-all shadow-sm"
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 text-white transition-all"
               data-testid="button-scroll-tabs-left"
               aria-label="Scroll tabs left"
             >
@@ -256,7 +256,7 @@ export function SubNavTabs() {
           {canScrollRight && (
             <button
               onClick={() => scrollBy("right")}
-              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full border border-black/[0.08] bg-white hover:bg-gray-50 text-gray-500 hover:text-black transition-all shadow-sm"
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 text-white transition-all"
               data-testid="button-scroll-tabs-right"
               aria-label="Scroll tabs right"
             >
