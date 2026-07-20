@@ -1,9 +1,7 @@
 import { Hero } from "./components/Hero"
 import { LogoMarquee } from "./components/LogoMarquee"
-import { ImageCarousel } from "./components/ImageCarousel"
 import { StatsBar } from "./components/StatsBar"
-import { BentoFeatures } from "./components/BentoFeatures"
-import { StepsSection } from "./components/StepsSection"
+import { PlatformSections } from "./components/PlatformSections"
 import { Testimonials } from "./components/Testimonials"
 import { FinalCTA } from "./components/FinalCTA"
 
@@ -24,10 +22,8 @@ export default function MarketingPage() {
       <div className="relative z-[1]">
         <Hero />
         <LogoMarquee />
+        <PlatformSections />
         <StatsBar />
-        <ImageCarousel />
-        <BentoFeatures />
-        <StepsSection />
         <Testimonials />
         <FinalCTA />
       </div>

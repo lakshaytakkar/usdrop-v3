@@ -133,7 +133,7 @@ export function AppTopNavigation() {
     return activeGroup?.label === groupLabel
   }
 
-  const primaryGroups = externalNavGroups.filter(g => !g.isDropdown)
+  const primaryGroups = externalNavGroups.filter(g => !g.isDropdown && !g.hideFromTopNav)
   const resolvedAvatar = userData?.avatar_url || avatarUrl || (isPro ? "/images/default-pro-avatar.png" : "https://avatar.iran.liara.run/public")
 
   return (
@@ -203,7 +203,7 @@ export function AppTopNavigation() {
               </GradientButton>
 
               <Link
-                href="/framework/my-store"
+                href="/store"
                 data-testid="button-shopify-pill"
                 className="hidden md:inline-flex items-center gap-1.5 h-8 pl-2.5 pr-3 rounded-full bg-[#1a1a2e] hover:bg-[#2a2a3e] text-white text-[13px] font-semibold transition-all shrink-0"
               >
@@ -320,7 +320,7 @@ export function AppTopNavigation() {
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 top-[68px] z-40 bg-white overflow-y-auto">
           <nav className="p-4 space-y-3">
-            {externalNavGroups.map((group) => {
+            {externalNavGroups.filter(g => !g.hideFromTopNav).map((group) => {
               return (
               <div key={group.label}>
                 <span className="ds-overline text-gray-300">

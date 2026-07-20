@@ -1,0 +1,45 @@
+USDROP - EMAIL & SMS FLOW SCRIPTS
+Paste into Klaviyo / Shopify Email / Omnisend. Replace {{placeholders}}.
+================================================================
+
+----- EMAIL 1: WELCOME (on signup) -----
+Subject: Welcome to {{store_name}} - here's 10% off
+Hi {{first_name}},
+Thanks for joining! Here's 10% off your first order: WELCOME10
+[Shop now] -> {{store_url}}
+- The {{store_name}} team
+
+----- EMAIL 2: ORDER CONFIRMATION -----
+Subject: Order #{{order_number}} confirmed
+Hi {{first_name}}, thanks for your order! We're getting it ready.
+Summary: {{order_summary}}
+Estimated delivery: {{delivery_estimate}}
+We'll email tracking as soon as it ships.
+
+----- EMAIL 3: SHIPPING NOTIFICATION -----
+Subject: Your order is on its way
+Hi {{first_name}}, good news - your order shipped!
+Track it: {{tracking_link}}  Carrier: {{carrier}}
+
+----- EMAIL 4: ABANDONED CART (1h, 24h, 48h) -----
+1h Subject: You left something behind
+Hi {{first_name}}, your {{product_name}} is still in your cart.
+[Complete checkout] -> {{cart_link}}
+24h Subject: Still thinking it over? Here's 10% off
+Use SAVE10 at checkout - expires in 24 hours.
+48h Subject: Last chance - your cart expires soon
+Your cart (and your 10% off) is about to expire.
+
+----- EMAIL 5: REVIEW REQUEST (3 days after delivery) -----
+Subject: How did we do?
+Hi {{first_name}}, hope you're loving your {{product_name}}!
+A quick review helps our small team a lot: [Leave a review] -> {{review_link}}
+
+----- EMAIL 6: WIN-BACK (30-45 days) -----
+Subject: We miss you - 15% off inside
+Hi {{first_name}}, it's been a while. Here's 15% off: COMEBACK15
+
+================= SMS VERSIONS =================
+ORDER CONFIRM: {{store_name}}: Order #{{order_number}} confirmed! We'll text tracking soon.
+SHIPPED: {{store_name}}: Your order shipped - track it: {{tracking_link}}
+ABANDONED: {{store_name}}: Still want your {{product_name}}? 10% off with SAVE10 -> {{cart_link}} Reply STOP to opt out.

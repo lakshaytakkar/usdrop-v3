@@ -527,7 +527,7 @@ export default function MyAdsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <Skeleton className="h-16 w-full rounded-md" />
         <div>
           <Skeleton className="h-8 w-48 mb-6" />
@@ -539,7 +539,7 @@ export default function MyAdsPage() {
 
   return (
     <ProPageWrapper featureName="My Ads" featureDescription="Log and manage your Meta Ads campaigns — audiences, ad sets, creatives, and testing results.">
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-ads">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-ads">
       <FrameworkBanner
         title="My Ads"
         description="Log and manage your Meta Ads campaigns — audiences, ad sets, creatives, and testing results."

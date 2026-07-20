@@ -1,0 +1,41 @@
+USDROP - STORE POLICIES PACK
+Copy/paste into your Shopify pages. Replace {{placeholders}}. Review with a professional before publishing.
+================================================================
+
+===== SHIPPING POLICY =====
+At {{store_name}} we work with vetted fulfillment partners to ship worldwide.
+
+Processing time: Orders are processed within 1-3 business days.
+Shipping time: Standard shipping is {{ship_days}} business days after processing.
+Shipping cost: {{ship_cost}} (or free over {{free_ship_threshold}}).
+Tracking: A tracking number is emailed once your order ships.
+Delays: Weather, customs or high demand can occasionally cause delays. We'll keep you updated.
+Questions: {{support_email}}
+
+===== RETURN & REFUND POLICY =====
+We want you to love your order. If you're not satisfied:
+
+Return window: 30 days from delivery.
+Condition: Items must be unused and in original packaging.
+How to start: Email {{support_email}} with your order number.
+Refunds: Issued to the original payment method within 5-7 business days of us receiving the return.
+Return shipping: Covered by the customer unless the item is defective or incorrect.
+Damaged/defective: Email us within 48 hours with photos - we'll replace it or refund you, no return needed.
+Non-returnable: Final-sale items, personalized items, gift cards.
+
+===== PRIVACY POLICY (summary) =====
+{{store_name}} collects the information you provide at checkout (name, address, email, payment) to fulfill your order.
+- We use trusted processors (e.g. Shopify, Stripe, PayPal) to handle payments; we never store full card numbers.
+- We may email you order updates and (with consent) marketing you can opt out of anytime.
+- We do not sell your personal data.
+- Requests to access or delete your data: {{support_email}}
+
+===== TERMS OF SERVICE (summary) =====
+By using {{store_url}} you agree to these terms.
+- Prices and availability may change without notice.
+- We reserve the right to refuse or cancel any order (e.g. suspected fraud).
+- Product images are illustrative; slight variation may occur.
+- {{store_name}} is not liable for indirect damages beyond the value of the product purchased.
+- Governing law: {{state}}, USA.
+
+Need help? {{support_email}}

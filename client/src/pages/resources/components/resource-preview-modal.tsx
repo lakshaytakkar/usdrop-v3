@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import {
   X,
@@ -23,6 +23,7 @@ interface ResourceFile {
   type: ResourceType
   size: string
   updatedAt: string
+  url?: string
 }
 
 interface ResourcePreviewModalProps {
@@ -35,51 +36,79 @@ interface ResourcePreviewModalProps {
   hasPrev?: boolean
 }
 
+// Filled-in sample of each live template (the download is the editable .xlsx).
 const spreadsheetData: Record<string, { headers: string[]; rows: string[][] }> = {
-  "1": {
-    headers: ["Product", "Category", "Sell Price", "Cost", "Margin", "Supplier", "Score"],
+  "profit-margin": {
+    headers: ["Field", "Value", "Notes"],
     rows: [
-      ["LED Strip Lights", "Home Decor", "$24.99", "$6.50", "74%", "ShenZhen Lighting Co.", "9.2"],
-      ["Posture Corrector", "Health", "$19.99", "$4.20", "79%", "GuangZhou Health Tech", "8.8"],
-      ["Portable Blender", "Kitchen", "$29.99", "$8.75", "71%", "Yiwu Smart Home", "8.5"],
-      ["Car Phone Mount", "Auto", "$14.99", "$2.80", "81%", "DongGuan Auto Parts", "8.3"],
-      ["Yoga Resistance Bands", "Fitness", "$12.99", "$2.10", "84%", "FuJian Sports Co.", "8.1"],
-      ["Pet Grooming Glove", "Pets", "$9.99", "$1.90", "81%", "ZheJiang Pet Supply", "7.9"],
-      ["Wireless Earbuds", "Electronics", "$34.99", "$11.50", "67%", "ShenZhen Audio Tech", "7.7"],
-      ["Insulated Tumbler", "Lifestyle", "$22.99", "$5.30", "77%", "YiWu Drinkware", "7.5"],
+      ["Selling price", "$39.99", "what the customer pays"],
+      ["Product cost", "$8.50", "from supplier"],
+      ["Shipping cost", "$4.00", "to customer"],
+      ["Processing fee", "$1.46", "2.9% + $0.30"],
+      ["Ad cost / order (CPA)", "$12.00", "ad spend ÷ orders"],
+      ["Gross profit / order", "$25.53", "before ads"],
+      ["Net profit after ads", "$13.53", "after ad spend"],
+      ["Profit margin", "63.8%", "gross ÷ price"],
+      ["Break-even ROAS", "1.57", "min ROAS to profit"],
+      ["Suggested price (30% margin)", "$37.70", "target-margin price"],
     ],
   },
-  "2": {
-    headers: ["Company", "Contact", "Email", "Phone", "Category", "MOQ", "Lead Time"],
+  "roas-tracker": {
+    headers: ["Date", "Campaign / Product", "Spend", "Revenue", "Orders", "ROAS", "CPA", "Est. Profit"],
     rows: [
-      ["US Direct Supply", "Mark Johnson", "mark@usdirectsupply.com", "(555) 123-4567", "General", "10 units", "3-5 days"],
-      ["FastShip America", "Sarah Lee", "sarah@fastshipamerica.com", "(555) 234-5678", "Electronics", "25 units", "2-4 days"],
-      ["HomeGoods Direct", "David Chen", "david@homegoodsdirect.com", "(555) 345-6789", "Home & Garden", "15 units", "4-7 days"],
-      ["FitGear Wholesale", "Amy Roberts", "amy@fitgearwholesale.com", "(555) 456-7890", "Fitness", "20 units", "3-5 days"],
-      ["PetPro Distributors", "James Wilson", "james@petprodist.com", "(555) 567-8901", "Pet Supplies", "30 units", "5-7 days"],
-      ["TechSource USA", "Lisa Wang", "lisa@techsourceusa.com", "(555) 678-9012", "Tech", "50 units", "2-3 days"],
+      ["2026-02-01", "Gold Necklace — Meta", "$50", "$180", "5", "3.60", "$10.00", "$4.00"],
+      ["2026-02-02", "Gold Necklace — Meta", "$65", "$240", "7", "3.69", "$9.29", "$7.00"],
+      ["2026-02-03", "Yoga Mat — TikTok", "$40", "$95", "3", "2.38", "$13.33", "-$11.50"],
+      ["TOTAL", "", "$155", "$515", "15", "3.32", "", "-$0.50"],
     ],
   },
-  "3": {
-    headers: ["Month", "Revenue", "COGS", "Ad Spend", "Shipping", "Platform Fees", "Net Profit", "Margin"],
+  "pnl-tracker": {
+    headers: ["Line item", "Jan", "Feb", "Mar", "Total"],
     rows: [
-      ["January", "$12,450", "$4,150", "$2,800", "$890", "$625", "$3,985", "32%"],
-      ["February", "$15,680", "$5,230", "$3,200", "$1,120", "$784", "$5,346", "34%"],
-      ["March", "$18,920", "$6,310", "$3,800", "$1,350", "$946", "$6,514", "34%"],
-      ["April", "$22,100", "$7,370", "$4,500", "$1,580", "$1,105", "$7,545", "34%"],
-      ["May", "$19,800", "$6,600", "$4,200", "$1,410", "$990", "$6,600", "33%"],
-      ["June", "$25,340", "$8,450", "$5,100", "$1,810", "$1,267", "$8,713", "34%"],
+      ["Revenue (sales)", "$12,000", "$15,000", "$18,000", "$45,000"],
+      ["Product cost (COGS)", "$4,000", "$5,000", "$6,000", "$15,000"],
+      ["Shipping cost", "$600", "$750", "$900", "$2,250"],
+      ["Ad spend", "$3,000", "$3,600", "$4,200", "$10,800"],
+      ["Apps & subscriptions", "$150", "$150", "$150", "$450"],
+      ["Transaction fees", "$360", "$450", "$540", "$1,350"],
+      ["NET PROFIT", "$3,890", "$5,050", "$6,210", "$15,150"],
     ],
   },
-  "11": {
-    headers: ["Date", "Campaign", "Platform", "Spend", "Impressions", "Clicks", "CTR", "Conversions", "ROAS"],
+  "validation": {
+    headers: ["Criterion", "Weight", "Product A", "Product B"],
     rows: [
-      ["Feb 1", "Spring Collection", "Facebook", "$85.00", "12,450", "234", "1.88%", "8", "3.2x"],
-      ["Feb 1", "Retargeting", "Facebook", "$45.00", "8,920", "312", "3.50%", "12", "5.8x"],
-      ["Feb 2", "Spring Collection", "Facebook", "$90.00", "13,100", "251", "1.92%", "9", "3.4x"],
-      ["Feb 2", "TikTok Launch", "TikTok", "$60.00", "25,600", "410", "1.60%", "6", "2.7x"],
-      ["Feb 3", "Spring Collection", "Facebook", "$85.00", "11,800", "218", "1.85%", "7", "2.8x"],
-      ["Feb 3", "Retargeting", "Facebook", "$50.00", "9,450", "338", "3.58%", "14", "6.1x"],
+      ["Proven demand / trending", "3", "5", "3"],
+      ["Healthy profit margin (3x+)", "3", "5", "2"],
+      ["Wow factor / scroll-stopping", "2", "4", "3"],
+      ["Solves a problem", "2", "4", "2"],
+      ["Not saturated / few sellers", "2", "3", "4"],
+      ["Easy & cheap to ship", "1", "5", "3"],
+      ["Hard to buy in local stores", "1", "4", "2"],
+      ["Strong ad/creative potential", "2", "5", "3"],
+      ["Weighted score (out of 100)", "", "89", "55"],
+      ["Verdict (≥70 = GO)", "", "✅ GO", "🟡 MAYBE"],
+    ],
+  },
+  "scaling": {
+    headers: ["Metric", "Value"],
+    rows: [
+      ["Monthly revenue goal", "$10,000"],
+      ["Average order value (AOV)", "$40"],
+      ["Profit margin", "30%"],
+      ["Target ROAS", "3.0"],
+      ["Orders needed / month", "250"],
+      ["Orders needed / day", "8.3"],
+      ["Gross profit / month", "$3,000"],
+      ["Max ad budget / month", "$3,333"],
+      ["Max cost per order (CPA)", "$12.00"],
+    ],
+  },
+  "supplier": {
+    headers: ["Supplier", "Platform", "Unit $", "MOQ", "Ship days", "Quality /5", "Comms /5", "Score"],
+    rows: [
+      ["US Fulfill Co", "Local (US)", "$6.50", "10", "3", "5", "5", "17.7"],
+      ["Shenzhen Trading", "Alibaba", "$3.20", "50", "12", "5", "4", "15.0"],
+      ["Yiwu Direct", "1688", "$2.80", "100", "15", "4", "3", "12.6"],
     ],
   },
 }
@@ -284,8 +313,11 @@ function SpreadsheetPreview({ fileId }: { fileId: string }) {
   )
 }
 
-function PDFPreview({ fileId }: { fileId: string }) {
-  const data = pdfContent[fileId]
+function PDFPreview({ file }: { file: ResourceFile }) {
+  if (file.url && file.url.endsWith(".pdf")) {
+    return <iframe src={file.url} title={file.name} className="w-full h-full border-0 bg-white" />
+  }
+  const data = pdfContent[file.id]
   if (!data) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -342,8 +374,34 @@ function VideoPreview({ file }: { file: ResourceFile }) {
   )
 }
 
-function TemplatePreview({ fileId }: { fileId: string }) {
-  const data = templateContent[fileId]
+function TemplatePreview({ file }: { file: ResourceFile }) {
+  const isText = !!file.url && file.url.endsWith(".txt")
+  const [text, setText] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isText || !file.url) return
+    setLoading(true)
+    fetch(file.url).then((r) => r.text()).then(setText).catch(() => setText(null)).finally(() => setLoading(false))
+  }, [file.url, isText])
+
+  if (isText) {
+    return (
+      <div className="h-full overflow-auto bg-white">
+        <div className="max-w-3xl mx-auto px-8 py-8">
+          <div className="mb-5 pb-3 border-b-2 border-blue-100">
+            <h1 className="text-xl font-bold text-gray-900">{file.name}</h1>
+            <p className="text-xs text-gray-400 mt-1">USDrop Template · editable — download to use</p>
+          </div>
+          <pre className="text-[12.5px] text-gray-700 leading-relaxed whitespace-pre-wrap font-mono">
+            {loading ? "Loading…" : (text || "Couldn't load this preview — try the download.")}
+          </pre>
+        </div>
+      </div>
+    )
+  }
+
+  const data = templateContent[file.id]
   if (!data) {
     return (
       <div className="flex items-center justify-center h-full text-gray-400 text-sm">
@@ -351,7 +409,6 @@ function TemplatePreview({ fileId }: { fileId: string }) {
       </div>
     )
   }
-
   return (
     <div className="h-full overflow-auto bg-white">
       <div className="max-w-3xl mx-auto px-8 py-10">
@@ -387,11 +444,11 @@ export function ResourcePreviewModal({
       case "spreadsheet":
         return <SpreadsheetPreview fileId={file.id} />
       case "pdf":
-        return <PDFPreview fileId={file.id} />
+        return <PDFPreview file={file} />
       case "video":
         return <VideoPreview file={file} />
       case "template":
-        return <TemplatePreview fileId={file.id} />
+        return <TemplatePreview file={file} />
     }
   }
 
@@ -456,6 +513,13 @@ export function ResourcePreviewModal({
               {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
             <button
+              onClick={() => {
+                if (!file.url) return
+                const a = document.createElement("a")
+                a.href = file.url
+                a.download = file.url.split("/").pop() || file.name
+                document.body.appendChild(a); a.click(); a.remove()
+              }}
               className="p-2 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
               title="Download"
               data-testid="button-preview-download"

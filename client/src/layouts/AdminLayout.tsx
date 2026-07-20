@@ -2,6 +2,7 @@ import { useLocation, Link } from "wouter";
 import { Bell, UserPlus, LifeBuoy, Building2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminGlobalSearch } from "@/components/admin-search";
+import { MovedToHqModal } from "@/components/feedback/moved-to-hq-modal";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -390,6 +391,9 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 overflow-auto">
         {children}
       </main>
+      {/* Blurs everything above and points staff at team.suprans.in/usdrop.
+          Rendered last so it sits over the whole admin, not just the content. */}
+      <MovedToHqModal />
     </div>
   );
 }

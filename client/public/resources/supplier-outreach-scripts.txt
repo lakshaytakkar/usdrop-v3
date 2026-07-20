@@ -1,0 +1,29 @@
+USDROP - SUPPLIER OUTREACH & NEGOTIATION SCRIPTS
+For Alibaba / 1688 / AliExpress / local US suppliers. Replace {{placeholders}}.
+================================================================
+
+----- 1. FIRST CONTACT -----
+Hi {{supplier_name}},
+I run an e-commerce store in the US and I'm interested in {{product_name}}.
+Could you share: unit price at 50 / 100 / 500 units, MOQ, production + shipping time to the US, and whether you offer ePacket / dropshipping.
+Thanks, {{your_name}}
+
+----- 2. SAMPLE REQUEST -----
+Hi {{supplier_name}}, before a bulk order I'd like to order 1-2 samples to check quality.
+What's the sample cost and shipping time to {{country}}? Can the sample cost be credited against a future bulk order?
+
+----- 3. PRICE NEGOTIATION -----
+Hi {{supplier_name}}, thanks for the quote. I'm comparing a few suppliers.
+I'm planning consistent monthly reorders - if we can get the unit price to {{target_price}}, I'm ready to move forward and scale volume. Is that workable?
+
+----- 4. DROPSHIPPING / FULFILLMENT TERMS -----
+Hi {{supplier_name}}, I'd like to dropship this product.
+Can you: ship directly to my customers with no invoices/branding inside, provide tracking within 48h, and keep processing under 2 days? What's your per-order fulfillment cost?
+
+----- 5. PRIVATE LABEL / BRANDING -----
+Hi {{supplier_name}}, I'd like to add my logo to the product/packaging.
+What's the setup cost, MOQ for branded units, and lead time? Can you send a mockup before production?
+
+----- 6. QUALITY ISSUE / DISPUTE -----
+Hi {{supplier_name}}, a customer received a defective unit (photos attached).
+For our ongoing relationship, can you replace it on the next order or issue a credit? I want to keep working together.

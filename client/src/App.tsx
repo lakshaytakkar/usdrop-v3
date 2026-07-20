@@ -95,6 +95,19 @@ import SeasonalCollections from "@/pages/seasonal-collections/page";
 import WinningProducts from "@/pages/winning-products/page";
 import TrendingProducts from "@/pages/trending-products/page";
 import Fulfillment from "@/pages/fulfillment/page";
+import FulfillmentOrders from "@/pages/fulfillment/orders";
+import FulfillmentRequests from "@/pages/fulfillment/requests";
+import BuildStore from "@/pages/build-store/page";
+import BannerGenerator from "@/pages/ai-studio/banner-generator/page";
+import BrandKit from "@/pages/ai-studio/brand-kit/page";
+import ProgramPage from "@/pages/program/page";
+import AddNumberPage from "@/pages/add-number/page";
+import { LLCPage } from "@/pages/my-llc/shared";
+import StoreSuiteDashboard from "@/pages/store-suite/dashboard";
+import StoreSuiteProducts from "@/pages/store-suite/products";
+import StoreSuiteInventory from "@/pages/store-suite/inventory";
+import StoreSuiteOrders from "@/pages/store-suite/orders";
+import StoreSuiteCustomers from "@/pages/store-suite/customers";
 import ShopifyMarketingPage from "@/pages/shopify/page";
 import WhatIsDropshipping from "@/pages/what-is-dropshipping/page";
 
@@ -231,6 +244,7 @@ function Router() {
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />
+      <Route path="/add-number" component={AddNumberPage} />
       <Route path="/signup" component={SignupPage} />
       <Route path="/auth/forgot-password" component={AuthForgotPassword} />
       <Route path="/auth/reset-password" component={AuthResetPassword} />
@@ -287,7 +301,7 @@ function Router() {
       {/* Framework (personal hub) — /framework/* */}
       <Route path="/framework" component={() => <UserGuard><AppLayout><HomePage /></AppLayout></UserGuard>} />
       <Route path="/framework/my-products" component={() => <UserGuard><AppLayout><MyProducts /></AppLayout></UserGuard>} />
-      <Route path="/framework/my-store" component={() => <UserGuard><AppLayout><MyStore /></AppLayout></UserGuard>} />
+      <Route path="/framework/my-store"><Redirect to="/store" /></Route>
       <Route path="/framework/my-store/:id" component={() => <UserGuard><AppLayout><StoreDetail /></AppLayout></UserGuard>} />
       <Route path="/framework/my-roadmap" component={() => <UserGuard><AppLayout><MyRoadmap /></AppLayout></UserGuard>} />
       <Route path="/framework/my-learning" component={() => <UserGuard><AppLayout><MentorshipPage /></AppLayout></UserGuard>} />
@@ -319,9 +333,15 @@ function Router() {
       <Route path="/private-supplier" component={() => <UserGuard><AppLayout><SuppliersPage /></AppLayout></UserGuard>} />
 
       {/* LLC */}
-      <Route path="/llc" component={() => <MarketingLayout><MyLLC /></MarketingLayout>} />
+      <Route path="/llc" component={() => <UserGuard><AppLayout><MyLLC /></AppLayout></UserGuard>} />
+      <Route path="/llc/documents" component={() => <UserGuard><AppLayout><LLCPage tab="documents" /></AppLayout></UserGuard>} />
+      <Route path="/llc/banking" component={() => <UserGuard><AppLayout><LLCPage tab="banking" /></AppLayout></UserGuard>} />
+      <Route path="/llc/payments" component={() => <UserGuard><AppLayout><LLCPage tab="payments" /></AppLayout></UserGuard>} />
+      <Route path="/llc/benefits" component={() => <UserGuard><AppLayout><LLCPage tab="benefits" /></AppLayout></UserGuard>} />
 
       {/* AI Studio — /ai-studio/* */}
+      <Route path="/ai-studio/banner-generator" component={() => <UserGuard><AppLayout><BannerGenerator /></AppLayout></UserGuard>} />
+      <Route path="/ai-studio/brand-kit" component={() => <UserGuard><AppLayout><BrandKit /></AppLayout></UserGuard>} />
       <Route path="/ai-studio/model-studio" component={() => <UserGuard><AppLayout><ModelStudio /></AppLayout></UserGuard>} />
       <Route path="/ai-studio/whitelabelling" component={() => <UserGuard><AppLayout><Whitelabelling /></AppLayout></UserGuard>} />
 
@@ -348,6 +368,15 @@ function Router() {
       <Route path="/intelligence-hub" component={() => <UserGuard><AppLayout><IntelligenceHub /></AppLayout></UserGuard>} />
       <Route path="/selling-channels" component={() => <UserGuard><AppLayout><SellingChannels /></AppLayout></UserGuard>} />
       <Route path="/fulfillment" component={() => <UserGuard><AppLayout><Fulfillment /></AppLayout></UserGuard>} />
+      <Route path="/fulfillment/orders" component={() => <UserGuard><AppLayout><FulfillmentOrders /></AppLayout></UserGuard>} />
+      <Route path="/fulfillment/requests" component={() => <UserGuard><AppLayout><FulfillmentRequests /></AppLayout></UserGuard>} />
+      <Route path="/program" component={() => <UserGuard><AppLayout><ProgramPage /></AppLayout></UserGuard>} />
+      <Route path="/build-store" component={() => <UserGuard><AppLayout><BuildStore /></AppLayout></UserGuard>} />
+      <Route path="/store" component={() => <UserGuard><AppLayout><StoreSuiteDashboard /></AppLayout></UserGuard>} />
+      <Route path="/store/products" component={() => <UserGuard><AppLayout><StoreSuiteProducts /></AppLayout></UserGuard>} />
+      <Route path="/store/inventory" component={() => <UserGuard><AppLayout><StoreSuiteInventory /></AppLayout></UserGuard>} />
+      <Route path="/store/orders" component={() => <UserGuard><AppLayout><StoreSuiteOrders /></AppLayout></UserGuard>} />
+      <Route path="/store/customers" component={() => <UserGuard><AppLayout><StoreSuiteCustomers /></AppLayout></UserGuard>} />
       <Route path="/shopify-stores">{() => { window.location.replace('/framework/my-store'); return null; }}</Route>
       <Route path="/what-is-dropshipping" component={() => <MarketingLayout><WhatIsDropshipping /></MarketingLayout>} />
       <Route path="/who-is-this-for" component={() => <UserGuard><AppLayout><WhoIsThisFor /></AppLayout></UserGuard>} />

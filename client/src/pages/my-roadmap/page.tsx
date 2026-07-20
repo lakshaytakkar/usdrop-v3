@@ -332,7 +332,7 @@ export default function MyJourneyPage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-roadmap">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-roadmap">
       <FrameworkBanner
         title="My Roadmap"
         description="Track your progress through the dropshipping journey"

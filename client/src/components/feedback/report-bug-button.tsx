@@ -19,7 +19,12 @@ export function ReportBugButton() {
     try {
       const r = await apiFetch("/api/support/tickets", {
         method: "POST",
-        body: JSON.stringify({ title: title.trim(), type, description: description.trim() }),
+        body: JSON.stringify({
+          title: title.trim(),
+          type,
+          description: description.trim(),
+          page_url: typeof window !== "undefined" ? window.location.pathname + window.location.search : undefined,
+        }),
       });
       if (!r.ok) throw new Error("Failed");
       setDone(true);

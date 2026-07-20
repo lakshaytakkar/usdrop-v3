@@ -438,6 +438,46 @@ export const shopifyStores = pgTable("shopify_stores", {
   updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
+// Phase H — Fulfillment Suite. Merchant requests for USDrop's China-warehouse
+// team to fulfill orders from their connected Shopify store. See migration
+// 021_fulfillment_requests.sql.
+export const fulfillmentRequests = pgTable("fulfillment_requests", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  store_id: text("store_id"),
+  shopify_order_id: text("shopify_order_id"),
+  order_number: text("order_number"),
+  items: jsonb("items").default(sql`'[]'::jsonb`),
+  quantity: integer("quantity").default(1),
+  destination_country: text("destination_country").default("US"),
+  status: text("status").default("requested"),
+  quote_amount: numeric("quote_amount"),
+  currency: text("currency").default("USD"),
+  carrier: text("carrier"),
+  tracking_number: text("tracking_number"),
+  notes: text("notes"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+// Phase I — "Build Your Store" (Elite). Done-for-you store build requests.
+// See migration 022_store_build_requests.sql.
+export const storeBuildRequests = pgTable("store_build_requests", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  user_id: uuid("user_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  niche: text("niche").notNull(),
+  store_name: text("store_name"),
+  tagline: text("tagline"),
+  brand_color: text("brand_color"),
+  products_count: integer("products_count").default(10),
+  status: text("status").default("requested"),
+  store_url: text("store_url"),
+  store_login: text("store_login"),
+  notes: text("notes"),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updated_at: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
 export const leads = pgTable("leads", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull(),

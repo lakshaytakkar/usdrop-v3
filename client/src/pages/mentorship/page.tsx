@@ -257,7 +257,7 @@ export default function AcademyPage() {
 
   return (
     <ModuleAccessGuard moduleId="courses">
-      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
+      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-3">
         <FrameworkBanner
           title="My Learning"
           description="Videos, tutorials, and in-depth training about dropshipping fundamentals and advanced strategies."

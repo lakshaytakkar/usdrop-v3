@@ -60,7 +60,7 @@ export default function VideosPage() {
 
   return (
     <ModuleAccessGuard moduleId="meta-ads">
-      <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
+      <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-3 min-h-0">
         <FrameworkBanner
           title="Product Videos"
           description="Browse viral product videos — hover to preview, discover your next winner"

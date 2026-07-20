@@ -440,7 +440,7 @@ export default function ProductHuntPage() {
     <ModuleAccessGuard moduleId="product-hunt">
     <>
       <div className="flex flex-1">
-        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-6 md:py-8">
+        <div className="flex flex-1 gap-5 px-12 md:px-20 lg:px-32 py-3">
           <FilterSidebar
             sortBy={sortBy}
             setSortBy={setSortBy}

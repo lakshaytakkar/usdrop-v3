@@ -236,14 +236,14 @@ export default function TrendingProductsPage() {
 
   if (error && products.length === 0) {
     return (
-      <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8">
+      <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-3">
         <SectionError description={error} onRetry={() => fetchTrending(1, false)} className="max-w-2xl" />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3 min-h-0">
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {Array.from({ length: 6 }).map((_, i) => (

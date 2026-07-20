@@ -1,0 +1,26 @@
+USDROP - CUSTOMER SERVICE RESPONSE TEMPLATES
+Fast, friendly macros for common tickets. Replace {{placeholders}}.
+================================================================
+
+----- WHERE IS MY ORDER (WISMO) -----
+Hi {{first_name}}, thanks for reaching out! Your order #{{order_number}} is on its way.
+Tracking: {{tracking_link}} - estimated delivery {{delivery_estimate}}.
+Let me know if you need anything else!
+
+----- SHIPPING DELAY -----
+Hi {{first_name}}, apologies for the wait. Your order is in transit but running a little behind due to {{reason}}.
+Here's your tracking: {{tracking_link}}. As a thank-you for your patience, here's 10% off your next order: SORRY10.
+
+----- DAMAGED / DEFECTIVE ITEM -----
+Hi {{first_name}}, so sorry your item arrived damaged! No need to return it.
+We're shipping a free replacement today / issuing a full refund (your choice). Which would you prefer?
+
+----- REFUND REQUEST -----
+Hi {{first_name}}, happy to help. I've started your refund of {{amount}} to your original payment method - it usually appears within 5-7 business days.
+Is there anything we could have done better?
+
+----- CANCELLATION (before shipping) -----
+Hi {{first_name}}, your order #{{order_number}} hasn't shipped yet, so I've cancelled it and refunded {{amount}}. You'll see it within 5-7 business days.
+
+----- CHARGEBACK PREVENTION -----
+Hi {{first_name}}, I see you may have opened a dispute. We'd love to sort this out directly and faster - I can refund or replace right now. Just reply here and we'll take care of it today.

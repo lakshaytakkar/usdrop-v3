@@ -58,6 +58,8 @@
           isDropdown?: boolean
           isNew?: boolean
           comingSoon?: boolean
+          accent?: "green"
+          hideFromTopNav?: boolean
         }
 
         export const externalNavGroups: NavGroup[] = [
@@ -76,7 +78,6 @@
             items: [
               { title: "Framework", icon: Home, url: "/framework", isPro: false },
               { title: "My Products", icon: Bookmark, url: "/framework/my-products", isPro: false },
-              { title: "My Store", icon: ShoppingBag, url: "/framework/my-store", isPro: true },
               { title: "My Roadmap", icon: Map, url: "/framework/my-roadmap", isPro: false },
               { title: "My Learning", icon: GraduationCap, url: "/framework/my-learning", isPro: false },
               { title: "My Sessions", icon: MonitorPlay, url: "/framework/my-sessions", isPro: false },
@@ -101,6 +102,19 @@
             ],
           },
           {
+            label: "Store",
+            icon: ShoppingBag,
+            iconSrc: "/3d-ecom-icons-blue/Search_Product.png",
+            hideFromTopNav: true,
+            items: [
+              { title: "Dashboard", icon: BarChart3, url: "/store", isPro: true },
+              { title: "Products", icon: Package, url: "/store/products", isPro: true },
+              { title: "Inventory", icon: Grid3x3, url: "/store/inventory", isPro: true },
+              { title: "Orders", icon: ShoppingBag, url: "/store/orders", isPro: true },
+              { title: "Customers", icon: User, url: "/store/customers", isPro: true },
+            ],
+          },
+          {
             label: "Marketplaces",
             icon: Store,
             iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
@@ -109,11 +123,26 @@
             ],
           },
           {
+            label: "Fulfillment",
+            icon: Truck,
+            iconSrc: "/3d-ecom-icons-blue/Delivery_Truck.png",
+            items: [
+              { title: "Overview", icon: Truck, url: "/fulfillment", isPro: false },
+              { title: "My Orders", icon: Package, url: "/fulfillment/orders", isPro: true },
+              { title: "My Requests", icon: ClipboardCheck, url: "/fulfillment/requests", isPro: true },
+            ],
+          },
+          {
             label: "LLC",
             icon: Building2,
             iconSrc: "/3d-ecom-icons-blue/Category_Grid.png",
+            accent: "green",
             items: [
-              { title: "LLC Formation", icon: Building2, url: "/llc", isPro: false },
+              { title: "Overview", icon: Building2, url: "/llc", isPro: false },
+              { title: "Documents", icon: FileText, url: "/llc/documents", isPro: false },
+              { title: "Banking", icon: Building2, url: "/llc/banking", isPro: false },
+              { title: "Payments", icon: Receipt, url: "/llc/payments", isPro: false },
+              { title: "Benefits", icon: Shield, url: "/llc/benefits", isPro: false },
             ],
           },
           {
@@ -122,6 +151,8 @@
             iconSrc: "/3d-ecom-icons-blue/Toolbox_Wrench.png",
             isNew: true,
             items: [
+              { title: "Banner Generator", icon: Palette, url: "/ai-studio/banner-generator", isPro: true, isAiStudio: true },
+              { title: "Brand Kit + Logo", icon: Palette, url: "/ai-studio/brand-kit", isPro: true, isAiStudio: true },
               { title: "Model Studio", icon: User, url: "/ai-studio/model-studio", isPro: true, isAiStudio: true },
               { title: "Whitelabelling", icon: Badge, url: "/ai-studio/whitelabelling", isPro: true, isAiStudio: true },
               { title: "Description Generator", icon: PenTool, url: "/tools/description-generator", isPro: true },

@@ -69,14 +69,8 @@ export default function HelpPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="ds-page-title" data-testid="text-page-title">Help & Support</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Find answers, guides, and support resources
-            </p>
-          </div>
+      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-3">
+        <div className="flex items-center justify-end gap-4">
           <div className="relative shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
             <Input

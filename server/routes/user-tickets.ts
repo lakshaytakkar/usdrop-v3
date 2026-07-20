@@ -1,6 +1,42 @@
 import { type Express, Router, Request, Response } from 'express';
 import { requireAuth } from '../lib/auth';
 import { supabaseRemote } from '../lib/supabase-remote';
+import type { AuthUser } from '../lib/auth';
+
+// The shared Suprans bug tracker (public.bug_reports) that team.suprans.in
+// /hq/bugs reads. Its POST /api/bugs is intentionally open, so no secret is
+// needed. Overridable per-env; falls back to production.
+const SUPRANS_BUG_ENDPOINT = process.env.SUPRANS_BUG_ENDPOINT || 'https://team.suprans.in/api/bugs';
+
+/**
+ * Mirror an EXTERNAL user's support ticket into the shared Suprans bug tracker.
+ * Only fires for non-@suprans.in reporters — internal staff already work bugs in
+ * team.suprans.in, so their test reports must not pollute the customer inbox.
+ * Fire-and-forget: never blocks or fails the ticket response.
+ */
+function forwardExternalBug(
+  user: AuthUser,
+  ticket: { title: string; type: string; description?: string; page_url?: string },
+): void {
+  const email = (user.email || '').trim().toLowerCase();
+  if (!email || email.endsWith('@suprans.in')) return; // internal → skip
+
+  const body = {
+    type: ticket.type === 'feature_request' ? 'feature' : 'bug',
+    description: [ticket.title, ticket.description].filter(Boolean).join('\n\n'),
+    severity: 'normal',
+    page_url: ticket.page_url || 'usdrop.ai',
+    reporter_id: user.id,
+    reporter_name: `[USDrop] ${user.full_name || email}`.slice(0, 200),
+  };
+
+  // Detached — the customer's submit must not wait on (or fail because of) this.
+  void fetch(SUPRANS_BUG_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).catch((err) => console.error('[user-tickets] forward to Suprans bug tracker failed:', err));
+}
 
 export function registerUserTicketRoutes(app: Express) {
   const router = Router();
@@ -31,7 +67,7 @@ export function registerUserTicketRoutes(app: Express) {
   router.post('/', async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
-      const { title, type, description } = req.body;
+      const { title, type, description, page_url } = req.body;
 
       if (!title || typeof title !== 'string' || title.trim().length === 0) {
         return res.status(400).json({ error: 'Title is required' });
@@ -67,6 +103,15 @@ export function registerUserTicketRoutes(app: Express) {
             is_internal: false,
           });
       }
+
+      // Mirror EXTERNAL (non-@suprans) reports into the shared Suprans bug
+      // tracker so customer bugs land in /hq/bugs too. Internal staff skipped.
+      forwardExternalBug(req.user!, {
+        title: title.trim(),
+        type: ticketType,
+        description: typeof description === 'string' ? description.trim() : undefined,
+        page_url: typeof page_url === 'string' ? page_url : undefined,
+      });
 
       return res.status(201).json(ticket);
     } catch (error) {

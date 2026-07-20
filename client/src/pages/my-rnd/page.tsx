@@ -124,7 +124,7 @@ export default function MyRnDPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <Skeleton className="h-16 w-full rounded-md" />
         <div>
           <Skeleton className="h-8 w-48 mb-6" />
@@ -136,7 +136,7 @@ export default function MyRnDPage() {
 
   return (
     <ProPageWrapper featureName="R&D Workspace" featureDescription="Track your daily work, learning, and research in one place">
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-rnd">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-rnd">
       <FrameworkBanner
         title="My R&D Workspace"
         description="Track your daily work, learning, and research in one place"

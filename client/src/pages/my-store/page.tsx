@@ -93,7 +93,7 @@ function ShopifyStoresContent() {
 
   return (
     <>
-        <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+        <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
           <FrameworkBanner
             title="My Store"
             description="Manage your connected Shopify stores and track performance"
@@ -199,7 +199,7 @@ export default function ShopifyStoresPage() {
   return (
     <Suspense fallback={
       <>
-          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0">
+          <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-3 min-h-0">
             <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
               <BlueSpinner size="lg" label="Loading your stores..." />
             </div>

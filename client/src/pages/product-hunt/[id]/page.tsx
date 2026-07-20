@@ -23,7 +23,6 @@ import { ProductKPICards } from "../components/product-kpi-cards"
 import { MarketAnalyticsChart } from "../components/market-analytics-chart"
 import { CompetitorPricingChart } from "../components/competitor-pricing-chart"
 import { AudienceDemographicsChart } from "../components/audience-demographics-chart"
-import { FulfillmentCard } from "../components/fulfillment-card"
 import { CompetitorStoresSection } from "../components/competitor-stores-section"
 import { RelatedProductsCarousel } from "../components/related-products-carousel"
 import { ProfitCalculator } from "../components/profit-calculator"
@@ -306,7 +305,7 @@ export default function ProductDetailPage() {
               isSticky && "shadow-sm"
             )}
           >
-            <div className="flex items-center justify-between py-3 px-6 md:px-12 lg:px-20 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
+            <div className="flex items-center justify-between py-3 px-12 md:px-20 lg:px-32 gap-2 sm:gap-4 max-w-full min-w-0 w-full">
               <nav className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground flex-1 min-w-0 overflow-hidden">
                 <button onClick={() => router.push("/")} className="hover:text-foreground transition-colors cursor-pointer">Home</button>
                 <span>/</span>
@@ -349,7 +348,6 @@ export default function ProductDetailPage() {
                   onClick={() => window.open(aliExpressUrl, "_blank")}
                   variant="default"
                   size="sm"
-                  className="bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
                   title="Find on AliExpress"
                 >
                   <ExternalLink className="h-4 w-4 sm:mr-2" />
@@ -360,7 +358,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col gap-6 px-6 md:px-12 lg:px-20 py-6 md:py-8 max-w-full overflow-x-hidden min-w-0 w-full">
+          <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-4 max-w-full overflow-x-hidden min-w-0 w-full">
             <div className="w-full space-y-8 min-w-0 max-w-full">
 
               {/* Product Hero: Images + Info */}
@@ -499,16 +497,6 @@ export default function ProductDetailPage() {
                     demographics={researchData.audience_targeting.demographics}
                     interests={researchData.audience_targeting.interests}
                     suggestions={researchData.audience_targeting.suggestions}
-                  />
-                </div>
-              )}
-
-              {researchData?.fulfillment && (
-                <div className="space-y-3 min-w-0 max-w-full">
-                  <SectionHeader title="Fulfillment & Costs" description="Shipping details and market saturation analysis" />
-                  <FulfillmentCard
-                    fulfillment={researchData.fulfillment}
-                    demandSaturation={researchData.demand_saturation}
                   />
                 </div>
               )}

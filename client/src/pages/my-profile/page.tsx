@@ -143,7 +143,7 @@ export default function MyProfilePage() {
   const displayName = details.full_name || fullName || emailPrefix || "User"
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-profile">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-profile">
       <FrameworkBanner
         title="My Profile"
         description="Manage your personal and business information"

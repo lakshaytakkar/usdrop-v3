@@ -181,7 +181,7 @@ function SeasonalCollectionsPageContent() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8 relative">
+      <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-3 relative">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {seasonalCollections.map((collection, index) => {
             const { isLocked } = getTeaserLockState(index, isFree, {

@@ -283,7 +283,7 @@ export default function MyAppsPage() {
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <FrameworkBanner
           title="My Apps"
           description="Connect and manage your external apps, API keys, and integrations"

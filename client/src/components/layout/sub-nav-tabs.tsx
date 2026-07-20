@@ -59,6 +59,11 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
     showSearch: false,
     actions: [],
   },
+  Fulfillment: {
+    searchPlaceholder: "",
+    showSearch: false,
+    actions: [],
+  },
   Trending: {
     searchPlaceholder: "",
     showSearch: false,
@@ -96,12 +101,13 @@ const toolbarConfigs: Record<string, ToolbarConfig> = {
 }
 
 
-function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
+function SubNavTabItem({ item, index, isActive, isLocked, showNumbering, accent }: {
   item: NavItem
   index: number
   isActive: boolean
   isLocked: boolean
   showNumbering: boolean
+  accent?: "green"
 }) {
   return (
     <Link
@@ -110,7 +116,7 @@ function SubNavTabItem({ item, index, isActive, isLocked, showNumbering }: {
       className={cn(
         "flex items-center gap-2 px-4 py-2 text-[14px] whitespace-nowrap transition-all rounded-full",
         isActive
-          ? "bg-white text-indigo-700 font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.12)]"
+          ? cn("bg-white font-semibold shadow-[0_1px_3px_rgba(0,0,0,0.12)]", accent === "green" ? "text-emerald-700" : "text-indigo-700")
           : "bg-transparent text-white/75 font-medium hover:text-white hover:bg-white/15",
         isLocked && "opacity-60"
       )}
@@ -219,7 +225,7 @@ export function SubNavTabs() {
       <div className="w-full px-12 md:px-20 lg:px-32 pt-2.5 pb-1.5">
         <div className="space-y-2.5">
 
-        {hasTabs && <div className="flex items-center gap-1 rounded-xl bg-indigo-600 px-2 py-1.5 shadow-[0_2px_8px_rgba(79,70,229,0.25)]">
+        {hasTabs && <div className={cn("flex items-center gap-1 rounded-xl px-2 py-1.5", activeGroup.accent === "green" ? "bg-emerald-600 shadow-[0_2px_8px_rgba(5,150,105,0.25)]" : "bg-indigo-600 shadow-[0_2px_8px_rgba(79,70,229,0.25)]")}>
           {canScrollLeft && (
             <button
               onClick={() => scrollBy("left")}
@@ -249,6 +255,7 @@ export function SubNavTabs() {
                   isActive={isActive}
                   isLocked={isLocked}
                   showNumbering={showNumbering}
+                  accent={activeGroup.accent}
                 />
               )
             })}

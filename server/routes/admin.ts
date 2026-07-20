@@ -1866,18 +1866,32 @@ export function registerAdminRoutes(app: Express) {
 
   router.get('/external-users', async (req: Request, res: Response) => {
     try {
-      const { data: rows, error } = await supabaseRemote
-        .from('profiles')
-        .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
-        .is('internal_role', null)
-        .order('created_at', { ascending: false });
+      // PostgREST caps every response at 1000 rows, so page through the table
+      // explicitly. `id` breaks created_at ties, without which rows sharing a
+      // timestamp could repeat or vanish across page boundaries.
+      const PAGE_SIZE = 1000;
+      const rows: any[] = [];
 
-      if (error) {
-        console.error('Error fetching external users:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabaseRemote
+          .from('profiles')
+          .select('*, subscription_plans(id, name, slug, price_monthly, features, trial_days)')
+          .is('internal_role', null)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) {
+          console.error('Error fetching external users:', error);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (!data || data.length === 0) break;
+        rows.push(...data);
+        if (data.length < PAGE_SIZE) break;
       }
 
-      if (!rows || rows.length === 0) {
+      if (rows.length === 0) {
         return res.json([]);
       }
 

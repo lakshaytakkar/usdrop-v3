@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { Link } from "wouter"
+import { Link, useLocation } from "wouter"
 import { Play, ChevronDown, ChevronRight, ArrowRight, GraduationCap, Check, BookOpen, Video, Layers, BadgeCheck, Clock, ExternalLink, Loader2 } from "lucide-react"
+import { WelcomeOnboardingModal } from "./components/welcome-onboarding-modal"
 import { cn } from "@/lib/utils"
 import { getYouTubeThumbnail, getCompletedLessons, getCompletionCount, isAllCompleted } from "./data"
 import type { FreeLearningModule, FreeLearningLesson } from "./data"
@@ -166,6 +167,7 @@ export default function FreeLearningPage() {
   const completedCount = getCompletionCount()
   const completedIds = getCompletedLessons()
   const [showActivation, setShowActivation] = useState(false)
+  const [, setLocation] = useLocation()
 
   if (isLoading) {
     return (
@@ -176,7 +178,7 @@ export default function FreeLearningPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
+    <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-3">
       <div
         className="relative overflow-hidden rounded-xl w-full"
         style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
@@ -195,38 +197,34 @@ export default function FreeLearningPage() {
           style={{ background: "radial-gradient(circle, #818cf8 0%, transparent 70%)" }}
         />
 
-        <div className="relative flex flex-col md:flex-row items-center gap-6 md:gap-10 p-6 md:p-8">
+        <div className="relative flex flex-col md:flex-row md:items-center gap-6 px-6 py-5 md:px-8 md:py-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-[11px] font-semibold uppercase tracking-wider text-blue-300">
-                <GraduationCap className="h-3 w-3" />
-                Free Learning
-              </span>
-            </div>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/20 text-[11px] font-semibold uppercase tracking-wider text-blue-300 mb-3">
+              <GraduationCap className="h-3 w-3" />
+              Free Learning
+            </span>
 
-            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight" data-testid="text-hero-title">
-              Learn USA Dropshipping<br className="hidden md:block" /> From Zero to Pro
+            <h1 className="text-xl md:text-[26px] font-bold text-white mb-2 leading-[1.15]" data-testid="text-hero-title">
+              Learn USA Dropshipping From Zero to Pro
             </h1>
-            <p className="text-sm md:text-[15px] text-white/60 mb-5 max-w-lg leading-relaxed">
-              Master the fundamentals of USA dropshipping — from product research to Shopify setup to running your first ads. Guided by an industry expert, completely free.
+            <p className="text-[13px] md:text-sm text-white/55 mb-4 max-w-2xl leading-relaxed">
+              Master USA dropshipping — product research, Shopify setup and your first ads. Guided by an industry expert, completely free.
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5 mb-6 max-w-sm">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-5">
               {mentorStats.map((stat) => (
-                <div key={stat.label} className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/[0.08] shrink-0">
-                    <stat.icon className="h-3.5 w-3.5 text-blue-400" />
-                  </div>
-                  <span className="text-xs text-white/70 font-medium">{stat.label}</span>
+                <div key={stat.label} className="flex items-center gap-1.5">
+                  <stat.icon className="h-4 w-4 text-blue-400 shrink-0" />
+                  <span className="text-[13px] text-white/70 font-medium">{stat.label}</span>
                 </div>
               ))}
             </div>
 
             {allCompleted ? (
               <button
-                onClick={() => setShowActivation(true)}
+                onClick={() => setLocation("/program")}
                 data-testid="button-activate-mentorship-hero"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer shadow-lg shadow-black/20"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer shadow-lg shadow-black/20"
               >
                 Activate Mentorship
               </button>
@@ -234,7 +232,7 @@ export default function FreeLearningPage() {
               <Link
                 href={`/free-learning/${firstLessonId}`}
                 data-testid="button-start-course-hero"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all shadow-lg shadow-black/20"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-slate-900 hover:bg-white/90 text-sm font-semibold transition-all shadow-lg shadow-black/20"
               >
                 <Play className="h-4 w-4" />
                 {completedCount > 0 ? "Continue Learning" : "Start Learning"}
@@ -242,8 +240,9 @@ export default function FreeLearningPage() {
             ) : null}
           </div>
 
-          <div className="shrink-0 flex flex-col items-center">
-            <div className="w-32 h-32 md:w-36 md:h-36 rounded-2xl overflow-hidden border-2 border-white/15 shadow-2xl bg-white mb-3">
+          {/* mentor — inline (image + details) to fill the row and keep height tight */}
+          <div className="shrink-0 flex items-center gap-4 md:border-l md:border-white/10 md:pl-6">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-2 border-white/15 shadow-xl bg-white shrink-0">
               <img
                 src="/images/mentor-suprans.png"
                 alt="Mr. Suprans - Your Mentor"
@@ -251,21 +250,21 @@ export default function FreeLearningPage() {
                 data-testid="img-mentor-photo"
               />
             </div>
-            <div className="flex items-center gap-1.5 mb-1">
-              <GraduationCap className="h-3 w-3 text-blue-300" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <GraduationCap className="h-3 w-3 text-blue-300" />
+                <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-blue-300">Your Mentor</span>
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">Mr. Suprans</h3>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                {mentorCredentials.map((item) => (
+                  <li key={item} className="flex items-center gap-1.5">
+                    <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                    <span className="text-[11.5px] text-white/60 whitespace-nowrap">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <h3 className="text-base font-bold text-white mb-2.5">Mr. Suprans</h3>
-            <ul className="space-y-1.5">
-              {mentorCredentials.map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 shrink-0">
-                    <Check className="h-2.5 w-2.5 text-emerald-400" />
-                  </span>
-                  <span className="text-[12px] text-white/60">{item}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </div>
@@ -277,7 +276,7 @@ export default function FreeLearningPage() {
           </h2>
           {allCompleted ? (
             <button
-              onClick={() => setShowActivation(true)}
+              onClick={() => setLocation("/program")}
               data-testid="button-activate-mentorship"
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white font-medium text-xs transition-colors cursor-pointer"
             >
@@ -319,7 +318,7 @@ export default function FreeLearningPage() {
             You're now eligible for personalized mentorship. Apply now to get matched with an expert mentor.
           </p>
           <button
-            onClick={() => setShowActivation(true)}
+            onClick={() => setLocation("/program")}
             data-testid="button-activate-mentorship-bottom"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm transition-colors cursor-pointer"
           >
@@ -346,6 +345,12 @@ export default function FreeLearningPage() {
       )}
 
       <MentorshipActivationModal open={showActivation} onOpenChange={setShowActivation} />
+
+      <WelcomeOnboardingModal
+        firstLessonId={firstLessonId}
+        onStart={(id) => { if (id) setLocation(`/free-learning/${id}`) }}
+      />
+
     </div>
   )
 }

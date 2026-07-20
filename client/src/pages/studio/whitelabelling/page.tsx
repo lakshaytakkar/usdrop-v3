@@ -9,7 +9,7 @@ export default function LogoStudioPage() {
         featureName="Whitelabelling Studio"
         featureDescription="Create custom logos and brand assets for your store. Complete Free Learning to unlock this feature."
       >
-        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-6 md:py-8 min-h-0 relative">
+        <div className="flex flex-1 flex-col gap-2 px-12 md:px-20 lg:px-32 py-3 min-h-0 relative">
           <LogoStudio />
         </div>
       </ProPageWrapper>

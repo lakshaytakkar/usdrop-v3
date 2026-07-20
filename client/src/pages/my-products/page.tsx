@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { TeaserListFade } from "@/components/ui/teaser-list-fade";
+import { TeaserListFade, TeaserCardGrid } from "@/components/ui/teaser-list-fade";
 import { TeaserButtonLock } from "@/components/ui/teaser-button-lock";
 import {
   Table,
@@ -48,6 +48,9 @@ import {
   Tag,
   X,
   Star,
+  LayoutGrid,
+  List,
+  ZoomIn,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -59,6 +62,29 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FrameworkBanner } from "@/components/framework-banner";
 import { Badge } from "@/components/ui/badge";
+
+// Image handling shared with the rest of the app (product-hunt / winning-products):
+// route un-trusted external URLs through the image proxy so Amazon/Shopify
+// hotlink-protected images still render; local/data URLs pass through untouched.
+const TRUSTED_IMG_HOSTS = [
+  "images.unsplash.com",
+  "supabase.co",
+  "cloudinary.com",
+  "imgix.net",
+  "shopify.com",
+  "amazonaws.com",
+];
+const IMG_FALLBACK =
+  "/demo-products/Screenshot 2024-07-24 185228.png";
+function resolveImg(url: string | null | undefined): string {
+  if (!url) return IMG_FALLBACK;
+  if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:"))
+    return url;
+  if (TRUSTED_IMG_HOSTS.some((d) => url.includes(d))) return url;
+  return `/api/proxy/image?url=${encodeURIComponent(url)}`;
+}
+
+type ViewMode = "grid" | "table";
 
 interface PicklistItem {
   id: string;
@@ -941,6 +967,10 @@ export default function MyProductsPage() {
   const [viewItem, setViewItem] = useState<PicklistItem | null>(null);
   const [editItem, setEditItem] = useState<PicklistItem | null>(null);
   const [activeTab, setActiveTab] = useState<SourceTab>("all");
+  // Grid is always the default on load; the toggle switches within the session
+  // but is intentionally not persisted.
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [lightboxItem, setLightboxItem] = useState<PicklistItem | null>(null);
   const [pushingProductId, setPushingProductId] = useState<string | null>(null);
   const [storeSelectItem, setStoreSelectItem] = useState<PicklistItem | null>(
     null,
@@ -1104,9 +1134,183 @@ export default function MyProductsPage() {
     }).format(date);
   };
 
+  const renderProductCard = (
+    item: PicklistItem,
+    _index: number,
+    locked: boolean,
+  ) => {
+    const profit = Number(item.price) - Number(item.buyPrice);
+    return (
+      <Card
+        key={item.id}
+        className={`group flex flex-col overflow-hidden p-0 transition-shadow hover:shadow-md ${
+          item.starred ? "border-amber-200 ring-1 ring-amber-100" : "border-gray-200"
+        }`}
+        data-testid={`card-product-${item.id}`}
+      >
+        {/* Image — click to expand */}
+        <div
+          className="relative aspect-square overflow-hidden bg-gray-50 cursor-zoom-in"
+          onClick={() => !locked && setLightboxItem(item)}
+          data-testid={`card-image-${item.id}`}
+        >
+          <img
+            src={resolveImg(item.image)}
+            alt={item.title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = IMG_FALLBACK;
+            }}
+          />
+          {item.starred && (
+            <div className="absolute left-2 top-2">
+              <Badge
+                className="border-0 bg-amber-400/95 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm"
+                variant="outline"
+              >
+                <Star className="mr-1 h-3 w-3 fill-white text-white" />
+                Starred
+              </Badge>
+            </div>
+          )}
+          <div className="absolute right-2 top-2">
+            <Badge
+              className={`px-2 py-0.5 text-[11px] font-semibold shadow-sm backdrop-blur-sm ${
+                item.inStock
+                  ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
+                  : "border-red-200 bg-red-50/95 text-red-700"
+              }`}
+              variant="outline"
+            >
+              {item.inStock ? "In Stock" : "Out of Stock"}
+            </Badge>
+          </div>
+          {/* Zoom affordance on hover */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/15 group-hover:opacity-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow">
+              <ZoomIn className="h-5 w-5 text-gray-700" />
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+          <div className="min-h-[2.1rem]">
+            <p
+              className="line-clamp-2 text-[13px] font-semibold leading-tight text-gray-900"
+              data-testid={`card-title-${item.id}`}
+            >
+              {item.title}
+            </p>
+            <p className="mt-0.5 truncate text-[11px] text-gray-500">
+              {item.category || "Uncategorized"}
+            </p>
+          </div>
+
+          {/* Price row */}
+          <div className="mt-auto flex items-stretch gap-1 text-center">
+            <div className="flex-1 rounded-md border border-gray-100 bg-gray-50 px-1 py-0.5">
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                Buy
+              </p>
+              <p className="text-[12px] font-bold text-gray-900">
+                ${Number(item.buyPrice).toFixed(2)}
+              </p>
+            </div>
+            <div className="flex-1 rounded-md border border-gray-100 bg-gray-50 px-1 py-0.5">
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                Sell
+              </p>
+              <p className="text-[12px] font-bold text-gray-900">
+                ${Number(item.price).toFixed(2)}
+              </p>
+            </div>
+            <div
+              className={`flex-1 rounded-md border px-1 py-0.5 ${
+                profit >= 0
+                  ? "border-emerald-100 bg-emerald-50/60"
+                  : "border-red-100 bg-red-50/60"
+              }`}
+            >
+              <p className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">
+                Profit
+              </p>
+              <p
+                className={`text-[12px] font-bold ${
+                  profit >= 0 ? "text-emerald-700" : "text-red-700"
+                }`}
+              >
+                {profit >= 0 ? "+" : ""}${profit.toFixed(2)}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1 pt-0.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 flex-1 px-1.5 text-[11px]"
+              onClick={() => setViewItem(item)}
+              data-testid={`button-view-${item.id}`}
+            >
+              <Eye className="mr-0.5 h-3 w-3" />
+              View
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 flex-1 border-0 bg-[#95BF47] px-1.5 text-[11px] text-white hover:bg-[#7FA737]"
+              onClick={() => handlePushToShopify(item)}
+              disabled={pushingProductId === item.id}
+              data-testid={`button-push-shopify-${item.id}`}
+            >
+              {pushingProductId === item.id ? (
+                <Loader2 className="mr-0.5 h-3 w-3 animate-spin" />
+              ) : (
+                <img
+                  src="/shopify_glyph.svg"
+                  alt="Shopify"
+                  width={12}
+                  height={12}
+                  className="mr-0.5"
+                />
+              )}
+              {pushingProductId === item.id ? "..." : "Shopify"}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0">
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => setEditItem(item)}
+                  data-testid={`button-edit-${item.id}`}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => handleRemove(item.id)}
+                  data-testid={`button-remove-${item.id}`}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Remove
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <FrameworkBanner
           title="My Products"
           description="Your saved products and picklist for quick access"
@@ -1169,6 +1373,34 @@ export default function MyProductsPage() {
                   {filteredItems.length === 1 ? "product" : "products"} saved
                 </p>
               )}
+              <div className="flex items-center rounded-lg border border-gray-200 bg-white p-0.5">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors cursor-pointer ${
+                    viewMode === "grid"
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === "grid"}
+                  data-testid="button-view-grid"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("table")}
+                  className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors cursor-pointer ${
+                    viewMode === "table"
+                      ? "bg-indigo-600 text-white"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  aria-label="Table view"
+                  aria-pressed={viewMode === "table"}
+                  data-testid="button-view-table"
+                >
+                  <List className="h-4 w-4" />
+                </button>
+              </div>
               <TeaserButtonLock message="Complete Free Learning to manage products">
                 <Button
                   onClick={() => setAddModalOpen(true)}
@@ -1246,6 +1478,14 @@ export default function MyProductsPage() {
                 )}
               </div>
             </Card>
+          ) : viewMode === "grid" ? (
+            <TeaserCardGrid
+              items={filteredItems}
+              visibleItems={10}
+              contentType="products"
+              renderItem={renderProductCard}
+              gridClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
+            />
           ) : (
             <TeaserListFade visibleItems={3} contentType="products">
               <Card>
@@ -1280,17 +1520,27 @@ export default function MyProductsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <div className="relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50">
+                              <button
+                                type="button"
+                                onClick={() => setLightboxItem(item)}
+                                className="group relative w-12 h-12 rounded-md overflow-hidden border flex-shrink-0 bg-gray-50 cursor-zoom-in"
+                                aria-label={`Expand image of ${item.title}`}
+                                data-testid={`row-image-${item.id}`}
+                              >
                                 <img
-                                  src={item.image}
+                                  src={resolveImg(item.image)}
                                   alt={item.title}
                                   className="w-full h-full object-cover"
+                                  loading="lazy"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src =
-                                      "/demo-products/Screenshot 2024-07-24 185228.png";
+                                      IMG_FALLBACK;
                                   }}
                                 />
-                              </div>
+                                <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/25 group-hover:opacity-100">
+                                  <ZoomIn className="h-4 w-4 text-white" />
+                                </span>
+                              </button>
                               <div className="flex-1 min-w-0">
                                 <p
                                   className="font-medium text-sm truncate max-w-[220px]"
@@ -1435,6 +1685,41 @@ export default function MyProductsPage() {
         }}
         onSaved={fetchPicklist}
       />
+
+      {/* Image lightbox — click any product image to expand */}
+      <Dialog
+        open={!!lightboxItem}
+        onOpenChange={(o) => {
+          if (!o) setLightboxItem(null);
+        }}
+      >
+        <DialogContent
+          className="max-w-3xl border-0 bg-transparent p-0 shadow-none"
+          aria-describedby="lightbox-desc"
+        >
+          <DialogTitle className="sr-only">
+            {lightboxItem?.title || "Product image"}
+          </DialogTitle>
+          <DialogDescription id="lightbox-desc" className="sr-only">
+            Expanded product image
+          </DialogDescription>
+          {lightboxItem && (
+            <div className="flex flex-col items-center">
+              <img
+                src={resolveImg(lightboxItem.image)}
+                alt={lightboxItem.title}
+                className="max-h-[80vh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = IMG_FALLBACK;
+                }}
+              />
+              <div className="mt-3 max-w-full truncate rounded-full bg-white/90 px-4 py-1.5 text-sm font-medium text-gray-800 shadow backdrop-blur">
+                {lightboxItem.title}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={storeSelectOpen}

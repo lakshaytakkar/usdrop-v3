@@ -120,7 +120,7 @@ export default function MyPlanPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <Skeleton className="h-16 w-full rounded-md" />
         <div className="space-y-6">
           {[1, 2, 3].map(i => (
@@ -148,7 +148,7 @@ export default function MyPlanPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-plan">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-plan">
       <FrameworkBanner
         title="My Plan"
         description="View your active services and subscription features"

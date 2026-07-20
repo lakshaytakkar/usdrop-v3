@@ -24,6 +24,17 @@ interface ResourceFile {
   type: "spreadsheet" | "pdf" | "video" | "template"
   size: string
   updatedAt: string
+  url?: string
+}
+
+function downloadResource(file: ResourceFile) {
+  if (!file.url) return
+  const a = document.createElement("a")
+  a.href = file.url
+  a.download = file.url.split("/").pop() || file.name
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
 }
 
 interface ImportantLink {
@@ -40,100 +51,121 @@ interface ImportantLink {
 
 const resources: ResourceFile[] = [
   {
-    id: "1",
-    name: "Product Research Tracker",
-    description: "Track and compare products, margins, and suppliers",
+    id: "profit-margin",
+    name: "Profit Margin & Pricing Calculator",
+    description: "Work out your true margin, break-even ROAS and the right price to charge.",
     type: "spreadsheet",
-    size: "245 KB",
+    size: "6 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/profit-margin-calculator.xlsx",
   },
   {
-    id: "2",
-    name: "Supplier Contact List",
-    description: "Pre-vetted US supplier directory with contact info",
+    id: "roas-tracker",
+    name: "Ad Spend & ROAS Tracker",
+    description: "Log daily ad results — ROAS, CPA, AOV and profit auto-calculate.",
     type: "spreadsheet",
-    size: "180 KB",
+    size: "6 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/ad-spend-roas-tracker.xlsx",
   },
   {
-    id: "3",
-    name: "Profit & Loss Template",
-    description: "Monthly P&L tracker for your dropshipping store",
+    id: "pnl-tracker",
+    name: "Monthly P&L / Cash-Flow Tracker",
+    description: "Track revenue and expenses across the year to see real net profit.",
     type: "spreadsheet",
-    size: "320 KB",
-    updatedAt: "Jan 2026",
-  },
-  {
-    id: "4",
-    name: "Dropshipping Startup Checklist",
-    description: "Step-by-step checklist to launch your first store",
-    type: "pdf",
-    size: "1.2 MB",
+    size: "6 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/monthly-pnl-tracker.xlsx",
   },
   {
-    id: "5",
-    name: "US Sales Tax Guide",
-    description: "State-by-state sales tax requirements for e-commerce",
-    type: "pdf",
-    size: "890 KB",
-    updatedAt: "Jan 2026",
-  },
-  {
-    id: "6",
-    name: "Facebook Ads Playbook",
-    description: "Proven ad strategies for dropshipping products",
-    type: "pdf",
-    size: "2.4 MB",
+    id: "validation",
+    name: "Product Validation Scorecard",
+    description: "Score any product against 8 winning criteria for a clear GO / NO-GO.",
+    type: "spreadsheet",
+    size: "6 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/product-validation-scorecard.xlsx",
   },
   {
-    id: "7",
-    name: "Product Listing Walkthrough",
-    description: "How to create optimized Shopify product listings",
-    type: "video",
-    size: "45 min",
+    id: "scaling",
+    name: "Break-even & Scaling Planner",
+    description: "Set a revenue goal and see the orders, ad budget and units you need.",
+    type: "spreadsheet",
+    size: "6 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/breakeven-scaling-planner.xlsx",
   },
   {
-    id: "8",
-    name: "Store Launch Blueprint",
-    description: "Complete video guide from zero to first sale",
-    type: "video",
-    size: "1h 20min",
-    updatedAt: "Jan 2026",
+    id: "supplier",
+    name: "Supplier Comparison Sheet",
+    description: "Compare suppliers on price, MOQ, shipping and quality with an auto score.",
+    type: "spreadsheet",
+    size: "6 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/supplier-comparison-sheet.xlsx",
   },
   {
-    id: "9",
-    name: "Customer Email Sequences",
-    description: "Pre-built email flows for order confirmation & follow-up",
+    id: "policies-pack",
+    name: "Store Policies Pack",
+    description: "Shipping, Returns, Privacy & Terms — paste into Shopify, fill the blanks.",
     type: "template",
-    size: "56 KB",
+    size: "3 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/store-policies-pack.txt",
   },
   {
-    id: "10",
-    name: "Return Policy Template",
-    description: "Professionally written return & refund policy",
+    id: "email-scripts",
+    name: "Email & SMS Flow Scripts",
+    description: "Welcome, order, shipping, abandoned-cart, review & win-back copy — ready to paste.",
     type: "template",
-    size: "32 KB",
-    updatedAt: "Jan 2026",
-  },
-  {
-    id: "11",
-    name: "Ad Spend Tracker",
-    description: "Daily ad spend and ROAS tracking spreadsheet",
-    type: "spreadsheet",
-    size: "210 KB",
+    size: "3 KB",
     updatedAt: "Feb 2026",
+    url: "/resources/email-sms-scripts.txt",
   },
   {
-    id: "12",
-    name: "Shipping Rate Comparison",
-    description: "Compare shipping costs across major carriers",
+    id: "supplier-scripts",
+    name: "Supplier Outreach & Negotiation Scripts",
+    description: "Message templates for sourcing, samples, price negotiation and private label.",
+    type: "template",
+    size: "2 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/supplier-outreach-scripts.txt",
+  },
+  {
+    id: "cs-templates",
+    name: "Customer Service Response Templates",
+    description: "Fast, friendly macros for WISMO, refunds, damaged items and chargebacks.",
+    type: "template",
+    size: "2 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/cs-response-templates.txt",
+  },
+  {
+    id: "sales-tax",
+    name: "US Sales Tax Cheat-Sheet",
+    description: "Nexus, thresholds, marketplace-facilitator rules — the essentials in one page.",
     type: "pdf",
-    size: "560 KB",
-    updatedAt: "Jan 2026",
+    size: "3 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/us-sales-tax-cheatsheet.pdf",
+  },
+  {
+    id: "meta-ads-checklist",
+    name: "Meta Ads Launch Checklist",
+    description: "Pixel, campaign structure, budgets, target metrics and scaling rules.",
+    type: "pdf",
+    size: "3 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/meta-ads-launch-checklist.pdf",
+  },
+  {
+    id: "store-launch-checklist",
+    name: "Store Launch Checklist",
+    description: "Everything from LLC to first sale — a step-by-step go-live checklist.",
+    type: "pdf",
+    size: "2 KB",
+    updatedAt: "Feb 2026",
+    url: "/resources/store-launch-checklist.pdf",
   },
 ]
 
@@ -241,12 +273,7 @@ export default function ResourcesPage() {
   const hasNext = currentPreviewIndex >= 0 && currentPreviewIndex < filtered.length - 1
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-6 md:py-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-1" data-testid="text-page-title">Resources</h1>
-        <p className="text-sm text-gray-500">Essential files, templates, links, and guides for your dropshipping journey</p>
-      </div>
-
+    <div className="flex flex-1 flex-col gap-6 px-12 md:px-20 lg:px-32 py-3">
       <div className="flex items-center gap-2 flex-wrap">
         {tabs.map(tab => (
           <button
@@ -395,7 +422,7 @@ export default function ResourcesPage() {
 
                     <div className="hidden md:flex items-center justify-end gap-1">
                       <button
-                        onClick={() => setPreviewFile(file)}
+                        onClick={(e) => { e.stopPropagation(); setPreviewFile(file) }}
                         className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                         data-testid={`button-preview-${file.id}`}
                         title="Preview"
@@ -403,6 +430,7 @@ export default function ResourcesPage() {
                         <Eye className="h-3.5 w-3.5" />
                       </button>
                       <button
+                        onClick={(e) => { e.stopPropagation(); downloadResource(file) }}
                         className="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer"
                         data-testid={`button-download-${file.id}`}
                         title="Download"

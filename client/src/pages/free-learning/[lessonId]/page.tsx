@@ -41,7 +41,7 @@ function Sidebar({
   return (
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 border-b border-gray-100">
-        <h3 className="text-sm font-bold text-gray-900 truncate">{freeLearningCourse.title}</h3>
+        <h3 className="text-[15px] font-bold text-gray-900 truncate">{freeLearningCourse.title}</h3>
         {allDone ? (
           <button
             onClick={onActivate}
@@ -54,8 +54,8 @@ function Sidebar({
         ) : (
           <div className="mt-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-gray-400 font-medium">{allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0}% complete</span>
-              <span className="text-[10px] text-gray-400">{completedCount}/{allLessons.length}</span>
+              <span className="text-[11px] text-gray-400 font-medium">{allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0}% complete</span>
+              <span className="text-[11px] text-gray-400">{completedCount}/{allLessons.length}</span>
             </div>
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
@@ -83,8 +83,8 @@ function Sidebar({
                 ) : (
                   <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                 )}
-                <span className="text-xs font-semibold text-gray-700 truncate flex-1">{module.title}</span>
-                <span className="text-[10px] text-gray-400 shrink-0">{module.lessons.length}</span>
+                <span className="text-[13px] font-semibold text-gray-700 truncate flex-1">{module.title}</span>
+                <span className="text-[11px] text-gray-400 shrink-0">{module.lessons.length}</span>
               </button>
 
               {isExpanded && (
@@ -97,7 +97,7 @@ function Sidebar({
                         href={`/free-learning/${lesson.id}`}
                         data-testid={`link-sidebar-lesson-${lesson.id}`}
                         className={cn(
-                          "flex items-center gap-2.5 pl-9 pr-4 py-2 text-xs transition-colors",
+                          "flex items-center gap-2.5 pl-9 pr-4 py-2.5 text-[13px] transition-colors",
                           isActive
                             ? "bg-blue-50 text-blue-600 font-medium"
                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -110,7 +110,7 @@ function Sidebar({
                         )}
                         <span className="truncate flex-1">{lesson.title}</span>
                         {lesson.duration && (
-                          <span className={cn("text-[10px] shrink-0", isActive ? "text-blue-400" : "text-gray-400")}>{lesson.duration}</span>
+                          <span className={cn("text-[11px] shrink-0", isActive ? "text-blue-400" : "text-gray-400")}>{lesson.duration}</span>
                         )}
                       </Link>
                     )
@@ -191,52 +191,44 @@ export default function FreeLearningLessonPage() {
 
   return (
     <div className="flex flex-1 flex-col h-[calc(100vh-5.5rem)] overflow-hidden px-12 md:px-20 lg:px-32">
-      <div className="flex items-center justify-between py-2 border-b bg-background">
+      <div className="flex items-center justify-between gap-4 py-3 border-b border-slate-200 bg-white">
         <Link
           href="/free-learning"
           data-testid="link-back-to-course"
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 transition-colors"
         >
-          Close
+          <ArrowLeft className="h-4 w-4" /> Back to course
         </Link>
-        <div className="text-sm text-muted-foreground">
-          Lesson {currentIdx + 1} of {allLessons.length}
+        <div className="text-[13px] font-medium text-slate-500">
+          Lesson <span className="text-slate-900 font-semibold">{currentIdx + 1}</span> of {allLessons.length}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {prevLesson ? (
-            <Link
-              href={`/free-learning/${prevLesson.id}`}
-              data-testid="button-prev-lesson"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Prev
+            <Link href={`/free-learning/${prevLesson.id}`} data-testid="button-prev-lesson" className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" /> Prev
             </Link>
           ) : (
-            <span className="text-sm text-gray-300">Prev</span>
+            <span className="inline-flex items-center gap-1 h-8 px-3 rounded-lg border border-slate-100 text-[13px] font-medium text-slate-300 cursor-not-allowed"><ArrowLeft className="h-3.5 w-3.5" /> Prev</span>
           )}
-          <span className="text-gray-300 mx-1">|</span>
           {nextLesson ? (
-            <Link
-              href={`/free-learning/${nextLesson.id}`}
-              data-testid="button-next-lesson"
-              className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-            >
-              Next Lesson
+            <Link href={`/free-learning/${nextLesson.id}`} data-testid="button-next-lesson" className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-blue-600 text-white text-[13px] font-semibold hover:bg-blue-700 transition-colors">
+              Next lesson <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           ) : (
-            <span className="text-sm text-gray-300">Next Lesson</span>
+            <span className="inline-flex items-center gap-1 h-8 px-3 rounded-lg bg-slate-100 text-[13px] font-medium text-slate-300 cursor-not-allowed">Next lesson <ArrowRight className="h-3.5 w-3.5" /></span>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-black/[0.04] bg-background mt-2 mb-4">
-        <div className="w-full lg:w-[300px] border-r bg-background overflow-hidden flex-shrink-0">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white mt-2 mb-4">
+        <div className="w-full lg:w-[300px] border-r border-slate-100 bg-white overflow-hidden flex-shrink-0">
           <Sidebar currentLessonId={lessonId} completionVersion={completionVersion} onActivate={() => setShowActivation(true)} modules={modules} findLessonFn={findLesson} />
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-shrink-0">
-            <div className="w-full bg-black" data-testid="video-player-area">
+        <div className="flex-1 overflow-y-auto bg-slate-50/40">
+          <div className="max-w-4xl mx-auto px-5 md:px-8 py-5 md:py-6">
+            {/* video stage — centered, capped width so it never becomes a giant slab */}
+            <div className="rounded-xl overflow-hidden border border-slate-200 bg-black shadow-sm" data-testid="video-player-area">
               {hasVideo ? (
                 isYouTube ? (
                   <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
@@ -250,112 +242,88 @@ export default function FreeLearningLessonPage() {
                   </div>
                 ) : (
                   <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                    <video
-                      src={lesson.videoUrl!}
-                      className="absolute inset-0 w-full h-full"
-                      controls
-                      playsInline
-                    />
+                    <video src={lesson.videoUrl!} className="absolute inset-0 w-full h-full" controls playsInline />
                   </div>
                 )
               ) : hasExternalUrl ? (
-                <div className="relative w-full flex items-center justify-center" style={{ paddingTop: "56.25%" }}>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-                    <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4">
-                      <ExternalLink className="h-7 w-7 text-blue-400" />
-                    </div>
-                    <p className="text-white text-base font-semibold mb-2">{lesson.title}</p>
+                <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 px-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-blue-500/20 flex items-center justify-center mb-4"><ExternalLink className="h-7 w-7 text-blue-400" /></div>
+                    <p className="text-white text-base font-semibold mb-1">{lesson.title}</p>
                     <p className="text-white/50 text-sm mb-5">This lesson opens as an external document</p>
-                    <a
-                      href={lesson.externalUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid="link-external-resource"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
-                    >
-                      Open Document
-                      <ExternalLink className="h-4 w-4" />
+                    <a href={lesson.externalUrl!} target="_blank" rel="noopener noreferrer" data-testid="link-external-resource" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors">
+                      Open Document <ExternalLink className="h-4 w-4" />
                     </a>
                   </div>
                 </div>
               ) : (
-                <div className="relative w-full flex items-center justify-center" style={{ paddingTop: "56.25%" }}>
+                <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white/60">
-                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3">
-                      <Play className="h-7 w-7 text-white/40 ml-1" />
-                    </div>
+                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mb-3"><Play className="h-7 w-7 text-white/40 ml-1" /></div>
                     <p className="text-sm font-medium">Video coming soon</p>
                     <p className="text-xs text-white/40 mt-1">Check back later for this lesson</p>
                   </div>
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center justify-between px-6 md:px-8 py-2 border-t">
-            <div className="min-w-0 flex-1">
-              <h2 className="text-sm font-semibold truncate" data-testid="text-lesson-title">{lesson.title}</h2>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            {/* title + meta + description */}
+            <div className="mt-5">
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 leading-snug" data-testid="text-lesson-title">{lesson.title}</h1>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-slate-500 mt-2">
                 {lesson.duration && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{lesson.duration}</span>
-                  </div>
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {lesson.duration}</span>
                 )}
-                <span>·</span>
+                <span className="text-slate-300">·</span>
                 <span>{module.title}</span>
+                <span className="inline-flex items-center gap-1 text-emerald-600 font-medium"><CheckCircle2 className="h-3.5 w-3.5" /> Watched</span>
               </div>
+              {lesson.description && (
+                <p className="text-[14px] text-slate-600 leading-relaxed mt-4">{lesson.description}</p>
+              )}
             </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto px-6 md:px-8 pb-4">
-            {nextLesson && (
-              <Link
-                href={`/free-learning/${nextLesson.id}`}
-                data-testid="link-next-lesson-bottom"
-                className="flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-blue-50/50 hover:bg-blue-50 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
-                  <Play className="h-4 w-4 text-white ml-0.5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-xs text-blue-500 font-semibold uppercase">Next Lesson</span>
-                  <p className="text-sm font-medium text-gray-900 truncate">{nextLesson.title}</p>
-                </div>
-                <ArrowRight className="h-4 w-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-              </Link>
-            )}
-
-            {!nextLesson && allCompleted && (
-              <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
-                <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <h3 className="text-base font-bold text-gray-900 mb-1">Congratulations! You've completed all the lessons!</h3>
-                <p className="text-sm text-gray-500 mb-4">You're ready to activate your personalized mentorship program.</p>
-                <button
-                  onClick={() => setShowActivation(true)}
-                  data-testid="button-activate-mentorship-end"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer"
-                >
-                  Activate Mentorship
-                </button>
-              </div>
-            )}
-
-            {!nextLesson && !allCompleted && (
-              <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
-                <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
-                <p className="text-sm text-gray-500 mb-4">Complete all lessons to unlock your personalized mentorship program.</p>
+            {/* next lesson / completion */}
+            <div className="mt-6">
+              {nextLesson && (
                 <Link
-                  href="/free-learning"
-                  data-testid="link-back-to-course-end"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors"
+                  href={`/free-learning/${nextLesson.id}`}
+                  data-testid="link-next-lesson-bottom"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-blue-100 bg-white hover:bg-blue-50/50 transition-colors group"
                 >
-                  Back to Lessons
-                  <ArrowRight className="h-4 w-4" />
+                  <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center shrink-0">
+                    <Play className="h-4 w-4 text-white ml-0.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[11px] text-blue-500 font-semibold uppercase tracking-wide">Up next</span>
+                    <p className="text-[14px] font-semibold text-gray-900 truncate">{nextLesson.title}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </Link>
-              </div>
-            )}
+              )}
+
+              {!nextLesson && allCompleted && (
+                <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
+                  <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <h3 className="text-base font-bold text-gray-900 mb-1">You've completed all the lessons!</h3>
+                  <p className="text-sm text-gray-500 mb-4">You're ready to activate your personalized mentorship program.</p>
+                  <button onClick={() => setShowActivation(true)} data-testid="button-activate-mentorship-end" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors cursor-pointer">
+                    Activate Mentorship
+                  </button>
+                </div>
+              )}
+
+              {!nextLesson && !allCompleted && (
+                <div className="p-6 rounded-xl bg-blue-50 border border-blue-100 text-center">
+                  <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <h3 className="text-base font-bold text-gray-900 mb-1">You've reached the end!</h3>
+                  <p className="text-sm text-gray-500 mb-4">Complete all lessons to unlock your personalized mentorship program.</p>
+                  <Link href="/free-learning" data-testid="link-back-to-course-end" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors">
+                    Back to Lessons <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

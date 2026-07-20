@@ -69,7 +69,7 @@ export default function StoreDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+      <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
         <div className="flex justify-center items-center" style={{ minHeight: 'calc(100vh - 300px)' }}>
           <BlueSpinner size="lg" label="Loading store..." />
         </div>
@@ -94,7 +94,7 @@ export default function StoreDetailPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3">
       <div className="flex items-center gap-3 mb-1">
         <Link href="/framework/my-store">
           <Button variant="ghost" size="sm" data-testid="button-back-stores">

@@ -143,7 +143,7 @@ export default function MySessionsPage() {
 
   return (
     <ModuleAccessGuard moduleId="mentorship">
-    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-2" data-testid="page-my-sessions">
+    <div className="flex flex-1 flex-col gap-4 px-12 md:px-20 lg:px-32 py-3" data-testid="page-my-sessions">
       <FrameworkBanner
         title="My Sessions"
         description="Recorded live strategy sessions with expert mentorship"
