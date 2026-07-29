@@ -44,6 +44,8 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   create_failed: "We couldn't save your store. Please try again.",
   update_failed: "We couldn't update your store. Please try again.",
   access_denied: "You cancelled the Shopify authorization.",
+  store_not_found: "We couldn't reach that Shopify store. Check the store ID and try again.",
+  connection_failed: "Something went wrong talking to Shopify. Please try again.",
 }
 
 export function StoreSuiteProvider({ children }: { children: ReactNode }) {

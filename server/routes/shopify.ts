@@ -198,7 +198,13 @@ export function registerShopifyRoutes(app: Express) {
       }
     } catch (error: any) {
       const baseUrl = storeBaseUrl(req);
-      return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${encodeURIComponent(error.message || 'oauth_failed')}`);
+      // Never forward a raw exception to the browser: Shopify answers an unknown
+      // shop with a full HTML page, which would otherwise be pasted verbatim into
+      // the query string and shown to the user as the "error message".
+      const detail = String(error?.message || '');
+      console.error('[shopify] OAuth callback failed:', detail.slice(0, 500));
+      const code = /\b404\b/.test(detail) ? 'store_not_found' : 'connection_failed';
+      return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${code}`);
     }
   });
 
