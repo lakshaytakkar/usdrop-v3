@@ -4,7 +4,8 @@ import { supabaseRemote } from '../lib/supabase-remote';
 import { triggerAutomation } from '../lib/email-automation';
 import { triggerSmsAutomation } from '../lib/sms-automation';
 import {
-  generateOAuthState,
+  createOAuthState,
+  verifyOAuthState,
   buildShopifyOAuthUrl,
   exchangeCodeForToken,
   fetchShopifyStoreInfo,
@@ -18,16 +19,10 @@ import {
   verifyShopifyHmac,
 } from '../lib/shopify-oauth';
 
-const oauthStates = new Map<string, { userId: string; shop: string; createdAt: number }>();
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, val] of oauthStates) {
-    if (now - val.createdAt > 10 * 60 * 1000) {
-      oauthStates.delete(key);
-    }
-  }
-}, 60 * 1000);
+/* Where the OAuth callback sends the browser back to. `/framework/my-store` is a
+   client-side redirect to `/store` that drops the query string, which silently
+   swallowed every success and error message — send users straight to the real page. */
+const STORE_PAGE_PATH = '/store';
 
 function mapStoreFromDB(row: any) {
   return {
@@ -67,13 +62,7 @@ export function registerShopifyRoutes(app: Express) {
         return res.status(400).json({ error: 'Shop parameter is required' });
       }
 
-      const state = generateOAuthState();
-
-      oauthStates.set(state, {
-        userId: user.id,
-        shop: shop,
-        createdAt: Date.now(),
-      });
+      const state = createOAuthState(user.id, shop);
 
       const oauthUrl = buildShopifyOAuthUrl(shop, state);
 
@@ -89,11 +78,11 @@ export function registerShopifyRoutes(app: Express) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
 
       if (oauthError) {
-        return res.redirect(`${baseUrl}/framework/my-store?error=${encodeURIComponent(String(oauthError))}`);
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${encodeURIComponent(String(oauthError))}`);
       }
 
       if (!code || !shop) {
-        return res.redirect(`${baseUrl}/framework/my-store?error=missing_parameters`);
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=missing_parameters`);
       }
 
       if (hmac) {
@@ -101,28 +90,31 @@ export function registerShopifyRoutes(app: Express) {
         for (const [k, v] of Object.entries(req.query)) {
           queryObj[k] = String(v);
         }
-        if (!verifyShopifyHmac(queryObj)) {
-          return res.redirect(`${baseUrl}/framework/my-store?error=hmac_verification_failed`);
+        const rawQuery = req.originalUrl.includes('?')
+          ? req.originalUrl.slice(req.originalUrl.indexOf('?') + 1)
+          : '';
+        if (!verifyShopifyHmac(queryObj, rawQuery)) {
+          console.error('[shopify] OAuth callback HMAC verification failed');
+          return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=hmac_verification_failed`);
         }
       }
 
-      const stateStr = String(state || '');
-      const storedState = oauthStates.get(stateStr);
+      const storedState = verifyOAuthState(String(state || ''));
 
       if (!storedState) {
-        return res.redirect(`${baseUrl}/framework/my-store?error=invalid_state`);
+        console.error('[shopify] OAuth callback rejected: invalid or expired state');
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=invalid_state`);
       }
 
       const shopStr = String(shop);
       const normalizedCallbackShop = normalizeShopDomain(shopStr);
       const normalizedStoredShop = normalizeShopDomain(storedState.shop);
       if (normalizedCallbackShop !== normalizedStoredShop) {
-        oauthStates.delete(stateStr);
-        return res.redirect(`${baseUrl}/framework/my-store?error=shop_mismatch`);
+        console.error('[shopify] OAuth callback rejected: shop mismatch');
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=shop_mismatch`);
       }
 
       const userId = storedState.userId;
-      oauthStates.delete(stateStr);
 
       const { access_token } = await exchangeCodeForToken(shopStr, String(code));
       const storeInfo = await fetchShopifyStoreInfo(access_token, shopStr);
@@ -152,7 +144,7 @@ export function registerShopifyRoutes(app: Express) {
           .eq('id', existingStore.id);
 
         if (updateError) {
-          return res.redirect(`${baseUrl}/framework/my-store?error=update_failed`);
+          return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=update_failed`);
         }
 
         const storeMeta = { 'store.name': storeInfo.name, 'store.domain': normalizedDomain, store_name: storeInfo.name, store_domain: normalizedDomain };
@@ -162,7 +154,7 @@ export function registerShopifyRoutes(app: Express) {
           .catch((err) => console.error('[shopify] store_connected sms automation trigger error:', err));
 
         await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
-        return res.redirect(`${baseUrl}/framework/my-store?success=store_updated`);
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?success=store_updated`);
       } else {
         const { error: createError } = await supabaseRemote
           .from('shopify_stores')
@@ -181,9 +173,9 @@ export function registerShopifyRoutes(app: Express) {
 
         if (createError) {
           if (createError.code === '23505') {
-            return res.redirect(`${baseUrl}/framework/my-store?error=store_already_exists`);
+            return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=store_already_exists`);
           }
-          return res.redirect(`${baseUrl}/framework/my-store?error=create_failed`);
+          return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=create_failed`);
         }
 
         const storeMeta2 = { 'store.name': storeInfo.name, 'store.domain': normalizedDomain, store_name: storeInfo.name, store_domain: normalizedDomain };
@@ -193,11 +185,11 @@ export function registerShopifyRoutes(app: Express) {
           .catch((err) => console.error('[shopify] store_connected sms automation trigger error:', err));
 
         await advanceAwaitingClaim(userId, normalizedDomain, storeInfo.name);
-        return res.redirect(`${baseUrl}/framework/my-store?success=store_connected`);
+        return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?success=store_connected`);
       }
     } catch (error: any) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      return res.redirect(`${baseUrl}/framework/my-store?error=${encodeURIComponent(error.message || 'oauth_failed')}`);
+      return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${encodeURIComponent(error.message || 'oauth_failed')}`);
     }
   });
 

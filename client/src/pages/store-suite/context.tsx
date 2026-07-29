@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react"
 import { apiFetch } from "@/lib/supabase"
+import { useToast } from "@/hooks/use-toast"
 
 /* Shared state for the dedicated Shopify Management Suite — the connected
    stores + which one is active, shared across all suite tabs. */
@@ -34,7 +35,19 @@ interface StoreSuiteCtx {
 const Ctx = createContext<StoreSuiteCtx | null>(null)
 const LS_KEY = "usdrop_suite_active_store"
 
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  invalid_state: "That connection link expired. Please try connecting again.",
+  shop_mismatch: "The store you approved didn't match the one you entered.",
+  hmac_verification_failed: "We couldn't verify the response from Shopify. Please try again.",
+  missing_parameters: "Shopify didn't send back everything we needed. Please try again.",
+  store_already_exists: "That store is already connected to another account.",
+  create_failed: "We couldn't save your store. Please try again.",
+  update_failed: "We couldn't update your store. Please try again.",
+  access_denied: "You cancelled the Shopify authorization.",
+}
+
 export function StoreSuiteProvider({ children }: { children: ReactNode }) {
+  const { showSuccess, showError } = useToast()
   const [stores, setStores] = useState<SuiteStore[]>([])
   const [activeStoreId, setActiveStoreIdState] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -66,6 +79,33 @@ export function StoreSuiteProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => { refresh() }, [refresh])
+
+  /* The Shopify OAuth callback returns here with ?success= or ?error=. Report the
+     outcome — before this, a failed connect bounced the user back to an unchanged
+     "Connect your Shopify store" screen with no explanation at all. */
+  const oauthHandled = useRef(false)
+  useEffect(() => {
+    if (oauthHandled.current) return
+
+    const params = new URLSearchParams(window.location.search)
+    const success = params.get("success")
+    const errorCode = params.get("error")
+    if (!success && !errorCode) return
+
+    oauthHandled.current = true
+
+    if (success) {
+      showSuccess(success === "store_updated" ? "Store reconnected successfully" : "Store connected successfully")
+      refresh()
+    } else if (errorCode) {
+      showError(OAUTH_ERROR_MESSAGES[errorCode] || `Could not connect your store (${errorCode})`)
+    }
+
+    params.delete("success")
+    params.delete("error")
+    const query = params.toString()
+    window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}`)
+  }, [showSuccess, showError, refresh])
 
   const syncNow = useCallback(async () => {
     if (!activeStoreId) return

@@ -17,23 +17,150 @@ function normalizeShopDomain(shop: string): string {
 
 export { normalizeShopDomain };
 
-export function verifyShopifyHmac(query: Record<string, any>): boolean {
+function safeEqualHex(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8');
+  const bufB = Buffer.from(b, 'utf8');
+  // timingSafeEqual throws on length mismatch — compare lengths first.
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Verify the HMAC Shopify appends to OAuth callbacks.
+ *
+ * Shopify computes the digest over the query string *as transmitted* (i.e. the
+ * percent-encoded form), with the `hmac` (and `signature`) pairs removed and the
+ * remaining pairs sorted. Rebuilding the message from Express' already-decoded
+ * `req.query` therefore breaks whenever a value contains an encoded character —
+ * `host` is base64 and routinely carries `=` padding. We verify against the raw
+ * query string first and only then fall back to the legacy decoded form.
+ */
+export function verifyShopifyHmac(
+  query: Record<string, any>,
+  rawQueryString?: string
+): boolean {
   const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
   if (!clientSecret) return false;
 
   const hmac = query.hmac;
   if (!hmac) return false;
 
+  const digestOf = (message: string) =>
+    crypto.createHmac('sha256', clientSecret).update(message).digest('hex');
+
+  const candidates: string[] = [];
+
+  if (rawQueryString) {
+    const raw = rawQueryString.replace(/^\?/, '');
+    const pairs = raw
+      .split('&')
+      .filter((pair) => pair.length > 0)
+      .filter((pair) => {
+        const key = pair.split('=')[0];
+        return key !== 'hmac' && key !== 'signature';
+      })
+      .sort();
+    candidates.push(pairs.join('&'));
+  }
+
   const params = { ...query };
   delete params.hmac;
-
+  delete params.signature;
   const sortedKeys = Object.keys(params).sort();
-  const message = sortedKeys.map(k => `${k}=${params[k]}`).join('&');
+  candidates.push(sortedKeys.map((k) => `${k}=${params[k]}`).join('&'));
 
-  const digest = crypto.createHmac('sha256', clientSecret).update(message).digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(String(hmac)));
+  return candidates.some((message) => safeEqualHex(digestOf(message), String(hmac)));
 }
 
+/* ---------------------------------------------------------------------------
+ * OAuth state
+ *
+ * This runs on Vercel serverless: the request that starts the OAuth flow and
+ * the callback request land on *different* lambda instances, so state cannot be
+ * held in process memory (that is why no store had ever connected). The state is
+ * therefore self-contained and signed — the callback re-derives the signature
+ * instead of looking anything up.
+ * ------------------------------------------------------------------------- */
+
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
+
+export interface OAuthStatePayload {
+  userId: string;
+  shop: string;
+  iat: number;
+  nonce: string;
+}
+
+function getStateSigningSecret(): string {
+  const secret =
+    process.env.SHOPIFY_CLIENT_SECRET ||
+    process.env.JWT_SECRET ||
+    process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error('No secret available to sign the Shopify OAuth state');
+  }
+  return secret;
+}
+
+function b64urlEncode(buf: Buffer): string {
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function b64urlDecode(value: string): Buffer {
+  return Buffer.from(value.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
+}
+
+export function createOAuthState(userId: string, shop: string): string {
+  const payload: OAuthStatePayload = {
+    userId,
+    shop: normalizeShopDomain(shop),
+    iat: Date.now(),
+    nonce: crypto.randomBytes(8).toString('hex'),
+  };
+  const body = b64urlEncode(Buffer.from(JSON.stringify(payload), 'utf8'));
+  const signature = crypto
+    .createHmac('sha256', getStateSigningSecret())
+    .update(body)
+    .digest('hex');
+  return `${body}.${signature}`;
+}
+
+export function verifyOAuthState(state: string): OAuthStatePayload | null {
+  if (!state) return null;
+
+  const separator = state.lastIndexOf('.');
+  if (separator <= 0) return null;
+
+  const body = state.slice(0, separator);
+  const signature = state.slice(separator + 1);
+
+  let expected: string;
+  try {
+    expected = crypto.createHmac('sha256', getStateSigningSecret()).update(body).digest('hex');
+  } catch {
+    return null;
+  }
+
+  if (!safeEqualHex(signature, expected)) return null;
+
+  let payload: OAuthStatePayload;
+  try {
+    payload = JSON.parse(b64urlDecode(body).toString('utf8'));
+  } catch {
+    return null;
+  }
+
+  if (!payload || typeof payload.userId !== 'string' || typeof payload.shop !== 'string') {
+    return null;
+  }
+  if (typeof payload.iat !== 'number' || Date.now() - payload.iat > OAUTH_STATE_TTL_MS) {
+    return null;
+  }
+
+  return payload;
+}
+
+/** @deprecated Unsigned states cannot survive a serverless hop — use createOAuthState. */
 export function generateOAuthState(): string {
   return crypto.randomBytes(32).toString('hex');
 }

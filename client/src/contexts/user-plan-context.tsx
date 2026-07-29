@@ -22,6 +22,7 @@ const ADMIN_ROLES = ["admin", "super_admin", "editor", "moderator"]
 
 export function UserPlanProvider({ children }: UserPlanProviderProps) {
   const [plan, setPlan] = useState<string | null>(null)
+  const [accountType, setAccountType] = useState<string | null>(null)
   const [internalRole, setInternalRole] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { user, loading: authLoading, authData, refreshUser } = useAuth()
@@ -34,18 +35,25 @@ export function UserPlanProvider({ children }: UserPlanProviderProps) {
       const isAdminUser = userRole != null && ADMIN_ROLES.includes(userRole)
       const userPlan = authData.plan || (isAdminUser ? "pro" : (user.account_type || "free"))
       setPlan(userPlan)
+      setAccountType(user.account_type || null)
       setInternalRole(userRole)
       setIsLoading(false)
     } else if (!user) {
       setPlan(null)
+      setAccountType(null)
       setInternalRole(null)
       setIsLoading(false)
     }
   }, [user, authLoading, authData])
 
   const isAdmin = internalRole != null && ADMIN_ROLES.includes(internalRole)
-  const isFree = !isAdmin && (plan === "free" || plan === null)
-  const isPro = isAdmin || plan === "pro"
+  /* `plan` resolves to the subscription plan's slug, which wins over
+     `account_type`. Some upgraded accounts carry account_type='pro' while still
+     pointing at the Free subscription row, and those users were being shown the
+     "upgrade to Pro" wall on Pro-only surfaces (Store connect included). Treat
+     either signal as Pro so a data mismatch can't lock a paying user out. */
+  const isPro = isAdmin || plan === "pro" || accountType === "pro"
+  const isFree = !isPro && (plan === "free" || plan === null)
 
   const value: UserPlanContextType = {
     plan,
