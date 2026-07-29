@@ -24,6 +24,15 @@ import {
    swallowed every success and error message — send users straight to the real page. */
 const STORE_PAGE_PATH = '/store';
 
+/* Vercel terminates TLS at the edge, so `req.protocol` reports "http" and the
+   OAuth callback would hand the browser an http:// Location — an extra redirect
+   hop on the critical path. Honour the forwarded protocol instead. */
+function storeBaseUrl(req: Request): string {
+  const forwarded = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const protocol = forwarded || req.protocol || 'https';
+  return `${protocol}://${req.get('host')}`;
+}
+
 function mapStoreFromDB(row: any) {
   return {
     id: row.id,
@@ -75,7 +84,7 @@ export function registerShopifyRoutes(app: Express) {
   app.get('/api/shopify-stores/oauth/callback', async (req: Request, res: Response) => {
     try {
       const { code, state, shop, error: oauthError, hmac } = req.query;
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = storeBaseUrl(req);
 
       if (oauthError) {
         return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${encodeURIComponent(String(oauthError))}`);
@@ -188,7 +197,7 @@ export function registerShopifyRoutes(app: Express) {
         return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?success=store_connected`);
       }
     } catch (error: any) {
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const baseUrl = storeBaseUrl(req);
       return res.redirect(`${baseUrl}${STORE_PAGE_PATH}?error=${encodeURIComponent(error.message || 'oauth_failed')}`);
     }
   });
