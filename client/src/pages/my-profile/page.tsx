@@ -62,6 +62,13 @@ export default function MyProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  /* Account password — separate from the Tools Password field further down,
+     which belongs to a third-party tool and is stored as ordinary profile
+     text. This one is the credential for signing in here. */
+  const [acctPw, setAcctPw] = useState("")
+  const [acctPw2, setAcctPw2] = useState("")
+  const [showAcctPw, setShowAcctPw] = useState(false)
+  const [savingPw, setSavingPw] = useState(false)
   const [showMore, setShowMore] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -106,6 +113,40 @@ export default function MyProfilePage() {
 
   const handleChange = (field: keyof UserDetails, value: string) => {
     setDetails((prev) => ({ ...prev, [field]: value }))
+  }
+
+  /* Deliberately NOT part of Save Profile. A password change signs you out of
+     nothing and saves nothing else; bundling it into the profile save would
+     mean a typo in a password field blocks someone updating their phone
+     number, and would fire the password endpoint on every profile save. */
+  const handleSetPassword = async () => {
+    if (acctPw !== acctPw2) { showError("The two passwords do not match."); return }
+    /* Mirrors validatePassword() in server/routes/auth.ts. Checked here too so
+       the rule is stated BEFORE the round-trip — the server is still the
+       authority and its message is shown if it disagrees. */
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,128}$/.test(acctPw)) {
+      showError("Use 8+ characters with an uppercase letter, a lowercase letter and a number.")
+      return
+    }
+    setSavingPw(true)
+    try {
+      const res = await apiFetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: acctPw }),
+      })
+      const data = await res.json().catch(() => ({}))
+      /* The server validates strength and returns the specific reason. Showing
+         its message beats a generic failure — "Failed" tells you nothing about
+         what to change. */
+      if (!res.ok) throw new Error(data?.error || "Could not set the password")
+      setAcctPw(""); setAcctPw2("")
+      showSuccess("Password set. You can now sign in with your email and this password on any device.")
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Could not set the password")
+    } finally {
+      setSavingPw(false)
+    }
   }
 
   const handleSave = async () => {
@@ -363,6 +404,63 @@ export default function MyProfilePage() {
                 </Card>
               </div>
             )}
+
+            {/* Account password. Placed OUTSIDE the collapsible section above so
+                it is reachable without expanding anything — somebody locked out
+                on a second device is looking for exactly this and should not
+                have to hunt. */}
+            <Card className="p-6 md:p-8">
+              <h3 className="ds-section-title ds-text-heading mb-2">Account password</h3>
+              <p className="text-sm ds-text-body mb-6 opacity-80">
+                Set a password to sign in with your email on any device. If you signed up with Google
+                you can keep using that button as well — this simply adds a second way in.
+                Needs at least 8 characters, including an uppercase letter, a lowercase letter and a number.
+              </p>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="acct_pw" className="text-sm font-medium ds-text-body">New password</Label>
+                  <div className="relative">
+                    <Input
+                      id="acct_pw" data-testid="input-account-password"
+                      type={showAcctPw ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={acctPw} onChange={(e) => setAcctPw(e.target.value)}
+                      placeholder="8+ chars, with a capital and a number"
+                      className="h-11 bg-white border-gray-200 text-[15px] pr-11"
+                    />
+                    <button
+                      type="button" onClick={() => setShowAcctPw(!showAcctPw)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      data-testid="button-toggle-account-password"
+                      aria-label={showAcctPw ? "Hide password" : "Show password"}
+                    >
+                      {showAcctPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="acct_pw2" className="text-sm font-medium ds-text-body">Confirm password</Label>
+                  <Input
+                    id="acct_pw2" data-testid="input-account-password-confirm"
+                    type={showAcctPw ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={acctPw2} onChange={(e) => setAcctPw2(e.target.value)}
+                    placeholder="Type it again"
+                    className="h-11 bg-white border-gray-200 text-[15px]"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Button
+                    onClick={handleSetPassword}
+                    disabled={savingPw || !acctPw || !acctPw2}
+                    variant="secondary"
+                    data-testid="button-set-account-password"
+                  >
+                    {savingPw ? "Saving..." : "Set password"}
+                  </Button>
+                </div>
+              </div>
+            </Card>
 
             <div className="flex justify-end pt-2 pb-4">
               <Button onClick={handleSave} disabled={saving} size="lg" className="px-8" data-testid="button-save-profile">

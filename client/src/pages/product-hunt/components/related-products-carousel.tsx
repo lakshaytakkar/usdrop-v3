@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Eye, ChevronLeft, ChevronRight, Package } from "lucide-react"
 import { useState, useRef } from "react"
 import { Product } from "@/types/products"
+import { IMG_FALLBACK } from "@/lib/img-fallback"
 
 interface RelatedProductsCarouselProps {
   productIds?: string[]
@@ -39,7 +40,7 @@ export function RelatedProductsCarousel({ productIds = [], currentProductId, pro
   const TRUSTED = ['images.unsplash.com', 'supabase.co', 'cloudinary.com', 'imgix.net', 'shopify.com', 'amazonaws.com'];
   const getProductImage = (product: Product): string => {
     const raw = product.image || (product.additional_images?.[0]) || null
-    if (!raw) return "/demo-products/Screenshot 2024-07-24 185228.png"
+    if (!raw) return IMG_FALLBACK
     if (raw.startsWith("/") || raw.startsWith("blob:") || raw.startsWith("data:")) return raw
     if (TRUSTED.some(d => raw.includes(d))) return raw
     return `/api/proxy/image?url=${encodeURIComponent(raw)}`

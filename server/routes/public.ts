@@ -2504,19 +2504,58 @@ export function registerPublicRoutes(app: Express) {
         return res.status(400).json({ error: 'Invalid URL format' });
       }
 
-      let title = parsedUrl.hostname.replace('www.', '');
+      /* The hostname is NOT a product name. This used to default to it, which
+         is why imported products were listed as "aliexpress.com" and "EPROLO".
+         Left null when unknown so the UI can prompt for a real one. */
+      let title = '';
       let description = '';
       let image = '';
+      let price = 0;
+      let note: string | null = null;
+      const host = parsedUrl.hostname.replace('www.', '');
+
+      /* If the pasted URL IS an image, that is the answer — do not try to
+         scrape it as a web page. Four of the last fifteen failed imports were
+         image URLs on a CDN: the picture people wanted was in the input the
+         whole time, and the importer threw it away looking for og:image in a
+         JPEG. Extension first, then a HEAD for the content type, because plenty
+         of CDN image URLs carry no extension. */
+      const looksLikeImage = /\.(jpe?g|png|webp|gif|avif|bmp|svg)(\?|$)/i.test(parsedUrl.pathname + parsedUrl.search);
+      let isImageUrl = looksLikeImage;
+      if (!isImageUrl) {
+        try {
+          const head = await fetch(url.trim(), { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+          isImageUrl = /^image\//i.test(head.headers.get('content-type') || '');
+        } catch { /* fall through to the normal page fetch */ }
+      }
+      if (isImageUrl) {
+        image = url.trim();
+        title = decodeURIComponent(parsedUrl.pathname.split('/').filter(Boolean).pop() || '')
+          .replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ').trim();
+        note = 'Imported from an image link — add a name and price.';
+      }
 
       try {
+        if (isImageUrl) throw new Error('__skip_page_fetch');
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
+        /* 15s, not 8s. Large product pages are routinely over a megabyte and
+           the body download happens INSIDE this window, so a slow origin used
+           to abort and lose an image it had already sent the tag for. */
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
+        /* A real browser UA. "USDrop/1.0" is identified as a bot by AliExpress,
+           Temu and most large storefronts, which serve a challenge page instead
+           of the product — and a challenge page has no og:image, which is why
+           every import came back with no picture. */
         const response = await fetch(url.trim(), {
           signal: controller.signal,
+          redirect: 'follow',
           headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; USDrop/1.0)',
-            'Accept': 'text/html',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+              '(KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'en-US,en;q=0.9',
           },
         });
         clearTimeout(timeout);
@@ -2524,36 +2563,105 @@ export function registerPublicRoutes(app: Express) {
         if (response.ok) {
           const html = await response.text();
 
-          const ogTitle = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)?.[1]
-            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:title["']/i)?.[1]
+          /* Attribute ORDER and the surrounding attributes vary by site. The
+             old pair of regexes required property and content to be adjacent,
+             so any tag carrying an extra attribute between them — common — was
+             missed and the import silently produced nothing. This finds the
+             tag first, then reads the value out of it. */
+          const meta = (key: string): string | null => {
+            const re = new RegExp(
+              `<meta[^>]+(?:property|name)=["']${key}["'][^>]*>|<meta[^>]*content=["'][^"']*["'][^>]+(?:property|name)=["']${key}["'][^>]*>`,
+              'i');
+            const tag = html.match(re)?.[0];
+            if (!tag) return null;
+            const v = tag.match(/content=["']([^"']*)["']/i)?.[1];
+            return v && v.trim() ? v.trim() : null;
+          };
+
+          /* JSON-LD is what large storefronts actually populate reliably, and
+             it is the only place a PRICE is usually available. */
+          const ld: Record<string, unknown>[] = [];
+          for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+            try {
+              const parsed = JSON.parse(m[1].trim());
+              ld.push(...(Array.isArray(parsed) ? parsed : [parsed]));
+            } catch { /* a malformed block must not abort the import */ }
+          }
+          const product = ld.find((x) => {
+            const t = (x as { '@type'?: unknown })['@type'];
+            return t === 'Product' || (Array.isArray(t) && t.includes('Product'));
+          }) as Record<string, any> | undefined;
+
+          const ogTitle = meta('og:title') || meta('twitter:title')
+            || product?.name
             || html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1];
 
-          const ogDesc = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i)?.[1]
-            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:description["']/i)?.[1]
-            || html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i)?.[1];
+          const ogDesc = meta('og:description') || meta('twitter:description')
+            || product?.description || meta('description');
 
-          const ogImage = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)?.[1]
-            || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i)?.[1];
+          let ogImage = meta('og:image') || meta('og:image:secure_url') || meta('twitter:image')
+            || html.match(/<link[^>]+rel=["']image_src["'][^>]+href=["']([^"']+)["']/i)?.[1];
+          if (!ogImage && product?.image) {
+            ogImage = Array.isArray(product.image)
+              ? product.image[0]
+              : (typeof product.image === 'string' ? product.image : product.image?.url);
+          }
 
-          if (ogTitle) title = ogTitle.trim();
-          if (ogDesc) description = ogDesc.trim();
+          const offer = Array.isArray(product?.offers) ? product?.offers[0] : product?.offers;
+          const rawPrice = offer?.price ?? offer?.lowPrice ?? meta('product:price:amount');
+          if (rawPrice != null) {
+            const n = Number(String(rawPrice).replace(/[^0-9.]/g, ''));
+            if (Number.isFinite(n) && n > 0) price = n;
+          }
+
+          if (ogTitle) title = String(ogTitle).trim();
+          if (ogDesc) description = String(ogDesc).trim();
           if (ogImage) {
-            image = ogImage.startsWith('http') ? ogImage : new URL(ogImage, parsedUrl.origin).href;
+            const src = String(ogImage).trim();
+            image = src.startsWith('//') ? `https:${src}`
+              : src.startsWith('http') ? src
+              : new URL(src, parsedUrl.origin).href;
           }
         }
       } catch (fetchErr) {
-        console.warn('Could not fetch URL metadata, using defaults:', fetchErr);
+        if ((fetchErr as Error)?.message !== '__skip_page_fetch') {
+          console.warn('Could not fetch URL metadata, using defaults:', fetchErr);
+          note = 'We could not read that page — add the details by hand, or upload a photo.';
+        }
+      }
+
+      /* Sites that serve a bot wall return 200 with a couple of kilobytes and
+         no meta at all. Say so, rather than leaving a blank product and letting
+         the person wonder what they did wrong. */
+      if (!image && !title) {
+        note = `We could not read a product from ${host}. Some sites (AliExpress, 1688, Amazon) block automated reads — upload a photo and add the details, or paste the image link directly.`;
       }
 
       const { data: product, error: productError } = await supabaseRemote
         .from('products')
         .insert({
-          title,
+          /* Never the bare hostname. If the page gave us nothing, say so
+             plainly so the person knows to rename it, rather than shipping a
+             product called "aliexpress.com". */
+          title: title || `Imported product (${host})`,
           description: description || null,
           image: image || null,
-          buy_price: 0,
+          /* The scraped price is the BUY price. sell_price stays 0 because only
+             the seller decides their margin — guessing one would put a wrong
+             number in front of a customer. */
+          buy_price: price,
           sell_price: 0,
           profit_per_order: 0,
+          /* WHAT WAS IMPORTED, and how it went. There is no source_url column
+             and nothing recorded the input, so a failed import threw the URL
+             away — it could not be retried and nobody could tell why it failed.
+             Stored in the existing jsonb so this needs no migration. */
+          specifications: {
+            source_url: url.trim(),
+            imported_at: new Date().toISOString(),
+            import_ok: !!(image && title),
+            import_note: note,
+          },
         })
         .select()
         .single();
@@ -2571,7 +2679,18 @@ export function registerPublicRoutes(app: Express) {
         console.error('Error adding to picklist:', picklistError);
       }
 
-      return res.status(201).json({ message: 'Product imported and added to picklist', product });
+      /* Tell the client what could NOT be read, so the UI can prompt for it
+         instead of silently showing a placeholder and a zero. */
+      return res.status(201).json({
+        message: 'Product imported and added to picklist',
+        product,
+        incomplete: [
+          !image ? 'image' : null,
+          !title ? 'title' : null,
+          !price ? 'price' : null,
+        ].filter(Boolean),
+        note,
+      });
     } catch (error) {
       console.error('Error in POST /api/products/import-url:', error);
       return res.status(500).json({ error: 'Internal server error' });
@@ -4011,6 +4130,63 @@ export function registerPublicRoutes(app: Express) {
       });
     } catch (error) {
       console.error('Error in PUT /api/user-details:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /* POST /api/products/:id/image — attach a photo the client actually has.
+     ────────────────────────────────────────────────────────────────────────
+     Until now My Products accepted an image URL and nothing else, so a client
+     photographing their own product had nowhere to put it, and any import that
+     failed to scrape a picture left the card blank for good.
+
+     Ownership is checked against user_picklist, not just the product id: the
+     products table is shared, and letting any authenticated user overwrite the
+     photo of any product id would let one client change what another sees. */
+  app.post('/api/products/:id/image', requireAuth, avatarUpload.single('file'), async (req: Request, res: Response) => {
+    const file = (req as any).file;
+    if (!file) return res.status(400).json({ error: 'No file provided' });
+    if (!/^image\//.test(file.mimetype || '')) {
+      return res.status(400).json({ error: 'That file is not an image' });
+    }
+    const user = req.user!;
+    const productId = req.params.id;
+    try {
+      const { data: owned } = await supabaseRemote
+        .from('user_picklist')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .maybeSingle();
+      if (!owned) return res.status(403).json({ error: 'That product is not in your list' });
+
+      await supabaseRemote.storage.createBucket('product-images', { public: true }).catch(() => {});
+
+      const ext = (file.originalname || '').split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const filePath = `${user.id}/${productId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabaseRemote.storage
+        .from('product-images')
+        .upload(filePath, file.buffer, { contentType: file.mimetype, upsert: true });
+      if (uploadError) {
+        console.error('Product image upload failed:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image' });
+      }
+
+      const { data: urlData } = supabaseRemote.storage.from('product-images').getPublicUrl(filePath);
+      const imageUrl = urlData.publicUrl;
+
+      const { error: updErr } = await supabaseRemote
+        .from('products')
+        .update({ image: imageUrl })
+        .eq('id', productId);
+      if (updErr) {
+        console.error('Product image save failed:', updErr);
+        return res.status(500).json({ error: 'Uploaded, but could not save it to the product' });
+      }
+
+      return res.json({ image: imageUrl });
+    } catch (error) {
+      console.error('Error in POST /api/products/:id/image:', error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });

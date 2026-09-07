@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/supabase";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FrameworkBanner } from "@/components/framework-banner";
 import { Badge } from "@/components/ui/badge";
+import { IMG_FALLBACK } from "@/lib/img-fallback"
 
 // Image handling shared with the rest of the app (product-hunt / winning-products):
 // route un-trusted external URLs through the image proxy so Amazon/Shopify
@@ -74,8 +75,7 @@ const TRUSTED_IMG_HOSTS = [
   "shopify.com",
   "amazonaws.com",
 ];
-const IMG_FALLBACK =
-  "/demo-products/Screenshot 2024-07-24 185228.png";
+
 function resolveImg(url: string | null | undefined): string {
   if (!url) return IMG_FALLBACK;
   if (url.startsWith("/") || url.startsWith("blob:") || url.startsWith("data:"))
@@ -201,7 +201,15 @@ function AddProductModal({
         const data = await res.json();
         throw new Error(data.error || "Failed to import product");
       }
-      showSuccess("Product imported and added to your list");
+      /* Tell them what actually happened. This said "Product imported" even
+         when the page yielded no name, no picture and no price — so somebody
+         whose import had silently failed was told it worked, and only found
+         out when they looked at the card. */
+      const out = await res.json().catch(() => ({} as any));
+      if (out?.note) showError(out.note);
+      else if (Array.isArray(out?.incomplete) && out.incomplete.length)
+        showSuccess(`Imported, but no ${out.incomplete.join(" or ")} — open it to fill that in.`);
+      else showSuccess("Product imported and added to your list");
       window.dispatchEvent(new CustomEvent("picklist-updated"));
       onProductCreated();
       handleClose();
@@ -593,7 +601,7 @@ function ViewProductModal({
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
-                      "/demo-products/Screenshot 2024-07-24 185228.png";
+                      IMG_FALLBACK;
                   }}
                   data-testid="img-view-product"
                 />
@@ -721,6 +729,12 @@ function EditProductModal({
   const [editBuyPrice, setEditBuyPrice] = useState("");
   const [editSellPrice, setEditSellPrice] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  /* Uploading the client's OWN photo. The dialog previously accepted an image
+     URL and nothing else, so somebody holding a photograph of their product
+     had nowhere to put it — and any import that failed to scrape a picture
+     left the card empty for good. */
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const editFileRef = useRef<HTMLInputElement>(null);
   const [editInStock, setEditInStock] = useState(true);
 
   useEffect(() => {
@@ -745,6 +759,31 @@ function EditProductModal({
       }
     } catch {
       console.error("Failed to fetch categories");
+    }
+  };
+
+  const handleUploadImage = async (file: File) => {
+    if (!item) return;
+    if (!file.type.startsWith("image/")) { showError("That file is not an image."); return }
+    if (file.size > 5 * 1024 * 1024) { showError("Image must be under 5MB."); return }
+    setUploadingImg(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiFetch(`/api/products/${item.productId}/image`, { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Upload failed");
+      /* Reflect it immediately in the open dialog AND in the list behind it,
+         so the person sees their own photo rather than having to guess whether
+         it worked. */
+      setEditImageUrl(data.image);
+      onSaved();
+      showSuccess("Photo uploaded.");
+    } catch (e) {
+      showError(e instanceof Error ? e.message : "Upload failed.");
+    } finally {
+      setUploadingImg(false);
+      if (editFileRef.current) editFileRef.current.value = "";
     }
   };
 
@@ -891,11 +930,47 @@ function EditProductModal({
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-semibold text-gray-700">
-              Image URL
+              Product photo
             </label>
+            {/* Upload FIRST, URL second. Pasting a URL is the fallback for a
+                product that lives on a supplier site; most people adding their
+                own product have the picture on the device they are holding. */}
+            <div className="flex items-center gap-2">
+              <input
+                ref={editFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                data-testid="input-edit-image-file"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadImage(f);
+                }}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={uploadingImg || !item}
+                onClick={() => editFileRef.current?.click()}
+                data-testid="button-upload-product-image"
+              >
+                {uploadingImg ? "Uploading..." : "Upload photo"}
+              </Button>
+              {editImageUrl ? (
+                <img
+                  src={resolveImg(editImageUrl)}
+                  alt="Product"
+                  className="h-10 w-10 rounded object-cover border border-gray-200"
+                />
+              ) : (
+                <span className="text-[12px] text-gray-500">No photo yet</span>
+              )}
+            </div>
             <Input
               value={editImageUrl}
               onChange={(e) => setEditImageUrl(e.target.value)}
+              placeholder="…or paste an image URL"
               className="h-10 bg-white border-gray-200 rounded-lg text-sm"
               data-testid="input-edit-image-url"
             />

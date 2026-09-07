@@ -11,6 +11,7 @@ import {
   Lock,
   Eye
 } from "lucide-react"
+import { IMG_FALLBACK } from "@/lib/img-fallback"
 // Local WinningProduct type (matches the transformed type from the page)
 export interface WinningProduct {
   id: number;
@@ -65,7 +66,7 @@ export function WinningProductCard({ product, onLockedClick }: ProductCardProps)
         {imageError ? (
           <div className="h-full w-full flex items-center justify-center bg-muted">
             <img
-              src="/demo-products/Screenshot 2024-07-24 185228.png"
+              src={IMG_FALLBACK}
               alt="Placeholder"
               width={300}
               height={300}
